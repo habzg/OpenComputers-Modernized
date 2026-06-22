@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "CDC",
+    "AEA"
+  ],
+  "key": {
+    "A": {
+      "tag": "c:ingots/iron"
+    },
+    "B": {
+      "item": "opencomputers:cable"
+    },
+    "C": {
+      "tag": "c:ingots/gold"
+    },
+    "D": {
+      "item": "opencomputers:chip1"
+    },
+    "E": {
+      "item": "opencomputers:printedcircuitboard"
+    }
+  },
+  "result": {
+    "id": "opencomputers:powerconverter",
+    "count": 1
+  }
+}

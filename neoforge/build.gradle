@@ -1,0 +1,185 @@
+plugins {
+    id 'net.neoforged.moddev'
+    id 'maven-publish'
+    id 'idea'
+}
+
+sourceSets.main.resources {
+    exclude("**/*.bbmodel")
+    exclude("src/generated/**/.cache")
+}
+
+base {
+    archivesName = mod_id
+}
+
+neoForge {
+    version = neo_version
+
+    parchment {
+        mappingsVersion = parchment_mappings_version
+        minecraftVersion = parchment_minecraft_version
+    }
+
+    accessTransformers = project.files('src/main/resources/META-INF/accesstransformer.cfg')
+
+    runs {
+        client {
+            client()
+            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+        }
+        server {
+            server()
+            programArgument '--nogui'
+            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+        }
+        gameTestServer {
+            type = "gameTestServer"
+            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+        }
+        data {
+            data()
+            programArguments.addAll '--mod', mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.DEBUG
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+configurations {
+    runtimeClasspath.extendsFrom localRuntime
+    commonJava { canBeResolved = true; canBeConsumed = false }
+    commonResources { canBeResolved = true; canBeConsumed = false }
+}
+
+dependencies {
+    // Project dependencies
+    compileOnly(project(':api'))
+    compileOnly(project(':core-api'))
+    compileOnly(project(':core'))
+
+    // OC repack libraries
+    compileOnly("li.cil.repack:OC-JNLua:${jnlua_version}")
+    implementation("com.typesafe:config:${typesafe_config_version}")
+    implementation("li.cil.repack:OC-LuaJ:${luaj_version}")
+    implementation("li.cil.repack:OC-JNLua-Natives:${jnlua_natives_version}")
+
+    // Integration - compile-time only (API jars)
+    compileOnly("cc.tweaked:cc-tweaked-${minecraft_version}-forge-api:${cc_version}")
+    compileOnly("mrtjp:ProjectRed:${minecraft_version}-${pr_version}:api")
+    compileOnly("mekanism:Mekanism:${minecraft_version}-${mekanism_version}:api")
+    compileOnly("mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}")
+    compileOnly("mcp.mobius.waila:wthit-api:${wthit_version}")
+    compileOnly("mcjty.theoneprobe:theoneprobe:${top_version}:api")
+
+    // Integration - runtime only
+    runtimeOnly("mcp.mobius.waila:wthit:${wthit_version}")
+    runtimeOnly("mcjty.theoneprobe:theoneprobe:${top_version}")
+    runtimeOnly("mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}")
+    runtimeOnly("cc.tweaked:cc-tweaked-${minecraft_version}-forge:${cc_version}")
+    runtimeOnly("mekanism:Mekanism:${minecraft_version}-${mekanism_version}")
+    runtimeOnly("mrtjp:ProjectRed:${minecraft_version}-${pr_version}:core")
+    runtimeOnly("mrtjp:ProjectRed:${minecraft_version}-${pr_version}:transmission")
+    runtimeOnly("maven.modrinth:rftools-base:${rftools_base_version}")
+    runtimeOnly("thedarkcolour:kotlinforforge-neoforge:${kotlinforforge_version}")
+
+    // Integration - compile + runtime (full jars)
+    implementation("com.enderio:enderio:${enderio_version}")
+    implementation("io.codechicken:CodeChickenLib:${minecraft_version}-${codechickenlib_version}")
+    implementation("io.codechicken:CBMultipart:${minecraft_version}-${cbmultipart_version}")
+    implementation("io.codechicken:EnderStorage:${minecraft_version}-${enderstorage_version}")
+    implementation("com.simibubi.create:create-${minecraft_version}:${create_version}")
+    implementation("maven.modrinth:rftools-utility:${rftools_utility_version}")
+    implementation("maven.modrinth:mcjtylib:${mcjtylib_version}")
+    implementation("maven.modrinth:applied-mekanistics:${appmek_version}")
+    implementation("org.appliedenergistics:appliedenergistics2:${ae2_version}")
+    implementation("maven.modrinth:railcraft-reborn:${railcraft_version}")
+    implementation("maven.modrinth:jade:${jade_version}")
+
+    // Source set merging
+    commonJava(project(path: ':core-api', configuration: 'commonJava'))
+    commonResources(project(path: ':core-api', configuration: 'commonResources'))
+    commonJava(project(path: ':core', configuration: 'commonJava'))
+    commonResources(project(path: ':core', configuration: 'commonResources'))
+    commonJava(project(path: ':api', configuration: 'commonJava'))
+    commonResources(project(path: ':api', configuration: 'commonResources'))
+
+    additionalRuntimeClasspath("com.typesafe:config:${typesafe_config_version}")
+    additionalRuntimeClasspath("li.cil.repack:OC-LuaJ:${luaj_version}")
+    additionalRuntimeClasspath("li.cil.repack:OC-JNLua-Natives:${jnlua_natives_version}")
+}
+
+// Merge OC-JNLua classes into the mod's build output so LuaState is in the same
+// classloader as the code calling System.load() (required for JNI resolution).
+def jnluaConfig = configurations.create('jnlua') {
+    canBeResolved = true
+    canBeConsumed = false
+}
+dependencies {
+    jnlua("li.cil.repack:OC-JNLua:${jnlua_version}")
+}
+def extractJNLua = tasks.register('extractJNLua', Copy) {
+    from({ jnluaConfig.collect { zipTree(it) } }) {
+        exclude 'META-INF/**'
+    }
+    into layout.buildDirectory.dir('classes/java/main')
+}
+tasks.named('compileJava', JavaCompile) {
+    dependsOn(configurations.commonJava)
+    source(configurations.commonJava)
+    finalizedBy(extractJNLua)
+}
+tasks.named('classes') {
+    dependsOn(extractJNLua)
+}
+
+processResources {
+    dependsOn(configurations.commonResources)
+    from(configurations.commonResources)
+    filesMatching("application.conf") {
+        filter { line ->
+            line.replace("@version@", project.findProperty("mod_version") ?: "0.0.0")
+        }
+    }
+}
+
+var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
+    var replaceProperties = [
+            minecraft_version      : minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            neo_version            : neo_version,
+            neo_version_range       : neo_version_range,
+            loader_version_range   : loader_version_range,
+            mod_id                 : mod_id,
+            mod_name               : mod_name,
+            mod_license            : mod_license,
+            mod_version            : mod_version,
+    ]
+    inputs.properties replaceProperties
+    expand replaceProperties
+    from "src/main/templates"
+    into "build/generated/sources/modMetadata"
+}
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
+
+publishing {
+    publications {
+        register('mavenJava', MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            url = "file://${project.projectDir}/repo"
+        }
+    }
+}

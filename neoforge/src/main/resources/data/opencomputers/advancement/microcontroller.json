@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "opencomputers:microcontroller"
+    },
+    "title": {
+      "translate": "achievement.opencomputers.microcontroller"
+    },
+    "description": {
+      "translate": "achievement.opencomputers.microcontroller.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "manual": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "manual"
+    ]
+  ],
+  "parent": "opencomputers:assembler"
+}

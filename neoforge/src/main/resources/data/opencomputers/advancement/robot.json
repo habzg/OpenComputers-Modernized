@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "opencomputers:robot"
+    },
+    "title": {
+      "translate": "achievement.opencomputers.robot"
+    },
+    "description": {
+      "translate": "achievement.opencomputers.robot.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "manual": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "manual"
+    ]
+  ],
+  "parent": "opencomputers:assembler"
+}

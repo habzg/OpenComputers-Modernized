@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    " C "
+  ],
+  "key": {
+    "A": {
+      "item": "opencomputers:chip1"
+    },
+    "B": {
+      "item": "opencomputers:chip2"
+    },
+    "C": {
+      "item": "opencomputers:printedcircuitboard"
+    }
+  },
+  "result": {
+    "id": "opencomputers:ram2",
+    "count": 1
+  }
+}

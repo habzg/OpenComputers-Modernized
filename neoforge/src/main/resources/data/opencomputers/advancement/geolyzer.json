@@ -1,0 +1,31 @@
+{
+  "display": {
+    "icon": {
+      "id": "opencomputers:geolyzer"
+    },
+    "title": {
+      "translate": "achievement.opencomputers.geolyzer"
+    },
+    "description": {
+      "translate": "achievement.opencomputers.geolyzer.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "craft_geolyzer": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:geolyzer"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "craft_geolyzer"
+    ]
+  ],
+  "parent": "opencomputers:cpu"
+}

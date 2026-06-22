@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "opencomputers:floppy"
+    }
+  ],
+  "result": {
+    "id": "opencomputers:floppy",
+    "count": 1
+  },
+  "category": "misc"
+}

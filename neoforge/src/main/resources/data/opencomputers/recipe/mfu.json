@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "CDC",
+    "ABA"
+  ],
+  "key": {
+    "A": {
+      "item": "opencomputers:chamelium"
+    },
+    "B": {
+      "tag": "c:gems/lapis"
+    },
+    "C": {
+      "item": "opencomputers:linkedcard"
+    },
+    "D": {
+      "item": "opencomputers:adapter"
+    }
+  },
+  "result": {
+    "id": "opencomputers:mfu",
+    "count": 1
+  }
+}

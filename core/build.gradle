@@ -1,0 +1,36 @@
+plugins {
+    id 'net.neoforged.moddev'
+    id 'java-library'
+}
+
+base {
+    archivesName = mod_id + "-core-1.21.1"
+}
+
+neoForge {
+    version = neo_version
+}
+
+configurations {
+    commonJava {
+        canBeResolved = false
+        canBeConsumed = true
+    }
+    commonResources {
+        canBeResolved = false
+        canBeConsumed = true
+    }
+}
+
+artifacts {
+    commonJava sourceSets.main.java.sourceDirectories.singleFile
+    commonResources sourceSets.main.resources.sourceDirectories.singleFile
+}
+
+dependencies {
+    implementation(project(':api'))
+    implementation(project(':core-api'))
+    implementation("com.typesafe:config:${typesafe_config_version}")
+    implementation("li.cil.repack:OC-LuaJ:${luaj_version}")
+    compileOnly("li.cil.repack:OC-JNLua:${jnlua_version}")
+}

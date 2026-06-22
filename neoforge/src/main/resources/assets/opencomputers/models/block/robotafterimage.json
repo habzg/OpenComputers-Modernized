@@ -1,0 +1,43 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "all": "opencomputers:block/geolyzer_top",
+    "particle": "opencomputers:block/geolyzer_top",
+    "itemRobot": "opencomputers:item/robot",
+    "itemDrone": "opencomputers:item/drone"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        16,
+        16
+      ],
+      "faces": {
+        "down": {
+          "texture": "#all"
+        },
+        "up": {
+          "texture": "#all"
+        },
+        "north": {
+          "texture": "#all"
+        },
+        "south": {
+          "texture": "#all"
+        },
+        "west": {
+          "texture": "#all"
+        },
+        "east": {
+          "texture": "#all"
+        }
+      }
+    }
+  ]
+}

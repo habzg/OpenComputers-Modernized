@@ -1,0 +1,45 @@
+{
+  "display": {
+    "icon": {
+      "id": "opencomputers:cpu1"
+    },
+    "title": {
+      "translate": "achievement.opencomputers.cpu"
+    },
+    "description": {
+      "translate": "achievement.opencomputers.cpu.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "craft_cpu1": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:cpu1"
+      }
+    },
+    "craft_cpu2": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:cpu2"
+      }
+    },
+    "craft_cpu3": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:cpu3"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "craft_cpu1",
+      "craft_cpu2",
+      "craft_cpu3"
+    ]
+  ],
+  "parent": "opencomputers:chip"
+}

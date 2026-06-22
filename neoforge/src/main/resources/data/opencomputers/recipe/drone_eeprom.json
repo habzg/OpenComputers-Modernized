@@ -1,0 +1,15 @@
+{
+  "type": "opencomputers:shapeless",
+  "ingredients": [
+    {
+      "item": "opencomputers:drone"
+    },
+    {
+      "item": "opencomputers:eeprom"
+    }
+  ],
+  "result": {
+    "id": "opencomputers:drone"
+  },
+  "category": "misc"
+}

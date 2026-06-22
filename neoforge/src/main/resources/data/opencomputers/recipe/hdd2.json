@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABC",
+    "DBE",
+    "ABC"
+  ],
+  "key": {
+    "A": {
+      "item": "opencomputers:chip2"
+    },
+    "B": {
+      "item": "opencomputers:disk"
+    },
+    "C": {
+      "tag": "c:ingots/gold"
+    },
+    "D": {
+      "item": "opencomputers:printedcircuitboard"
+    },
+    "E": {
+      "tag": "opencomputers:crafting_piston"
+    }
+  },
+  "result": {
+    "id": "opencomputers:hdd2",
+    "count": 1
+  }
+}

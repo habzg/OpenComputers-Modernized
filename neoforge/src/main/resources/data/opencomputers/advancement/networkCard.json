@@ -1,0 +1,31 @@
+{
+  "display": {
+    "icon": {
+      "id": "opencomputers:lancard"
+    },
+    "title": {
+      "translate": "achievement.opencomputers.networkcard"
+    },
+    "description": {
+      "translate": "achievement.opencomputers.networkcard.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "craft_lancard": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:lancard"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "craft_lancard"
+    ]
+  ],
+  "parent": "opencomputers:card"
+}

@@ -1,0 +1,9 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "bottom": "opencomputers:block/generic_top",
+    "top": "opencomputers:block/generic_top",
+    "side": "opencomputers:block/generic_side",
+    "particle": "opencomputers:block/generic_side"
+  }
+}

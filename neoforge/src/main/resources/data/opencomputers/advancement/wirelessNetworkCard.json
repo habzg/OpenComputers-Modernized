@@ -1,0 +1,38 @@
+{
+  "display": {
+    "icon": {
+      "id": "opencomputers:wlancard1"
+    },
+    "title": {
+      "translate": "achievement.opencomputers.wirelessnetworkcard"
+    },
+    "description": {
+      "translate": "achievement.opencomputers.wirelessnetworkcard.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "craft_wlancard1": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:wlancard1"
+      }
+    },
+    "craft_wlancard2": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:wlancard2"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "craft_wlancard1",
+      "craft_wlancard2"
+    ]
+  ],
+  "parent": "opencomputers:networkcard"
+}

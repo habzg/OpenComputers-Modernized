@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "CDE",
+    "AFA"
+  ],
+  "key": {
+    "A": {
+      "tag": "c:nuggets/iron"
+    },
+    "B": {
+      "item": "opencomputers:solargeneratorupgrade"
+    },
+    "C": {
+      "item": "opencomputers:chip3"
+    },
+    "D": {
+      "item": "opencomputers:screen2"
+    },
+    "E": {
+      "item": "opencomputers:wlancard2"
+    },
+    "F": {
+      "item": "opencomputers:keyboard"
+    }
+  },
+  "result": {
+    "id": "opencomputers:terminal",
+    "count": 1
+  }
+}

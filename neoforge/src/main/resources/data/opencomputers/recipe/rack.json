@@ -1,0 +1,35 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "CDC",
+    "EFG"
+  ],
+  "key": {
+    "A": {
+      "tag": "c:gems/diamond"
+    },
+    "B": {
+      "item": "opencomputers:wlancard2"
+    },
+    "C": {
+      "item": "minecraft:iron_bars"
+    },
+    "D": {
+      "tag": "c:chests"
+    },
+    "E": {
+      "item": "opencomputers:relay"
+    },
+    "F": {
+      "item": "opencomputers:printedcircuitboard"
+    },
+    "G": {
+      "item": "opencomputers:powerdistributor"
+    }
+  },
+  "result": {
+    "id": "opencomputers:rack",
+    "count": 1
+  }
+}

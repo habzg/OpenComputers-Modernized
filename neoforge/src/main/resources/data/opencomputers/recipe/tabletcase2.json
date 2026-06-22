@@ -1,0 +1,35 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABC",
+    "DEF",
+    "AGC"
+  ],
+  "key": {
+    "A": {
+      "item": "opencomputers:chip2"
+    },
+    "B": {
+      "tag": "minecraft:buttons"
+    },
+    "C": {
+      "tag": "c:ingots/gold"
+    },
+    "D": {
+      "item": "opencomputers:componentbus3"
+    },
+    "E": {
+      "item": "opencomputers:screen2"
+    },
+    "F": {
+      "item": "opencomputers:chip3"
+    },
+    "G": {
+      "item": "opencomputers:printedcircuitboard"
+    }
+  },
+  "result": {
+    "id": "opencomputers:tabletcase2",
+    "count": 1
+  }
+}

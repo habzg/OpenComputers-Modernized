@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "CDC",
+    "AEA"
+  ],
+  "key": {
+    "A": {
+      "item": "opencomputers:endstone"
+    },
+    "B": {
+      "item": "minecraft:compass"
+    },
+    "C": {
+      "item": "opencomputers:chip1"
+    },
+    "D": {
+      "item": "opencomputers:microcontrollercase1"
+    },
+    "E": {
+      "item": "opencomputers:componentbus2"
+    }
+  },
+  "result": {
+    "id": "opencomputers:dronecase1",
+    "count": 1
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "CDC",
+    "AEA"
+  ],
+  "key": {
+    "A": {
+      "tag": "c:ingots/gold"
+    },
+    "B": {
+      "item": "minecraft:compass"
+    },
+    "C": {
+      "item": "opencomputers:chip2"
+    },
+    "D": {
+      "item": "minecraft:filled_map"
+    },
+    "E": {
+      "item": "minecraft:potion"
+    }
+  },
+  "result": {
+    "id": "opencomputers:navigationupgrade",
+    "count": 1
+  }
+}

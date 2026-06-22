@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "CDC",
+    "AEA"
+  ],
+  "key": {
+    "A": {
+      "tag": "c:nuggets/iron"
+    },
+    "B": {
+      "item": "opencomputers:hoverupgrade2"
+    },
+    "C": {
+      "item": "minecraft:leather"
+    },
+    "D": {
+      "item": "opencomputers:dronecase1"
+    },
+    "E": {
+      "item": "opencomputers:capacitor"
+    }
+  },
+  "result": {
+    "id": "opencomputers:hoverboots",
+    "count": 1
+  }
+}

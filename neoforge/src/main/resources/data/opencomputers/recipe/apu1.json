@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "CDE",
+    "ABA"
+  ],
+  "key": {
+    "A": {
+      "tag": "c:nuggets/gold"
+    },
+    "B": {
+      "item": "opencomputers:chip1"
+    },
+    "C": {
+      "item": "opencomputers:cpu2"
+    },
+    "D": {
+      "item": "opencomputers:componentbus1"
+    },
+    "E": {
+      "item": "opencomputers:graphicscard1"
+    }
+  },
+  "result": {
+    "id": "opencomputers:apu1",
+    "count": 1
+  }
+}

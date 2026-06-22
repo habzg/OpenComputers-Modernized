@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "CDC",
+    "AEA"
+  ],
+  "key": {
+    "A": {
+      "tag": "c:ingots/iron"
+    },
+    "B": {
+      "tag": "opencomputers:crafting_piston"
+    },
+    "C": {
+      "tag": "c:rods/wooden"
+    },
+    "D": {
+      "item": "opencomputers:chip1"
+    },
+    "E": {
+      "item": "opencomputers:printedcircuitboard"
+    }
+  },
+  "result": {
+    "id": "opencomputers:pistonupgrade",
+    "count": 1
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "parent": "block/cube_all",
+  "textures": {
+    "all": "opencomputers:block/generic_top",
+    "particle": "opencomputers:block/generic_top"
+  }
+}

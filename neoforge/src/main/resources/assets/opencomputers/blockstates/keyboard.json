@@ -1,0 +1,27 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "opencomputers:block/keyboard"
+    },
+    "facing=south": {
+      "model": "opencomputers:block/keyboard",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "opencomputers:block/keyboard",
+      "y": 270
+    },
+    "facing=east": {
+      "model": "opencomputers:block/keyboard",
+      "y": 90
+    },
+    "facing=up": {
+      "model": "opencomputers:block/keyboard",
+      "x": -90
+    },
+    "facing=down": {
+      "model": "opencomputers:block/keyboard",
+      "x": 90
+    }
+  }
+}

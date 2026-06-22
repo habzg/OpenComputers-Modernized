@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "CDE",
+    "AFA"
+  ],
+  "key": {
+    "A": {
+      "tag": "minecraft:planks"
+    },
+    "B": {
+      "item": "minecraft:hopper"
+    },
+    "C": {
+      "item": "minecraft:dropper"
+    },
+    "D": {
+      "tag": "c:chests"
+    },
+    "E": {
+      "tag": "opencomputers:crafting_piston"
+    },
+    "F": {
+      "item": "opencomputers:chip1"
+    }
+  },
+  "result": {
+    "id": "opencomputers:inventoryupgrade",
+    "count": 1
+  }
+}

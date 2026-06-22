@@ -1,0 +1,10 @@
+{
+  "opencomputers:wthit_plugin": {
+    "entrypoints": {
+      "common": "li.cil.oc.neoforge.integration.wthit.OCWthitCommonPlugin",
+      "client": "li.cil.oc.neoforge.integration.wthit.OCWthitClientPlugin"
+    },
+    "side": "*",
+    "required": []
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "display": {
+    "icon": {
+      "id": "opencomputers:case1"
+    },
+    "title": {
+      "translate": "achievement.opencomputers.opencomputers"
+    },
+    "description": {
+      "translate": "achievement.opencomputers.opencomputers.desc"
+    },
+    "frame": "task",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "hidden": false,
+    "background": "minecraft:textures/gui/advancements/backgrounds/stone.png"
+  },
+  "criteria": {
+    "auto": {
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "auto"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

@@ -2,8 +2,6 @@
 .settings
 /.idea/
 /.vscode/
-/run/
-/build/
 /eclipse/
 .classpath
 .project
@@ -36,3 +34,10 @@ addon.local.gradle.kts
 addon.late.local.gradle
 addon.late.local.gradle.kts
 layout.json
+**/run/
+**/build/
+/build/
+
+# shhh...
+opencode.json
+.opencode

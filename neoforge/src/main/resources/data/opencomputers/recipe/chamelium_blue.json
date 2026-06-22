@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "opencomputers:chameliumblock"
+    },
+    {
+      "tag": "c:dyes/blue"
+    }
+  ],
+  "result": {
+    "id": "opencomputers:chameliumblock",
+    "components": {
+      "minecraft:dyed_color": {
+        "rgb": 255,
+        "show_in_tooltip": false
+      }
+    }
+  }
+}

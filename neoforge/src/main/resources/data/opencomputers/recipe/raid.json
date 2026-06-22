@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "CDC",
+    "AEA"
+  ],
+  "key": {
+    "A": {
+      "tag": "c:nuggets/iron"
+    },
+    "B": {
+      "item": "opencomputers:cpu3"
+    },
+    "C": {
+      "item": "opencomputers:ram1"
+    },
+    "D": {
+      "item": "opencomputers:diskdrive"
+    },
+    "E": {
+      "item": "opencomputers:chip2"
+    }
+  },
+  "result": {
+    "id": "opencomputers:raid",
+    "count": 1
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "display": {
+    "icon": {
+      "id": "opencomputers:ram1"
+    },
+    "title": {
+      "translate": "achievement.opencomputers.ram"
+    },
+    "description": {
+      "translate": "achievement.opencomputers.ram.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "craft_ram1": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:ram1"
+      }
+    },
+    "craft_ram2": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:ram2"
+      }
+    },
+    "craft_ram3": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:ram3"
+      }
+    },
+    "craft_ram4": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:ram4"
+      }
+    },
+    "craft_ram5": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:ram5"
+      }
+    },
+    "craft_ram6": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:ram6"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "craft_ram1",
+      "craft_ram2",
+      "craft_ram3",
+      "craft_ram4",
+      "craft_ram5",
+      "craft_ram6"
+    ]
+  ],
+  "parent": "opencomputers:chip"
+}

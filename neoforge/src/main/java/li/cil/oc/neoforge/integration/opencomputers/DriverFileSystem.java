@@ -1,0 +1,167 @@
+package li.cil.oc.neoforge.integration.opencomputers;
+
+import li.cil.oc.api.network.EnvironmentHost;
+import li.cil.oc.core.Constants;
+import li.cil.oc.core.common.Slot;
+import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.common.item.data.DriveData;
+import li.cil.oc.core.impl.server.component.Drive;
+import li.cil.oc.core.impl.server.fs.FileSystem.ItemLabel;
+import li.cil.oc.core.impl.server.fs.FileSystem.ReadOnlyLabel;
+import li.cil.oc.neoforge.OpenComputers;
+import li.cil.oc.neoforge.common.Loot;
+import li.cil.oc.neoforge.common.item.FloppyDisk;
+import li.cil.oc.neoforge.common.item.HardDiskDrive;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
+
+
+import java.util.regex.Pattern;
+
+@SuppressWarnings("unused")
+public final class DriverFileSystem extends Item {
+    private static final Pattern UUIDVerifier = Pattern.compile("^([0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12})$");
+
+    @Override
+    public boolean worksWith(ItemStack stack) {
+        return isOneOf(stack,
+                li.cil.oc.api.Items.get(Constants.ItemName.HDDTier1),
+                li.cil.oc.api.Items.get(Constants.ItemName.HDDTier2),
+                li.cil.oc.api.Items.get(Constants.ItemName.HDDTier3),
+                li.cil.oc.api.Items.get(Constants.ItemName.Floppy));
+    }
+
+    @Override
+    public li.cil.oc.api.network.ManagedEnvironment createEnvironment(ItemStack stack, EnvironmentHost host) {
+        if (host.level() != null && host.level().isClientSide()) return null;
+        var subItem = stack.getItem();
+        if (subItem instanceof HardDiskDrive hdd) {
+            return createEnvironment(stack, hdd.kiloBytes() * 1024, hdd.platterCount(), host, hdd.tier() + 2);
+        } else if (subItem instanceof FloppyDisk disk) {
+            return createEnvironment(stack, Settings.get().floppySize * 1024, 1, host, 1);
+        }
+        return null;
+    }
+
+    @Override
+    public String slot(ItemStack stack) {
+        var subItem = stack.getItem();
+        if (subItem instanceof HardDiskDrive) {
+            return Slot.HDD;
+        } else if (subItem instanceof FloppyDisk) {
+            return Slot.Floppy;
+        }
+        throw new IllegalArgumentException();
+    }
+
+    @Override
+    public int tier(ItemStack stack) {
+        var subItem = stack.getItem();
+        if (subItem instanceof HardDiskDrive hdd) {
+            return hdd.tier();
+        }
+        return 0;
+    }
+
+    private li.cil.oc.api.network.ManagedEnvironment createEnvironment(ItemStack stack, int capacity, int platterCount, EnvironmentHost host, int speed) {
+        CustomData cd = stack.get(DataComponents.CUSTOM_DATA);
+        if (cd != null && !cd.isEmpty() && cd.copyTag().contains(Settings.namespace + "lootFactory")) {
+            String factoryKey = cd.copyTag().getString(Settings.namespace + "lootFactory");
+            java.util.concurrent.Callable<li.cil.oc.api.fs.FileSystem> factory = Loot.factories.get(factoryKey);
+            if (factory != null) {
+                String label = getTag(stack).contains(Settings.namespace + "fs.label")
+                        ? getTag(stack).getString(Settings.namespace + "fs.label") : null;
+                try {
+                    var fs = factory.call();
+                    if (fs == null) {
+                        OpenComputers.log().warn("Loot factory '{}' returned null filesystem.", factoryKey);
+                    }
+                    return li.cil.oc.api.FileSystem.asManagedEnvironment(fs, label, host, Settings.resourceDomain + ":floppy_access");
+                } catch (Exception e) {
+                    OpenComputers.log().warn("Loot factory '{}' threw an exception.", factoryKey, e);
+                    return null;
+                }
+            }
+            return null;
+        } else {
+            String address = addressFromTag(getTag(stack));
+            li.cil.oc.api.fs.Label label = new ReadWriteItemLabel();
+            boolean isFloppy = li.cil.oc.api.Items.get(stack) == li.cil.oc.api.Items.get(Constants.ItemName.Floppy);
+            String sound = Settings.resourceDomain + ":" + (isFloppy ? "floppy_access" : "hdd_access");
+            DriveData drive = new DriveData(stack);
+            li.cil.oc.api.network.ManagedEnvironment environment;
+            if (drive.isUnmanaged) {
+                environment = new Drive(Math.max(capacity, 0), platterCount, label, host, sound, speed, drive.isLocked());
+            } else {
+                li.cil.oc.api.fs.FileSystem fs = li.cil.oc.api.FileSystem.fromSaveDirectory(address, Math.max(capacity, 0), Settings.get().bufferChanges);
+                if (drive.isLocked()) {
+                    fs = li.cil.oc.api.FileSystem.asReadOnly(fs);
+                    label = new ReadOnlyLabel(label.getLabel());
+                }
+                environment = li.cil.oc.api.FileSystem.asManagedEnvironment(fs, label, host, sound, speed);
+            }
+            if (environment != null && environment.node() != null) {
+                ((li.cil.oc.core.impl.server.network.Node) environment.node()).address_$eq(address);
+            }
+            return environment;
+        }
+    }
+
+    private String addressFromTag(CompoundTag tag) {
+        if (tag.contains("node") && tag.getCompound("node").contains("address")) {
+            String address = tag.getCompound("node").getString("address");
+            if (UUIDVerifier.matcher(address).matches()) {
+                return address;
+            } else {
+                String newAddress = java.util.UUID.randomUUID().toString();
+                tag.getCompound("node").putString("address", newAddress);
+                OpenComputers.log().warn("Generated new address for disk '{}'.", newAddress);
+                return newAddress;
+            }
+        }
+        return java.util.UUID.randomUUID().toString();
+    }
+
+    private CompoundTag getTag(ItemStack stack) {
+        CustomData cd = stack.get(DataComponents.CUSTOM_DATA);
+        if (cd != null && !cd.isEmpty()) {
+            CompoundTag nbt = cd.copyTag();
+            if (nbt.contains(Settings.namespace + "data")) {
+                return nbt.getCompound(Settings.namespace + "data");
+            }
+            return nbt;
+        }
+        return new CompoundTag();
+    }
+
+    private static class ReadWriteItemLabel extends ItemLabel {
+        private String label;
+
+        @Override
+        public String getLabel() {
+            return label;
+        }
+
+        public void setLabel(String value) {
+            if (value != null && value.length() > 16) {
+                label = value.substring(0, 16);
+            } else {
+                label = value;
+            }
+        }
+
+        @Override
+        public void load(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider provider) {
+            if (nbt.contains(Settings.namespace + "fs.label")) {
+                label = nbt.getString(Settings.namespace + "fs.label");
+            }
+        }
+
+        @Override
+        public void save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider provider) {
+            if (label != null) nbt.putString(Settings.namespace + "fs.label", label);
+        }
+    }
+}

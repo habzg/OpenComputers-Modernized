@@ -1,0 +1,12 @@
+{
+  "type": "opencomputers:openos",
+  "ingredients": [
+    {
+      "item": "opencomputers:manual"
+    },
+    {
+      "item": "opencomputers:floppy"
+    }
+  ],
+  "category": "misc"
+}

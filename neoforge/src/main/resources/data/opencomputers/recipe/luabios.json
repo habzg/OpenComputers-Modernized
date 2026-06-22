@@ -1,0 +1,12 @@
+{
+  "type": "opencomputers:luabios",
+  "ingredients": [
+    {
+      "item": "opencomputers:eeprom"
+    },
+    {
+      "item": "opencomputers:manual"
+    }
+  ],
+  "category": "misc"
+}

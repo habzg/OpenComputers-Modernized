@@ -1,0 +1,20 @@
+{
+  "type": "opencomputers:shapeless",
+  "ingredients": [
+    [
+      {
+        "item": "opencomputers:print"
+      },
+      {
+        "item": "opencomputers:beaconbaseprint"
+      }
+    ],
+    {
+      "item": "minecraft:glowstone"
+    }
+  ],
+  "result": {
+    "id": "opencomputers:print"
+  },
+  "category": "misc"
+}

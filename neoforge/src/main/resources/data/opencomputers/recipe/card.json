@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "A  ",
+    "AB ",
+    "AC "
+  ],
+  "key": {
+    "A": {
+      "tag": "c:nuggets/iron"
+    },
+    "B": {
+      "item": "opencomputers:printedcircuitboard"
+    },
+    "C": {
+      "tag": "c:nuggets/gold"
+    }
+  },
+  "result": {
+    "id": "opencomputers:card",
+    "count": 1
+  }
+}

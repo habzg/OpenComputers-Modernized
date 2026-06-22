@@ -1,0 +1,38 @@
+{
+  "display": {
+    "icon": {
+      "id": "opencomputers:redstonecard1"
+    },
+    "title": {
+      "translate": "achievement.opencomputers.redstonecard"
+    },
+    "description": {
+      "translate": "achievement.opencomputers.redstonecard.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "craft_redstonecard1": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:redstonecard1"
+      }
+    },
+    "craft_redstonecard2": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:redstonecard2"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "craft_redstonecard1",
+      "craft_redstonecard2"
+    ]
+  ],
+  "parent": "opencomputers:card"
+}

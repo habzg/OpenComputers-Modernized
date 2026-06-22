@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "AAA",
+    "AAA",
+    "AAA"
+  ],
+  "key": {
+    "A": {
+      "item": "opencomputers:chamelium"
+    }
+  },
+  "result": {
+    "id": "opencomputers:chameliumblock",
+    "count": 1
+  }
+}

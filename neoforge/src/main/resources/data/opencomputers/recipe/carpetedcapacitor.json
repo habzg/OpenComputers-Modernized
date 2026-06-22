@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "tag": "minecraft:wool_carpets"
+    },
+    {
+      "item": "opencomputers:capacitor"
+    }
+  ],
+  "result": {
+    "id": "opencomputers:carpetedcapacitor",
+    "count": 1
+  }
+}

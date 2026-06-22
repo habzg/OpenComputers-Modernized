@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABC",
+    " D "
+  ],
+  "key": {
+    "A": {
+      "item": "opencomputers:chipdiamond"
+    },
+    "B": {
+      "item": "opencomputers:cpu2"
+    },
+    "C": {
+      "item": "opencomputers:ram5"
+    },
+    "D": {
+      "item": "opencomputers:card"
+    }
+  },
+  "result": {
+    "id": "opencomputers:datacard3",
+    "count": 1
+  }
+}

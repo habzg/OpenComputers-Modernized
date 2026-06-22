@@ -1,0 +1,53 @@
+plugins {
+    id 'java-library'
+}
+
+base {
+    archivesName = mod_id + "-core-api"
+}
+
+var tagsDir = layout.buildDirectory.dir("generated/sources/tags/java/main")
+var generateTags = tasks.register("generateTags", Sync) {
+    from "src/main/templates"
+    into tagsDir
+    expand(mod_version: mod_version)
+    filteringCharset = "UTF-8"
+}
+
+sourceSets.main.java.srcDir(tagsDir)
+tasks.named('compileJava') {
+    dependsOn(generateTags)
+}
+
+configurations {
+    commonJava {
+        canBeResolved = false
+        canBeConsumed = true
+    }
+    commonResources {
+        canBeResolved = false
+        canBeConsumed = true
+    }
+}
+
+sourceSets.main.java.srcDirs.each { dir ->
+    artifacts.add('commonJava', dir)
+}
+artifacts {
+    commonResources sourceSets.main.resources.sourceDirectories.singleFile
+}
+
+dependencies {
+    api project(':api')
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+tasks.configureEach { task ->
+    if (task.name == 'sourcesJar') {
+        task.dependsOn(generateTags)
+    }
+}

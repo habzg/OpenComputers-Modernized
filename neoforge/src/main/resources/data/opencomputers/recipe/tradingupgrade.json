@@ -1,0 +1,35 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "CDC",
+    "EFG"
+  ],
+  "key": {
+    "A": {
+      "tag": "c:ingots/gold"
+    },
+    "B": {
+      "tag": "c:chests"
+    },
+    "C": {
+      "item": "minecraft:emerald"
+    },
+    "D": {
+      "item": "opencomputers:chip2"
+    },
+    "E": {
+      "item": "minecraft:dropper"
+    },
+    "F": {
+      "item": "opencomputers:printedcircuitboard"
+    },
+    "G": {
+      "tag": "opencomputers:crafting_piston"
+    }
+  },
+  "result": {
+    "id": "opencomputers:tradingupgrade",
+    "count": 1
+  }
+}

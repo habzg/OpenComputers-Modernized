@@ -1,0 +1,9 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "opencomputers:loot_recrafting"
+    }
+  ],
+  "type": "opencomputers:loot_disk_cycling",
+  "category": "misc"
+}

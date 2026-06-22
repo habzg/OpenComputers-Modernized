@@ -1,0 +1,45 @@
+{
+  "display": {
+    "icon": {
+      "id": "opencomputers:screen1"
+    },
+    "title": {
+      "translate": "achievement.opencomputers.screen"
+    },
+    "description": {
+      "translate": "achievement.opencomputers.screen.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "craft_screen1": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:screen1"
+      }
+    },
+    "craft_screen2": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:screen2"
+      }
+    },
+    "craft_screen3": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:screen3"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "craft_screen1",
+      "craft_screen2",
+      "craft_screen3"
+    ]
+  ],
+  "parent": "opencomputers:chip"
+}

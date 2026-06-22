@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "BCD",
+    "ABA"
+  ],
+  "key": {
+    "A": {
+      "item": "minecraft:obsidian"
+    },
+    "B": {
+      "item": "minecraft:glowstone_dust"
+    },
+    "C": {
+      "item": "opencomputers:chip3"
+    },
+    "D": {
+      "tag": "c:glass_blocks"
+    }
+  },
+  "result": {
+    "id": "opencomputers:screen3",
+    "count": 1
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "AAA",
+    "AAA"
+  ],
+  "key": {
+    "A": {
+      "item": "minecraft:stone_button"
+    }
+  },
+  "result": {
+    "id": "opencomputers:buttongroup",
+    "count": 1
+  }
+}

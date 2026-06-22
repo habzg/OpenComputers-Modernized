@@ -1,0 +1,31 @@
+{
+  "display": {
+    "icon": {
+      "id": "opencomputers:redstone"
+    },
+    "title": {
+      "translate": "achievement.opencomputers.redstoneio"
+    },
+    "description": {
+      "translate": "achievement.opencomputers.redstoneio.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "craft_redstone": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:redstone"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "craft_redstone"
+    ]
+  ],
+  "parent": "opencomputers:cpu"
+}

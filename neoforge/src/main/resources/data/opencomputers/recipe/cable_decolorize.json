@@ -1,0 +1,5 @@
+{
+  "type": "opencomputers:decolorize",
+  "target": "opencomputers:cable",
+  "category": "misc"
+}

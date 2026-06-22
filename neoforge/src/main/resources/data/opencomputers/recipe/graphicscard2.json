@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABC",
+    " D "
+  ],
+  "key": {
+    "A": {
+      "item": "opencomputers:chip2"
+    },
+    "B": {
+      "item": "opencomputers:alu"
+    },
+    "C": {
+      "item": "opencomputers:ram3"
+    },
+    "D": {
+      "item": "opencomputers:card"
+    }
+  },
+  "result": {
+    "id": "opencomputers:graphicscard2",
+    "count": 1
+  }
+}

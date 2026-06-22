@@ -1,0 +1,45 @@
+{
+  "display": {
+    "icon": {
+      "id": "opencomputers:graphicscard1"
+    },
+    "title": {
+      "translate": "achievement.opencomputers.graphicscard"
+    },
+    "description": {
+      "translate": "achievement.opencomputers.graphicscard.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "craft_graphicscard1": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:graphicscard1"
+      }
+    },
+    "craft_graphicscard2": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:graphicscard2"
+      }
+    },
+    "craft_graphicscard3": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:graphicscard3"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "craft_graphicscard1",
+      "craft_graphicscard2",
+      "craft_graphicscard3"
+    ]
+  ],
+  "parent": "opencomputers:card"
+}

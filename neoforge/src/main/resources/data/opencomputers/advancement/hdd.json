@@ -1,0 +1,45 @@
+{
+  "display": {
+    "icon": {
+      "id": "opencomputers:hdd1"
+    },
+    "title": {
+      "translate": "achievement.opencomputers.hdd"
+    },
+    "description": {
+      "translate": "achievement.opencomputers.hdd.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "craft_hdd1": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:hdd1"
+      }
+    },
+    "craft_hdd2": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:hdd2"
+      }
+    },
+    "craft_hdd3": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:hdd3"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "craft_hdd1",
+      "craft_hdd2",
+      "craft_hdd3"
+    ]
+  ],
+  "parent": "opencomputers:chip"
+}

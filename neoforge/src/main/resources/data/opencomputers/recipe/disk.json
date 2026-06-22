@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " A ",
+    "A A",
+    " A "
+  ],
+  "key": {
+    "A": {
+      "tag": "c:nuggets/iron"
+    }
+  },
+  "result": {
+    "id": "opencomputers:disk",
+    "count": 1
+  }
+}

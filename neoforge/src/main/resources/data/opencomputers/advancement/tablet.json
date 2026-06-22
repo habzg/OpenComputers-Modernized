@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "opencomputers:tablet"
+    },
+    "title": {
+      "translate": "achievement.opencomputers.tablet"
+    },
+    "description": {
+      "translate": "achievement.opencomputers.tablet.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "manual": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "manual"
+    ]
+  ],
+  "parent": "opencomputers:assembler"
+}

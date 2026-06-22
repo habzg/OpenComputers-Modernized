@@ -1,0 +1,7 @@
+{
+  "textures": {
+    "particle": "opencomputers:block/cable",
+    "cable": "opencomputers:block/cable",
+    "cablecap": "opencomputers:block/cablecap"
+  }
+}

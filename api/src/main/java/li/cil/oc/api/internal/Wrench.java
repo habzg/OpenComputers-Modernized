@@ -1,0 +1,31 @@
+package li.cil.oc.api.internal;
+
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+
+/**
+ * Implemented on items that are wrench-like tools.
+ */
+public interface Wrench {
+    /**
+     * Called when the wrench is used.
+     * <br>
+     * This is called in two scenarios, once when testing whether the wrench
+     * can be used on a certain block, in which case the <code>simulate</code>
+     * argument will be <code>true</code>, and once when actually used on a block,
+     * in which case the <code>simulate</code> argument will be <code>false</code>,
+     * allowing the tool to damage itself, for example.
+     * <br>
+     * This is usually called from blocks' activation logic.
+     *
+     * @param player   the player using the tool
+     * @param Level    the Level containing the block the wrench is used on.
+     * @param x        the X coordinate of the block.
+     * @param y        the Y coordinate of the block.
+     * @param z        the Z coordinate of the block.
+     * @param simulate whether to simulate the usage.
+     * @return whether the wrench can be used on the block.
+     */
+    @SuppressWarnings({"SameReturnValue", "unused"})
+    boolean useWrenchOnBlock(Player player, Level Level, int x, int y, int z, boolean simulate);
+}

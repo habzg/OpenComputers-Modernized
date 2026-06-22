@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "opencomputers:drone"
+    },
+    "title": {
+      "translate": "achievement.opencomputers.drone"
+    },
+    "description": {
+      "translate": "achievement.opencomputers.drone.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "manual": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "manual"
+    ]
+  ],
+  "parent": "opencomputers:assembler"
+}

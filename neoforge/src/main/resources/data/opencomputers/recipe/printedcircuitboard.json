@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:smelting",
+  "ingredient": {
+    "item": "opencomputers:rawcircuitboard"
+  },
+  "result": {
+    "id": "opencomputers:printedcircuitboard"
+  },
+  "experience": 0.1,
+  "cookingtime": 200
+}

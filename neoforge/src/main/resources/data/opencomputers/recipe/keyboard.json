@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "AAA",
+    "ABC"
+  ],
+  "key": {
+    "A": {
+      "item": "opencomputers:buttongroup"
+    },
+    "B": {
+      "item": "opencomputers:arrowkeys"
+    },
+    "C": {
+      "item": "opencomputers:numpad"
+    }
+  },
+  "result": {
+    "id": "opencomputers:keyboard",
+    "count": 1
+  }
+}

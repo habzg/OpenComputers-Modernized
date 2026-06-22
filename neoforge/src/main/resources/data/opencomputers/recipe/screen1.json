@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "BCD",
+    "ABA"
+  ],
+  "key": {
+    "A": {
+      "tag": "c:ingots/iron"
+    },
+    "B": {
+      "item": "minecraft:redstone"
+    },
+    "C": {
+      "item": "opencomputers:chip1"
+    },
+    "D": {
+      "tag": "c:glass_blocks"
+    }
+  },
+  "result": {
+    "id": "opencomputers:screen1",
+    "count": 1
+  }
+}

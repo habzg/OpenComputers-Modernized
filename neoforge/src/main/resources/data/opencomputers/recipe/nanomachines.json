@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "CDE",
+    "AFA"
+  ],
+  "key": {
+    "A": {
+      "item": "opencomputers:chamelium"
+    },
+    "B": {
+      "item": "opencomputers:wlancard2"
+    },
+    "C": {
+      "item": "opencomputers:cpu2"
+    },
+    "D": {
+      "item": "opencomputers:acid"
+    },
+    "E": {
+      "item": "opencomputers:ram1"
+    },
+    "F": {
+      "item": "opencomputers:capacitor"
+    }
+  },
+  "result": {
+    "id": "opencomputers:nanomachines",
+    "count": 1
+  }
+}

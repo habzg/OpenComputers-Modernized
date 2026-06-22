@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "CD ",
+    "AEA"
+  ],
+  "key": {
+    "A": {
+      "tag": "c:ingots/gold"
+    },
+    "B": {
+      "item": "opencomputers:chip2"
+    },
+    "C": {
+      "tag": "opencomputers:crafting_piston"
+    },
+    "D": {
+      "tag": "c:chests"
+    },
+    "E": {
+      "item": "opencomputers:printedcircuitboard"
+    }
+  },
+  "result": {
+    "id": "opencomputers:upgradecontainer3",
+    "count": 1
+  }
+}

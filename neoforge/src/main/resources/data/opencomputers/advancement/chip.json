@@ -1,0 +1,45 @@
+{
+  "display": {
+    "icon": {
+      "id": "opencomputers:chip1"
+    },
+    "title": {
+      "translate": "achievement.opencomputers.chip"
+    },
+    "description": {
+      "translate": "achievement.opencomputers.chip.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "craft_chip1": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:chip1"
+      }
+    },
+    "craft_chip2": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:chip2"
+      }
+    },
+    "craft_chip3": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "opencomputers:chip3"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "craft_chip1",
+      "craft_chip2",
+      "craft_chip3"
+    ]
+  ],
+  "parent": "opencomputers:transistor"
+}

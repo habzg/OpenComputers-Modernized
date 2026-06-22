@@ -1,0 +1,42 @@
+{
+  "display": {
+    "icon": {
+      "id": "opencomputers:floppy"
+    },
+    "title": {
+      "translate": "achievement.opencomputers.openos"
+    },
+    "description": {
+      "translate": "achievement.opencomputers.openos.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "opencomputers:floppy",
+  "criteria": {
+    "has_openos": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "opencomputers:floppy"
+            ],
+            "components": {
+              "minecraft:custom_data": {
+                "oc:lootFactory": "opencomputers:openos"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_openos"
+    ]
+  ]
+}

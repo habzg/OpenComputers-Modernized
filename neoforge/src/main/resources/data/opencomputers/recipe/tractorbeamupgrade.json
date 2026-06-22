@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "CDC",
+    "AEA"
+  ],
+  "key": {
+    "A": {
+      "tag": "c:ingots/gold"
+    },
+    "B": {
+      "tag": "opencomputers:crafting_piston"
+    },
+    "C": {
+      "tag": "c:ingots/iron"
+    },
+    "D": {
+      "item": "opencomputers:capacitor"
+    },
+    "E": {
+      "item": "opencomputers:chip3"
+    }
+  },
+  "result": {
+    "id": "opencomputers:tractorbeamupgrade",
+    "count": 1
+  }
+}

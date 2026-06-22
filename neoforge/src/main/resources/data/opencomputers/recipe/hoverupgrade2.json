@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "CDC",
+    "AEA"
+  ],
+  "key": {
+    "A": {
+      "item": "opencomputers:endstone"
+    },
+    "B": {
+      "item": "opencomputers:chip2"
+    },
+    "C": {
+      "tag": "c:nuggets/gold"
+    },
+    "D": {
+      "tag": "c:ingots/iron"
+    },
+    "E": {
+      "item": "opencomputers:printedcircuitboard"
+    }
+  },
+  "result": {
+    "id": "opencomputers:hoverupgrade2",
+    "count": 1
+  }
+}

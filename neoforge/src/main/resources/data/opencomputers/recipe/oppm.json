@@ -1,0 +1,12 @@
+{
+  "type": "opencomputers:oppm",
+  "ingredients": [
+    {
+      "item": "opencomputers:floppy"
+    },
+    {
+      "item": "opencomputers:interweb"
+    }
+  ],
+  "category": "misc"
+}
