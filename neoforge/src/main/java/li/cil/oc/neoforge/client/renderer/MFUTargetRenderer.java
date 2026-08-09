@@ -8,10 +8,12 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import li.cil.oc.api.detail.ItemInfo;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.client.ClientDistanceHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 
@@ -31,13 +33,16 @@ public final class MFUTargetRenderer {
             var cd = stack.get(DataComponents.CUSTOM_DATA);
             if (cd != null && !cd.isEmpty()) {
                 var data = cd.copyTag();
-                if (data.contains(Settings.namespace + "coord", net.minecraft.nbt.Tag.TAG_INT_ARRAY)) {
-                    var coords = data.getIntArray(Settings.namespace + "coord");
+                if (data.contains(OCSettings.namespace + "coord", net.minecraft.nbt.Tag.TAG_INT_ARRAY)) {
+                    var coords = data.getIntArray(OCSettings.namespace + "coord");
                     if (coords.length < 5) return;
                     if (player.level().dimension().location().hashCode() != coords[3]) return;
                     int x = coords[0], y = coords[1], z = coords[2], side = coords[4];
 
-                    if (player.distanceToSqr(x, y, z) > 64 * 64) return;
+                    if (ClientDistanceHelper.distanceSquared(player.level(), x, y, z, player) > 64 * 64) return;
+
+                    var target = ClientDistanceHelper.project(player.level(), new Vec3(x, y, z));
+                    float tx = (float) target.x, ty = (float) target.y, tz = (float) target.z;
 
                     var camera = e.getCamera();
                     float px = (float) camera.getPosition().x;
@@ -56,12 +61,12 @@ public final class MFUTargetRenderer {
 
                         var tesselator = Tesselator.getInstance();
                         var builder = tesselator.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
-                        drawBoxOutline(builder, (float) (x - 0.1 - px), (float) (y - 0.1 - py), (float) (z - 0.1 - pz), (float) (x + 1.1 - px), (float) (y + 1.1 - py), (float) (z + 1.1 - pz), r, g, b, 0.5f);
+                        drawBoxOutline(builder, tx - 0.1f - px, ty - 0.1f - py, tz - 0.1f - pz, tx + 1.1f - px, ty + 1.1f - py, tz + 1.1f - pz, r, g, b, 0.5f);
                         var mesh1 = builder.build();
                         if (mesh1 != null) BufferUploader.drawWithShader(mesh1);
 
                         builder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-                        drawFace(builder, (float) (x - 0.1 - px), (float) (y - 0.1 - py), (float) (z - 0.1 - pz), (float) (x + 1.1 - px), (float) (y + 1.1 - py), (float) (z + 1.1 - pz), side, r, g, b, 0.5f);
+                        drawFace(builder, tx - 0.1f - px, ty - 0.1f - py, tz - 0.1f - pz, tx + 1.1f - px, ty + 1.1f - py, tz + 1.1f - pz, side, r, g, b, 0.5f);
                         var mesh2 = builder.build();
                         if (mesh2 != null) BufferUploader.drawWithShader(mesh2);
                     } finally {

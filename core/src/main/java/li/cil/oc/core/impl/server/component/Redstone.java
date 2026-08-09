@@ -1,15 +1,13 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.Map;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.common.tileentity.traits.BundledRedstoneAware;
+import li.cil.oc.core.impl.common.blockentity.traits.BundledRedstoneAware;
 import li.cil.oc.core.impl.integration.util.WirelessRedstone;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-
-
-import java.util.Map;
 
 public final class Redstone {
     private Redstone() {
@@ -98,6 +96,17 @@ public final class Redstone {
         }
 
         @Override
+        public boolean getWirelessInputValue() {
+            return wirelessInput;
+        }
+
+        @Override
+        public void setWirelessInputValue(boolean value) {
+            wirelessInput = value;
+            host.markChanged();
+        }
+
+        @Override
         public int getWirelessFrequencyValue() {
             return wirelessFrequency;
         }
@@ -173,6 +182,17 @@ public final class Redstone {
         @Override
         public void setWirelessOutputValue(boolean value) {
             wirelessOutput = value;
+        }
+
+        @Override
+        public boolean getWirelessInputValue() {
+            return wirelessInput;
+        }
+
+        @Override
+        public void setWirelessInputValue(boolean value) {
+            wirelessInput = value;
+            host.markChanged();
         }
 
         @Override
@@ -263,6 +283,17 @@ public final class Redstone {
         @Override
         public void setWirelessOutputValue(boolean value) {
             wirelessOutput = value;
+        }
+
+        @Override
+        public boolean getWirelessInputValue() {
+            return wirelessInput;
+        }
+
+        @Override
+        public void setWirelessInputValue(boolean value) {
+            wirelessInput = value;
+            host.markChanged();
         }
 
         @Override

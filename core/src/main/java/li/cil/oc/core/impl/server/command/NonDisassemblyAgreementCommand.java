@@ -1,6 +1,6 @@
 package li.cil.oc.core.impl.server.command;
 
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.command.SimpleCommand;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.component.DataComponents;
@@ -21,6 +21,10 @@ public class NonDisassemblyAgreementCommand extends SimpleCommand {
 
     @Override
     protected int execute(CommandSourceStack source, String[] args) {
+        if (source.getEntity() != null && !(source.getEntity() instanceof Player)) {
+            source.sendFailure(Component.literal("Can only be used by players."));
+            return 0;
+        }
         if (source.getEntity() instanceof Player player) {
             ItemStack stack = player.getMainHandItem();
             if (!stack.isEmpty()) {
@@ -28,11 +32,11 @@ public class NonDisassemblyAgreementCommand extends SimpleCommand {
                 CompoundTag nbt = _cd != null ? _cd.copyTag() : new CompoundTag();
                 boolean preventDisassembly = args.length > 0 ?
                         Boolean.parseBoolean(args[0]) :
-                        !nbt.getBoolean(Settings.namespace + "undisassemblable");
+                        !nbt.getBoolean(OCSettings.namespace + "undisassemblable");
                 if (preventDisassembly) {
-                    nbt.putBoolean(Settings.namespace + "undisassemblable", true);
+                    nbt.putBoolean(OCSettings.namespace + "undisassemblable", true);
                 } else {
-                    nbt.remove(Settings.namespace + "undisassemblable");
+                    nbt.remove(OCSettings.namespace + "undisassemblable");
                 }
                 if (nbt.isEmpty()) {
                     stack.set(DataComponents.CUSTOM_DATA, CustomData.EMPTY);

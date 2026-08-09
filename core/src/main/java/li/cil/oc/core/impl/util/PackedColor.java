@@ -1,7 +1,7 @@
 package li.cil.oc.core.impl.util;
 
 import li.cil.oc.api.Persistable;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 
@@ -86,7 +86,7 @@ public final class PackedColor {
     }
 
     public static class SingleBitFormat extends ColorFormat {
-        public static final SingleBitFormat INSTANCE = new SingleBitFormat(Settings.get().monochromeColor);
+        public static final SingleBitFormat INSTANCE = new SingleBitFormat(OCSettings.get().monochromeColor);
         public final int color;
 
         public SingleBitFormat(int color) {

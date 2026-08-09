@@ -1,7 +1,7 @@
 package li.cil.oc.neoforge.common.recipe;
 
 import com.mojang.serialization.MapCodec;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import net.neoforged.neoforge.common.conditions.ICondition;
 import org.jetbrains.annotations.NotNull;
 
@@ -15,7 +15,8 @@ public final class LootRecraftingCondition implements ICondition {
 
     @Override
     public boolean test(@NotNull IContext context) {
-        return Settings.get().lootRecrafting;
+        var settings = OCSettings.get();
+        return settings == null || settings.lootRecrafting;
     }
 
     @Override

@@ -1,12 +1,11 @@
 package li.cil.oc.core.impl.util;
 
-import li.cil.oc.core.impl.Settings;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.util.Set;
 import java.util.UUID;
+import li.cil.oc.core.impl.OCSettings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class FilePathUtil {
     private static final Logger LOGGER = LoggerFactory.getLogger(FilePathUtil.class);
@@ -22,7 +21,7 @@ public final class FilePathUtil {
 
     public static boolean isCaseInsensitive() {
         if (isCaseInsensitive_ == null) {
-            isCaseInsensitive_ = Settings.get().forceCaseInsensitive || checkCaseInsensitive();
+            isCaseInsensitive_ = OCSettings.get().forceCaseInsensitive || checkCaseInsensitive();
         }
         return isCaseInsensitive_;
     }

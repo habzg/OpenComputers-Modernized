@@ -15,7 +15,7 @@ package li.cil.oc.api.driver;
  * suppress inventory functionality if your BlockEntity implements Container.
  * <br>
  * To do so, implement this interface in the <em>environment</em> that you
- * return from your driver's {@link SidedBlock#createEnvironment(net.minecraft.world.level.Level, int, int, int, net.minecraft.core.Direction)}
+ * return from your driver's {@link DriverBlock#createEnvironment(net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.core.Direction)}
  * method, and provide the names of the allowed methods from {@link #whitelistedMethods()}.
  * <br>
  * <em>Important</em>: if multiple drivers apply to a single block that each

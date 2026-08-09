@@ -1,5 +1,6 @@
 package li.cil.oc.core.impl.server.machine.luaj;
 
+import java.util.Map;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Value;
 import li.cil.oc.core.impl.server.machine.ArgumentsImpl;
@@ -7,8 +8,6 @@ import li.cil.oc.core.util.ConverterRegistry;
 import li.cil.repack.org.luaj.vm2.LuaValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Map;
 
 public class UserdataAPI extends LuaJAPI {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserdataAPI.class);

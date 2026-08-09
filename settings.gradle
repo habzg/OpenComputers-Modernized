@@ -2,14 +2,15 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
         mavenCentral()
-        maven { url = "https://maven.neoforged.net/releases/" }
+        maven { url = "https://maven.fabricmc.net/" }
     }
 }
-
-
 
 rootProject.name = 'OpenComputers'
 include 'api'
 include 'core-api'
 include 'core'
 include 'neoforge'
+include 'fabric'
+include 'neoforge-api'
+include 'fabric-api'

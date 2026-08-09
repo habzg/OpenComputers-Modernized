@@ -1,20 +1,22 @@
 package li.cil.oc.neoforge.client.gui;
 
+import li.cil.oc.core.impl.client.gui.DynamicGuiContainer;
 import li.cil.oc.core.impl.common.item.TabletWrapper;
+import li.cil.oc.neoforge.common.init.Menus;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.entity.player.Inventory;
 
-public class Tablet extends DynamicGuiContainer<li.cil.oc.neoforge.common.container.Tablet> implements li.cil.oc.core.impl.client.gui.traits.LockedHotbar {
+public class Tablet extends DynamicGuiContainer<li.cil.oc.core.impl.common.container.Tablet> implements li.cil.oc.core.impl.client.gui.traits.LockedHotbar {
     public final TabletWrapper tablet;
     private int lockedSlot = -1;
 
     @SuppressWarnings("unused")
     public Tablet(Inventory playerInventory, TabletWrapper tablet) {
-        super(new li.cil.oc.neoforge.common.container.Tablet(0, playerInventory, tablet));
+        super(new li.cil.oc.core.impl.common.container.Tablet(Menus.TABLET.get(), 0, playerInventory, tablet));
         this.tablet = tablet;
     }
 
-    public Tablet(li.cil.oc.neoforge.common.container.Tablet container, Inventory inv, net.minecraft.network.chat.Component title) {
+    public Tablet(li.cil.oc.core.impl.common.container.Tablet container, Inventory inv, net.minecraft.network.chat.Component title) {
         super(container, inv, title);
         this.tablet = (TabletWrapper) container.otherInventory;
     }
@@ -48,13 +50,13 @@ public class Tablet extends DynamicGuiContainer<li.cil.oc.neoforge.common.contai
     }
 
     @Override
-    protected boolean checkHotbarKeyPressed(int keyCode, int scanCode) {
+    protected boolean checkHotbarKeyPressed(int ignoredKeyCode, int ignoredScanCode) {
         return false;
     }
 
     @Override
     protected void drawSecondaryForegroundLayer(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         super.drawSecondaryForegroundLayer(guiGraphics, mouseX, mouseY);
-        guiGraphics.drawString(font, title, 8, 6, 0x404040);
+        guiGraphics.drawString(font, title, 8, 6, 0x404040, false);
     }
 }

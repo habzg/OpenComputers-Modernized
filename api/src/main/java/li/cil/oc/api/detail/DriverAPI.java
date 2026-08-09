@@ -1,10 +1,12 @@
 package li.cil.oc.api.detail;
 
+import java.util.Collection;
+import java.util.Set;
 import li.cil.oc.api.driver.Converter;
 import li.cil.oc.api.driver.EnvironmentProvider;
 import li.cil.oc.api.driver.InventoryProvider;
-import li.cil.oc.api.driver.Item;
-import li.cil.oc.api.driver.SidedBlock;
+import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.driver.DriverBlock;
 import li.cil.oc.api.network.EnvironmentHost;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -12,9 +14,6 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-
-import java.util.Collection;
-import java.util.Set;
 
 public interface DriverAPI {
     /**
@@ -29,7 +28,7 @@ public interface DriverAPI {
      *
      * @param driver the driver to register.
      */
-    void add(SidedBlock driver);
+    void add(DriverBlock driver);
 
     /**
      * Registers a new driver for an item li.cil.oc.common.component.
@@ -42,7 +41,7 @@ public interface DriverAPI {
      *
      * @param driver the driver for an item li.cil.oc.common.component.
      */
-    void add(Item driver);
+    void add(DriverItem driver);
 
     /**
      * Registers a new type converter.
@@ -86,14 +85,14 @@ public interface DriverAPI {
      * Note that several drivers for a single block can exist. Because of this
      * block drivers are always encapsulated in a 'compound' driver, which is
      * what will be returned here. In other words, you should will <em>not</em>
-     * get actual instances of drivers registered via {@link #add(SidedBlock)}.
+     * get actual instances of drivers registered via {@link #add(DriverBlock)}.
      *
      * @param level the Level containing the block.
      * @param pos   the position of the block.
      * @param side  the side of the block.
      * @return a driver for the block, or <code>null</code> if there is none.
      */
-    SidedBlock driverFor(Level level, BlockPos pos, Direction side);
+    DriverBlock driverFor(Level level, BlockPos pos, Direction side);
 
     /**
      * Looks up a driver for the specified item stack.
@@ -106,7 +105,7 @@ public interface DriverAPI {
      * @param host  the type that will host the environment created by returned driver.
      * @return a driver for the item, or <code>null</code> if there is none.
      */
-    Item driverFor(ItemStack stack, Class<? extends EnvironmentHost> host);
+    DriverItem driverFor(ItemStack stack, Class<? extends EnvironmentHost> host);
 
     /**
      * Looks up a driver for the specified item stack.
@@ -121,7 +120,7 @@ public interface DriverAPI {
      * @param stack the item stack to get a driver for.
      * @return a driver for the item, or <code>null</code> if there is none.
      */
-    Item driverFor(ItemStack stack);
+    DriverItem driverFor(ItemStack stack);
 
     /**
      * Looks up the environments associated with the specified item stack.
@@ -161,7 +160,7 @@ public interface DriverAPI {
      *
      * @return the list of all registered block drivers.
      */
-    Collection<SidedBlock> blockDrivers();
+    Collection<DriverBlock> blockDrivers();
 
     /**
      * Get a list of all registered item drivers.
@@ -173,5 +172,5 @@ public interface DriverAPI {
      *
      * @return the list of all registered item drivers.
      */
-    Collection<Item> itemDrivers();
+    Collection<DriverItem> itemDrivers();
 }

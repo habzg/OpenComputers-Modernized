@@ -1,17 +1,20 @@
 package li.cil.oc.core.impl.common.component;
 
 import com.google.common.base.Strings;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.core.common.PacketType;
 import li.cil.oc.core.common.Tier;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.client.ClientComponentTracker;
 import li.cil.oc.core.impl.client.renderer.TextBufferRenderCache;
 import li.cil.oc.core.impl.common.PacketBuilderBase;
 import li.cil.oc.core.impl.common.PacketSender;
-import li.cil.oc.core.impl.common.tileentity.Screen;
+import li.cil.oc.core.impl.common.blockentity.Screen;
 import li.cil.oc.core.impl.server.component.Keyboard;
 import li.cil.oc.core.impl.util.SaveHandlerDelegate;
 import li.cil.oc.core.impl.util.SideTracker;
@@ -22,12 +25,8 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 public class TextBuffer extends TextBufferBase {
-    public static final List<TextBuffer> clientBuffers = new ArrayList<>();
+  public static final List<TextBuffer> clientBuffers = new ArrayList<>();
 
     public TextBuffer(EnvironmentHost host) {
         super(host);
@@ -53,7 +52,7 @@ public class TextBuffer extends TextBufferBase {
     }
 
     public static void registerClientBuffer(TextBuffer t) {
-        ClientPacketSenderDelegate.get().sendTextBufferInit(t.proxy.nodeAddress);
+      ClientPacketSenderDelegate.get().sendTextBufferInit(t.proxy.nodeAddress);
         ClientComponentTracker.INSTANCE.add(t.host().level(), t.proxy.nodeAddress, t);
         clientBuffers.add(t);
     }
@@ -83,7 +82,7 @@ public class TextBuffer extends TextBufferBase {
         synchronized (this) {
             hadCommands = pendingCommands != null;
             if (hadCommands) {
-                pendingCommands.sendToPlayersNearHost(host(), Settings.get().maxWirelessRange[Tier.Two] * Settings.get().maxWirelessRange[Tier.Two]);
+                pendingCommands.sendToPlayersNearHost(host(), OCSettings.get().maxWirelessRange[Tier.Two] * OCSettings.get().maxWirelessRange[Tier.Two]);
                 pendingCommands = null;
             }
         }
@@ -491,11 +490,11 @@ public class TextBuffer extends TextBufferBase {
             if (stack.isEmpty()) return;
             var existing = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
             var tag = existing != null ? existing.copyTag() : new CompoundTag();
-            tag.remove(Settings.namespace + "clipboard");
+            tag.remove(OCSettings.namespace + "clipboard");
             if (line >= 0 && line < owner.getViewportHeight()) {
                 var text = owner.data.lineToString(line);
                 if (!Strings.isNullOrEmpty(text)) {
-                    tag.putString(Settings.namespace + "clipboard", text);
+                    tag.putString(OCSettings.namespace + "clipboard", text);
                 }
             }
             if (tag.isEmpty()) {
@@ -518,7 +517,7 @@ public class TextBuffer extends TextBufferBase {
                 argsList.add((int) y + 1);
             }
             argsList.add(data);
-            if (Settings.get().inputUsername && player != null) {
+            if (OCSettings.get().inputUsername && player != null) {
                 argsList.add(player.getScoreboardName());
             }
             owner.node.sendToReachable("computer.checked_signal", argsList.toArray());

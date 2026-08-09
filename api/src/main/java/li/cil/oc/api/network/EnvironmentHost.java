@@ -10,7 +10,7 @@ import net.minecraft.world.level.Level;
  * <br>
  * You will only need to implement this if you intend to host components, e.g.
  * by providing a custom computer case or such. In OpenComputers this interface
- * is usually implemented directly by the tile entities acting as the host, so
+ * is usually implemented directly by the block entities acting as the host, so
  * in most cases you should be able to cast this to <code>BlockEntity</code> for
  * more options, if necessary.
  */
@@ -23,24 +23,24 @@ public interface EnvironmentHost {
     /**
      * The container's X position in the Level.
      * <br>
-     * For tile entities this is the <em>centered</em> position. For example,
-     * if the tile entity is located at (0, 2, 3) this will be 0.5.
+     * For block entities this is the <em>centered</em> position. For example,
+     * if the block entity is located at (0, 2, 3) this will be 0.5.
      */
     double xPosition();
 
     /**
      * The container's Y position in the Level.
      * <br>
-     * For tile entities this is the <em>centered</em> position. For example,
-     * if the tile entity is located at (0, 2, 3) this will be 2.5.
+     * For block entities this is the <em>centered</em> position. For example,
+     * if the block entity is located at (0, 2, 3) this will be 2.5.
      */
     double yPosition();
 
     /**
      * The container's Z position in the Level.
      * <br>
-     * For tile entities this is the <em>centered</em> position. For example,
-     * if the tile entity is located at (0, 2, 3) this will be 3.5.
+     * For block entities this is the <em>centered</em> position. For example,
+     * if the block entity is located at (0, 2, 3) this will be 3.5.
      */
     double zPosition();
 

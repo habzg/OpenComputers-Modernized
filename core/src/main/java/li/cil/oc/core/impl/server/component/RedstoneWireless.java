@@ -1,19 +1,17 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.EnvironmentHost;
-import li.cil.oc.core.impl.Settings;
-import li.cil.oc.core.impl.common.tileentity.traits.RedstoneAware.RedstoneChangedEventArgs;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.common.blockentity.traits.RedstoneAware.RedstoneChangedEventArgs;
 import li.cil.oc.core.impl.integration.util.WirelessRedstone;
 import li.cil.oc.core.util.ResultWrapper;
-
-
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 public interface RedstoneWireless extends DeviceInfo {
     EnvironmentHost redstone();
@@ -21,6 +19,7 @@ public interface RedstoneWireless extends DeviceInfo {
     @Callback(doc = "function():number -- Get the wireless redstone input.")
     default Object[] getWirelessInput(Context context, Arguments args) {
         boolean input = WirelessRedstone.getInput(this);
+        setWirelessInputValue(input);
         return ResultWrapper.result(input);
     }
 
@@ -33,6 +32,10 @@ public interface RedstoneWireless extends DeviceInfo {
 
     void setWirelessOutputValue(boolean value);
 
+    boolean getWirelessInputValue();
+
+    void setWirelessInputValue(boolean value);
+
     int getWirelessFrequencyValue();
 
     void setWirelessFrequencyValue(int value);
@@ -44,8 +47,8 @@ public interface RedstoneWireless extends DeviceInfo {
         if (oldValue != newValue) {
             setWirelessOutputValue(newValue);
             WirelessRedstone.updateOutput(this);
-            if (Settings.get().redstoneDelay > 0)
-                context.pause(Settings.get().redstoneDelay);
+            if (OCSettings.get().redstoneDelay > 0)
+                context.pause(OCSettings.get().redstoneDelay);
         }
         return ResultWrapper.result(oldValue);
     }
@@ -55,7 +58,7 @@ public interface RedstoneWireless extends DeviceInfo {
         return ResultWrapper.result((double) getWirelessFrequencyValue());
     }
 
-    @Callback(doc = "function(frequency:number):number -- Set the wireless redstone frequency.")
+    @Callback(doc = "function(frequency:number):number -- Set the wireless redstone frequency to use.")
     default Object[] setWirelessFrequency(Context context, Arguments args) {
         int oldValue = getWirelessFrequencyValue();
         int newValue = args.checkInteger(0);
@@ -64,6 +67,7 @@ public interface RedstoneWireless extends DeviceInfo {
                 return ResultWrapper.result(null, "none of the available providers can handle the requested frequency");
             }
             setWirelessOutputValue(false);
+            setWirelessInputValue(false);
             WirelessRedstone.updateOutput(this);
             WirelessRedstone.removeReceiver(this);
             WirelessRedstone.removeTransmitter(this);

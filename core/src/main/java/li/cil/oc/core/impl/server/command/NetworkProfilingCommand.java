@@ -14,6 +14,10 @@ public class NetworkProfilingCommand extends SimpleCommand {
 
     @Override
     protected int execute(CommandSourceStack source, String[] args) {
+        if (source.getEntity() != null && !(source.getEntity() instanceof net.minecraft.world.entity.player.Player)) {
+            source.sendFailure(net.minecraft.network.chat.Component.literal("Can only be used by players."));
+            return 0;
+        }
         PacketBuilderBase.isProfilingEnabled = args.length > 0 ?
                 Boolean.parseBoolean(args[0]) : !PacketBuilderBase.isProfilingEnabled;
         return 0;

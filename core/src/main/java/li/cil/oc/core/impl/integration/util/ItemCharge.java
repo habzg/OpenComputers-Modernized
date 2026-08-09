@@ -1,11 +1,10 @@
 package li.cil.oc.core.impl.integration.util;
 
-import li.cil.oc.core.impl.common.ReflectionUtil;
-import net.minecraft.world.item.ItemStack;
-
 import java.lang.reflect.Method;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import li.cil.oc.core.impl.common.ReflectionUtil;
+import net.minecraft.world.item.ItemStack;
 
 public final class ItemCharge {
     private static final Set<Charger> chargers = new LinkedHashSet<>();

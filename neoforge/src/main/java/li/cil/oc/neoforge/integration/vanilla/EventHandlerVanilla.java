@@ -1,8 +1,8 @@
 package li.cil.oc.neoforge.integration.vanilla;
 
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.api.event.GeolyzerEvent;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.BlockPosition;
-import li.cil.oc.neoforge.event.GeolyzerEventImpl;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.Block;
@@ -21,29 +21,29 @@ import net.neoforged.bus.api.SubscribeEvent;
 @SuppressWarnings("unused")
 public final class EventHandlerVanilla {
     @SubscribeEvent
-    public static void onGeolyzerScan(GeolyzerEventImpl.Scan e) {
-        var world = e.host().level();
-        var blockPos = BlockPosition.apply(e.host());
-        var includeReplaceable = e.options().get("includeReplaceable") instanceof Boolean value ? value : true;
+    public static void onGeolyzerScan(GeolyzerEvent.Scan e) {
+        var world = e.host.level();
+        var blockPos = BlockPosition.apply(e.host);
+        var includeReplaceable = !(e.options.get("includeReplaceable") instanceof Boolean value) || value;
 
-        var noise = new byte[e.data().length];
+        var noise = new byte[e.data.length];
         var random = world.random;
         for (int i = 0; i < noise.length; i++) {
             noise[i] = (byte) random.nextInt();
         }
-        for (int i = 0; i < e.data().length; i++) {
-            e.data()[i] = (noise[i] / 128f / 33f);
+        for (int i = 0; i < e.data.length; i++) {
+            e.data[i] = (noise[i] / 128f / 33f);
         }
 
-        int w = e.maxX() - e.minX() + 1;
-        int d = e.maxZ() - e.minZ() + 1;
-        for (int ry = e.minY(); ry <= e.maxY(); ry++) {
-            for (int rz = e.minZ(); rz <= e.maxZ(); rz++) {
-                for (int rx = e.minX(); rx <= e.maxX(); rx++) {
+        int w = e.maxX - e.minX + 1;
+        int d = e.maxZ - e.minZ + 1;
+        for (int ry = e.minY; ry <= e.maxY; ry++) {
+            for (int rz = e.minZ; rz <= e.maxZ; rz++) {
+                for (int rx = e.minX; rx <= e.maxX; rx++) {
                     int x = blockPos.x() + rx;
                     int y = blockPos.y() + ry;
                     int z = blockPos.z() + rz;
-                    int index = (rx - e.minX()) + ((rz - e.minZ()) + (ry - e.minY()) * d) * w;
+                    int index = (rx - e.minX) + ((rz - e.minZ) + (ry - e.minY) * d) * w;
                     BlockPos pos = new BlockPos(x, y, z);
                     if (world.hasChunk(pos.getX() >> 4, pos.getZ() >> 4) && !world.isEmptyBlock(pos)) {
                         Block block = world.getBlockState(pos).getBlock();
@@ -52,12 +52,12 @@ public final class EventHandlerVanilla {
                             double dy = blockPos.y() - y;
                             double dz = blockPos.z() - z;
                             float distance = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
-                            e.data()[index] = e.data()[index] * distance * Settings.get().geolyzerNoise + block.defaultBlockState().getDestroySpeed(world, pos);
+                            e.data[index] = e.data[index] * distance * OCSettings.get().geolyzerNoise + block.defaultBlockState().getDestroySpeed(world, pos);
                         } else {
-                            e.data()[index] = 0;
+                            e.data[index] = 0;
                         }
                     } else {
-                        e.data()[index] = 0;
+                        e.data[index] = 0;
                     }
                 }
             }
@@ -69,28 +69,28 @@ public final class EventHandlerVanilla {
     }
 
     @SubscribeEvent
-    public static void onGeolyzerAnalyze(GeolyzerEventImpl.Analyze e) {
-        var world = e.host().level();
-        var blockPos = new BlockPos(e.x(), e.y(), e.z());
+    public static void onGeolyzerAnalyze(GeolyzerEvent.Analyze e) {
+        var world = e.host.level();
+        var blockPos = e.pos;
         var state = world.getBlockState(blockPos);
         var block = state.getBlock();
 
-        e.data().put("name", net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(block).toString());
-        e.data().put("metadata", 0);
-        e.data().put("hardness", state.getDestroySpeed(world, blockPos));
-        e.data().put("harvestLevel", getHarvestLevel(state));
-        e.data().put("harvestTool", getHarvestTool(state));
-        e.data().put("color", state.getMapColor(world, blockPos).col);
+        e.data.put("name", net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(block).toString());
+        e.data.put("metadata", 0);
+        e.data.put("hardness", state.getDestroySpeed(world, blockPos));
+        e.data.put("harvestLevel", getHarvestLevel(state));
+        e.data.put("harvestTool", getHarvestTool(state));
+        e.data.put("color", state.getMapColor(world, blockPos).col);
         {
             var props = new java.util.LinkedHashMap<String, String>();
             for (var prop : state.getProperties()) {
                 props.put(prop.getName(), state.getValue(prop).toString());
             }
-            e.data().put("properties", props);
+            e.data.put("properties", props);
         }
 
-        if (Settings.get().insertIdsInConverters) {
-            e.data().put("id", net.minecraft.core.registries.BuiltInRegistries.BLOCK.getId(block));
+        if (OCSettings.get().insertIdsInConverters) {
+            e.data.put("id", net.minecraft.core.registries.BuiltInRegistries.BLOCK.getId(block));
         }
 
         Float growth = null;
@@ -109,7 +109,7 @@ public final class EventHandlerVanilla {
             growth = 1f;
         }
         if (growth != null) {
-            e.data().put("growth", growth);
+            e.data.put("growth", growth);
         }
     }
 

@@ -71,6 +71,7 @@ public interface InventoryControl extends InventoryAware {
                 if (amount > 0) {
                     from.shrink(amount);
                     to.grow(amount);
+                    assert from.getCount() >= 0;
                     if (from.isEmpty()) {
                         inventory().setItem(selectedSlot(), ItemStack.EMPTY);
                     }

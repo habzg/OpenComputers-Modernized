@@ -1,6 +1,8 @@
 package li.cil.oc.core.impl.common.component;
 
 import com.google.common.base.Strings;
+import java.util.HashMap;
+import java.util.Map;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
@@ -9,10 +11,10 @@ import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
-import li.cil.oc.api.prefab.ManagedEnvironment;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Tier;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.component.traits.TextBufferProxy;
 import li.cil.oc.core.impl.common.component.traits.VideoRamDevice;
 import li.cil.oc.core.impl.common.component.traits.VideoRamRasterizer;
@@ -24,10 +26,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 
-import java.util.HashMap;
-import java.util.Map;
-
-public abstract class TextBufferBase extends ManagedEnvironment implements TextBufferProxy, VideoRamRasterizer, DeviceInfo {
+public abstract class TextBufferBase extends AbstractManagedEnvironment implements TextBufferProxy, VideoRamRasterizer, DeviceInfo {
     public final Node node;
     private final int syncInterval = 100;
     private final Map<String, String> deviceInfo = new HashMap<>();
@@ -37,13 +36,13 @@ public abstract class TextBufferBase extends ManagedEnvironment implements TextB
     public int viewportW, viewportH;
     private int maxWidth;
     private int maxHeight;
-    private int maxDepth = Settings.screenDepthsByTier[Tier.One].ordinal();
-    private final int[] initialRes = Settings.screenResolutionsByTier[Tier.One];
+    private int maxDepth = OCSettings.screenDepthsByTier[Tier.One].ordinal();
+    private final int[] initialRes = OCSettings.screenResolutionsByTier[Tier.One];
     public final li.cil.oc.core.impl.util.TextBuffer data = new li.cil.oc.core.impl.util.TextBuffer(
             new int[]{initialRes[0], initialRes[1]}, PackedColor.Depth.format(li.cil.oc.api.internal.TextBuffer.ColorDepth.values()[maxDepth]));
     private double aspectRatioW = 1.0;
     private double aspectRatioH = 1.0;
-    private double powerConsumptionPerTick = Settings.get().screenCost;
+    private double powerConsumptionPerTick = OCSettings.get().screenCost;
     protected boolean precisionMode = false;
     private boolean isRendering = true;
     private boolean isDisplaying = true;
@@ -67,7 +66,7 @@ public abstract class TextBufferBase extends ManagedEnvironment implements TextB
                 .withComponent("screen")
                 .withConnector()
                 .create();
-        var res = Settings.screenResolutionsByTier[Tier.One];
+        var res = OCSettings.screenResolutionsByTier[Tier.One];
         maxWidth = res[0];
         maxHeight = res[1];
         viewportW = res[0];
@@ -80,7 +79,7 @@ public abstract class TextBufferBase extends ManagedEnvironment implements TextB
     protected abstract Proxy createProxy();
 
     public double computeFullyLitCost() {
-        var res = Settings.screenResolutionsByTier[0];
+        var res = OCSettings.screenResolutionsByTier[0];
         int w = res[0], h = res[1];
         int mw = getMaximumWidth();
         int mh = getMaximumHeight();
@@ -116,7 +115,7 @@ public abstract class TextBufferBase extends ManagedEnvironment implements TextB
     @Override
     public void update() {
         super.update();
-        if (isDisplaying && host().level().getGameTime() % Settings.get().tickFrequency == 0) {
+        if (isDisplaying && host().level().getGameTime() % OCSettings.get().tickFrequency == 0) {
             if (relativeLitArea < 0) {
                 int w = getViewportWidth();
                 int h = getViewportHeight();
@@ -138,7 +137,7 @@ public abstract class TextBufferBase extends ManagedEnvironment implements TextB
             }
             if (node != null) {
                 boolean hadPower = hasPower;
-                double neededPower = relativeLitArea * fullyLitCost * Settings.get().tickFrequency;
+                double neededPower = relativeLitArea * fullyLitCost * OCSettings.get().tickFrequency;
                 hasPower = ((Connector) node).tryChangeBuffer(-neededPower);
                 if (hasPower != hadPower) {
                     sendPowerChange(node.address(), isDisplaying && hasPower);
@@ -196,7 +195,7 @@ public abstract class TextBufferBase extends ManagedEnvironment implements TextB
 
     @Callback(doc = "function(enabled:boolean):boolean -- Set whether to use high precision mode (sub-pixel mouse event positions).")
     public Object[] setPrecise(Context computer, Arguments args) {
-        if (maxDepth == Settings.screenDepthsByTier[3].ordinal()) {
+        if (maxDepth == OCSettings.screenDepthsByTier[3].ordinal()) {
             boolean old = precisionMode;
             precisionMode = args.checkBoolean(0);
             return ResultWrapper.result(old);
@@ -225,7 +224,7 @@ public abstract class TextBufferBase extends ManagedEnvironment implements TextB
         if (isDisplaying != value) {
             isDisplaying = value;
             if (isDisplaying) {
-                double needed = fullyLitCost * Settings.get().tickFrequency;
+                double needed = fullyLitCost * OCSettings.get().tickFrequency;
                 hasPower = ((Connector) node).changeBuffer(-needed) == 0;
             }
             sendPowerChange(node.address(), isDisplaying && hasPower);
@@ -491,18 +490,18 @@ public abstract class TextBufferBase extends ManagedEnvironment implements TextB
             else if (!Strings.isNullOrEmpty(node.address()))
                 loadBufferData(nbt, provider);
         }
-        if (nbt.contains(Settings.namespace + "isOn"))
-            isDisplaying = nbt.getBoolean(Settings.namespace + "isOn");
-        if (nbt.contains(Settings.namespace + "hasPower"))
-            hasPower = nbt.getBoolean(Settings.namespace + "hasPower");
-        if (nbt.contains(Settings.namespace + "maxWidth") && nbt.contains(Settings.namespace + "maxHeight")) {
-            maxWidth = nbt.getInt(Settings.namespace + "maxWidth");
-            maxHeight = nbt.getInt(Settings.namespace + "maxHeight");
+        if (nbt.contains(OCSettings.namespace + "isOn"))
+            isDisplaying = nbt.getBoolean(OCSettings.namespace + "isOn");
+        if (nbt.contains(OCSettings.namespace + "hasPower"))
+            hasPower = nbt.getBoolean(OCSettings.namespace + "hasPower");
+        if (nbt.contains(OCSettings.namespace + "maxWidth") && nbt.contains(OCSettings.namespace + "maxHeight")) {
+            maxWidth = nbt.getInt(OCSettings.namespace + "maxWidth");
+            maxHeight = nbt.getInt(OCSettings.namespace + "maxHeight");
         }
-        precisionMode = nbt.getBoolean(Settings.namespace + "precise");
-        if (nbt.contains(Settings.namespace + "viewportWidth")) {
-            viewportW = Math.clamp(nbt.getInt(Settings.namespace + "viewportWidth"), 1, data.width);
-            viewportH = Math.clamp(nbt.getInt(Settings.namespace + "viewportHeight"), 1, data.height);
+        precisionMode = nbt.getBoolean(OCSettings.namespace + "precise");
+        if (nbt.contains(OCSettings.namespace + "viewportWidth")) {
+            viewportW = Math.clamp(nbt.getInt(OCSettings.namespace + "viewportWidth"), 1, data.width);
+            viewportH = Math.clamp(nbt.getInt(OCSettings.namespace + "viewportHeight"), 1, data.height);
         } else {
             viewportW = data.width;
             viewportH = data.height;
@@ -517,7 +516,7 @@ public abstract class TextBufferBase extends ManagedEnvironment implements TextB
         super.save(nbt, provider);
         if (node.network() != null) {
             for (var n : node.network().nodes()) {
-                if (n.host() instanceof li.cil.oc.core.impl.common.tileentity.traits.Computer comp && !comp.machine().isPaused()) {
+                if (n.host() instanceof li.cil.oc.core.impl.common.blockentity.traits.Computer comp && !comp.machine().isPaused()) {
                     comp.machine().pause(0.1);
                 }
             }
@@ -532,13 +531,13 @@ public abstract class TextBufferBase extends ManagedEnvironment implements TextB
         } catch (java.io.IOException e) {
             Log.get().warn("Failed to serialize text buffer data for saving.", e);
         }
-        nbt.putBoolean(Settings.namespace + "isOn", isDisplaying);
-        nbt.putBoolean(Settings.namespace + "hasPower", hasPower);
-        nbt.putInt(Settings.namespace + "maxWidth", maxWidth);
-        nbt.putInt(Settings.namespace + "maxHeight", maxHeight);
-        nbt.putBoolean(Settings.namespace + "precise", precisionMode);
-        nbt.putInt(Settings.namespace + "viewportWidth", viewportW);
-        nbt.putInt(Settings.namespace + "viewportHeight", viewportH);
+        nbt.putBoolean(OCSettings.namespace + "isOn", isDisplaying);
+        nbt.putBoolean(OCSettings.namespace + "hasPower", hasPower);
+        nbt.putInt(OCSettings.namespace + "maxWidth", maxWidth);
+        nbt.putInt(OCSettings.namespace + "maxHeight", maxHeight);
+        nbt.putBoolean(OCSettings.namespace + "precise", precisionMode);
+        nbt.putInt(OCSettings.namespace + "viewportWidth", viewportW);
+        nbt.putInt(OCSettings.namespace + "viewportHeight", viewportH);
     }
 
     @Override

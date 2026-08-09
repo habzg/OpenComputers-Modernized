@@ -7,6 +7,7 @@ import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Slot;
 import li.cil.oc.core.common.Tier;
+import li.cil.oc.core.impl.integration.opencomputers.Item;
 import li.cil.oc.core.impl.util.BlockPosition;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;

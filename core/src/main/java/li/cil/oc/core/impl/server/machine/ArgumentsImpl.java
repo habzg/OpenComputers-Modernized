@@ -1,5 +1,7 @@
 package li.cil.oc.core.impl.server.machine;
 
+import java.util.Iterator;
+import java.util.Map;
 import li.cil.oc.api.machine.Arguments;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -12,9 +14,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Iterator;
-import java.util.Map;
 
 public class ArgumentsImpl implements Arguments {
     private final Object[] args;
@@ -179,9 +178,9 @@ public class ArgumentsImpl implements Arguments {
         Object tagObj = map.get("tag");
         try {
             if (tagObj instanceof byte[] ba) {
-                tag = NbtIo.readCompressed(new java.io.ByteArrayInputStream(ba), NbtAccounter.unlimitedHeap());
+                tag = NbtIo.readCompressed(new java.io.ByteArrayInputStream(ba), NbtAccounter.create(0x200000L));
             } else if (tagObj instanceof String s) {
-                tag = NbtIo.readCompressed(new java.io.ByteArrayInputStream(s.getBytes(java.nio.charset.StandardCharsets.UTF_8)), NbtAccounter.unlimitedHeap());
+                tag = NbtIo.readCompressed(new java.io.ByteArrayInputStream(s.getBytes(java.nio.charset.StandardCharsets.UTF_8)), NbtAccounter.create(0x200000L));
             }
         } catch (java.io.IOException ignored) {
         }

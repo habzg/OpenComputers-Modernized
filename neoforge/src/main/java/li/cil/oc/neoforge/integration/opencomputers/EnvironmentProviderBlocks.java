@@ -2,10 +2,10 @@ package li.cil.oc.neoforge.integration.opencomputers;
 
 import li.cil.oc.api.driver.EnvironmentProvider;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.common.tileentity.Assembler;
-import li.cil.oc.core.impl.common.tileentity.Hologram;
-import li.cil.oc.core.impl.common.tileentity.Printer;
-import li.cil.oc.core.impl.common.tileentity.Waypoint;
+import li.cil.oc.core.impl.common.blockentity.Assembler;
+import li.cil.oc.core.impl.common.blockentity.Hologram;
+import li.cil.oc.core.impl.common.blockentity.Printer;
+import li.cil.oc.core.impl.common.blockentity.Waypoint;
 import li.cil.oc.core.impl.integration.util.BundledRedstone;
 import li.cil.oc.neoforge.server.machine.Machine;
 import net.minecraft.world.item.BlockItem;
@@ -31,10 +31,10 @@ public final class EnvironmentProviderBlocks implements EnvironmentProvider {
             if (isOneOf(block, Constants.BlockName.ScreenTier1))
                 return li.cil.oc.core.impl.common.component.TextBuffer.class;
             if (isOneOf(block, Constants.BlockName.ScreenTier2, Constants.BlockName.ScreenTier3))
-                return li.cil.oc.neoforge.common.component.Screen.class;
+                return li.cil.oc.core.impl.common.component.Screen.class;
             if (isOneOf(block, Constants.BlockName.Robot)) return li.cil.oc.core.impl.server.component.Robot.class;
             if (isOneOf(block, Constants.BlockName.Waypoint)) return Waypoint.class;
-            if (isOneOf(block, Constants.BlockName.Relay)) return li.cil.oc.neoforge.common.tileentity.Relay.class;
+            if (isOneOf(block, Constants.BlockName.Relay)) return li.cil.oc.core.impl.common.blockentity.Relay.class;
         } else {
             if (li.cil.oc.api.Items.get(stack) == li.cil.oc.api.Items.get(Constants.ItemName.Drone))
                 return li.cil.oc.neoforge.server.component.Drone.class;

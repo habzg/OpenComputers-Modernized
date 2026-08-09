@@ -1,5 +1,9 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
@@ -7,8 +11,9 @@ import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.BlockPosition;
 import li.cil.oc.core.impl.util.InventoryUtils;
 import li.cil.oc.core.util.ResultWrapper;
@@ -16,18 +21,13 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 
 public class UpgradeTractorBeam {
     static boolean hasPickupDelay(ItemEntity entity) {
         return entity.hasPickUpDelay();
     }
 
-    public static abstract class Common extends li.cil.oc.api.prefab.ManagedEnvironment implements DeviceInfo {
+    public static abstract class Common extends AbstractManagedEnvironment implements DeviceInfo {
         private static final int pickupRadius = 3;
         @SuppressWarnings("unused")
         public final li.cil.oc.api.network.Node node = Network.newNode(this, Visibility.Network)
@@ -54,7 +54,7 @@ public class UpgradeTractorBeam {
         }
 
         @Callback(doc = "function():boolean -- Tries to pick up a random item in the robots' vicinity.")
-        public Object[] suck(Context context, Arguments args) {
+        public Object[] suck(Context context, Arguments ignoredArgs) {
             List<ItemEntity> items = level().getEntitiesOfClass(ItemEntity.class, position().bounds().inflate(pickupRadius, pickupRadius, pickupRadius));
             items.removeIf(item -> !item.isAlive() || hasPickupDelay(item));
             if (!items.isEmpty()) {
@@ -63,7 +63,7 @@ public class UpgradeTractorBeam {
                 int size = stack.getCount();
                 collectItem(item);
                 if (stack.getCount() < size || !item.isAlive()) {
-                    context.pause(Settings.get().suckDelay);
+                    context.pause(OCSettings.get().suckDelay);
                     level().levelEvent(2003, net.minecraft.core.BlockPos.containing(item.getX(), item.getY(), item.getZ()), 0);
                     return ResultWrapper.result(true);
                 }

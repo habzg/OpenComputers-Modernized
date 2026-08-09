@@ -10,28 +10,28 @@ import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Node;
-import li.cil.oc.api.prefab.DriverSidedTileEntity;
+import li.cil.oc.api.prefab.DriverSidedBlockEntity;
+import li.cil.oc.core.impl.integration.ManagedBlockEntityEnvironment;
 import li.cil.oc.core.impl.util.DatabaseAccess;
 import li.cil.oc.core.util.ResultWrapper;
-import li.cil.oc.neoforge.integration.ManagedTileEntityEnvironment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 @SuppressWarnings("unused")
-public class DriverBlockInterface extends DriverSidedTileEntity {
+public class DriverBlockInterface extends DriverSidedBlockEntity {
     @Override
-    public Class<?> getTileEntityClass() {
+    public Class<?> getBlockEntityClass() {
         return AEUtil.interfaceClass();
     }
 
     @Override
-    public ManagedEnvironment createEnvironment(Level world, int x, int y, int z, Direction side) {
-        return new Environment((InterfaceBlockEntity) world.getBlockEntity(new BlockPos(x, y, z)));
+    public ManagedEnvironment createEnvironment(Level world, BlockPos pos, Direction side) {
+        return new Environment((InterfaceBlockEntity) world.getBlockEntity(pos));
     }
 
-    public static final class Environment extends ManagedTileEntityEnvironment<InterfaceBlockEntity>
+    public static final class Environment extends ManagedBlockEntityEnvironment<InterfaceBlockEntity>
             implements NamedBlock, NetworkControl<InterfaceBlockEntity> {
         public Environment(InterfaceBlockEntity tile) {
             super(tile, "me_interface");
@@ -49,7 +49,7 @@ public class DriverBlockInterface extends DriverSidedTileEntity {
 
         @Override
         public InterfaceBlockEntity tile() {
-            return getTileEntity();
+            return getBlockEntity();
         }
 
         @Override

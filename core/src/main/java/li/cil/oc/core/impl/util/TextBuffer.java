@@ -1,11 +1,10 @@
 package li.cil.oc.core.impl.util;
 
-import li.cil.oc.core.impl.Settings;
+import java.util.Arrays;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.util.ExtendedUnicodeHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
-
-import java.util.Arrays;
 
 public class TextBuffer {
     public int width;
@@ -255,7 +254,7 @@ public class TextBuffer {
     }
 
     public void load(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider provider) {
-        int maxResolution = Math.max(Settings.screenResolutionsByTier[Settings.screenResolutionsByTier.length - 1][0], Settings.screenResolutionsByTier[Settings.screenResolutionsByTier.length - 1][1]);
+        int maxResolution = Math.max(OCSettings.screenResolutionsByTier[OCSettings.screenResolutionsByTier.length - 1][0], OCSettings.screenResolutionsByTier[OCSettings.screenResolutionsByTier.length - 1][1]);
         int w = Math.min(nbt.getInt("width"), maxResolution);
         w = Math.max(w, 1);
         int h = Math.min(nbt.getInt("height"), maxResolution);

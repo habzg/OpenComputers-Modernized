@@ -1,25 +1,6 @@
 package li.cil.oc.core.impl.server.component;
 
 import com.google.common.hash.Hashing;
-import li.cil.oc.api.Network;
-import li.cil.oc.api.driver.DeviceInfo;
-import li.cil.oc.api.machine.Arguments;
-import li.cil.oc.api.machine.Callback;
-import li.cil.oc.api.machine.Context;
-import li.cil.oc.api.network.ComponentConnector;
-import li.cil.oc.api.network.Visibility;
-import li.cil.oc.core.impl.Settings;
-import li.cil.oc.core.util.ResultWrapper;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.output.ByteArrayOutputStream;
-
-import javax.crypto.Cipher;
-import javax.crypto.KeyAgreement;
-import javax.crypto.Mac;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.Key;
@@ -36,8 +17,27 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Map;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterOutputStream;
+import javax.crypto.Cipher;
+import javax.crypto.KeyAgreement;
+import javax.crypto.Mac;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import li.cil.oc.api.Network;
+import li.cil.oc.api.driver.DeviceInfo;
+import li.cil.oc.api.machine.Arguments;
+import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.network.ComponentConnector;
+import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.util.ResultWrapper;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.output.ByteArrayOutputStream;
 
-public abstract class DataCard extends li.cil.oc.api.prefab.ManagedEnvironment implements DeviceInfo {
+public abstract class DataCard extends AbstractManagedEnvironment implements DeviceInfo {
     private static final ThreadLocal<SecureRandom> SecureRandomInstance = ThreadLocal.withInitial(() -> {
         try {
             return SecureRandom.getInstance("SHA1PRNG");
@@ -52,13 +52,13 @@ public abstract class DataCard extends li.cil.oc.api.prefab.ManagedEnvironment i
 
     protected byte[] checkCost(Context context, Arguments args, double baseCost, double byteCost) {
         byte[] data = args.checkByteArray(0);
-        if (data.length > Settings.get().dataCardHardLimit)
+        if (data.length > OCSettings.get().dataCardHardLimit)
             throw new IllegalArgumentException("data size limit exceeded");
         double cost = baseCost + data.length * byteCost;
         if (!node.tryChangeBuffer(-cost))
             throw new RuntimeException("not enough energy");
-        if (data.length > Settings.get().dataCardSoftLimit)
-            context.pause(Settings.get().dataCardTimeout);
+        if (data.length > OCSettings.get().dataCardSoftLimit)
+            context.pause(OCSettings.get().dataCardTimeout);
         return data;
     }
 
@@ -68,24 +68,24 @@ public abstract class DataCard extends li.cil.oc.api.prefab.ManagedEnvironment i
     }
 
     protected byte[] trivialCost(Context context, Arguments args) {
-        return checkCost(context, args, Settings.get().dataCardTrivial, Settings.get().dataCardTrivialByte);
+        return checkCost(context, args, OCSettings.get().dataCardTrivial, OCSettings.get().dataCardTrivialByte);
     }
 
     protected byte[] simpleCost(Context context, Arguments args) {
-        return checkCost(context, args, Settings.get().dataCardSimple, Settings.get().dataCardSimpleByte);
+        return checkCost(context, args, OCSettings.get().dataCardSimple, OCSettings.get().dataCardSimpleByte);
     }
 
     protected byte[] complexCost(Context context, Arguments args) {
-        return checkCost(context, args, Settings.get().dataCardComplex, Settings.get().dataCardComplexByte);
+        return checkCost(context, args, OCSettings.get().dataCardComplex, OCSettings.get().dataCardComplexByte);
     }
 
     protected byte[] asymmetricCost(Context context, Arguments args) {
-        return checkCost(context, args, Settings.get().dataCardAsymmetric, Settings.get().dataCardComplexByte);
+        return checkCost(context, args, OCSettings.get().dataCardAsymmetric, OCSettings.get().dataCardComplexByte);
     }
 
     @Callback(direct = true, doc = "function():number -- The maximum size of data that can be passed to other functions of the card.")
     public Object[] getLimit(Context context, Arguments args) {
-        return ResultWrapper.result(Settings.get().dataCardHardLimit);
+        return ResultWrapper.result(OCSettings.get().dataCardHardLimit);
     }
 
     public static class Tier1 extends DataCard {
@@ -129,26 +129,27 @@ public abstract class DataCard extends li.cil.oc.api.prefab.ManagedEnvironment i
             ByteArrayOutputStream baos = new ByteArrayOutputStream(512);
             try (InflaterOutputStream inos = new InflaterOutputStream(baos)) {
                 inos.write(data);
+                inos.finish();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
             return ResultWrapper.result((Object) baos.toByteArray());
         }
 
-        @Callback(direct = true, limit = 32, doc = "function(data:string):string -- Computes CRC-32 hash of the data.")
+        @Callback(direct = true, limit = 32, doc = "function(data:string):string -- Computes CRC-32 hash of the data. Result is binary data.")
         public Object[] crc32(Context context, Arguments args) {
             byte[] data = trivialCost(context, args);
             return ResultWrapper.result((Object) Hashing.crc32().hashBytes(data).asBytes());
         }
 
-        @Callback(direct = true, limit = 8, doc = "function(data:string):string -- Computes MD5 hash of the data.")
+        @Callback(direct = true, limit = 8, doc = "function(data:string):string -- Computes MD5 hash of the data. Result is binary data.")
         public Object[] md5(Context context, Arguments args) {
             byte[] data = simpleCost(context, args);
             // noinspection deprecation - this is using MD5 on purpose
             return ResultWrapper.result((Object) Hashing.md5().hashBytes(data).asBytes());
         }
 
-        @Callback(direct = true, limit = 4, doc = "function(data:string):string -- Computes SHA2-256 hash of the data.")
+        @Callback(direct = true, limit = 4, doc = "function(data:string):string -- Computes SHA2-256 hash of the data. Result is binary data.")
         public Object[] sha256(Context context, Arguments args) {
             byte[] data = complexCost(context, args);
             return ResultWrapper.result((Object) Hashing.sha256().hashBytes(data).asBytes());
@@ -158,7 +159,7 @@ public abstract class DataCard extends li.cil.oc.api.prefab.ManagedEnvironment i
         public Object[] decodeNBT(Context context, Arguments args) {
             byte[] data = complexCost(context, args);
             try {
-                return ResultWrapper.result(net.minecraft.nbt.NbtIo.readCompressed(new java.io.ByteArrayInputStream(data), net.minecraft.nbt.NbtAccounter.unlimitedHeap()));
+                return ResultWrapper.result(net.minecraft.nbt.NbtIo.readCompressed(new java.io.ByteArrayInputStream(data), net.minecraft.nbt.NbtAccounter.create(0x200000L)));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -178,7 +179,7 @@ public abstract class DataCard extends li.cil.oc.api.prefab.ManagedEnvironment i
         }
 
         @Override
-        @Callback(direct = true, limit = 8, doc = "function(data:string[, hmacKey:string]):string -- Computes MD5 hash.")
+        @Callback(direct = true, limit = 8, doc = "function(data:string[, hmacKey:string]):string -- Computes MD5 hash of the data. Result is binary data.")
         public Object[] md5(Context context, Arguments args) {
             if (args.count() > 1) {
                 byte[] data = simpleCost(context, args);
@@ -189,7 +190,7 @@ public abstract class DataCard extends li.cil.oc.api.prefab.ManagedEnvironment i
         }
 
         @Override
-        @Callback(direct = true, limit = 4, doc = "function(data:string[, hmacKey:string]):string -- Computes SHA2-256 hash.")
+        @Callback(direct = true, limit = 4, doc = "function(data:string[, hmacKey:string]):string -- Computes SHA2-256 hash of the data. Result is binary data.")
         public Object[] sha256(Context context, Arguments args) {
             if (args.count() > 1) {
                 byte[] data = complexCost(context, args);
@@ -199,7 +200,7 @@ public abstract class DataCard extends li.cil.oc.api.prefab.ManagedEnvironment i
             return super.sha256(context, args);
         }
 
-        @Callback(direct = true, limit = 8, doc = "function(data:string, key:string, iv:string):string -- Encrypt data with AES.")
+        @Callback(direct = true, limit = 8, doc = "function(data:string, key:string, iv:string):string -- Encrypt data with AES. Result is binary data.")
         public Object[] encrypt(Context context, Arguments args) {
             return crypt(context, args, Cipher.ENCRYPT_MODE);
         }
@@ -214,7 +215,7 @@ public abstract class DataCard extends li.cil.oc.api.prefab.ManagedEnvironment i
             int len = args.checkInteger(0);
             if (len <= 0 || len > 1024)
                 throw new IllegalArgumentException("length must be in range [1..1024]");
-            checkCost(Settings.get().dataCardComplex + Settings.get().dataCardComplexByte * len);
+            checkCost(OCSettings.get().dataCardComplex + OCSettings.get().dataCardComplexByte * len);
             byte[] target = new byte[len];
             SecureRandomInstance.get().nextBytes(target);
             return ResultWrapper.result((Object) target);
@@ -260,10 +261,10 @@ public abstract class DataCard extends li.cil.oc.api.prefab.ManagedEnvironment i
             return deviceInfo;
         }
 
-        @Callback(direct = true, limit = 1, doc = "function([bitLen:number]):userdata, userdata -- Generates key pair.")
+        @Callback(direct = true, limit = 1, doc = "function([bitLen:number]):userdata, userdata -- Generates key pair. Returns: public, private keys. Allowed key lengths: 256, 384 bits.")
         public Object[] generateKeyPair(Context context, Arguments args) {
             try {
-                checkCost(Settings.get().dataCardAsymmetric);
+                checkCost(OCSettings.get().dataCardAsymmetric);
                 int bitLen = args.optInteger(0, 384);
                 if (bitLen != 256 && bitLen != 384)
                     throw new IllegalArgumentException("invalid key length, must be 256 or 384");
@@ -276,17 +277,17 @@ public abstract class DataCard extends li.cil.oc.api.prefab.ManagedEnvironment i
             }
         }
 
-        @Callback(direct = true, limit = 8, doc = "function(data:string, type:string):userdata -- Restores key from string.")
+        @Callback(direct = true, limit = 8, doc = "function(data:string, type:string):userdata -- Restores key from its string representation.")
         public Object[] deserializeKey(Context context, Arguments args) {
             byte[] data = simpleCost(context, args);
             String t = args.checkString(1);
             return ResultWrapper.result(new ECUserdata(ECUserdata.deserializeKey(t, data)));
         }
 
-        @Callback(direct = true, limit = 1, doc = "function(priv:userdata, pub:userdata):string -- Generates a shared key.")
+        @Callback(direct = true, limit = 1, doc = "function(priv:userdata, pub:userdata):string -- Generates a shared key. ecdh(a.priv, b.pub) == ecdh(b.priv, a.pub)")
         public Object[] ecdh(Context context, Arguments args) {
             try {
-                checkCost(Settings.get().dataCardAsymmetric);
+                checkCost(OCSettings.get().dataCardAsymmetric);
                 ECUserdata privUd = checkUserdata(args, 0, false);
                 ECUserdata pubUd = checkUserdata(args, 1, true);
                 KeyAgreement ka = KeyAgreement.getInstance("ECDH");
@@ -298,7 +299,7 @@ public abstract class DataCard extends li.cil.oc.api.prefab.ManagedEnvironment i
             }
         }
 
-        @Callback(direct = true, limit = 1, doc = "function(data:string, key:userdata[, sig:string]):string or boolean -- Signs or verifies.")
+        @Callback(direct = true, limit = 1, doc = "function(data:string, key:userdata[, sig:string]):string or boolean -- Signs or verifies data.")
         public Object[] ecdsa(Context context, Arguments args) {
             try {
                 byte[] data = asymmetricCost(context, args);
@@ -385,7 +386,7 @@ public abstract class DataCard extends li.cil.oc.api.prefab.ManagedEnvironment i
             return ResultWrapper.result(keyType());
         }
 
-        @Callback(direct = true, limit = 4, doc = "function():string -- Returns string representation.")
+        @Callback(direct = true, limit = 4, doc = "function():string -- Returns string representation of key. Result is binary data.")
         public Object[] serialize(Context context, Arguments args) {
             return ResultWrapper.result((Object) value.getEncoded());
         }

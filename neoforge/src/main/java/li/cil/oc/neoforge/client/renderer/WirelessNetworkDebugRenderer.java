@@ -6,8 +6,8 @@ import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import li.cil.oc.core.impl.Settings;
-import li.cil.oc.neoforge.server.network.WirelessNetwork;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.server.network.WirelessNetworkManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -20,12 +20,12 @@ public final class WirelessNetworkDebugRenderer {
     @SuppressWarnings("unused")
     public static void onRenderWorldLastEvent(RenderLevelStageEvent e) {
         if (e.getStage() != RenderLevelStageEvent.Stage.AFTER_BLOCK_ENTITIES) return;
-        if (!Settings.rTreeDebugRenderer) return;
+        if (!OCSettings.rTreeDebugRenderer) return;
 
         var world = Minecraft.getInstance().level;
         if (world == null) return;
         var dim = world.dimension();
-        var tree = WirelessNetwork.getTree(dim);
+        var tree = WirelessNetworkManager.getTree(dim);
         if (tree != null) {
             var camera = e.getCamera();
             float px = (float) camera.getPosition().x;

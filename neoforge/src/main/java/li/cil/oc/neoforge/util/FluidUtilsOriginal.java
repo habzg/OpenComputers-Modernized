@@ -49,6 +49,10 @@ public final class FluidUtilsOriginal {
         if (position.level() != null) {
             Level world = position.level();
             if (world.isLoaded(position.toBlockPos())) {
+                IFluidHandler capHandler = world.getCapability(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.BLOCK, position.toBlockPos(), null);
+                if (capHandler != null) {
+                    return capHandler;
+                }
                 BlockEntity te = world.getBlockEntity(position.toBlockPos());
                 if (te instanceof IFluidHandler handler) {
                     return handler;

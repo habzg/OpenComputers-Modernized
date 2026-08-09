@@ -14,5 +14,8 @@ public final class ModRFTools implements ModProxy {
     @Override
     public void initialize() {
         WirelessRedstone.register(new WirelessRedstoneRFTools());
+
+        li.cil.oc.core.impl.common.Registrar.registerWrenchTool("li.cil.oc.neoforge.integration.rftools.EventHandlerRFTools.useWrench");
+        li.cil.oc.core.impl.common.Registrar.registerWrenchToolCheck("li.cil.oc.neoforge.integration.rftools.EventHandlerRFTools.isWrench");
     }
 }

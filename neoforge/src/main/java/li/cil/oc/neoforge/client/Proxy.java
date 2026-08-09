@@ -1,18 +1,21 @@
 package li.cil.oc.neoforge.client;
 
-import li.cil.oc.core.impl.client.renderer.tileentity.AdapterRenderer;
-import li.cil.oc.core.impl.client.renderer.tileentity.AssemblerRenderer;
-import li.cil.oc.core.impl.client.renderer.tileentity.ChargerRenderer;
-import li.cil.oc.core.impl.client.renderer.tileentity.DisassemblerRenderer;
-import li.cil.oc.core.impl.client.renderer.tileentity.GeolyzerRenderer;
-import li.cil.oc.core.impl.client.renderer.tileentity.HologramRenderer;
-import li.cil.oc.core.impl.client.renderer.tileentity.MicrocontrollerRenderer;
-import li.cil.oc.core.impl.client.renderer.tileentity.NetSplitterRenderer;
-import li.cil.oc.core.impl.client.renderer.tileentity.PowerDistributorRenderer;
-import li.cil.oc.core.impl.client.renderer.tileentity.PrinterRenderer;
-import li.cil.oc.core.impl.client.renderer.tileentity.RaidRenderer;
-import li.cil.oc.core.impl.client.renderer.tileentity.RelayRenderer;
-import li.cil.oc.core.impl.client.renderer.tileentity.TransposerRenderer;
+import li.cil.oc.core.impl.client.renderer.entity.DroneRenderer;
+import li.cil.oc.core.impl.client.renderer.item.HoverBootRenderer;
+import li.cil.oc.core.impl.client.renderer.blockentity.AdapterRenderer;
+import li.cil.oc.core.impl.client.renderer.blockentity.AssemblerRenderer;
+import li.cil.oc.core.impl.client.renderer.blockentity.CaseRenderer;
+import li.cil.oc.core.impl.client.renderer.blockentity.ChargerRenderer;
+import li.cil.oc.core.impl.client.renderer.blockentity.DisassemblerRenderer;
+import li.cil.oc.core.impl.client.renderer.blockentity.DiskDriveRenderer;
+import li.cil.oc.core.impl.client.renderer.blockentity.GeolyzerRenderer;
+import li.cil.oc.core.impl.client.renderer.blockentity.MicrocontrollerRenderer;
+import li.cil.oc.core.impl.client.renderer.blockentity.NetSplitterRenderer;
+import li.cil.oc.core.impl.client.renderer.blockentity.PowerDistributorRenderer;
+import li.cil.oc.core.impl.client.renderer.blockentity.PrinterRenderer;
+import li.cil.oc.core.impl.client.renderer.blockentity.RaidRenderer;
+import li.cil.oc.core.impl.client.renderer.blockentity.RelayRenderer;
+import li.cil.oc.core.impl.client.renderer.blockentity.TransposerRenderer;
 import li.cil.oc.core.impl.util.Color;
 import li.cil.oc.core.impl.util.ItemColorizer;
 import li.cil.oc.neoforge.client.renderer.HighlightRenderer;
@@ -20,21 +23,18 @@ import li.cil.oc.neoforge.client.renderer.HologramDeferredEventHandler;
 import li.cil.oc.neoforge.client.renderer.MFUTargetRenderer;
 import li.cil.oc.neoforge.client.renderer.PetRenderer;
 import li.cil.oc.neoforge.client.renderer.WirelessNetworkDebugRenderer;
-import li.cil.oc.neoforge.client.renderer.entity.DroneRenderer;
 import li.cil.oc.neoforge.client.renderer.entity.HoverBootLayer;
-import li.cil.oc.neoforge.client.renderer.item.HoverBootRenderer;
-import li.cil.oc.neoforge.client.renderer.tileentity.CableRenderer;
-import li.cil.oc.neoforge.client.renderer.tileentity.CaseRenderer;
-import li.cil.oc.neoforge.client.renderer.tileentity.DiskDriveRenderer;
-import li.cil.oc.neoforge.client.renderer.tileentity.RackRenderer;
-import li.cil.oc.neoforge.client.renderer.tileentity.RobotRenderer;
-import li.cil.oc.neoforge.client.renderer.tileentity.ScreenRenderer;
+import li.cil.oc.neoforge.client.renderer.blockentity.CableRenderer;
+import li.cil.oc.neoforge.client.renderer.blockentity.HologramRenderer;
+import li.cil.oc.neoforge.client.renderer.blockentity.RackRenderer;
+import li.cil.oc.neoforge.client.renderer.blockentity.RobotRenderer;
+import li.cil.oc.neoforge.client.renderer.blockentity.ScreenRenderer;
 import li.cil.oc.neoforge.common.event.NanomachinesHandler;
 import li.cil.oc.neoforge.common.event.RackMountableRenderHandler;
 import li.cil.oc.neoforge.common.init.Blocks;
 import li.cil.oc.neoforge.common.init.Entities;
 import li.cil.oc.neoforge.common.init.Items;
-import li.cil.oc.neoforge.common.init.TileEntities;
+import li.cil.oc.neoforge.common.init.BlockEntities;
 import li.cil.oc.neoforge.model.CableModel;
 import li.cil.oc.neoforge.model.DroneModel;
 import li.cil.oc.neoforge.model.FloppyModel;
@@ -76,8 +76,6 @@ public class Proxy extends li.cil.oc.neoforge.common.Proxy {
         super.init(e);
 
         li.cil.oc.core.impl.client.gui.Icons.init();
-
-        li.cil.oc.core.impl.util.TabletCache.setClientInstance(new li.cil.oc.neoforge.util.NeoClientTabletCache());
 
         NeoForge.EVENT_BUS.register(CommandHandler.class);
         NeoForge.EVENT_BUS.register(HighlightRenderer.class);
@@ -176,25 +174,25 @@ public class Proxy extends li.cil.oc.neoforge.common.Proxy {
     }
 
     public static void handleRegisterBlockEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        event.registerBlockEntityRenderer(TileEntities.ADAPTER.get(), AdapterRenderer::new);
-        event.registerBlockEntityRenderer(TileEntities.CABLE.get(), CableRenderer::new);
-        event.registerBlockEntityRenderer(TileEntities.ASSEMBLER.get(), AssemblerRenderer::new);
-        event.registerBlockEntityRenderer(TileEntities.CASE.get(), CaseRenderer::new);
-        event.registerBlockEntityRenderer(TileEntities.CHARGER.get(), ChargerRenderer::new);
-        event.registerBlockEntityRenderer(TileEntities.DISASSEMBLER.get(), DisassemblerRenderer::new);
-        event.registerBlockEntityRenderer(TileEntities.DISK_DRIVE.get(), DiskDriveRenderer::new);
-        event.registerBlockEntityRenderer(TileEntities.GEOLYZER.get(), GeolyzerRenderer::new);
-        event.registerBlockEntityRenderer(TileEntities.HOLOGRAM.get(), HologramRenderer::new);
-        event.registerBlockEntityRenderer(TileEntities.MICROCONTROLLER.get(), MicrocontrollerRenderer::new);
-        event.registerBlockEntityRenderer(TileEntities.NET_SPLITTER.get(), NetSplitterRenderer::new);
-        event.registerBlockEntityRenderer(TileEntities.POWER_DISTRIBUTOR.get(), PowerDistributorRenderer::new);
-        event.registerBlockEntityRenderer(TileEntities.PRINTER.get(), PrinterRenderer::new);
-        event.registerBlockEntityRenderer(TileEntities.RACK.get(), RackRenderer::new);
-        event.registerBlockEntityRenderer(TileEntities.RAID.get(), RaidRenderer::new);
-        event.registerBlockEntityRenderer(TileEntities.RELAY.get(), RelayRenderer::new);
-        event.registerBlockEntityRenderer(TileEntities.ROBOT.get(), RobotRenderer::new);
-        event.registerBlockEntityRenderer(TileEntities.SCREEN.get(), ScreenRenderer::new);
-        event.registerBlockEntityRenderer(TileEntities.TRANSPOSER.get(), TransposerRenderer::new);
+        event.registerBlockEntityRenderer(BlockEntities.ADAPTER.get(), AdapterRenderer::new);
+        event.registerBlockEntityRenderer(BlockEntities.CABLE.get(), CableRenderer::new);
+        event.registerBlockEntityRenderer(BlockEntities.ASSEMBLER.get(), AssemblerRenderer::new);
+        event.registerBlockEntityRenderer(BlockEntities.CASE.get(), CaseRenderer::new);
+        event.registerBlockEntityRenderer(BlockEntities.CHARGER.get(), ChargerRenderer::new);
+        event.registerBlockEntityRenderer(BlockEntities.DISASSEMBLER.get(), DisassemblerRenderer::new);
+        event.registerBlockEntityRenderer(BlockEntities.DISK_DRIVE.get(), DiskDriveRenderer::new);
+        event.registerBlockEntityRenderer(BlockEntities.GEOLYZER.get(), GeolyzerRenderer::new);
+        event.registerBlockEntityRenderer(BlockEntities.HOLOGRAM.get(), HologramRenderer::new);
+        event.registerBlockEntityRenderer(BlockEntities.MICROCONTROLLER.get(), MicrocontrollerRenderer::new);
+        event.registerBlockEntityRenderer(BlockEntities.NET_SPLITTER.get(), NetSplitterRenderer::new);
+        event.registerBlockEntityRenderer(BlockEntities.POWER_DISTRIBUTOR.get(), PowerDistributorRenderer::new);
+        event.registerBlockEntityRenderer(BlockEntities.PRINTER.get(), PrinterRenderer::new);
+        event.registerBlockEntityRenderer(BlockEntities.RACK.get(), RackRenderer::new);
+        event.registerBlockEntityRenderer(BlockEntities.RAID.get(), RaidRenderer::new);
+        event.registerBlockEntityRenderer(BlockEntities.RELAY.get(), RelayRenderer::new);
+        event.registerBlockEntityRenderer(BlockEntities.ROBOT.get(), RobotRenderer::new);
+        event.registerBlockEntityRenderer(BlockEntities.SCREEN.get(), ScreenRenderer::new);
+        event.registerBlockEntityRenderer(BlockEntities.TRANSPOSER.get(), TransposerRenderer::new);
         event.registerEntityRenderer(Entities.DRONE.get(), DroneRenderer::new);
     }
 
@@ -212,7 +210,7 @@ public class Proxy extends li.cil.oc.neoforge.common.Proxy {
         BlockColor teColor = (state, level, pos, tintIndex) -> {
             if (level != null && pos != null) {
                 BlockEntity te = level.getBlockEntity(pos);
-                if (te instanceof li.cil.oc.core.impl.common.tileentity.traits.Colored colored) {
+                if (te instanceof li.cil.oc.core.impl.common.blockentity.traits.Colored colored) {
                     return colored.color();
                 }
             }
@@ -228,7 +226,7 @@ public class Proxy extends li.cil.oc.neoforge.common.Proxy {
         event.register(teColor, Blocks.CABLE.get());
 
         BlockColor chameliumColor = (state, level, pos, tintIndex) -> {
-            net.minecraft.world.item.DyeColor dye = state.getValue(li.cil.oc.neoforge.common.block.ChameliumBlock.COLOR);
+            net.minecraft.world.item.DyeColor dye = state.getValue(li.cil.oc.core.impl.common.block.ChameliumBlock.COLOR);
             return li.cil.oc.core.impl.util.Color.byMeta(dye.getId());
         };
         event.register(chameliumColor, Blocks.CHAMELIUM_BLOCK.get());
@@ -252,7 +250,7 @@ public class Proxy extends li.cil.oc.neoforge.common.Proxy {
                         int t = Math.min(bc.tier, 3);
                         return 0xFF000000 | li.cil.oc.core.impl.util.Color.byTier[Math.max(0, t)];
                     }
-                    if (block instanceof li.cil.oc.neoforge.common.block.Screen bs) {
+                    if (block instanceof li.cil.oc.core.impl.common.block.Screen bs) {
                         int t = Math.min(bs.tier, 3);
                         return 0xFF000000 | li.cil.oc.core.impl.util.Color.byTier[Math.max(0, t)];
                     }
@@ -264,7 +262,7 @@ public class Proxy extends li.cil.oc.neoforge.common.Proxy {
             return 0xFFFFFFFF;
         }, Blocks.CABLE.get().asItem());
         event.register((stack, tintIndex) -> {
-            var dye = li.cil.oc.neoforge.common.block.ChameliumBlock.readDyeColor(stack);
+            var dye = li.cil.oc.core.impl.common.block.ChameliumBlock.readDyeColor(stack);
             return 0xFF000000 | (dye != null ? li.cil.oc.core.impl.util.Color.byMeta(dye.getId()) : li.cil.oc.core.impl.util.Color.Black);
         }, Blocks.CHAMELIUM_BLOCK.get().asItem());
     }

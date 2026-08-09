@@ -1,11 +1,10 @@
 package li.cil.oc.core.impl.client.renderer.markdown.segment;
 
+import java.net.URI;
 import li.cil.oc.core.client.renderer.markdown.MarkupFormat;
 import li.cil.oc.core.impl.client.renderer.markdown.Document;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
-
-import java.net.URI;
 
 public class LinkSegment extends TextSegment implements InteractiveSegment {
     public final String href;

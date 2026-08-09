@@ -12,6 +12,6 @@ public class Transposer extends SimpleBlock {
 
     @Override
     public BlockEntity newBlockEntity(@NotNull BlockPos pos, @NotNull BlockState state) {
-        return new li.cil.oc.neoforge.common.tileentity.Transposer(pos, state);
+        return new li.cil.oc.neoforge.common.blockentity.Transposer(pos, state);
     }
 }

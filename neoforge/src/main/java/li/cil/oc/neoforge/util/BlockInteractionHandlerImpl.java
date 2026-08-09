@@ -1,6 +1,6 @@
 package li.cil.oc.neoforge.util;
 
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.BlockInteractionHandler;
 import li.cil.oc.core.impl.util.BlockPosition;
 import net.minecraft.core.BlockPos;
@@ -17,7 +17,7 @@ import net.neoforged.neoforge.event.level.BlockEvent;
 public final class BlockInteractionHandlerImpl implements BlockInteractionHandler {
     @Override
     public Player getFakePlayer(Level level, BlockPosition pos) {
-        Player player = FakePlayerFactory.get((ServerLevel) level, Settings.get().fakePlayerProfile);
+        Player player = FakePlayerFactory.get((ServerLevel) level, OCSettings.get().fakePlayerProfile);
         player.setPos(pos.x() + 0.5, pos.y() + 0.5, pos.z() + 0.5);
         return player;
     }

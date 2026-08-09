@@ -1,11 +1,10 @@
 package li.cil.oc.core.impl.common.block.traits;
 
+import java.util.List;
 import li.cil.oc.core.impl.common.block.AbstractBlock;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-
-import java.util.List;
 
 public interface PowerAcceptor {
     double energyThroughput();

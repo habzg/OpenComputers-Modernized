@@ -1,9 +1,8 @@
 package li.cil.oc.core.server.machine;
 
+import java.util.Map;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.network.Node;
-
-import java.util.Map;
 
 public abstract class ArchitectureAPI {
     protected final Machine machine;

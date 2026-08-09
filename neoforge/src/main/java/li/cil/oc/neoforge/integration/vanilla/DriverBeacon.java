@@ -6,9 +6,9 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.ManagedEnvironment;
-import li.cil.oc.api.prefab.DriverSidedTileEntity;
+import li.cil.oc.api.prefab.DriverSidedBlockEntity;
+import li.cil.oc.core.impl.integration.ManagedBlockEntityEnvironment;
 import li.cil.oc.core.util.ResultWrapper;
-import li.cil.oc.neoforge.integration.ManagedTileEntityEnvironment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
@@ -20,18 +20,18 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 
 @SuppressWarnings("unused")
-public final class DriverBeacon extends DriverSidedTileEntity {
+public final class DriverBeacon extends DriverSidedBlockEntity {
     @Override
-    public Class<?> getTileEntityClass() {
+    public Class<?> getBlockEntityClass() {
         return BeaconBlockEntity.class;
     }
 
     @Override
-    public ManagedEnvironment createEnvironment(Level world, int x, int y, int z, Direction side) {
-        return new Environment((BeaconBlockEntity) world.getBlockEntity(new BlockPos(x, y, z)));
+    public ManagedEnvironment createEnvironment(Level world, BlockPos pos, Direction side) {
+        return new Environment((BeaconBlockEntity) world.getBlockEntity(pos));
     }
 
-    public static final class Environment extends ManagedTileEntityEnvironment<BeaconBlockEntity> implements NamedBlock {
+    public static final class Environment extends ManagedBlockEntityEnvironment<BeaconBlockEntity> implements NamedBlock {
         public Environment(BeaconBlockEntity BlockEntity) {
             super(BlockEntity, "beacon");
         }
@@ -59,17 +59,17 @@ public final class DriverBeacon extends DriverSidedTileEntity {
 
         @Callback(doc = "function():number -- Get the number of levels for this beacon.")
         public Object[] getLevels(Context context, Arguments args) {
-            return ResultWrapper.result(getTileEntity().levels);
+            return ResultWrapper.result(getBlockEntity().levels);
         }
 
         @Callback(doc = "function():string -- Get the name of the active primary effect.")
         public Object[] getPrimaryEffect(Context context, Arguments args) {
-            return ResultWrapper.result(getEffectName(getTileEntity().primaryPower));
+            return ResultWrapper.result(getEffectName(getBlockEntity().primaryPower));
         }
 
         @Callback(doc = "function():string -- Get the name of the active secondary effect.")
         public Object[] getSecondaryEffect(Context context, Arguments args) {
-            return ResultWrapper.result(getEffectName(getTileEntity().secondaryPower));
+            return ResultWrapper.result(getEffectName(getBlockEntity().secondaryPower));
         }
     }
 

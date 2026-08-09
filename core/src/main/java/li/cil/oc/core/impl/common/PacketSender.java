@@ -1,6 +1,8 @@
 package li.cil.oc.core.impl.common;
 
+import java.io.IOException;
 import li.cil.oc.core.common.PacketType;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.BlockPosition;
 import li.cil.oc.core.impl.util.PackedColor;
 import net.minecraft.core.Direction;
@@ -11,8 +13,6 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-
-import java.io.IOException;
 
 
 public abstract class PacketSender {
@@ -29,9 +29,9 @@ public abstract class PacketSender {
     protected void sendAdapterStateImpl(BlockEntity t, byte compressedSides) {
         try (PacketBuilderBase<?> pb = createBuilder(PacketType.AdapterState)) {
             try {
-                pb.writeTileEntity(t);
+                pb.writeBlockEntity(t);
                 pb.writeByte(compressedSides);
-                pb.sendToPlayersNearTileEntity(t);
+                pb.sendToPlayersNearBlockEntity(t);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -60,10 +60,10 @@ public abstract class PacketSender {
     protected void sendChargerStateImpl(BlockEntity t, double chargeSpeed, boolean hasPower) {
         try (PacketBuilderBase<?> pb = createBuilder(PacketType.ChargerState)) {
             try {
-                pb.writeTileEntity(t);
+                pb.writeBlockEntity(t);
                 pb.writeDouble(chargeSpeed);
                 pb.writeBoolean(hasPower);
-                pb.sendToPlayersNearTileEntity(t);
+                pb.sendToPlayersNearBlockEntity(t);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -98,9 +98,9 @@ public abstract class PacketSender {
     protected void sendColorChangeImpl(BlockEntity t, int color) {
         try (PacketBuilderBase<?> pb = createBuilder(PacketType.ColorChange)) {
             try {
-                pb.writeTileEntity(t);
+                pb.writeBlockEntity(t);
                 pb.writeInt(color);
-                pb.sendToPlayersNearTileEntity(t);
+                pb.sendToPlayersNearBlockEntity(t);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -114,10 +114,10 @@ public abstract class PacketSender {
     protected void sendComputerStateImpl(BlockEntity t, boolean isRunning, boolean hasErrored) {
         try (PacketBuilderBase<?> pb = createBuilder(PacketType.ComputerState)) {
             try {
-                pb.writeTileEntity(t);
+                pb.writeBlockEntity(t);
                 pb.writeBoolean(isRunning);
                 pb.writeBoolean(hasErrored);
-                pb.sendToPlayersNearTileEntity(t);
+                pb.sendToPlayersNearBlockEntity(t);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -131,10 +131,10 @@ public abstract class PacketSender {
     protected void sendComputerUserListImpl(BlockEntity t, String[] list) {
         try (PacketBuilderBase<?> pb = createBuilder(PacketType.ComputerUserList)) {
             try {
-                pb.writeTileEntity(t);
+                pb.writeBlockEntity(t);
                 pb.writeInt(list.length);
                 for (String s : list) pb.writeUTF(s);
-                pb.sendToPlayersNearTileEntity(t);
+                pb.sendToPlayersNearBlockEntity(t);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -166,9 +166,9 @@ public abstract class PacketSender {
     protected void sendDisassemblerActiveImpl(BlockEntity t, boolean active) {
         try (PacketBuilderBase<?> pb = createBuilder(PacketType.DisassemblerActiveChange)) {
             try {
-                pb.writeTileEntity(t);
+                pb.writeBlockEntity(t);
                 pb.writeBoolean(active);
-                pb.sendToPlayersNearTileEntity(t);
+                pb.sendToPlayersNearBlockEntity(t);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -181,10 +181,10 @@ public abstract class PacketSender {
 
     protected void sendFloppyChangeImpl(BlockEntity t, ItemStack stack) {
         try (PacketBuilderBase<?> pb = createBuilder(PacketType.FloppyChange)) {
-            pb.writeTileEntity(t);
+            pb.writeBlockEntity(t);
             var level = t.getLevel();
             pb.writeItemStack(stack, level != null ? level.registryAccess() : null);
-            pb.sendToPlayersNearTileEntity(t);
+            pb.sendToPlayersNearBlockEntity(t);
         }
     }
 
@@ -194,8 +194,8 @@ public abstract class PacketSender {
 
     protected void sendHologramClearImpl(BlockEntity t) {
         try (PacketBuilderBase<?> pb = createBuilder(PacketType.HologramClear)) {
-            pb.writeTileEntity(t);
-            pb.sendToPlayersNearTileEntity(t);
+            pb.writeBlockEntity(t);
+            pb.sendToPlayersNearBlockEntity(t);
         }
     }
 
@@ -206,10 +206,10 @@ public abstract class PacketSender {
     protected void sendHologramColorImpl(BlockEntity t, int index, int value) {
         try (PacketBuilderBase<?> pb = createBuilder(PacketType.HologramColor)) {
             try {
-                pb.writeTileEntity(t);
+                pb.writeBlockEntity(t);
                 pb.writeInt(index);
                 pb.writeInt(value);
-                pb.sendToPlayersNearTileEntity(t);
+                pb.sendToPlayersNearBlockEntity(t);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -223,9 +223,9 @@ public abstract class PacketSender {
     protected void sendHologramPowerChangeImpl(BlockEntity t, boolean hasPower) {
         try (PacketBuilderBase<?> pb = createBuilder(PacketType.HologramPowerChange)) {
             try {
-                pb.writeTileEntity(t);
+                pb.writeBlockEntity(t);
                 pb.writeBoolean(hasPower);
-                pb.sendToPlayersNearTileEntity(t);
+                pb.sendToPlayersNearBlockEntity(t);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -239,9 +239,9 @@ public abstract class PacketSender {
     protected void sendHologramScaleImpl(BlockEntity t, double scale) {
         try (PacketBuilderBase<?> pb = createBuilder(PacketType.HologramScale)) {
             try {
-                pb.writeTileEntity(t);
+                pb.writeBlockEntity(t);
                 pb.writeDouble(scale);
-                pb.sendToPlayersNearTileEntity(t);
+                pb.sendToPlayersNearBlockEntity(t);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -267,11 +267,11 @@ public abstract class PacketSender {
     protected void sendHologramOffsetImpl(BlockEntity t, double translationX, double translationY, double translationZ) {
         try (PacketBuilderBase<?> pb = createBuilder(PacketType.HologramTranslation)) {
             try {
-                pb.writeTileEntity(t);
+                pb.writeBlockEntity(t);
                 pb.writeDouble(translationX);
                 pb.writeDouble(translationY);
                 pb.writeDouble(translationZ);
-                pb.sendToPlayersNearTileEntity(t);
+                pb.sendToPlayersNearBlockEntity(t);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -285,12 +285,12 @@ public abstract class PacketSender {
     protected void sendHologramRotationImpl(BlockEntity t, float rotationAngle, float rotationX, float rotationY, float rotationZ) {
         try (PacketBuilderBase<?> pb = createBuilder(PacketType.HologramRotation)) {
             try {
-                pb.writeTileEntity(t);
+                pb.writeBlockEntity(t);
                 pb.writeFloat(rotationAngle);
                 pb.writeFloat(rotationX);
                 pb.writeFloat(rotationY);
                 pb.writeFloat(rotationZ);
-                pb.sendToPlayersNearTileEntity(t);
+                pb.sendToPlayersNearBlockEntity(t);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -304,12 +304,12 @@ public abstract class PacketSender {
     protected void sendHologramRotationSpeedImpl(BlockEntity t, float rotationSpeed, float rotationSpeedX, float rotationSpeedY, float rotationSpeedZ) {
         try (PacketBuilderBase<?> pb = createBuilder(PacketType.HologramRotationSpeed)) {
             try {
-                pb.writeTileEntity(t);
+                pb.writeBlockEntity(t);
                 pb.writeFloat(rotationSpeed);
                 pb.writeFloat(rotationSpeedX);
                 pb.writeFloat(rotationSpeedY);
                 pb.writeFloat(rotationSpeedZ);
-                pb.sendToPlayersNearTileEntity(t);
+                pb.sendToPlayersNearBlockEntity(t);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -329,10 +329,10 @@ public abstract class PacketSender {
     protected void sendNetSplitterStateImpl(BlockEntity t, boolean isInverted, byte compressedSides) {
         try (PacketBuilderBase<?> pb = createBuilder(PacketType.NetSplitterState)) {
             try {
-                pb.writeTileEntity(t);
+                pb.writeBlockEntity(t);
                 pb.writeBoolean(isInverted);
                 pb.writeByte(compressedSides);
-                pb.sendToPlayersNearTileEntity(t);
+                pb.sendToPlayersNearBlockEntity(t);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -355,7 +355,7 @@ public abstract class PacketSender {
                 pb.writeDirection(direction);
                 pb.writeUTF(name);
                 pb.writeByte((byte) count);
-                pb.sendToNearbyPlayers(position.level(), position.x(), position.y(), position.z(), li.cil.oc.core.impl.Settings.get().maxNetworkClientEffectPacketDistance / 2.0);
+                pb.sendToNearbyPlayers(position.level(), position.x(), position.y(), position.z(), OCSettings.get().maxNetworkClientEffectPacketDistance / 2.0);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -369,10 +369,10 @@ public abstract class PacketSender {
     protected void sendPowerStateImpl(BlockEntity t, double buffer, double bufferSize) {
         try (PacketBuilderBase<?> pb = createBuilder(PacketType.PowerState)) {
             try {
-                pb.writeTileEntity(t);
+                pb.writeBlockEntity(t);
                 pb.writeDouble(buffer);
                 pb.writeDouble(bufferSize);
-                pb.sendToPlayersNearTileEntity(t);
+                pb.sendToPlayersNearBlockEntity(t);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -386,9 +386,9 @@ public abstract class PacketSender {
     protected void sendPrintingImpl(BlockEntity t, boolean printing) {
         try (PacketBuilderBase<?> pb = createBuilder(PacketType.PrinterState)) {
             try {
-                pb.writeTileEntity(t);
+                pb.writeBlockEntity(t);
                 pb.writeBoolean(printing);
-                pb.sendToPlayersNearTileEntity(t);
+                pb.sendToPlayersNearBlockEntity(t);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -402,9 +402,9 @@ public abstract class PacketSender {
     protected void sendRobotAssemblingImpl(BlockEntity t, boolean assembling) {
         try (PacketBuilderBase<?> pb = createBuilder(PacketType.RobotAssemblingState)) {
             try {
-                pb.writeTileEntity(t);
+                pb.writeBlockEntity(t);
                 pb.writeBoolean(assembling);
-                pb.sendToPlayersNearTileEntity(t);
+                pb.sendToPlayersNearBlockEntity(t);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -417,8 +417,8 @@ public abstract class PacketSender {
 
     protected void sendSwitchActivityImpl(BlockEntity t) {
         try (PacketBuilderBase<?> pb = createBuilder(PacketType.SwitchActivity)) {
-            pb.writeTileEntity(t);
-            pb.sendToPlayersNearTileEntity(t, li.cil.oc.core.impl.Settings.get().maxNetworkClientEffectPacketDistance);
+            pb.writeBlockEntity(t);
+            pb.sendToPlayersNearBlockEntity(t, OCSettings.get().maxNetworkClientEffectPacketDistance);
         }
     }
 
@@ -451,9 +451,9 @@ public abstract class PacketSender {
     protected void sendScreenTouchModeImpl(BlockEntity t, boolean value) {
         try (PacketBuilderBase<?> pb = createBuilder(PacketType.ScreenTouchMode)) {
             try {
-                pb.writeTileEntity(t);
+                pb.writeBlockEntity(t);
                 pb.writeBoolean(value);
-                pb.sendToPlayersNearTileEntity(t);
+                pb.sendToPlayersNearBlockEntity(t);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -474,7 +474,7 @@ public abstract class PacketSender {
                 pb.writeInt(blockPos.z());
                 pb.writeShort((short) frequency);
                 pb.writeShort((short) duration);
-                pb.sendToNearbyPlayers(world, x, y, z, li.cil.oc.core.impl.Settings.get().maxNetworkClientSoundPacketDistance);
+                pb.sendToNearbyPlayers(world, x, y, z, OCSettings.get().maxNetworkClientSoundPacketDistance);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -494,7 +494,7 @@ public abstract class PacketSender {
                 pb.writeInt(blockPos.y());
                 pb.writeInt(blockPos.z());
                 pb.writeUTF(pattern);
-                pb.sendToNearbyPlayers(world, x, y, z, li.cil.oc.core.impl.Settings.get().maxNetworkClientSoundPacketDistance);
+                pb.sendToNearbyPlayers(world, x, y, z, OCSettings.get().maxNetworkClientSoundPacketDistance);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -507,8 +507,8 @@ public abstract class PacketSender {
 
     protected void sendTransposerActivityImpl(BlockEntity t) {
         try (PacketBuilderBase<?> pb = createBuilder(PacketType.TransposerActivity)) {
-            pb.writeTileEntity(t);
-            pb.sendToPlayersNearTileEntity(t, li.cil.oc.core.impl.Settings.get().maxNetworkClientEffectPacketDistance / 2.0);
+            pb.writeBlockEntity(t);
+            pb.sendToPlayersNearBlockEntity(t, OCSettings.get().maxNetworkClientEffectPacketDistance / 2.0);
         }
     }
 
@@ -856,16 +856,16 @@ public abstract class PacketSender {
 
     protected abstract void sendRedstoneStateImpl(BlockEntity t, boolean outputEnabled, int[] output) ;
 
-    public static void sendWaypointLabel(li.cil.oc.core.impl.common.tileentity.Waypoint t) {
+    public static void sendWaypointLabel(li.cil.oc.core.impl.common.blockentity.Waypoint t) {
         INSTANCE.sendWaypointLabelImpl(t);
     }
 
-    protected void sendWaypointLabelImpl(li.cil.oc.core.impl.common.tileentity.Waypoint t) {
+    protected void sendWaypointLabelImpl(li.cil.oc.core.impl.common.blockentity.Waypoint t) {
         try (PacketBuilderBase<?> pb = createBuilder(PacketType.WaypointLabel)) {
             try {
-                pb.writeTileEntity(t);
+                pb.writeBlockEntity(t);
                 pb.writeUTF(t.label);
-                pb.sendToPlayersNearTileEntity(t);
+                pb.sendToPlayersNearBlockEntity(t);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -894,10 +894,10 @@ public abstract class PacketSender {
 
     protected void sendRotatableStateImpl(BlockEntity t, Direction pitch, Direction yaw) {
         try (PacketBuilderBase<?> pb = createBuilder(PacketType.RotatableState)) {
-            pb.writeTileEntity(t);
+            pb.writeBlockEntity(t);
             pb.writeDirection(pitch);
             pb.writeDirection(yaw);
-            pb.sendToPlayersNearTileEntity(t);
+            pb.sendToPlayersNearBlockEntity(t);
         }
     }
 }

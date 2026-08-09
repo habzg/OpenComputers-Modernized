@@ -3,7 +3,7 @@
  * classes so that they can be checked for and used by type checking and
  * casting to these interfaces.
  * <br>
- * For example, to determine whether a tile entity is a robot, you can
+ * For example, to determine whether a block entity is a robot, you can
  * do an <code>instanceof</code> with the {@link li.cil.oc.api.internal.Robot}
  * interface - and cast to it if you wish to access some of the provided
  * functionality.

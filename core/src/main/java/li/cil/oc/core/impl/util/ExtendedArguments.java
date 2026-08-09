@@ -42,6 +42,18 @@ public final class ExtendedArguments {
         return checkSide(args, index, Direction.values());
     }
 
+    public static Direction checkSideExcept(Arguments args, int index, Direction... except) {
+        java.util.List<Direction> allowed = new java.util.ArrayList<>();
+        outer:
+        for (Direction d : Direction.values()) {
+            for (Direction e : except) {
+                if (e == d) continue outer;
+            }
+            allowed.add(d);
+        }
+        return checkSide(args, index, allowed.toArray(new Direction[0]));
+    }
+
     public static Direction optSideAny(Arguments args, int index, Direction defaultVal) {
         return optSide(args, index, defaultVal);
     }

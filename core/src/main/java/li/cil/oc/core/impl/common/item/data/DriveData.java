@@ -1,13 +1,13 @@
 package li.cil.oc.core.impl.common.item.data;
 
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
 public class DriveData extends ItemData {
-    private static final String UnmanagedKey = Settings.namespace + "unmanaged";
-    private static final String LockKey = Settings.namespace + "lock";
+    private static final String UnmanagedKey = OCSettings.namespace + "unmanaged";
+    private static final String LockKey = OCSettings.namespace + "lock";
     public boolean isUnmanaged = false;
     public String lockInfo = "";
 

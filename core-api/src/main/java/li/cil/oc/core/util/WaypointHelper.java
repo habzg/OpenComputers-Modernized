@@ -3,11 +3,13 @@ package li.cil.oc.core.util;
 public abstract class WaypointHelper {
     private static WaypointHelper instance;
 
-    public static void setInstance(WaypointHelper inst) {
-        instance = inst;
-    }
-
     public static WaypointHelper get() {
+        if (instance == null) {
+            try {
+                instance = (WaypointHelper) Class.forName("li.cil.oc.core.util.WaypointHelperImpl").getDeclaredConstructor().newInstance();
+            } catch (Exception ignored) {
+            }
+        }
         return instance;
     }
 

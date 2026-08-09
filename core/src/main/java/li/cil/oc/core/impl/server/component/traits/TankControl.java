@@ -41,7 +41,7 @@ public interface TankControl extends TankAware {
         return ResultWrapper.result(0);
     }
 
-    @Callback(doc = "function(index:number):boolean -- Compares the fluids in the selected and the specified tank.")
+    @Callback(doc = "function(index:number):boolean -- Compares the fluids in the selected and the specified tank. Returns true if equal.")
     default Object[] compareFluidTo(Context context, Arguments args) {
         int index = ExtendedArguments.checkTank(args, tank(), 0);
         FluidStack a = fluidInTank(selectedTank());

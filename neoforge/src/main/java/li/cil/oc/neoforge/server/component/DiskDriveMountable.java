@@ -20,6 +20,7 @@ public class DiskDriveMountable extends DiskDriveMountableBase {
             buf.writeInt(pos.x());
             buf.writeInt(GuiType.embedSlot(pos.y(), slot));
             buf.writeInt(pos.z());
+            buf.writeUtf("");
         });
     }
 }

@@ -3,11 +3,11 @@ package li.cil.oc.api.network;
 /**
  * The environment of a node.
  * <br>
- * For blocks/tile entities this will usually be the tile entity. For items
+ * For blocks/block entities this will usually be the block entity. For items
  * this will usually be an object created when a component is added to a
  * compatible inventory (e.g. put into a computer).
  * <br>
- * Tile entities should implement this interface if they want to be connected
+ * block entities should implement this interface if they want to be connected
  * to the component network of their neighboring blocks. If you cannot do that,
  * as mentioned above, you will have to provide a driver that creates a managed
  * environment for the block you wish to connect instead.
@@ -15,7 +15,7 @@ package li.cil.oc.api.network;
  * To get some more control over which sides of your block may connect to a
  * network, see {@link SidedEnvironment}.
  * <br>
- * When a tile entity implements this interface a good way of connecting and
+ * When a block entity implements this interface a good way of connecting and
  * disconnecting is the following pattern:
  * <pre>
  *     void updateEntity() {

@@ -1,5 +1,6 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.Map;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
@@ -9,15 +10,13 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.util.ResultWrapper;
 import net.minecraft.world.entity.Entity;
 
-
-import java.util.Map;
-
-public abstract class UpgradeChunkloaderBase extends li.cil.oc.api.prefab.ManagedEnvironment implements DeviceInfo {
+public abstract class UpgradeChunkloaderBase extends AbstractManagedEnvironment implements DeviceInfo {
     public final EnvironmentHost host;
 
     public final Node node = Network.newNode(this, Visibility.Network)
@@ -49,8 +48,8 @@ public abstract class UpgradeChunkloaderBase extends li.cil.oc.api.prefab.Manage
     @Override
     public void update() {
         super.update();
-        if (host.level().getGameTime() % Settings.get().tickFrequency == 0 && active) {
-            if (!consumeEnergy(Settings.get().chunkloaderCost * Settings.get().tickFrequency)) {
+        if (host.level().getGameTime() % OCSettings.get().tickFrequency == 0 && active) {
+            if (!consumeEnergy(OCSettings.get().chunkloaderCost * OCSettings.get().tickFrequency)) {
                 setActive(false);
             } else if (host instanceof Entity) {
                 onChunkTicketActive();
@@ -119,8 +118,8 @@ public abstract class UpgradeChunkloaderBase extends li.cil.oc.api.prefab.Manage
 
     private boolean isDimensionAllowed() {
         int id = legacyDimensionId(host.level().dimension());
-        java.util.List<Integer> whitelist = Settings.get().chunkloadDimensionWhitelist;
-        java.util.List<Integer> blacklist = Settings.get().chunkloadDimensionBlacklist;
+        java.util.List<Integer> whitelist = OCSettings.get().chunkloadDimensionWhitelist;
+        java.util.List<Integer> blacklist = OCSettings.get().chunkloadDimensionBlacklist;
         if (whitelist != null && !whitelist.isEmpty()) {
             boolean found = false;
             for (int w : whitelist) {

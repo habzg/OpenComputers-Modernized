@@ -1,5 +1,6 @@
 package li.cil.oc.core.impl.util;
 
+import java.util.function.Consumer;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Container;
@@ -11,14 +12,12 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.function.Consumer;
-
 public final class InventoryUtils {
 
     public static boolean haveSameItemType(ItemStack stackA, ItemStack stackB, boolean checkNBT) {
         return stackA != null && !stackA.isEmpty() && stackB != null && !stackB.isEmpty() &&
                 stackA.getItem() == stackB.getItem() &&
-                (!stackA.getItem().isDamageable(stackA) || stackA.getDamageValue() == stackB.getDamageValue()) &&
+                (!stackA.isDamageableItem() || stackA.getDamageValue() == stackB.getDamageValue()) &&
                 (!checkNBT || ItemStack.isSameItemSameComponents(stackA, stackB));
     }
 
@@ -119,7 +118,7 @@ public final class InventoryUtils {
         boolean success = false;
         int remaining = limit;
 
-        boolean shouldTryMerge = !stack.getItem().isDamageable(stack) && stack.getMaxStackSize() > 1 && inventory.getMaxStackSize() > 1;
+        boolean shouldTryMerge = !stack.isDamageableItem() && stack.getMaxStackSize() > 1 && inventory.getMaxStackSize() > 1;
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
             int stackSize = stack.getCount();
             ItemStack existing = inventory.getItem(slot);
@@ -304,7 +303,6 @@ public final class InventoryUtils {
                     0.0125 * (rng.nextDouble() - 0.5) + oy * 0.08 + (ox + oz) * 0.03,
                     0.0125 * (rng.nextDouble() - 0.5) + oz * 0.03
             );
-            entity.lifespan = 6000;
             if (validator == null || validator.test(entity)) {
                 world.addFreshEntity(entity);
                 return entity;

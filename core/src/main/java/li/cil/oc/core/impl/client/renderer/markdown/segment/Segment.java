@@ -1,12 +1,11 @@
 package li.cil.oc.core.impl.client.renderer.markdown.segment;
 
-import li.cil.oc.core.client.renderer.markdown.MarkupFormat;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.MultiBufferSource;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
+import li.cil.oc.core.client.renderer.markdown.MarkupFormat;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 
 public abstract class Segment {
     public final Segment parent;
@@ -27,7 +26,7 @@ public abstract class Segment {
         return next == null || root() != next.root();
     }
 
-    public abstract InteractiveSegment render(int x, int y, int indent, int maxWidth, Font renderer, MultiBufferSource bufferSource, int mouseX, int mouseY);
+    public abstract InteractiveSegment render(int x, int y, int indent, int maxWidth, Font renderer, GuiGraphics graphics, int mouseX, int mouseY);
 
     public abstract int nextX(int indent, int maxWidth, Font renderer);
 

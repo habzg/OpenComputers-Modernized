@@ -1,6 +1,12 @@
 package li.cil.oc.core.impl.server.component;
 
 import com.google.common.io.Files;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.util.Map;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.fs.Label;
@@ -10,8 +16,9 @@ import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.util.ResultWrapper;
 import li.cil.oc.core.util.ServerNetwork;
 import net.minecraft.core.HolderLookup;
@@ -20,15 +27,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-
-import java.util.Map;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
-
-public class Drive extends li.cil.oc.api.prefab.ManagedEnvironment implements DeviceInfo {
+public class Drive extends AbstractManagedEnvironment implements DeviceInfo {
     private static final Logger LOGGER = LoggerFactory.getLogger(Drive.class);
     public final int capacity;
     public final int platterCount;
@@ -73,9 +72,9 @@ public class Drive extends li.cil.oc.api.prefab.ManagedEnvironment implements De
         var level = host().level();
         if (level != null && level.getServer() != null) {
             var saveDir = level.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT);
-            return new File(saveDir.toFile(), Settings.savePath + node.address() + ".bin");
+            return new File(saveDir.toFile(), OCSettings.savePath + node.address() + ".bin");
         }
-        return new File("saves", Settings.savePath + node.address() + ".bin");
+        return new File("saves", OCSettings.savePath + node.address() + ".bin");
     }
 
     @Override
@@ -89,7 +88,7 @@ public class Drive extends li.cil.oc.api.prefab.ManagedEnvironment implements De
         return null;
     }
 
-    @Callback(doc = "function(value:string):string -- Sets the label of the drive.")
+    @Callback(doc = "function(value:string):string -- Sets the label of the drive. Returns the new value, which may be truncated.")
     public synchronized Object[] setLabel(Context context, Arguments args) {
         if (isLocked) throw new RuntimeException("drive is read only");
         if (label == null) throw new RuntimeException("drive does not support labeling");
@@ -141,7 +140,7 @@ public class Drive extends li.cil.oc.api.prefab.ManagedEnvironment implements De
         int offset = args.checkInteger(0) - 1;
         moveToSector(context, checkSector(offset));
         diskActivity();
-        return ResultWrapper.result(data[offset] & 0xFF);
+        return ResultWrapper.result(data[offset]);
     }
 
     @SuppressWarnings("SameReturnValue")
@@ -221,7 +220,7 @@ public class Drive extends li.cil.oc.api.prefab.ManagedEnvironment implements De
         int newHeadPos = sectorToHeadPos(sector);
         if (headPos != newHeadPos) {
             int delta = Math.abs(headPos - newHeadPos);
-            if (delta > Settings.get().sectorSeekThreshold) context.pause(Settings.get().sectorSeekTime);
+            if (delta > OCSettings.get().sectorSeekThreshold) context.pause(OCSettings.get().sectorSeekTime);
             headPos = newHeadPos;
         }
         return sector;

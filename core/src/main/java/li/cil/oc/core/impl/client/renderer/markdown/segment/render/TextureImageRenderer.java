@@ -1,20 +1,19 @@
 package li.cil.oc.core.impl.client.renderer.markdown.segment.render;
 
 import com.mojang.blaze3d.platform.TextureUtil;
-import com.mojang.blaze3d.vertex.PoseStack;
+import java.io.IOException;
+import java.io.InputStream;
+import javax.imageio.ImageIO;
 import li.cil.oc.api.manual.ImageRenderer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 
-import javax.imageio.ImageIO;
-import java.io.IOException;
-import java.io.InputStream;
-
 public class TextureImageRenderer implements ImageRenderer {
+    private static final java.util.Map<ResourceLocation, ManualTexture> cache = new java.util.HashMap<>();
+
     private final int width;
     private final int height;
     private final ResourceLocation location;
@@ -23,16 +22,18 @@ public class TextureImageRenderer implements ImageRenderer {
     public TextureImageRenderer(ResourceLocation location) {
         this.location = location;
         var mc = Minecraft.getInstance();
-        var manager = mc.getTextureManager();
-        var existing = manager.getTexture(location);
-        if (existing instanceof ManualTexture tex) {
-            this.width = tex.width;
-            this.height = tex.height;
-        } else {
-            var tex = new ManualTexture(location);
-            manager.register(location, tex);
-            this.width = tex.width;
-            this.height = tex.height;
+        synchronized (cache) {
+            var existing = cache.get(location);
+            if (existing != null) {
+                this.width = existing.width;
+                this.height = existing.height;
+            } else {
+                var tex = new ManualTexture(location);
+                mc.getTextureManager().register(location, tex);
+                cache.put(location, tex);
+                this.width = tex.width;
+                this.height = tex.height;
+            }
         }
     }
 
@@ -47,13 +48,8 @@ public class TextureImageRenderer implements ImageRenderer {
     }
 
     @Override
-    public void render(PoseStack poseStack, MultiBufferSource bufferSource, int mouseX, int mouseY) {
-        var m = poseStack.last().pose();
-        var consumer = bufferSource.getBuffer(RenderType.entityCutout(location));
-        consumer.addVertex(m, 0, 0, 0).setColor(1, 1, 1, 1).setUv(0, 0).setLight(0x00F000F0).setNormal(0, 0, 1);
-        consumer.addVertex(m, 0, height, 0).setColor(1, 1, 1, 1).setUv(0, 1).setLight(0x00F000F0).setNormal(0, 0, 1);
-        consumer.addVertex(m, width, height, 0).setColor(1, 1, 1, 1).setUv(1, 1).setLight(0x00F000F0).setNormal(0, 0, 1);
-        consumer.addVertex(m, width, 0, 0).setColor(1, 1, 1, 1).setUv(1, 0).setLight(0x00F000F0).setNormal(0, 0, 1);
+    public void render(GuiGraphics graphics, int ignoredMouseX, int ignoredMouseY) {
+        graphics.blit(location, 0, 0, 0, 0, width, height, width, height);
     }
 
     static class ManualTexture extends AbstractTexture {
@@ -94,7 +90,8 @@ public class TextureImageRenderer implements ImageRenderer {
                         nativeImage.upload(0, 0, 0, 0, 0, width, height, false, false, false, true);
                     }
                 }
-            } catch (IOException ignored) {
+            } catch (IOException e) {
+                org.slf4j.LoggerFactory.getLogger(TextureImageRenderer.class).warn("Failed to load manual texture: {}", location, e);
             } finally {
                 if (is != null) {
                     try {

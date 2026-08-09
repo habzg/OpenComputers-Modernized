@@ -1,9 +1,11 @@
 package li.cil.oc.core.impl.server.component.traits;
 
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.ExtendedArguments;
 import li.cil.oc.core.impl.util.FluidUtils;
 import li.cil.oc.core.impl.util.InventoryUtils;
@@ -12,10 +14,6 @@ import li.cil.oc.core.util.FluidStack;
 import li.cil.oc.core.util.FluidTank;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
 import static li.cil.oc.core.util.ResultWrapper.result;
 
 public interface TankInventoryControl extends WorldAware, InventoryAware, TankAware {
@@ -34,7 +32,7 @@ public interface TankInventoryControl extends WorldAware, InventoryAware, TankAw
 
     @Callback(doc = "function([slot:number]):table -- Get a description of the fluid in the tank item in the specified slot or the selected slot.")
     default Object[] getFluidInTankInSlot(Context context, Arguments args) {
-        if (Settings.get().allowItemStackInspection) {
+        if (OCSettings.get().allowItemStackInspection) {
             return withFluidInfo(optSlot(args, 0), (fluid, capacity) -> result(fluid));
         }
         return result(null, "not enabled in config");
@@ -42,7 +40,7 @@ public interface TankInventoryControl extends WorldAware, InventoryAware, TankAw
 
     @Callback(doc = "function([tank:number]):table -- Get a description of the fluid in the tank in the specified slot or the selected slot.")
     default Object[] getFluidInInternalTank(Context context, Arguments args) {
-        if (Settings.get().allowItemStackInspection) {
+        if (OCSettings.get().allowItemStackInspection) {
             FluidTank tank = getTank(optTank(args, 0));
             return result(tank != null ? tank.getFluid() : null);
         }
@@ -59,7 +57,8 @@ public interface TankInventoryControl extends WorldAware, InventoryAware, TankAw
         FluidHandler fluidHandler = FluidUtils.fluidHandlerIn(stack);
         if (fluidHandler != null) {
             FluidStack drainable = fluidHandler.drain(amount, true);
-            ItemStack container = stack.getCraftingRemainingItem();
+            var remaining = stack.getItem().getCraftingRemainingItem();
+            ItemStack container = remaining != null ? new ItemStack(remaining) : ItemStack.EMPTY;
             if (drainable == null || drainable.isEmpty())
                 return result(null, "item is empty or not a fluid container");
             int transferred = into.fill(drainable, true);
@@ -88,17 +87,32 @@ public interface TankInventoryControl extends WorldAware, InventoryAware, TankAw
         if (from == null) return result(null, "no tank");
         ItemStack stack = inventory().getItem(selectedSlot());
         if (stack.isEmpty()) return result(null, "nothing selected");
-        FluidHandler intoHandler = FluidUtils.fluidHandlerIn(stack);
-        if (intoHandler != null) {
-            FluidStack drained = from.drain(amount, true);
-            int transferred = intoHandler.fill(drained, false);
-            if (transferred > 0) {
-                from.drain(transferred, false);
+        FluidHandler fluidHandler = FluidUtils.fluidHandlerIn(stack);
+        if (fluidHandler != null) {
+            FluidStack available = from.drain(amount, true);
+            if (available == null || available.isEmpty())
+                return result(null, "tank is empty");
+            int transferred = fluidHandler.fill(available, true);
+            if (transferred <= 0)
+                return result(null, "item is full or incompatible fluid");
+            ItemStack filledStack = FluidUtils.fillItem(stack, available.copyWithAmount(transferred));
+            from.drain(transferred, false);
+            if (filledStack != null) {
+                inventory().removeItem(selectedSlot(), 1);
+                for (int s : insertionSlots()) {
+                    if (InventoryUtils.insertIntoInventorySlot(filledStack, inventory(), null, s, 64)) break;
+                }
+                if (filledStack.getCount() > 0) {
+                    InventoryUtils.spawnStackInWorld(position(), filledStack, null, null);
+                }
                 return result(true, transferred);
             }
-            return result(null, "incompatible or no fluid");
+            return result(null, "item is full or incompatible fluid");
         }
-        return result(null, "item is full or not a fluid container");
+        if (FluidUtils.isFluidContainer(stack)) {
+            return result(null, "item is full or incompatible fluid");
+        }
+        return result(null, "item is not a fluid container");
     }
 
     default int optSlot(Arguments args, int n) {

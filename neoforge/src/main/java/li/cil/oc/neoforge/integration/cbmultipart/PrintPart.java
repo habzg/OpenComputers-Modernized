@@ -67,7 +67,7 @@ public final class PrintPart extends SimpleBlockPart
         this(null);
     }
 
-    public PrintPart(li.cil.oc.core.impl.common.tileentity.Print original) {
+    public PrintPart(li.cil.oc.core.impl.common.blockentity.Print original) {
         if (original != null) {
             facing = original.facing();
             data = original.data;

@@ -1,5 +1,10 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
 import li.cil.oc.api.Machine;
 import li.cil.oc.api.component.RackBusConnectable;
 import li.cil.oc.api.driver.DeviceInfo;
@@ -13,9 +18,10 @@ import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.InventorySlots;
 import li.cil.oc.core.common.Slot;
 import li.cil.oc.core.common.Tier;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.inventory.ComponentInventory;
 import li.cil.oc.core.impl.common.inventory.ServerInventory;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -26,13 +32,6 @@ import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
 
 public abstract class ServerBase implements ComponentInventory, MachineHost, ServerInventory, Analyzable, li.cil.oc.api.internal.Server, DeviceInfo {
     public final li.cil.oc.api.internal.Rack rack;
@@ -266,9 +265,9 @@ public abstract class ServerBase implements ComponentInventory, MachineHost, Ser
                 } else {
                     nbt = customData.copyTag();
                 }
-                CompoundTag data = nbt.contains(Settings.namespace + "data") ? nbt.getCompound(Settings.namespace + "data") : new CompoundTag();
+                CompoundTag data = nbt.contains(OCSettings.namespace + "data") ? nbt.getCompound(OCSettings.namespace + "data") : new CompoundTag();
                 save(data, level.registryAccess());
-                nbt.put(Settings.namespace + "data", data);
+                nbt.put(OCSettings.namespace + "data", data);
                 c.set(DataComponents.CUSTOM_DATA, CustomData.of(nbt));
             }
             if (rack instanceof BlockEntity be) {
@@ -389,7 +388,7 @@ public abstract class ServerBase implements ComponentInventory, MachineHost, Ser
     }
 
     @Override
-    public Node[] onAnalyze(Player player, int side, float hitX, float hitY, float hitZ) {
+    public Node[] onAnalyze(Player player, Direction side, float hitX, float hitY, float hitZ) {
         return new Node[]{machine.node()};
     }
 }

@@ -5,11 +5,10 @@ import appeng.api.stacks.KeyCounter;
 import appeng.api.storage.StorageCells;
 import appeng.api.storage.cells.IBasicCellItem;
 import appeng.me.cells.BasicCellInventory;
-import li.cil.oc.api.driver.Converter;
-import net.minecraft.world.item.ItemStack;
-
 import java.util.ArrayList;
 import java.util.Map;
+import li.cil.oc.api.driver.Converter;
+import net.minecraft.world.item.ItemStack;
 
 @SuppressWarnings("unused")
 public final class ConverterCellInventory implements Converter {

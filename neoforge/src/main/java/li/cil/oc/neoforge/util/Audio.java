@@ -1,6 +1,8 @@
 package li.cil.oc.neoforge.util;
 
-import li.cil.oc.core.impl.Settings;
+import java.nio.ByteBuffer;
+import java.util.Iterator;
+import li.cil.oc.core.impl.OCSettings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -11,24 +13,21 @@ import org.lwjgl.openal.AL10;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.ByteBuffer;
-import java.util.Iterator;
-
 public final class Audio {
     private static final Logger LOGGER = LoggerFactory.getLogger(Audio.class);
     private static final java.util.Set<Source> sources = new java.util.HashSet<>();
     private static boolean disableAudio = false;
 
     private static float sampleRate() {
-        return Settings.get().beepSampleRate;
+        return OCSettings.get().beepSampleRate;
     }
 
     private static int amplitude() {
-        return Settings.get().beepAmplitude;
+        return OCSettings.get().beepAmplitude;
     }
 
     private static int maxDistance() {
-        return (int) Settings.get().beepRadius;
+        return (int) OCSettings.get().beepRadius;
     }
 
     private static float volume() {
@@ -133,13 +132,6 @@ public final class Audio {
         if (disableAudio) return;
         synchronized (sources) {
             sources.removeIf(Source::checkFinished);
-        }
-
-        try {
-            AL10.alGetError();
-        } catch (Throwable t) {
-            LOGGER.warn("Negotiations with OpenAL broke down, disabling sounds.");
-            disableAudio = true;
         }
     }
 

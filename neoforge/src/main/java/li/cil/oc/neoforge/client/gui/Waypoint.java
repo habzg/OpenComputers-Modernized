@@ -1,5 +1,6 @@
 package li.cil.oc.neoforge.client.gui;
 
+import li.cil.oc.core.impl.client.ClientDistanceHelper;
 import li.cil.oc.core.impl.client.Textures;
 import li.cil.oc.neoforge.client.PacketSender;
 import net.minecraft.client.gui.GuiGraphics;
@@ -11,10 +12,10 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
 public class Waypoint extends Screen {
-    public final li.cil.oc.core.impl.common.tileentity.Waypoint waypoint;
+    public final li.cil.oc.core.impl.common.blockentity.Waypoint waypoint;
     private EditBox textField;
 
-    public Waypoint(li.cil.oc.core.impl.common.tileentity.Waypoint waypoint) {
+    public Waypoint(li.cil.oc.core.impl.common.blockentity.Waypoint waypoint) {
         super(Component.literal("waypoint"));
         this.waypoint = waypoint;
     }
@@ -23,7 +24,7 @@ public class Waypoint extends Screen {
     public void tick() {
         super.tick();
         if (minecraft == null || minecraft.player == null) return;
-        if (minecraft.player.distanceToSqr(waypoint.getBlockPos().getX() + 0.5, waypoint.getBlockPos().getY() + 0.5, waypoint.getBlockPos().getZ() + 0.5) > 64) {
+        if (ClientDistanceHelper.distanceSquared(waypoint.getLevel(), waypoint.getBlockPos().getX() + 0.5, waypoint.getBlockPos().getY() + 0.5, waypoint.getBlockPos().getZ() + 0.5, minecraft.player) > 64) {
             minecraft.player.closeContainer();
         }
     }
@@ -65,6 +66,12 @@ public class Waypoint extends Screen {
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (textField.charTyped(codePoint, modifiers)) return true;
+        return super.charTyped(codePoint, modifiers);
     }
 
     @Override

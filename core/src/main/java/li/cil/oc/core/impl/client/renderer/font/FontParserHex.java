@@ -1,12 +1,5 @@
 package li.cil.oc.core.impl.client.renderer.font;
 
-import li.cil.oc.core.impl.Settings;
-import li.cil.oc.core.impl.util.FontUtils;
-import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,6 +8,12 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.util.FontUtils;
+import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class FontParserHex {
     private static final byte[] OPAQUE = {(byte) 255, (byte) 255, (byte) 255, (byte) 255};
@@ -26,7 +25,7 @@ public final class FontParserHex {
     public void initialize() {
         glyphs.clear();
 
-        ResourceLocation loc = ResourceLocation.fromNamespaceAndPath(Settings.resourceDomain, "font.hex");
+        ResourceLocation loc = ResourceLocation.fromNamespaceAndPath(OCSettings.resourceDomain, "font.hex");
         try {
             var resourceOpt = Minecraft.getInstance().getResourceManager().getResource(loc);
             if (resourceOpt.isEmpty()) {
@@ -56,7 +55,7 @@ public final class FontParserHex {
                     byte[] glyph = new byte[glyphLen];
                     int glyphWidth = glyph.length / getGlyphHeight();
                     if (expectedWidth != glyphWidth) {
-                        if (Settings.get().logHexFontErrors) {
+                        if (OCSettings.get().logHexFontErrors) {
                             LOGGER.warn("Size of glyph for code point U+{} ({}) in font ({}) does not match expected width ({}), ignoring.",
                                     String.format("%04X", charCode), (char) charCode, glyphWidth, expectedWidth);
                         }
@@ -69,7 +68,7 @@ public final class FontParserHex {
                 }
             }
         } catch (IOException e) {
-            if (Settings.get().logHexFontErrors) {
+            if (OCSettings.get().logHexFontErrors) {
                 LOGGER.warn("Failed loading glyphs.", e);
             }
         }

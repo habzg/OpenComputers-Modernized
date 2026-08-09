@@ -1,15 +1,14 @@
 package li.cil.oc.core.impl.client.renderer.font;
 
-import li.cil.oc.core.impl.Settings;
-import li.cil.oc.core.impl.client.Textures;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.AbstractTexture;
-import net.minecraft.resources.ResourceLocation;
-
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.client.Textures;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.resources.ResourceLocation;
 
 public class StaticFontRenderer extends TextureFontRenderer {
 
@@ -28,7 +27,7 @@ public class StaticFontRenderer extends TextureFontRenderer {
         String charsStr = "☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■";
         try {
             var resourceOpt = Minecraft.getInstance().getResourceManager()
-                    .getResource(ResourceLocation.fromNamespaceAndPath(Settings.resourceDomain, "textures/font/chars.txt"));
+                    .getResource(ResourceLocation.fromNamespaceAndPath(OCSettings.resourceDomain, "textures/font/chars.txt"));
             if (resourceOpt.isEmpty()) throw new RuntimeException("chars.txt resource not found");
             InputStream is = resourceOpt.get().open();
             BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
@@ -50,7 +49,7 @@ public class StaticFontRenderer extends TextureFontRenderer {
         this.uSize = uStep;
         this.vStep = (charHeight + 1) / 256.0;
         this.vSize = charHeight / 256.0;
-        this.s = Settings.get().fontCharScale;
+        this.s = OCSettings.get().fontCharScale;
     }
 
     @Override
@@ -71,7 +70,7 @@ public class StaticFontRenderer extends TextureFontRenderer {
     private ResourceLocation lastFiltered = null;
 
     public ResourceLocation getFontTextureLocation(int index) {
-        ResourceLocation loc = Settings.get().textAntiAlias ? Textures.fontAntiAliased : Textures.fontAliased;
+        ResourceLocation loc = OCSettings.get().textAntiAlias ? Textures.fontAntiAliased : Textures.fontAliased;
         if (loc != lastFiltered) {
             AbstractTexture texture = Minecraft.getInstance().getTextureManager().getTexture(loc);
             applyTextLinearFilter(texture);

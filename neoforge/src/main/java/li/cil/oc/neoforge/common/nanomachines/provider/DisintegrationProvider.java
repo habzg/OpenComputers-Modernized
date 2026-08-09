@@ -1,9 +1,12 @@
 package li.cil.oc.neoforge.common.nanomachines.provider;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import li.cil.oc.api.nanomachines.Behavior;
 import li.cil.oc.api.nanomachines.DisableReason;
 import li.cil.oc.api.prefab.AbstractBehavior;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.nanomachines.provider.ScalaProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -17,10 +20,6 @@ import net.neoforged.neoforge.common.CommonHooks;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.common.util.TriState;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 public class DisintegrationProvider extends ScalaProvider {
     public DisintegrationProvider() {
         super("c4e7e3c2-8069-4fbb-b08e-74b1bddcdfe7");
@@ -32,7 +31,7 @@ public class DisintegrationProvider extends ScalaProvider {
     }
 
     @Override
-    public Behavior readBehaviorFromNBT(Player player, CompoundTag nbt) {
+    public Behavior readBehaviorFromNBT(Player player, CompoundTag ignoredNbt) {
         return new DisintegrationBehavior(player);
     }
 
@@ -45,7 +44,7 @@ public class DisintegrationProvider extends ScalaProvider {
         }
 
         @Override
-        public void onDisable(DisableReason reason) {
+        public void onDisable(DisableReason ignoredReason) {
             var world = player.level();
             for (var pos : breakingMap.keySet()) {
                 world.destroyBlockProgress(pos.hashCode(), pos, -1);
@@ -59,7 +58,7 @@ public class DisintegrationProvider extends ScalaProvider {
             if (!world.isClientSide && player instanceof ServerPlayer playerMP && !(player instanceof FakePlayer)) {
                 long now = world.getGameTime();
                 BlockPos playerPos = player.blockPosition();
-                int actualRange = Settings.get().nanomachineDisintegrationRange * li.cil.oc.api.Nanomachines.getController(player).getInputCount(this);
+                int actualRange = OCSettings.get().nanomachineDisintegrationRange * li.cil.oc.api.Nanomachines.getController(player).getInputCount(this);
 
                 for (int x = -actualRange; x <= actualRange; x++) {
                     for (int y = 0; y <= actualRange * 2; y++) {

@@ -1,6 +1,6 @@
 package li.cil.oc.neoforge.common;
 
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.server.machine.luac.LuaStateFactory;
 import li.cil.oc.core.impl.server.machine.luac.NativeLua52Architecture;
 import li.cil.oc.core.impl.server.machine.luac.NativeLua53Architecture;
@@ -16,7 +16,7 @@ import net.neoforged.fml.loading.FMLPaths;
 
 public class Proxy {
     public void preInit(FMLCommonSetupEvent e) {
-        Settings.load(
+        OCSettings.load(
                 FMLPaths.CONFIGDIR.get().resolve("OpenComputers.cfg").toFile(),
                 FMLPaths.CONFIGDIR.get().toFile(),
                 ModList.get().getModContainerById("opencomputers")
@@ -39,9 +39,9 @@ public class Proxy {
         li.cil.oc.api.API.fileSystem = li.cil.oc.core.impl.server.fs.FileSystem.INSTANCE;
         li.cil.oc.api.API.items = Items.INSTANCE;
         li.cil.oc.api.API.machine = new li.cil.oc.neoforge.server.machine.Machine.API();
-        li.cil.oc.api.API.nanomachines = new li.cil.oc.neoforge.common.nanomachines.Nanomachines();
+        li.cil.oc.api.API.nanomachines = new li.cil.oc.core.impl.common.nanomachines.Nanomachines();
 
-        li.cil.oc.api.API.config = Settings.get().config;
+        li.cil.oc.api.API.config = OCSettings.get().config;
 
         OpenComputers.log().info("Initializing loot disks.");
         Loot.init();
@@ -62,13 +62,15 @@ public class Proxy {
         }
 
         li.cil.oc.api.Machine.LuaArchitecture =
-                Settings.get().forceLuaJ ? LuaJLuaArchitecture.class : li.cil.oc.api.Machine.architectures().iterator().next();
+                OCSettings.get().forceLuaJ ? LuaJLuaArchitecture.class : li.cil.oc.api.Machine.architectures().iterator().next();
     }
 
     public void init(FMLCommonSetupEvent e) {
         li.cil.oc.neoforge.OpenComputers.log().debug("Initializing mod integration.");
+        li.cil.oc.core.integration.ModIDs.setModResolver(net.neoforged.fml.ModList.get()::isLoaded);
+        li.cil.oc.neoforge.integration.Mods.setLogger(msg -> li.cil.oc.neoforge.OpenComputers.log().info(msg));
         Mods.init();
-        li.cil.oc.api.API.isPowerEnabled = !Settings.get().ignorePower;
+        li.cil.oc.api.API.isPowerEnabled = !OCSettings.get().ignorePower;
     }
 
     public void postInit() {

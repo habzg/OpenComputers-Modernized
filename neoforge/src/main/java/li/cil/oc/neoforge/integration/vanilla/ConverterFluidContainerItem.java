@@ -1,14 +1,13 @@
 package li.cil.oc.neoforge.integration.vanilla;
 
+import java.util.HashMap;
+import java.util.Map;
 import li.cil.oc.api.driver.Converter;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.server.driver.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.fluids.FluidStack;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @SuppressWarnings("unused")
 public final class ConverterFluidContainerItem implements Converter {
@@ -34,7 +33,7 @@ public final class ConverterFluidContainerItem implements Converter {
                 if (!fluidStack.isEmpty()) {
                     var fluid = fluidStack.getFluid();
                     var fluidType = fluid.getFluidType();
-                    if (Settings.get().insertIdsInConverters) {
+                    if (OCSettings.get().insertIdsInConverters) {
                         output.put("fluid_id", BuiltInRegistries.FLUID.getId(fluid));
                     }
                     output.put("fluid_hasTag", !fluidStack.getComponents().isEmpty());

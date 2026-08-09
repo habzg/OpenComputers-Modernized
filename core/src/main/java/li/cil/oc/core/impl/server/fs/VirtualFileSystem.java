@@ -1,14 +1,5 @@
 package li.cil.oc.core.impl.server.fs;
 
-import li.cil.oc.api.fs.Mode;
-import li.cil.oc.core.impl.util.FilePathUtil;
-import li.cil.oc.core.server.fs.Buffered;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
-import org.jetbrains.annotations.NotNull;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,6 +8,14 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import li.cil.oc.api.fs.Mode;
+import li.cil.oc.core.impl.util.FilePathUtil;
+import li.cil.oc.core.server.fs.Buffered;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import org.jetbrains.annotations.NotNull;
 
 public abstract class VirtualFileSystem extends OutputStreamFileSystem {
     protected final VirtualDirectory root = new VirtualDirectory();
@@ -384,6 +383,8 @@ public abstract class VirtualFileSystem extends OutputStreamFileSystem {
     }
 
     public static class VirtualOutputHandle extends OutputHandle {
+        private static final long MAX_SEEK = 64 * 1024 * 1024;
+
         public final VirtualFile file;
         public long position;
 
@@ -415,6 +416,7 @@ public abstract class VirtualFileSystem extends OutputStreamFileSystem {
         @Override
         public long seek(long to) {
             if (to < 0) throw new RuntimeException(new IOException("invalid offset"));
+            if (to > MAX_SEEK) throw new RuntimeException(new IOException("offset too large"));
             position = to;
             return position;
         }
@@ -422,6 +424,7 @@ public abstract class VirtualFileSystem extends OutputStreamFileSystem {
         @Override
         public void write(byte[] b) {
             if (isClosed()) throw new RuntimeException(new IOException("file is closed"));
+            if (position > Integer.MAX_VALUE) throw new RuntimeException(new IOException("file too large"));
             int pos = (int) position;
             int newLen = pos + b.length;
             file.grow(newLen);

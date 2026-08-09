@@ -1,11 +1,10 @@
 package li.cil.oc.core.impl.common.component.traits;
 
+import java.util.Map;
 import li.cil.oc.core.impl.common.component.GpuTextBuffer;
 import li.cil.oc.core.impl.util.PackedColor;
 import li.cil.oc.core.impl.util.TextBuffer;
 import net.minecraft.nbt.CompoundTag;
-
-import java.util.Map;
 
 public interface VideoRamRasterizer {
     Map<String, VideoRamDevice> getInternalBuffers();

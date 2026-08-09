@@ -1,6 +1,5 @@
 package li.cil.oc.core.impl.common.block.traits;
 
-import li.cil.oc.core.impl.common.block.AbstractBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -13,32 +12,20 @@ import org.jetbrains.annotations.Nullable;
 public interface CustomDrops<T extends BlockEntity> {
 
     @SuppressWarnings("unused")
-    default boolean removedByPlayer(BlockState state, Level world, BlockPos pos, Player player, boolean willHarvest, AbstractBlock self) {
-        if (!world.isClientSide) {
-            BlockEntity te = world.getBlockEntity(pos);
-            if (te != null && getTileClass().isInstance(te)) {
-                doCustomDrops(getTileClass().cast(te), player, willHarvest);
-            }
-        }
-        return self.onDestroyedByPlayer(state, world, pos, player, willHarvest, world.getFluidState(pos));
-    }
-
-
-    @SuppressWarnings("unused")
-    default void onBlockPlacedBy(Level world, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack, AbstractBlock self) {
+    default void onBlockPlacedBy(Level world, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         BlockEntity te = world.getBlockEntity(pos);
-        if (te != null && getTileClass().isInstance(te)) {
-            doCustomInit(getTileClass().cast(te), placer, stack);
+        if (te != null && getBlockClass().isInstance(te)) {
+            doCustomInit(getBlockClass().cast(te), placer, stack);
         }
     }
 
-    Class<T> getTileClass();
+    Class<T> getBlockClass();
 
     @SuppressWarnings("unused")
-    default void doCustomInit(T tileEntity, LivingEntity player, ItemStack stack) {
+    default void doCustomInit(T blockEntity, LivingEntity player, ItemStack stack) {
     }
 
     @SuppressWarnings("unused")
-    default void doCustomDrops(T tileEntity, Player player, boolean willHarvest) {
+    default void doCustomDrops(T blockEntity, Player player, boolean willHarvest) {
     }
 }

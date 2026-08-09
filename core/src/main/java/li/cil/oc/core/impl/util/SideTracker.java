@@ -1,8 +1,7 @@
 package li.cil.oc.core.impl.util;
 
-import net.minecraft.server.MinecraftServer;
-
 import java.util.function.Supplier;
+import net.minecraft.server.MinecraftServer;
 
 public final class SideTracker {
     private static boolean isDedicatedServer;

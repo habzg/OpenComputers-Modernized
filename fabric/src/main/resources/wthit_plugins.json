@@ -1,0 +1,10 @@
+{
+  "opencomputers:wthit_plugin": {
+    "entrypoints": {
+      "common": "li.cil.oc.fabric.integration.wthit.OCWthitPlugin",
+      "client": "li.cil.oc.fabric.integration.wthit.OCWthitPlugin"
+    },
+    "side": "*",
+    "required": []
+  }
+}

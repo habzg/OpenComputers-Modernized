@@ -1,16 +1,22 @@
 package li.cil.oc.neoforge.integration.jei;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.Manual;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.common.LootManager;
+import li.cil.oc.core.impl.common.recipe.LootDiskCyclingRecipe;
 import li.cil.oc.core.server.machine.CallbackWrapper;
 import li.cil.oc.core.server.machine.Callbacks;
 import li.cil.oc.neoforge.client.gui.Database;
 import li.cil.oc.neoforge.client.gui.Relay;
-import li.cil.oc.neoforge.common.Loot;
-import li.cil.oc.neoforge.common.recipe.LootDiskCyclingRecipe;
 import li.cil.oc.neoforge.integration.util.JEI;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
@@ -52,13 +58,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @JeiPlugin
 @SuppressWarnings("unused")
@@ -106,9 +105,9 @@ public class OCJEIPlugin implements IModPlugin {
                     var customData = stack.get(DataComponents.CUSTOM_DATA);
                     if (customData != null && !customData.isEmpty()) {
                         var tag = customData.copyTag();
-                        if (tag.contains(Settings.namespace + "data")) {
-                            var data = tag.getCompound(Settings.namespace + "data");
-                            if (data.contains(Settings.namespace + "eeprom") && data.getByteArray(Settings.namespace + "eeprom").length > 0) {
+                        if (tag.contains(OCSettings.namespace + "data")) {
+                            var data = tag.getCompound(OCSettings.namespace + "data");
+                            if (data.contains(OCSettings.namespace + "eeprom") && data.getByteArray(OCSettings.namespace + "eeprom").length > 0) {
                                 return "programmed";
                             }
                         }
@@ -128,9 +127,9 @@ public class OCJEIPlugin implements IModPlugin {
                 @Override
                 public @Nullable Object getSubtypeData(@NotNull ItemStack stack, @NotNull UidContext context) {
                     var customData = stack.get(DataComponents.CUSTOM_DATA);
-                    if (customData != null && !customData.isEmpty() && customData.copyTag().contains(Settings.namespace + "lootFactory")) {
+                    if (customData != null && !customData.isEmpty() && customData.copyTag().contains(OCSettings.namespace + "lootFactory")) {
                         var tag = new CompoundTag();
-                        tag.putString(Settings.namespace + "lootFactory", customData.copyTag().getString(Settings.namespace + "lootFactory"));
+                        tag.putString(OCSettings.namespace + "lootFactory", customData.copyTag().getString(OCSettings.namespace + "lootFactory"));
                         return tag;
                     }
                     return null;
@@ -150,7 +149,7 @@ public class OCJEIPlugin implements IModPlugin {
                     var customData = stack.get(DataComponents.CUSTOM_DATA);
                     if (customData != null && !customData.isEmpty()) {
                         var tag = customData.copyTag();
-                        double charge = tag.getDouble(Settings.namespace + "charge");
+                        double charge = tag.getDouble(OCSettings.namespace + "charge");
                         if (charge > 0) {
                             return "charged";
                         }
@@ -195,7 +194,7 @@ public class OCJEIPlugin implements IModPlugin {
 
     @Override
     public void registerVanillaCategoryExtensions(@NotNull IVanillaCategoryExtensionRegistration registration) {
-        if (!Loot.disksForCycling().isEmpty()) {
+        if (!LootManager.disksForCycling().isEmpty()) {
             registration.getCraftingCategory().addExtension(LootDiskCyclingRecipe.class, new LootDiskCyclingExtension());
         }
     }
@@ -208,19 +207,6 @@ public class OCJEIPlugin implements IModPlugin {
                 runtime.getIngredientManager().removeIngredientsAtRuntime(VanillaTypes.ITEM_STACK, List.of(stack));
             }
         }
-        var luaBios = li.cil.oc.api.Items.get(Constants.ItemName.LuaBios);
-        if (luaBios != null) {
-            var stack = luaBios.createItemStack(1);
-            if (!stack.isEmpty()) {
-                runtime.getIngredientManager().addIngredientsAtRuntime(VanillaTypes.ITEM_STACK, List.of(stack));
-            }
-        }
-        var lootDisks = li.cil.oc.neoforge.common.Loot.disksForCycling();
-        if (!lootDisks.isEmpty()) {
-            runtime.getIngredientManager().addIngredientsAtRuntime(VanillaTypes.ITEM_STACK, new ArrayList<>(lootDisks));
-        }
-        li.cil.oc.neoforge.common.Loot.jeiDiskAdder = stack ->
-                runtime.getIngredientManager().addIngredientsAtRuntime(VanillaTypes.ITEM_STACK, List.of(stack));
     }
 
     static List<String> getCallbackDocs(ItemStack stack) {
@@ -390,18 +376,16 @@ public class OCJEIPlugin implements IModPlugin {
     private static class LootDiskCyclingExtension implements ICraftingCategoryExtension<LootDiskCyclingRecipe> {
         @Override
         public boolean isHandled(@NotNull RecipeHolder<LootDiskCyclingRecipe> recipeHolder) {
-            return !Loot.disksForCycling().isEmpty();
+            return !LootManager.disksForCycling().isEmpty();
         }
 
         @Override
         public void setRecipe(@NotNull RecipeHolder<LootDiskCyclingRecipe> recipeHolder, @NotNull IRecipeLayoutBuilder builder, @NotNull ICraftingGridHelper craftingGridHelper, @NotNull IFocusGroup focuses) {
-            var disks = Loot.disksForCycling();
+            var disks = LootManager.disksForCycling();
             if (disks.isEmpty()) return;
             var wrench = li.cil.oc.api.Items.get(Constants.ItemName.Wrench).createItemStack(1);
-            craftingGridHelper.createAndSetInputs(builder, List.of(
-                    new ArrayList<>(disks),
-                    List.of(wrench)
-            ), 0, 0);
+            List<List<ItemStack>> inputs = List.of(new ArrayList<>(disks), List.of(wrench));
+            craftingGridHelper.createAndSetInputs(builder, inputs, 0, 0);
             craftingGridHelper.createAndSetOutputs(builder, new ArrayList<>(disks));
         }
     }

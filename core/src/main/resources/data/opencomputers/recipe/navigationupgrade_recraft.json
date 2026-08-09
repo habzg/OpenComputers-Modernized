@@ -1,0 +1,16 @@
+{
+  "type": "opencomputers:shapeless",
+  "ingredients": [
+    {
+      "item": "opencomputers:navigationupgrade"
+    },
+    {
+      "item": "minecraft:filled_map"
+    }
+  ],
+  "result": {
+    "id": "opencomputers:navigationupgrade",
+    "count": 1
+  },
+  "category": "misc"
+}

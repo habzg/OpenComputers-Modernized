@@ -1,19 +1,18 @@
 package li.cil.oc.core.impl.server.component;
 
 
+import java.util.Map;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 
-
-import java.util.Map;
-
-public abstract class UpgradeTankBase extends li.cil.oc.api.prefab.ManagedEnvironment implements DeviceInfo {
+public abstract class UpgradeTankBase extends AbstractManagedEnvironment implements DeviceInfo {
     public final EnvironmentHost owner;
     public final int capacity;
 
@@ -36,9 +35,9 @@ public abstract class UpgradeTankBase extends li.cil.oc.api.prefab.ManagedEnviro
         return deviceInfo;
     }
 
-    protected abstract void loadTankNbt(CompoundTag nbt, HolderLookup.Provider provider);
+    protected abstract void loadTankNbt(CompoundTag nbt, HolderLookup.Provider ignoredProvider);
 
-    protected abstract void saveTankNbt(CompoundTag nbt, HolderLookup.Provider provider);
+    protected abstract void saveTankNbt(CompoundTag nbt, HolderLookup.Provider ignoredProvider);
 
     @Override
     public void load(CompoundTag nbt, HolderLookup.Provider provider) {

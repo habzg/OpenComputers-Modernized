@@ -8,7 +8,7 @@ base {
 }
 
 neoForge {
-    version = neo_version
+    neoFormVersion = "1.21.1-20240808.144430"
 }
 
 configurations {
@@ -28,7 +28,7 @@ artifacts {
 }
 
 dependencies {
-    implementation("com.typesafe:config:${typesafe_config_version}")
+    implementation files(rootProject.tasks.named('relocateTypesafe'))
 }
 
 java {

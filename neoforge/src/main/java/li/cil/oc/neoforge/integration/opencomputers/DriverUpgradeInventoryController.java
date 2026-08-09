@@ -8,7 +8,8 @@ import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Slot;
 import li.cil.oc.core.common.Tier;
 import li.cil.oc.core.impl.common.entity.Drone;
-import li.cil.oc.neoforge.common.tileentity.Robot;
+import li.cil.oc.core.impl.integration.opencomputers.Item;
+import li.cil.oc.neoforge.common.blockentity.Robot;
 import net.minecraft.world.item.ItemStack;
 
 @SuppressWarnings("unused")
@@ -22,8 +23,8 @@ public final class DriverUpgradeInventoryController extends Item implements Host
     public li.cil.oc.api.network.ManagedEnvironment createEnvironment(ItemStack stack, EnvironmentHost host) {
         if (host.level() != null && host.level().isClientSide()) return null;
         return switch (host) {
-            case Adapter adapter -> new li.cil.oc.neoforge.server.component.UpgradeInventoryController.Adapter(host);
-            case Drone drone -> new li.cil.oc.neoforge.server.component.UpgradeInventoryController.Drone(drone);
+            case Adapter adapter -> new li.cil.oc.core.impl.server.component.UpgradeInventoryController.Adapter(host);
+            case Drone drone -> new li.cil.oc.core.impl.server.component.UpgradeInventoryController.Drone(drone);
             case Robot robot -> new li.cil.oc.neoforge.server.component.UpgradeInventoryController.Robot(robot);
             default -> null;
         };

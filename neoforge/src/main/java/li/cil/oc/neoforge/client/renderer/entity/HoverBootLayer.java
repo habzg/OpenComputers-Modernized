@@ -2,7 +2,7 @@ package li.cil.oc.neoforge.client.renderer.entity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.ItemColorizer;
 import li.cil.oc.neoforge.common.init.Items;
 import net.minecraft.client.model.PlayerModel;
@@ -24,7 +24,7 @@ import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 
 public class HoverBootLayer extends RenderLayer<Player, PlayerModel<Player>> {
-    public static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(Settings.resourceDomain, "textures/model/drone.png");
+    public static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(OCSettings.resourceDomain, "textures/model/drone.png");
 
     private final ModelPart light0;
     private final ModelPart light1;

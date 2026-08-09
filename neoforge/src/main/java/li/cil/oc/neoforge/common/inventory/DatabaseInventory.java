@@ -1,6 +1,6 @@
 package li.cil.oc.neoforge.common.inventory;
 
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.inventory.ItemStackInventory;
 import li.cil.oc.neoforge.integration.opencomputers.DriverUpgradeDatabase;
 import net.minecraft.world.item.ItemStack;
@@ -12,7 +12,7 @@ public interface DatabaseInventory extends ItemStackInventory {
 
     @Override
     default int getContainerSize() {
-        return Settings.get().databaseEntriesPerTier[tier()];
+        return OCSettings.get().databaseEntriesPerTier[tier()];
     }
 
     @Override

@@ -1,5 +1,7 @@
 package li.cil.oc.neoforge.integration.jei;
 
+import java.util.ArrayList;
+import java.util.List;
 import li.cil.oc.neoforge.client.PacketSender;
 import li.cil.oc.neoforge.client.gui.Database;
 import mezz.jei.api.gui.handlers.IGhostIngredientHandler;
@@ -7,9 +9,6 @@ import mezz.jei.api.ingredients.ITypedIngredient;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @SuppressWarnings("unused")
 public class DatabaseGhostIngredientHandler implements IGhostIngredientHandler<Database> {

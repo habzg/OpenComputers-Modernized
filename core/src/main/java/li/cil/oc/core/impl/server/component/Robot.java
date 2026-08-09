@@ -13,9 +13,9 @@ import net.minecraft.world.phys.HitResult;
 import org.jetbrains.annotations.NotNull;
 
 public class Robot extends li.cil.oc.core.impl.server.component.RobotBase {
-    public final li.cil.oc.core.impl.common.tileentity.RobotBase agent;
+    public final li.cil.oc.core.impl.common.blockentity.RobotBase agent;
 
-    public Robot(li.cil.oc.core.impl.common.tileentity.RobotBase agent) {
+    public Robot(li.cil.oc.core.impl.common.blockentity.RobotBase agent) {
         super(String.valueOf(agent.getContainerSize()));
         this.agent = agent;
     }
@@ -96,9 +96,9 @@ public class Robot extends li.cil.oc.core.impl.server.component.RobotBase {
 
     @Override
     protected boolean postRobotPlaceInAirEvent() {
-        li.cil.oc.api.event.RobotPlaceInAirEvent event = li.cil.oc.api.event.OCEventFactory.get().createRobotPlaceInAirEvent(agent);
-        if (EventHandlerDelegate.get() != null) EventHandlerDelegate.get().post(event);
-        return event.isAllowed();
+        var delegate = EventHandlerDelegate.get();
+        if (delegate == null) return false;
+        return delegate.postRobotPlaceInAir(agent);
     }
 
     @Override

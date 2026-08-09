@@ -1,12 +1,11 @@
 package li.cil.oc.core.impl.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SafeThreadPool {
     private static final Logger LOGGER = LoggerFactory.getLogger(SafeThreadPool.class);

@@ -1,11 +1,14 @@
 package li.cil.oc.core.impl.server.machine.luac;
 
 import com.google.common.base.Strings;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Objects;
 import li.cil.oc.api.driver.item.Memory;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.LimitReachedException;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.ExtendedLuaState;
 import li.cil.oc.core.impl.util.SaveHandlerDelegate;
 import li.cil.oc.core.util.MachineStateHelper;
@@ -18,10 +21,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.Objects;
 
 public abstract class NativeLuaArchitecture implements Architecture {
     private static final Logger LOGGER = LoggerFactory.getLogger(NativeLuaArchitecture.class);
@@ -61,7 +60,7 @@ public abstract class NativeLuaArchitecture implements Architecture {
                 return 1;
             }
         } catch (Throwable e) {
-            if (Settings.get().logLuaCallbackErrors && !(e instanceof LimitReachedException)) {
+            if (OCSettings.get().logLuaCallbackErrors && !(e instanceof LimitReachedException)) {
                 LOGGER.warn("Exception in Lua callback.", e);
             }
             if (e instanceof LimitReachedException) {
@@ -81,7 +80,7 @@ public abstract class NativeLuaArchitecture implements Architecture {
                 lua.pushBoolean(true);
                 lua.pushNil();
                 lua.pushString(msg);
-                if (Settings.get().logLuaCallbackErrors) {
+                if (OCSettings.get().logLuaCallbackErrors) {
                     java.io.StringWriter sw = new java.io.StringWriter();
                     e.printStackTrace(new java.io.PrintWriter(sw));
                     lua.pushString(sw.toString());
@@ -160,7 +159,7 @@ public abstract class NativeLuaArchitecture implements Architecture {
     @Override
     public boolean recomputeMemory(Iterable<ItemStack> components) {
         int memoryBytes = memoryInBytes(components);
-        if (lua != null && Settings.get().limitMemory) {
+        if (lua != null && OCSettings.get().limitMemory) {
             lua.setTotalMemory(Integer.MAX_VALUE);
             if (kernelMemory > 0) {
                 lua.setTotalMemory(kernelMemory + (int) Math.ceil(memoryBytes * ramScale));
@@ -177,7 +176,7 @@ public abstract class NativeLuaArchitecture implements Architecture {
                 acc += ((Memory) driver).amount(stack) * 1024;
             }
         }
-        return Math.clamp((int) acc, 0, Settings.get().maxTotalRam);
+        return Math.clamp((int) acc, 0, OCSettings.get().maxTotalRam);
     }
 
     @Override
@@ -246,7 +245,7 @@ public abstract class NativeLuaArchitecture implements Architecture {
                     LOGGER.warn("Kernel stopped unexpectedly.");
                     return new ExecutionResult.Shutdown(false);
                 } else {
-                    if (Settings.get().limitMemory) {
+                    if (OCSettings.get().limitMemory) {
                         lua.setTotalMemory(Integer.MAX_VALUE);
                     }
                     String error;
@@ -285,14 +284,14 @@ public abstract class NativeLuaArchitecture implements Architecture {
             return false;
         }
         lua = state;
-        ramScale = lua.getPointerWidth() >= 8 ? Settings.get().ramScaleFor64Bit : 1.0;
+        ramScale = lua.getPointerWidth() >= 8 ? OCSettings.get().ramScaleFor64Bit : 1.0;
 
         for (NativeLuaAPI api : apis) {
             api.initialize();
         }
 
         try {
-            lua.load(NativeLuaArchitecture.class.getResourceAsStream(Settings.scriptPath + "machine.lua"), "=machine", "t");
+            lua.load(NativeLuaArchitecture.class.getResourceAsStream(OCSettings.scriptPath + "machine.lua"), "=machine", "t");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -308,7 +307,7 @@ public abstract class NativeLuaArchitecture implements Architecture {
     @Override
     public void close() {
         if (lua != null) {
-            if (Settings.get().limitMemory) {
+            if (OCSettings.get().limitMemory) {
                 lua.setTotalMemory(Integer.MAX_VALUE);
             }
             lua.close();
@@ -321,7 +320,7 @@ public abstract class NativeLuaArchitecture implements Architecture {
     public void load(CompoundTag nbt) {
         if (!machine.isRunning()) return;
 
-        if (Settings.get().limitMemory) {
+        if (OCSettings.get().limitMemory) {
             lua.setTotalMemory(Integer.MAX_VALUE);
         }
 
@@ -361,7 +360,7 @@ public abstract class NativeLuaArchitecture implements Architecture {
 
     @Override
     public void save(CompoundTag nbt) {
-        if (Settings.get().limitMemory) {
+        if (OCSettings.get().limitMemory) {
             lua.setTotalMemory(Integer.MAX_VALUE);
         }
 

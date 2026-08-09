@@ -1,5 +1,8 @@
 package li.cil.oc.core.impl.client.renderer.markdown;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Pattern;
 import li.cil.oc.api.Manual;
 import li.cil.oc.core.impl.client.renderer.markdown.segment.BoldSegment;
 import li.cil.oc.core.impl.client.renderer.markdown.segment.CodeSegment;
@@ -12,11 +15,7 @@ import li.cil.oc.core.impl.client.renderer.markdown.segment.Segment;
 import li.cil.oc.core.impl.client.renderer.markdown.segment.StrikethroughSegment;
 import li.cil.oc.core.impl.client.renderer.markdown.segment.TextSegment;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.MultiBufferSource;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Pattern;
+import net.minecraft.client.gui.GuiGraphics;
 
 @SuppressWarnings("unused")
 public final class Document {
@@ -67,7 +66,7 @@ public final class Document {
         return renderer.lineHeight + 1;
     }
 
-    public static InteractiveSegment render(Segment document, int x, int y, int maxWidth, int maxHeight, int yOffset, Font renderer, MultiBufferSource bufferSource, int mouseX, int mouseY) {
+    public static InteractiveSegment render(Segment document, int x, int y, int maxWidth, int maxHeight, int yOffset, Font renderer, GuiGraphics graphics, int mouseX, int mouseY) {
         InteractiveSegment hovered = null;
         int indent = 0;
         int currentY = y - yOffset;
@@ -77,7 +76,7 @@ public final class Document {
         while (segment != null) {
             int segmentHeight = segment.nextY(indent, maxWidth, renderer);
             if (currentY + segmentHeight >= minY && currentY <= maxYLimit) {
-                InteractiveSegment result = segment.render(x, currentY, indent, maxWidth, renderer, bufferSource, mouseX, mouseY);
+                InteractiveSegment result = segment.render(x, currentY, indent, maxWidth, renderer, graphics, mouseX, mouseY);
                 if (result != null) hovered = result;
             }
             currentY += segmentHeight;

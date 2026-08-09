@@ -1,5 +1,9 @@
 package li.cil.oc.core.impl.common.entity;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.UUID;
+import java.util.function.Function;
 import li.cil.oc.api.Items;
 import li.cil.oc.api.Machine;
 import li.cil.oc.api.internal.MultiTank;
@@ -11,7 +15,7 @@ import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.inventory.ComponentInventory;
 import li.cil.oc.core.impl.common.inventory.Inventory;
 import li.cil.oc.core.impl.common.item.data.DroneData;
@@ -48,11 +52,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.UUID;
-import java.util.function.Function;
-
 public class Drone extends Entity implements MachineHost, li.cil.oc.api.internal.Drone, li.cil.oc.api.internal.Rotatable, li.cil.oc.api.network.Analyzable, Context {
     private static final EntityDataAccessor<Byte> DATA_RUNNING = SynchedEntityData.defineId(Drone.class, EntityDataSerializers.BYTE);
     private static final EntityDataAccessor<Float> DATA_TARGET_X = SynchedEntityData.defineId(Drone.class, EntityDataSerializers.FLOAT);
@@ -65,6 +64,8 @@ public class Drone extends Entity implements MachineHost, li.cil.oc.api.internal
     private static final EntityDataAccessor<String> DATA_STATUS_TEXT = SynchedEntityData.defineId(Drone.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<Byte> DATA_INVENTORY_SIZE = SynchedEntityData.defineId(Drone.class, EntityDataSerializers.BYTE);
     private static final EntityDataAccessor<Integer> DATA_LIGHT_COLOR = SynchedEntityData.defineId(Drone.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Byte> DATA_TIER = SynchedEntityData.defineId(Drone.class, EntityDataSerializers.BYTE);
+    private static final EntityDataAccessor<String> DATA_NAME = SynchedEntityData.defineId(Drone.class, EntityDataSerializers.STRING);
 
     private static EntityType<? extends Drone> TYPE;
     private static Function<Drone, AgentBase> controlFactory;
@@ -108,8 +109,8 @@ public class Drone extends Entity implements MachineHost, li.cil.oc.api.internal
     public int lastEnergyUpdate = 0;
     public int selectedTank = 0;
 
-    public String ownerName = Settings.get().fakePlayerName;
-    public UUID ownerUUID = Settings.get().fakePlayerProfile.getId();
+    public String ownerName = OCSettings.get().fakePlayerName;
+    public UUID ownerUUID = OCSettings.get().fakePlayerProfile.getId();
 
     private Player player_;
     private boolean isChangingDimension = false;
@@ -158,15 +159,15 @@ public class Drone extends Entity implements MachineHost, li.cil.oc.api.internal
             }
 
             @Override
-            public void onConnect(Node node) {
+            public void onConnect(Node ignoredNode) {
             }
 
             @Override
-            public void onDisconnect(Node node) {
+            public void onDisconnect(Node ignoredNode) {
             }
 
             @Override
-            public void onMessage(Message message) {
+            public void onMessage(Message ignoredMessage) {
             }
 
             @Override
@@ -318,7 +319,7 @@ public class Drone extends Entity implements MachineHost, li.cil.oc.api.internal
 
     @Override
     public int tier() {
-        return info.tier;
+        return level().isClientSide ? entityData.get(DATA_TIER) : info.tier;
     }
 
     @Override
@@ -333,12 +334,13 @@ public class Drone extends Entity implements MachineHost, li.cil.oc.api.internal
 
     @Override
     public String name() {
-        return info.name;
+        return level().isClientSide ? entityData.get(DATA_NAME) : info.name;
     }
 
     @Override
     public void setName(String name) {
         info.name = name;
+        entityData.set(DATA_NAME, name);
     }
 
     @Override
@@ -455,7 +457,7 @@ public class Drone extends Entity implements MachineHost, li.cil.oc.api.internal
     }
 
     @Override
-    public Node[] onAnalyze(Player player, int side, float hitX, float hitY, float hitZ) {
+    public Node[] onAnalyze(Player ignoredPlayer, Direction ignoredSide, float ignoredHitX, float ignoredHitY, float ignoredHitZ) {
         return new Node[]{machine != null ? machine.node() : null};
     }
 
@@ -506,11 +508,14 @@ public class Drone extends Entity implements MachineHost, li.cil.oc.api.internal
         builder.define(DATA_STATUS_TEXT, "");
         builder.define(DATA_INVENTORY_SIZE, (byte) 0);
         builder.define(DATA_LIGHT_COLOR, 0x66DD55);
+        builder.define(DATA_TIER, (byte) 0);
+        builder.define(DATA_NAME, "");
     }
 
     @SuppressWarnings("unused")
     public void initializeAfterPlacement(ItemStack stack, Player player, Vec3 position) {
         info.load(stack, level().registryAccess());
+        syncInfo();
         ((Connector) control.node()).changeBuffer(info.storedEnergy - ((Connector) control.node()).localBuffer());
         wireThingsTogether();
         inventorySize(computeInventorySize());
@@ -528,7 +533,7 @@ public class Drone extends Entity implements MachineHost, li.cil.oc.api.internal
     private void wireThingsTogether() {
         li.cil.oc.api.Network.joinNewNetwork(machine.node());
         machine.node().connect(control.node());
-        machine.setCostPerTick(Settings.get().droneCost);
+        machine.setCostPerTick(OCSettings.get().droneCost);
         components.connectComponents();
     }
 
@@ -761,7 +766,7 @@ public class Drone extends Entity implements MachineHost, li.cil.oc.api.internal
                     entity.getZ() - getZ()
             ).normalize();
             if (!level().isClientSide && machine != null) {
-                if (Settings.get().inputUsername) {
+                if (OCSettings.get().inputUsername) {
                     machine.signal("hit", direction.x, direction.z, direction.y, entity.getName().getString());
                 } else {
                     machine.signal("hit", direction.x, direction.z, direction.y);
@@ -817,9 +822,15 @@ public class Drone extends Entity implements MachineHost, li.cil.oc.api.internal
         }
     }
 
+    private void syncInfo() {
+        entityData.set(DATA_TIER, (byte) info.tier);
+        entityData.set(DATA_NAME, info.name == null ? "" : info.name);
+    }
+
     @Override
     public void readAdditionalSaveData(CompoundTag nbt) {
         info.load(nbt.getCompound("info"), level().registryAccess());
+        syncInfo();
         inventorySize(computeInventorySize());
         if (!level().isClientSide) {
             if (machine != null) {

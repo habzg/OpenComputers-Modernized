@@ -1,19 +1,16 @@
 package li.cil.oc.neoforge.server.component;
 
+import li.cil.oc.api.event.RobotPlaceInAirEvent;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.core.impl.server.component.DroneBase;
 import li.cil.oc.core.impl.util.ExtendedArguments;
-import li.cil.oc.core.impl.util.InventoryUtils;
-import li.cil.oc.neoforge.event.RobotPlaceInAirEventImpl;
 import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.vehicle.Minecart;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -46,8 +43,8 @@ public class Drone extends DroneBase {
 
     @Override
     protected boolean postRobotPlaceInAirEvent() {
-        RobotPlaceInAirEventImpl event = new RobotPlaceInAirEventImpl(agent);
-        li.cil.oc.api.event.OCEventBus.post(event);
+        RobotPlaceInAirEvent event = new RobotPlaceInAirEvent(agent);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(event);
         return event.isAllowed();
     }
 
@@ -109,24 +106,6 @@ public class Drone extends DroneBase {
             }
         }
         return hit;
-    }
-
-    @Override
-    protected void beginConsumeDrops(@NotNull Entity entity) {
-        entity.captureDrops = new java.util.ArrayList<>();
-    }
-
-    @Override
-    protected void endConsumeDrops(@NotNull Player player, @NotNull Entity entity) {
-        if (entity.captureDrops != null && !entity.captureDrops.isEmpty()) {
-            for (ItemEntity drop : entity.captureDrops) {
-                if (!drop.isRemoved()) {
-                    ItemStack stack = drop.getItem();
-                    InventoryUtils.addToPlayerInventory(stack, player, false);
-                }
-            }
-        }
-        entity.captureDrops = null;
     }
 
     @Override

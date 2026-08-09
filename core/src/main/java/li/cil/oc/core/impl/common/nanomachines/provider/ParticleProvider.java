@@ -1,17 +1,16 @@
 package li.cil.oc.core.impl.common.nanomachines.provider;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import li.cil.oc.api.nanomachines.Behavior;
 import li.cil.oc.api.prefab.AbstractBehavior;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.PlayerUtils;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 public class ParticleProvider extends ScalaProvider {
     public ParticleProvider() {
@@ -30,8 +29,9 @@ public class ParticleProvider extends ScalaProvider {
     public Iterable<Behavior> createScalaBehaviors(Player player) {
         List<Behavior> list = new ArrayList<>();
         for (var entry : BuiltInRegistries.PARTICLE_TYPE.entrySet()) {
-            if (entry.getValue() instanceof ParticleOptions && VANILLA_PARTICLES.contains(entry.getKey().toString())) {
-                list.add(new ParticleBehavior(entry.getKey().toString(), player));
+            var key = entry.getKey().location();
+            if (entry.getValue() instanceof ParticleOptions && VANILLA_PARTICLES.contains(key.toString())) {
+                list.add(new ParticleBehavior(key.toString(), player));
             }
         }
         return list;
@@ -67,7 +67,7 @@ public class ParticleProvider extends ScalaProvider {
         @Override
         public void update() {
             var world = player.level();
-            if (world.isClientSide && Settings.get().enableNanomachinePfx) {
+            if (world.isClientSide && OCSettings.get().enableNanomachinePfx) {
                 PlayerUtils.spawnParticleAround(player, effectName, li.cil.oc.api.Nanomachines.getController(player).getInputCount(this) * 0.25);
             }
         }

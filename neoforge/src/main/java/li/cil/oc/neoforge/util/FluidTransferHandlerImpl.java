@@ -13,6 +13,7 @@ import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.material.FluidState;
 import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.IFluidTank;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.fluids.capability.IFluidHandlerItem;
 import org.jetbrains.annotations.NotNull;
@@ -23,11 +24,30 @@ public class FluidTransferHandlerImpl implements FluidUtils.FluidTransferHandler
         if (position.level() != null) {
             Level world = position.level();
             if (world.isLoaded(position.toBlockPos())) {
+                IFluidHandler capHandler = world.getCapability(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.BLOCK, position.toBlockPos(), null);
+                if (capHandler != null) {
+                    return new li.cil.oc.neoforge.util.FluidHandler(capHandler);
+                }
                 BlockEntity te = world.getBlockEntity(position.toBlockPos());
                 if (te instanceof IFluidHandler handler) {
-                    return new NeoFluidHandler(handler);
+                    return new li.cil.oc.neoforge.util.FluidHandler(handler);
                 }
-                return new NeoFluidHandler(new GenericBlockWrapper(position));
+                return new li.cil.oc.neoforge.util.FluidHandler(new GenericBlockWrapper(position));
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public FluidHandler fluidHandlerAt(BlockPosition position, Direction side) {
+        if (position.level() != null) {
+            Level world = position.level();
+            if (world.isLoaded(position.toBlockPos())) {
+                IFluidHandler capHandler = world.getCapability(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.BLOCK, position.toBlockPos(), side);
+                if (capHandler != null) {
+                    return new li.cil.oc.neoforge.util.FluidHandler(capHandler);
+                }
+                return fluidHandlerAt(position);
             }
         }
         return null;
@@ -40,10 +60,28 @@ public class FluidTransferHandlerImpl implements FluidUtils.FluidTransferHandler
             oneSized.setCount(1);
             IFluidHandlerItem handler = oneSized.getCapability(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.ITEM);
             if (handler != null) {
-                return new NeoFluidHandler(handler);
+                return new li.cil.oc.neoforge.util.FluidHandler(handler);
             }
         }
         return null;
+    }
+
+    @Override
+    public ItemStack fillItem(ItemStack stack, li.cil.oc.core.util.FluidStack resource) {
+        if (stack.isEmpty()) return null;
+        ItemStack oneSized = stack.copy();
+        oneSized.setCount(1);
+        IFluidHandlerItem handler = oneSized.getCapability(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.ITEM);
+        if (handler == null) return null;
+        int filled = handler.fill(li.cil.oc.neoforge.util.FluidHandler.toNeo(resource), IFluidHandler.FluidAction.EXECUTE);
+        if (filled <= 0) return null;
+        return handler.getContainer();
+    }
+
+    @Override
+    public boolean isFluidContainer(ItemStack stack) {
+        if (stack.isEmpty()) return false;
+        return stack.getCapability(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.ITEM) != null;
     }
 
     @Override
@@ -65,11 +103,14 @@ public class FluidTransferHandlerImpl implements FluidUtils.FluidTransferHandler
 
     @Override
     public FluidTank tankFrom(MultiTank multiTank, int index) {
-        return new NeoFluidTank(multiTank.getFluidTank(index));
+        Object tank = multiTank.getFluidTank(index);
+        if (tank instanceof FluidTank ft) return ft;
+        if (tank instanceof IFluidTank ift) return new li.cil.oc.neoforge.util.FluidTank(ift);
+        return null;
     }
 
     private IFluidHandler unwrap(FluidHandler handler) {
-        if (handler instanceof NeoFluidHandler(IFluidHandler delegate)) return delegate;
+        if (handler instanceof li.cil.oc.neoforge.util.FluidHandler(IFluidHandler delegate)) return delegate;
         return null;
     }
 
@@ -77,6 +118,10 @@ public class FluidTransferHandlerImpl implements FluidUtils.FluidTransferHandler
         if (position.level() != null) {
             Level world = position.level();
             if (world.isLoaded(position.toBlockPos())) {
+                IFluidHandler capHandler = world.getCapability(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.BLOCK, position.toBlockPos(), null);
+                if (capHandler != null) {
+                    return capHandler;
+                }
                 BlockEntity te = world.getBlockEntity(position.toBlockPos());
                 if (te instanceof IFluidHandler handler) {
                     return handler;

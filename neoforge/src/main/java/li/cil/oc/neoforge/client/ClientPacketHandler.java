@@ -1,42 +1,45 @@
 package li.cil.oc.neoforge.client;
 
 import io.netty.buffer.ByteBuf;
+import java.io.IOException;
+import java.util.Objects;
 import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.core.common.PacketType;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.client.ClientComponentTracker;
-import li.cil.oc.core.impl.common.tileentity.Adapter;
-import li.cil.oc.core.impl.common.tileentity.Assembler;
-import li.cil.oc.core.impl.common.tileentity.Charger;
-import li.cil.oc.core.impl.common.tileentity.Disassembler;
-import li.cil.oc.core.impl.common.tileentity.DiskDrive;
-import li.cil.oc.core.impl.common.tileentity.Hologram;
-import li.cil.oc.core.impl.common.tileentity.NetSplitter;
-import li.cil.oc.core.impl.common.tileentity.Printer;
-import li.cil.oc.core.impl.common.tileentity.Rack;
-import li.cil.oc.core.impl.common.tileentity.Raid;
-import li.cil.oc.core.impl.common.tileentity.Screen;
-import li.cil.oc.core.impl.common.tileentity.Waypoint;
-import li.cil.oc.core.impl.common.tileentity.traits.Colored;
-import li.cil.oc.core.impl.common.tileentity.traits.Computer;
-import li.cil.oc.core.impl.common.tileentity.traits.PowerInformation;
-import li.cil.oc.core.impl.common.tileentity.traits.RedstoneAware;
-import li.cil.oc.core.impl.common.tileentity.traits.Rotatable;
-import li.cil.oc.core.impl.common.tileentity.traits.SwitchLike;
+import li.cil.oc.core.impl.common.LootManager;
+import li.cil.oc.core.impl.common.component.TerminalServer;
+import li.cil.oc.core.impl.common.nanomachines.ControllerImpl;
+import li.cil.oc.core.impl.common.blockentity.Adapter;
+import li.cil.oc.core.impl.common.blockentity.Assembler;
+import li.cil.oc.core.impl.common.blockentity.Charger;
+import li.cil.oc.core.impl.common.blockentity.Disassembler;
+import li.cil.oc.core.impl.common.blockentity.DiskDrive;
+import li.cil.oc.core.impl.common.blockentity.Hologram;
+import li.cil.oc.core.impl.common.blockentity.NetSplitter;
+import li.cil.oc.core.impl.common.blockentity.Printer;
+import li.cil.oc.core.impl.common.blockentity.Rack;
+import li.cil.oc.core.impl.common.blockentity.Raid;
+import li.cil.oc.core.impl.common.blockentity.Screen;
+import li.cil.oc.core.impl.common.blockentity.Waypoint;
+import li.cil.oc.core.impl.common.blockentity.traits.Colored;
+import li.cil.oc.core.impl.common.blockentity.traits.Computer;
+import li.cil.oc.core.impl.common.blockentity.traits.PowerInformation;
+import li.cil.oc.core.impl.common.blockentity.traits.RedstoneAware;
+import li.cil.oc.core.impl.common.blockentity.traits.Rotatable;
+import li.cil.oc.core.impl.common.blockentity.traits.SwitchLike;
 import li.cil.oc.neoforge.OpenComputers;
 import li.cil.oc.neoforge.client.renderer.PetRenderer;
-import li.cil.oc.neoforge.common.Loot;
 import li.cil.oc.neoforge.common.PacketHandler;
-import li.cil.oc.neoforge.common.component.TerminalServer;
-import li.cil.oc.neoforge.common.nanomachines.ControllerImpl;
-import li.cil.oc.neoforge.common.tileentity.Transposer;
-import li.cil.oc.neoforge.event.FileSystemAccessEventImpl;
-import li.cil.oc.neoforge.event.NetworkActivityEventImpl;
+import li.cil.oc.neoforge.common.blockentity.Transposer;
+import li.cil.oc.api.event.FileSystemAccessEvent;
+import li.cil.oc.api.event.NetworkActivityEvent;
 import li.cil.oc.neoforge.util.Audio;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -45,19 +48,18 @@ import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 
-import java.io.IOException;
-import java.util.Objects;
-
 
 public final class ClientPacketHandler extends PacketHandler {
     public static final ClientPacketHandler INSTANCE = new ClientPacketHandler();
+    private static final int MAX_DROP_FILE_SIZE = 1024 * 1024;
+    private final java.util.Map<net.minecraft.world.entity.player.Player, Long> lastDropTimes = new java.util.HashMap<>();
 
     public void onPacket(ByteBuf payload) {
         onPacketData(payload, Minecraft.getInstance().player);
     }
 
     @Override
-    protected Level world(Player player, int dimension) {
+    public Level world(Player player, int ignoredDimension) {
         return player.level();
     }
 
@@ -128,7 +130,7 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onAdapterState(PacketParser p) {
         try {
-            Adapter t = p.readTileEntity(Adapter.class);
+            Adapter t = p.readBlockEntity(Adapter.class);
             if (t != null) {
                 t.uncompressSides(p.readByte());
                 var level = t.getLevel();
@@ -156,7 +158,7 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onChargerState(PacketParser p) {
         try {
-            Charger t = p.readTileEntity(Charger.class);
+            Charger t = p.readBlockEntity(Charger.class);
             if (t != null) {
                 t.chargeSpeed = p.readDouble();
                 t.hasPower = p.readBoolean();
@@ -186,13 +188,35 @@ public final class ClientPacketHandler extends PacketHandler {
         }
     }
 
-    @SuppressWarnings({"EmptyMethod", "unused"})
     private void onDropFile(PacketParser p) {
+        try {
+            String fileName = p.readUTF();
+            if (fileName.isEmpty() || fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")) {
+                OpenComputers.log().warn("Invalid drop file name: {}", fileName);
+                return;
+            }
+            long now = System.currentTimeMillis();
+            Long lastDrop = lastDropTimes.get(p.player);
+            if (lastDrop != null && now - lastDrop < 1000) {
+                OpenComputers.log().warn("Drop file rate limit exceeded for player {}", p.player.getName().getString());
+                return;
+            }
+            lastDropTimes.put(p.player, now);
+            int fileSize = p.readInt();
+            if (fileSize <= 0 || fileSize > MAX_DROP_FILE_SIZE) {
+                OpenComputers.log().warn("Invalid drop file size: {}", fileSize);
+                return;
+            }
+            byte[] data = new byte[fileSize];
+            p.readFully(data);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void onColorChange(PacketParser p) {
         try {
-            Colored t = p.readTileEntity(Colored.class);
+            Colored t = p.readBlockEntity(Colored.class);
             if (t != null) {
                 t.color(p.readInt());
                 if (t instanceof net.minecraft.world.level.block.entity.BlockEntity be) {
@@ -209,7 +233,7 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onComputerState(PacketParser p) {
         try {
-            Computer t = p.readTileEntity(Computer.class);
+            Computer t = p.readBlockEntity(Computer.class);
             if (t != null) {
                 boolean running = p.readBoolean();
                 t.setRunning(running);
@@ -233,9 +257,13 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onComputerUserList(PacketParser p) {
         try {
-            Computer t = p.readTileEntity(Computer.class);
+            Computer t = p.readBlockEntity(Computer.class);
             if (t != null) {
                 int count = p.readInt();
+                if (count < 0 || count > 1024) {
+                    OpenComputers.log().warn("Received invalid computer user list count: {}", count);
+                    return;
+                }
                 java.util.List<String> users = new java.util.ArrayList<>();
                 for (int i = 0; i < count; i++) users.add(p.readUTF());
                 t.setUsers(users);
@@ -249,8 +277,8 @@ public final class ClientPacketHandler extends PacketHandler {
         try {
             int windowId = p.readUnsignedByte();
             if (p.player.containerMenu.containerId == windowId) {
-                if (p.player.containerMenu instanceof li.cil.oc.neoforge.common.container.Player) {
-                    ((li.cil.oc.neoforge.common.container.Player) p.player.containerMenu).updateCustomData(p.readNBT());
+                if (p.player.containerMenu instanceof li.cil.oc.core.impl.common.container.Player) {
+                    ((li.cil.oc.core.impl.common.container.Player) p.player.containerMenu).updateCustomData(p.readNBT());
                 }
             }
         } catch (IOException e) {
@@ -260,7 +288,7 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onDisassemblerActiveChange(PacketParser p) {
         try {
-            Disassembler t = p.readTileEntity(Disassembler.class);
+            Disassembler t = p.readBlockEntity(Disassembler.class);
             if (t != null) {
                 t.isActive = p.readBoolean();
             }
@@ -272,18 +300,18 @@ public final class ClientPacketHandler extends PacketHandler {
     private void onFileSystemActivity(PacketParser p) {
         try {
             String sound = p.readUTF();
-            var data = NbtIo.read(p);
+            var data = NbtIo.read(p, NbtAccounter.create(0x200000L));
             if (p.readBoolean()) {
-                net.minecraft.world.level.block.entity.BlockEntity t = p.readTileEntity(net.minecraft.world.level.block.entity.BlockEntity.class);
+                net.minecraft.world.level.block.entity.BlockEntity t = p.readBlockEntity(net.minecraft.world.level.block.entity.BlockEntity.class);
                 if (t != null) {
-                    li.cil.oc.api.event.OCEventBus.post(new FileSystemAccessEventImpl.Client(sound, t, data));
+                    net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new FileSystemAccessEvent.Client(sound, t, data));
                 }
             } else {
                 Level w = world(p.player, p.readInt());
                 double x = p.readDouble();
                 double y = p.readDouble();
                 double z = p.readDouble();
-                li.cil.oc.api.event.OCEventBus.post(new FileSystemAccessEventImpl.Client(sound, w, x, y, z, data));
+                net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new FileSystemAccessEvent.Client(sound, w, x, y, z, data));
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -292,18 +320,18 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onNetworkActivity(PacketParser p) {
         try {
-            var data = NbtIo.read(p);
+            var data = NbtIo.read(p, NbtAccounter.create(0x200000L));
             if (p.readBoolean()) {
-                net.minecraft.world.level.block.entity.BlockEntity t = p.readTileEntity(net.minecraft.world.level.block.entity.BlockEntity.class);
+                net.minecraft.world.level.block.entity.BlockEntity t = p.readBlockEntity(net.minecraft.world.level.block.entity.BlockEntity.class);
                 if (t != null) {
-                    li.cil.oc.api.event.OCEventBus.post(new NetworkActivityEventImpl.Client(t, data));
+                    net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new NetworkActivityEvent.Client(t, data));
                 }
             } else {
                 Level w = world(p.player, p.readInt());
                 double x = p.readDouble();
                 double y = p.readDouble();
                 double z = p.readDouble();
-                li.cil.oc.api.event.OCEventBus.post(new NetworkActivityEventImpl.Client(w, x, y, z, data));
+                net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new NetworkActivityEvent.Client(w, x, y, z, data));
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -311,14 +339,14 @@ public final class ClientPacketHandler extends PacketHandler {
     }
 
     private void onFloppyChange(PacketParser p) {
-        DiskDrive t = p.readTileEntity(DiskDrive.class);
+        DiskDrive t = p.readBlockEntity(DiskDrive.class);
         if (t != null) {
             t.setItem(0, p.readItemStack());
         }
     }
 
     private void onHologramClear(PacketParser p) {
-        Hologram t = p.readTileEntity(Hologram.class);
+        Hologram t = p.readBlockEntity(Hologram.class);
         if (t != null) {
             java.util.Arrays.fill(t.volume, 0);
             t.needsRendering = true;
@@ -327,10 +355,14 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onHologramColor(PacketParser p) {
         try {
-            Hologram t = p.readTileEntity(Hologram.class);
+            Hologram t = p.readBlockEntity(Hologram.class);
             if (t != null) {
                 int index = p.readInt();
                 int value = p.readInt();
+                if (index < 0 || index >= t.colors.length) {
+                    OpenComputers.log().warn("Received HologramColor with out-of-range index {}", index);
+                    return;
+                }
                 t.colors[index] = value & 0xFFFFFF;
                 t.needsRendering = true;
             }
@@ -341,7 +373,7 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onHologramPowerChange(PacketParser p) {
         try {
-            Hologram t = p.readTileEntity(Hologram.class);
+            Hologram t = p.readBlockEntity(Hologram.class);
             if (t != null) {
                 t.hasPower = p.readBoolean();
             }
@@ -352,7 +384,7 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onHologramScale(PacketParser p) {
         try {
-            Hologram t = p.readTileEntity(Hologram.class);
+            Hologram t = p.readBlockEntity(Hologram.class);
             if (t != null) {
                 t.scale = p.readDouble();
             }
@@ -363,12 +395,13 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onHologramArea(PacketParser p) {
         try {
-            Hologram t = p.readTileEntity(Hologram.class);
+            Hologram t = p.readBlockEntity(Hologram.class);
             if (t != null) {
-                int fromX = p.readByte();
-                int untilX = p.readByte();
-                int fromZ = p.readByte();
-                int untilZ = p.readByte();
+                int fromX = Math.max(0, p.readByte());
+                int untilX = Math.min(Hologram.WIDTH, p.readByte());
+                int fromZ = Math.max(0, p.readByte());
+                int untilZ = Math.min(Hologram.WIDTH, p.readByte());
+                if (untilX < fromX || untilZ < fromZ) return;
                 for (int x = fromX; x < untilX; x++) {
                     for (int z = fromZ; z < untilZ; z++) {
                         t.volume[x + z * Hologram.WIDTH] = p.readInt();
@@ -384,13 +417,14 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onHologramValues(PacketParser p) {
         try {
-            Hologram t = p.readTileEntity(Hologram.class);
+            Hologram t = p.readBlockEntity(Hologram.class);
             if (t != null) {
                 int count = p.readInt();
                 for (int i = 0; i < count; i++) {
                     int xz = p.readShort();
                     int x = (xz >> 8) & 0xFF;
                     int z = xz & 0xFF;
+                    if (x >= Hologram.WIDTH || z >= Hologram.WIDTH) continue;
                     t.volume[x + z * Hologram.WIDTH] = p.readInt();
                     t.volume[x + z * Hologram.WIDTH + Hologram.WIDTH * Hologram.WIDTH] = p.readInt();
                 }
@@ -403,7 +437,7 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onHologramPositionOffsetY(PacketParser p) {
         try {
-            Hologram t = p.readTileEntity(Hologram.class);
+            Hologram t = p.readBlockEntity(Hologram.class);
             if (t != null) {
                 t.translationX = p.readDouble();
                 t.translationY = p.readDouble();
@@ -416,7 +450,7 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onHologramRotation(PacketParser p) {
         try {
-            Hologram t = p.readTileEntity(Hologram.class);
+            Hologram t = p.readBlockEntity(Hologram.class);
             if (t != null) {
                 t.rotationAngle = p.readFloat();
                 t.rotationX = p.readFloat();
@@ -430,7 +464,7 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onHologramRotationSpeed(PacketParser p) {
         try {
-            Hologram t = p.readTileEntity(Hologram.class);
+            Hologram t = p.readBlockEntity(Hologram.class);
             if (t != null) {
                 t.rotationSpeed = p.readFloat();
                 t.rotationSpeedX = p.readFloat();
@@ -445,14 +479,18 @@ public final class ClientPacketHandler extends PacketHandler {
     private void onLootDisk(PacketParser p) {
         var stack = p.readItemStack();
         if (stack != null) {
-            Loot.disksForClient.add(stack);
+            if (LootManager.pendingDiskSync) {
+                LootManager.pendingDiskSync = false;
+                LootManager.disksForClient.clear();
+            }
+            LootManager.disksForClient.add(stack);
         }
     }
 
     private void onCyclingDisk(PacketParser p) {
         var stack = p.readItemStack();
         if (stack != null) {
-            Loot.disksForCyclingClient.add(stack);
+            LootManager.disksForCyclingClient.add(stack);
         }
     }
 
@@ -482,6 +520,10 @@ public final class ClientPacketHandler extends PacketHandler {
                 Object controller = li.cil.oc.api.Nanomachines.getController(player);
                 if (controller instanceof ControllerImpl ctrl) {
                     int count = p.readInt();
+                    if (count < 0 || count > 256) {
+                        OpenComputers.log().warn("Received invalid input count from nanomachines: {}", count);
+                        return;
+                    }
                     byte[] inputs = new byte[count];
                     p.readFully(inputs);
                     synchronized (ctrl.configuration) {
@@ -513,7 +555,7 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onNetSplitterState(PacketParser p) {
         try {
-            NetSplitter t = p.readTileEntity(NetSplitter.class);
+            NetSplitter t = p.readBlockEntity(NetSplitter.class);
             if (t != null) {
                 t.isInverted = p.readBoolean();
                 t.uncompressSides(p.readByte());
@@ -582,7 +624,7 @@ public final class ClientPacketHandler extends PacketHandler {
         try {
             if (!PetRenderer.isInitialized) {
                 PetRenderer.isInitialized = true;
-                if (Settings.get().hideOwnPet) {
+                if (OCSettings.get().hideOwnPet) {
                     var player = Minecraft.getInstance().player;
                     if (player != null) PetRenderer.hidden.add(player.getScoreboardName());
                 }
@@ -590,6 +632,10 @@ public final class ClientPacketHandler extends PacketHandler {
             }
 
             int count = p.readInt();
+            if (count < 0 || count > 1024) {
+                OpenComputers.log().warn("Received invalid pet visibility count: {}", count);
+                return;
+            }
             for (int i = 0; i < count; i++) {
                 String name = p.readUTF();
                 if (p.readBoolean()) {
@@ -605,7 +651,7 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onPowerState(PacketParser p) {
         try {
-            PowerInformation t = p.readTileEntity(PowerInformation.class);
+            PowerInformation t = p.readBlockEntity(PowerInformation.class);
             if (t != null) {
                 t.globalBuffer(p.readDouble());
                 t.globalBufferSize(p.readDouble());
@@ -617,7 +663,7 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onPrinterState(PacketParser p) {
         try {
-            Printer t = p.readTileEntity(Printer.class);
+            Printer t = p.readBlockEntity(Printer.class);
             if (t != null) {
                 if (p.readBoolean()) t.requiredEnergy = 9001;
                 else t.requiredEnergy = 0;
@@ -629,11 +675,13 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onRackInventory(PacketParser p) {
         try {
-            Rack t = p.readTileEntity(Rack.class);
+            Rack t = p.readBlockEntity(Rack.class);
             if (t != null) {
-                int count = p.readInt();
+                int count = Math.min(p.readInt(), t.getContainerSize());
+                if (count < 0) count = 0;
                 for (int i = 0; i < count; i++) {
                     int slot = p.readInt();
+                    if (slot < 0 || slot >= t.getContainerSize()) continue;
                     var stack = p.readItemStack();
                     t.updateItems(slot, stack);
                 }
@@ -646,9 +694,13 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onRackMountableData(PacketParser p) {
         try {
-            Rack t = p.readTileEntity(Rack.class);
+            Rack t = p.readBlockEntity(Rack.class);
             if (t != null) {
                 int mountableIndex = p.readInt();
+                if (mountableIndex < 0 || mountableIndex >= t.lastData.length) {
+                    OpenComputers.log().warn("Received invalid mountable index: {}", mountableIndex);
+                    return;
+                }
                 var data = p.readNBT();
                 t.lastData[mountableIndex] = data;
                 TerminalServer.TerminalServerCache.loaded.completePending();
@@ -660,7 +712,7 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onRaidStateChange(PacketParser p) {
         try {
-            Raid t = p.readTileEntity(Raid.class);
+            Raid t = p.readBlockEntity(Raid.class);
             if (t != null) {
                 for (int slot = 0; slot < t.getContainerSize(); slot++) {
                     t.presence[slot] = p.readBoolean();
@@ -673,7 +725,7 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onRedstoneState(PacketParser p) {
         try {
-            RedstoneAware t = p.readTileEntity(RedstoneAware.class);
+            RedstoneAware t = p.readBlockEntity(RedstoneAware.class);
             if (t != null) {
                 t.setOutputEnabled(p.readBoolean());
                 for (Direction d : Direction.values()) {
@@ -687,7 +739,7 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onRobotAnimateSwing(PacketParser p) {
         try {
-            var t = p.readTileEntity(li.cil.oc.neoforge.common.tileentity.RobotProxy.class);
+            var t = p.readBlockEntity(li.cil.oc.neoforge.common.blockentity.RobotProxy.class);
             if (t != null) {
                 t.setAnimateSwing(p.readInt());
             }
@@ -698,7 +750,7 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onRobotAnimateTurn(PacketParser p) {
         try {
-            var t = p.readTileEntity(li.cil.oc.neoforge.common.tileentity.RobotProxy.class);
+            var t = p.readBlockEntity(li.cil.oc.neoforge.common.blockentity.RobotProxy.class);
             if (t != null) {
                 t.setAnimateTurn(p.readByte(), p.readInt());
             }
@@ -709,7 +761,7 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onRobotAssemblingState(PacketParser p) {
         try {
-            Assembler t = p.readTileEntity(Assembler.class);
+            Assembler t = p.readBlockEntity(Assembler.class);
             if (t != null) {
                 if (p.readBoolean()) t.requiredEnergy = 9001;
                 else t.requiredEnergy = 0;
@@ -721,21 +773,27 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onRobotInventoryChange(PacketParser p) {
         try {
-            var t = p.readTileEntity(li.cil.oc.neoforge.common.tileentity.RobotProxy.class);
+            var t = p.readBlockEntity(li.cil.oc.neoforge.common.blockentity.RobotProxy.class);
             if (t != null) {
                 int slot = p.readInt();
                 var stack = p.readItemStack();
+                if (slot < 0 || slot >= t.getContainerSize()) {
+                    OpenComputers.log().warn("Received robot inventory change with out-of-bounds slot: {}", slot);
+                    return;
+                }
                 if (slot >= t.getContainerSize() - t.componentCount()) {
                     int compIdx = slot - (t.getContainerSize() - t.componentCount());
-                    t.info.components.set(compIdx, stack);
+                    if (compIdx >= 0 && compIdx < t.info.components.size()) {
+                        t.info.components.set(compIdx, stack);
+                    }
                     var comps = t.robot._components();
-                    if (comps != null && slot >= 0 && slot < comps.length && comps[slot] != null && !stack.isEmpty()) {
+                    if (comps != null && slot < comps.length && comps[slot] != null && !stack.isEmpty()) {
                         var driver = li.cil.oc.api.API.driver.driverFor(stack);
                         if (driver != null) {
                             try {
                                 var data = driver.dataTag(stack);
                                 if (data == null) {
-                                    data = li.cil.oc.neoforge.integration.opencomputers.Item.getDataTag(stack);
+                                    data = li.cil.oc.core.impl.integration.opencomputers.Item.getDataTag(stack);
                                 }
                                 comps[slot].load(data, t.level().registryAccess());
                             } catch (Throwable e) {
@@ -754,9 +812,14 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onRobotLightChange(PacketParser p) {
         try {
-            var t = p.readTileEntity(li.cil.oc.neoforge.common.tileentity.RobotProxy.class);
+            int dimension = p.readInt();
+            int x = p.readInt();
+            int y = p.readInt();
+            int z = p.readInt();
+            int lightColor = p.readInt();
+            var t = p.getBlockEntity(dimension, x, y, z, li.cil.oc.neoforge.common.blockentity.RobotProxy.class);
             if (t != null) {
-                t.info.lightColor = p.readInt();
+                t.info.lightColor = lightColor;
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -765,13 +828,21 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onRobotNameChange(PacketParser p) {
         try {
-            var t = p.readTileEntity(li.cil.oc.neoforge.common.tileentity.RobotProxy.class);
+            int dimension = p.readInt();
+            int x = p.readInt();
+            int y = p.readInt();
+            int z = p.readInt();
+            int len = p.readShort();
+            if (len < 0 || len > 1024) {
+                OpenComputers.log().warn("Received robot name change with invalid length: {}", len);
+                return;
+            }
+            StringBuilder name = new StringBuilder(len);
+            for (int i = 0; i < len; i++) {
+                name.append(p.readChar());
+            }
+            var t = p.getBlockEntity(dimension, x, y, z, li.cil.oc.neoforge.common.blockentity.RobotProxy.class);
             if (t != null) {
-                int len = p.readShort();
-                StringBuilder name = new StringBuilder(len);
-                for (int x = 0; x < len; x++) {
-                    name.append(p.readChar());
-                }
                 t.setName(name.toString());
             }
         } catch (IOException e) {
@@ -786,11 +857,19 @@ public final class ClientPacketHandler extends PacketHandler {
             int y = p.readInt();
             int z = p.readInt();
             Direction direction = p.readDirection();
-            var t = p.getTileEntity(dimension, x, y, z, li.cil.oc.neoforge.common.tileentity.RobotProxy.class);
+            var t = p.getBlockEntity(dimension, x, y, z, li.cil.oc.neoforge.common.blockentity.RobotProxy.class);
             if (t != null && direction != null) {
                 t.move(direction);
             } else if (direction != null) {
-                PacketSender.sendRobotStateRequest(dimension, x + direction.getStepX(), y + direction.getStepY(), z + direction.getStepZ());
+                var oldPos = new net.minecraft.core.BlockPos(x, y, z);
+                var newPos = oldPos.relative(direction);
+                var newProxy = p.getBlockEntity(dimension, newPos.getX(), newPos.getY(), newPos.getZ(), li.cil.oc.neoforge.common.blockentity.RobotProxy.class);
+                if (newProxy != null) {
+                    var moveTicks = Math.max((int) (li.cil.oc.core.impl.OCSettings.get().moveDelay * 20), 1);
+                    newProxy.setAnimateMove(li.cil.oc.core.impl.util.BlockPosition.apply(x, y, z, newProxy.getLevel()), moveTicks);
+                } else {
+                    PacketSender.sendRobotStateRequest(dimension, newPos.getX(), newPos.getY(), newPos.getZ());
+                }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -799,9 +878,14 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onRobotSelectedSlotChange(PacketParser p) {
         try {
-            var t = p.readTileEntity(li.cil.oc.neoforge.common.tileentity.RobotProxy.class);
+            int dimension = p.readInt();
+            int x = p.readInt();
+            int y = p.readInt();
+            int z = p.readInt();
+            int value = p.readInt();
+            var t = p.getBlockEntity(dimension, x, y, z, li.cil.oc.neoforge.common.blockentity.RobotProxy.class);
             if (t != null) {
-                t.robot.selectedSlot = p.readInt();
+                t.robot.selectedSlot = value;
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -809,18 +893,18 @@ public final class ClientPacketHandler extends PacketHandler {
     }
 
     private void onRotatableState(PacketParser p) {
-        Rotatable t = p.readTileEntity(Rotatable.class);
+        Rotatable t = p.readBlockEntity(Rotatable.class);
         if (t != null) {
             Direction pitch = p.readDirection();
             Direction yaw = p.readDirection();
-            if (pitch != null && yaw != null && t instanceof li.cil.oc.core.impl.common.tileentity.Screen screen) {
+            if (pitch != null && yaw != null && t instanceof li.cil.oc.core.impl.common.blockentity.Screen screen) {
                 screen.trySetPitchYaw(pitch, yaw);
             }
         }
     }
 
     private void onSwitchActivity(PacketParser p) {
-        SwitchLike t = p.readTileEntity(SwitchLike.class);
+        SwitchLike t = p.readBlockEntity(SwitchLike.class);
         if (t != null) {
             t.lastMessage(System.currentTimeMillis());
         }
@@ -853,7 +937,7 @@ public final class ClientPacketHandler extends PacketHandler {
         if (cache != null) {
             cache.invalidate(stack);
         }
-        var host = li.cil.oc.neoforge.common.item.Tablet.get(stack, player);
+        var host = li.cil.oc.core.impl.common.item.Tablet.get(stack, player);
         host.update();
         li.cil.oc.neoforge.client.PacketSender.sendMachineItemStateRequest(stack);
         for (ManagedEnvironment env : host.componentEnvironments()) {
@@ -874,7 +958,7 @@ public final class ClientPacketHandler extends PacketHandler {
         }
         for (ManagedEnvironment env : host.componentEnvironments()) {
             if (env instanceof TextBuffer buffer) {
-                var inner = new li.cil.oc.neoforge.client.gui.Screen(buffer, true, () -> true, buffer::isRenderingEnabled);
+                var inner = new li.cil.oc.core.impl.client.gui.Screen(buffer, true, () -> true, buffer::isRenderingEnabled);
                 Minecraft.getInstance().setScreen(new net.minecraft.client.gui.screens.Screen(net.minecraft.network.chat.Component.literal("tablet")) {
                     @Override
                     public boolean isPauseScreen() {
@@ -963,7 +1047,8 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onTextBufferInit(PacketParser p) {
         try {
-            li.cil.oc.api.network.ManagedEnvironment bufEnv = ClientComponentTracker.INSTANCE.get(p.player.level(), p.readUTF());
+            String addr = p.readUTF();
+            li.cil.oc.api.network.ManagedEnvironment bufEnv = ClientComponentTracker.INSTANCE.get(p.player.level(), addr);
             if (bufEnv instanceof li.cil.oc.core.impl.common.component.TextBuffer buffer) {
                 var nbt = p.readNBT();
                 if (nbt.contains("maxWidth")) {
@@ -987,7 +1072,8 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onTextBufferMulti(PacketParser p) {
         try {
-            li.cil.oc.api.network.ManagedEnvironment bufEnv2 = ClientComponentTracker.INSTANCE.get(p.player.level(), p.readUTF());
+            String addr = p.readUTF();
+            li.cil.oc.api.network.ManagedEnvironment bufEnv2 = ClientComponentTracker.INSTANCE.get(p.player.level(), addr);
             if (bufEnv2 instanceof li.cil.oc.api.internal.TextBuffer buffer) {
                 multiLoop:
                 while (true) {
@@ -1162,10 +1248,14 @@ public final class ClientPacketHandler extends PacketHandler {
         try {
             int col = p.readInt();
             int row = p.readInt();
-            int rows = p.readShort();
+            int maxRows = buffer.getMaximumHeight();
+            int maxCols = buffer.getMaximumWidth();
+            int rows = Math.min(p.readShort(), maxRows);
+            if (rows < 0) rows = 0;
             int[][] text = new int[rows][];
             for (int y = 0; y < rows; y++) {
-                int cols = p.readShort();
+                int cols = Math.min(p.readShort(), maxCols);
+                if (cols < 0) cols = 0;
                 int[] line = new int[cols];
                 for (int x = 0; x < cols; x++) {
                     line[x] = p.readMedium();
@@ -1182,10 +1272,14 @@ public final class ClientPacketHandler extends PacketHandler {
         try {
             int col = p.readInt();
             int row = p.readInt();
-            int rows = p.readShort();
+            int maxRows = buffer.getMaximumHeight();
+            int maxCols = buffer.getMaximumWidth();
+            int rows = Math.min(p.readShort(), maxRows);
+            if (rows < 0) rows = 0;
             int[][] color = new int[rows][];
             for (int y = 0; y < rows; y++) {
-                int cols = p.readShort();
+                int cols = Math.min(p.readShort(), maxCols);
+                if (cols < 0) cols = 0;
                 int[] line = new int[cols];
                 for (int x = 0; x < cols; x++) {
                     line[x] = p.readInt();
@@ -1202,10 +1296,14 @@ public final class ClientPacketHandler extends PacketHandler {
         try {
             int col = p.readInt();
             int row = p.readInt();
-            int rows = p.readShort();
+            int maxRows = buffer.getMaximumHeight();
+            int maxCols = buffer.getMaximumWidth();
+            int rows = Math.min(p.readShort(), maxRows);
+            if (rows < 0) rows = 0;
             int[][] color = new int[rows][];
             for (int y = 0; y < rows; y++) {
-                int cols = p.readShort();
+                int cols = Math.min(p.readShort(), maxCols);
+                if (cols < 0) cols = 0;
                 int[] line = new int[cols];
                 for (int x = 0; x < cols; x++) {
                     line[x] = p.readInt();
@@ -1220,7 +1318,7 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onScreenTouchMode(PacketParser p) {
         try {
-            Screen t = p.readTileEntity(Screen.class);
+            Screen t = p.readBlockEntity(Screen.class);
             if (t != null) {
                 t.invertTouchMode = p.readBoolean();
             }
@@ -1259,7 +1357,7 @@ public final class ClientPacketHandler extends PacketHandler {
     }
 
     private void onTransposerActivity(PacketParser p) {
-        Transposer t = p.readTileEntity(Transposer.class);
+        Transposer t = p.readBlockEntity(Transposer.class);
         if (t != null) {
             t.lastOperation = System.currentTimeMillis();
         }
@@ -1267,7 +1365,7 @@ public final class ClientPacketHandler extends PacketHandler {
 
     private void onWaypointLabel(PacketParser p) {
         try {
-            Waypoint t = p.readTileEntity(Waypoint.class);
+            Waypoint t = p.readBlockEntity(Waypoint.class);
             if (t != null) {
                 t.label = p.readUTF();
             }

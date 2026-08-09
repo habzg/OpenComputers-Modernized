@@ -1,6 +1,8 @@
 package li.cil.oc.neoforge.model;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.RenderType;
@@ -32,9 +34,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class NetSplitterModel implements IDynamicBakedModel {
     public static final ModelProperty<Byte> OPEN_SIDES = new ModelProperty<>();
 
@@ -61,7 +60,7 @@ public class NetSplitterModel implements IDynamicBakedModel {
     @Override
     public @NotNull ModelData getModelData(@NotNull BlockAndTintGetter level, @NotNull BlockPos pos, @NotNull BlockState state, @NotNull ModelData modelData) {
         BlockEntity blockEntity = level.getBlockEntity(pos);
-        if (blockEntity instanceof li.cil.oc.core.impl.common.tileentity.NetSplitter splitter) {
+        if (blockEntity instanceof li.cil.oc.core.impl.common.blockentity.NetSplitter splitter) {
             byte sides = 0;
             for (Direction dir : Direction.values()) {
                 if (splitter.isSideOpen(dir)) {

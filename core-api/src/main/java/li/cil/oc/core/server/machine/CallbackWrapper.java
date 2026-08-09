@@ -1,13 +1,14 @@
 package li.cil.oc.core.server.machine;
 
-import li.cil.oc.api.machine.Arguments;
-import li.cil.oc.api.machine.Callback;
-import li.cil.oc.api.machine.Context;
-import li.cil.oc.api.network.ManagedPeripheral;
+import li.cil.oc.api.network.DocumentedPeripheral;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import li.cil.oc.api.machine.Arguments;
+import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.network.ManagedPeripheral;
 
 public class CallbackWrapper {
     private final Method method;
@@ -36,7 +37,8 @@ public class CallbackWrapper {
     }
 
     public static CallbackWrapper peripheral(String name, ManagedPeripheral peripheral) {
-        return new CallbackWrapper(null, createAnnotation(name), (instance, args) ->
+        String doc = peripheral instanceof DocumentedPeripheral documented ? documented.doc(name) : "";
+        return new CallbackWrapper(null, createAnnotation(name, doc), (instance, args) ->
                 peripheral.invoke(name, (Context) args[0], (Arguments) args[1])
         );
     }
@@ -58,7 +60,7 @@ public class CallbackWrapper {
         Object[] call(Object instance, Object... args) ;
     }
 
-    private static Callback createAnnotation(final String name) {
+    private static Callback createAnnotation(final String name, final String doc) {
         return (Callback) Proxy.newProxyInstance(
                 Callback.class.getClassLoader(),
                 new Class<?>[]{Callback.class},
@@ -66,7 +68,7 @@ public class CallbackWrapper {
                     case "value" -> name;
                     case "direct" -> true;
                     case "limit" -> 100;
-                    case "doc" -> "";
+                    case "doc" -> doc;
                     case "getter", "setter" -> false;
                     case "annotationType" -> Callback.class;
                     case "equals" -> proxy == args[0];

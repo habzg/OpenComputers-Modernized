@@ -1,23 +1,5 @@
 package li.cil.oc.core.impl.server.network;
 
-import li.cil.oc.api.network.Environment;
-import li.cil.oc.api.network.Node;
-import li.cil.oc.api.network.SidedEnvironment;
-import li.cil.oc.api.network.Visibility;
-import li.cil.oc.api.network.WirelessEndpoint;
-import li.cil.oc.core.impl.Settings;
-import li.cil.oc.core.impl.util.Color;
-import li.cil.oc.core.impl.util.SideTracker;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,6 +14,24 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import li.cil.oc.api.network.Environment;
+import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.SidedEnvironment;
+import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.network.WirelessEndpoint;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.util.Color;
+import li.cil.oc.core.impl.util.SideTracker;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Network implements li.cil.oc.api.detail.NetworkAPI, Distributor {
     public static boolean cbMultipartAvailable = false;
@@ -81,7 +81,6 @@ public class Network implements li.cil.oc.api.detail.NetworkAPI, Distributor {
         this.wrapper = new Wrapper();
         addNew(node);
         node.onConnect(node);
-        syncVertices();
     }
 
     private Network(Map<String, Vertex> subgraph) {
@@ -103,56 +102,51 @@ public class Network implements li.cil.oc.api.detail.NetworkAPI, Distributor {
         }
     }
 
-    public static Node getNetworkNode(BlockEntity tileEntity, Direction side) {
-        if (tileEntity instanceof SidedEnvironment) {
-            return ((SidedEnvironment) tileEntity).sidedNode(side);
-        } else if (tileEntity instanceof Environment) {
-            if (tileEntity instanceof li.cil.oc.api.network.SidedComponent) {
-                if (((li.cil.oc.api.network.SidedComponent) tileEntity).canConnectNode(side)) {
-                    return ((Environment) tileEntity).node();
-                } else {
-                    return null;
-                }
-            }
-            return ((Environment) tileEntity).node();
-        } else if (tileEntity instanceof li.cil.oc.api.network.SimpleComponent) {
-            if (simpleComponentHandler != null) return simpleComponentHandler.apply(tileEntity);
+    public static Node getNetworkNode(BlockEntity blockEntity, Direction side) {
+        if (blockEntity == null) return null;
+        if (blockEntity instanceof li.cil.oc.core.impl.common.blockentity.RobotProxy) return null;
+        if (blockEntity instanceof SidedEnvironment) {
+            return ((SidedEnvironment) blockEntity).sidedNode(side);
+        } else if (blockEntity instanceof Environment) {
+            return ((Environment) blockEntity).node();
+        } else if (blockEntity instanceof li.cil.oc.api.network.SimpleComponent) {
+            if (simpleComponentHandler != null) return simpleComponentHandler.apply(blockEntity);
             return null;
         } else if (cbMultipartAvailable) {
-            return getMultiPartNode(tileEntity);
+            return getMultiPartNode(blockEntity);
         } else if (capabilityNodeHandler != null) {
-            return capabilityNodeHandler.apply(tileEntity, side);
+            return capabilityNodeHandler.apply(blockEntity, side);
         }
         return null;
     }
 
-    private static Node getMultiPartNode(BlockEntity tileEntity) {
-        if (multipartNodeHandler != null) return multipartNodeHandler.apply(tileEntity);
+    private static Node getMultiPartNode(BlockEntity blockEntity) {
+        if (multipartNodeHandler != null) return multipartNodeHandler.apply(blockEntity);
         return null;
     }
 
-    private static int cableColor(BlockEntity tileEntity) {
-        if (tileEntity instanceof li.cil.oc.core.impl.common.tileentity.Cable) {
-            return ((li.cil.oc.core.impl.common.tileentity.Cable) tileEntity).color();
+    private static int cableColor(BlockEntity blockEntity) {
+        if (blockEntity instanceof li.cil.oc.core.impl.common.blockentity.Cable) {
+            return ((li.cil.oc.core.impl.common.blockentity.Cable) blockEntity).color();
         } else if (cbMultipartAvailable) {
-            return cableColorCBMultipart(tileEntity);
+            return cableColorCBMultipart(blockEntity);
         }
         return Color.LightGray;
     }
 
-    private static int cableColorCBMultipart(BlockEntity tileEntity) {
-        if (multipartColorHandler != null) return multipartColorHandler.apply(tileEntity);
+    private static int cableColorCBMultipart(BlockEntity blockEntity) {
+        if (multipartColorHandler != null) return multipartColorHandler.apply(blockEntity);
         return Color.LightGray;
     }
 
-    private static boolean canConnectBasedOnColor(BlockEntity te1, BlockEntity te2) {
-        int c1 = cableColor(te1);
-        int c2 = cableColor(te2);
+    private static boolean canConnectBasedOnColor(BlockEntity be1, BlockEntity be2) {
+        int c1 = cableColor(be1);
+        int c2 = cableColor(be2);
         return c1 == c2 || c1 == Color.LightGray || c2 == Color.LightGray;
     }
 
-    private static boolean canConnectFromSideCBMultipart(BlockEntity tileEntity, Direction side) {
-        if (multipartCanConnectHandler != null) return multipartCanConnectHandler.test(tileEntity, side);
+    private static boolean canConnectFromSideCBMultipart(BlockEntity blockEntity, Direction side) {
+        if (multipartCanConnectHandler != null) return multipartCanConnectHandler.test(blockEntity, side);
         return true;
     }
 
@@ -598,7 +592,7 @@ public class Network implements li.cil.oc.api.detail.NetworkAPI, Distributor {
     @Override
     public double changeBuffer(double delta) {
         if (delta == 0) return 0;
-        if (Settings.get().ignorePower) {
+        if (OCSettings.get().ignorePower) {
             return delta < 0 ? 0 : delta;
         }
         synchronized (this) {
@@ -643,30 +637,30 @@ public class Network implements li.cil.oc.api.detail.NetworkAPI, Distributor {
     }
 
     @Override
-    public void joinOrCreateNetwork(Level level, BlockPos pos) {
-        if (level != null && !level.isClientSide) {
-            var tileEntity = level.getBlockEntity(pos);
-            if (tileEntity != null) {
-                joinOrCreateNetwork(tileEntity);
+    public void joinOrCreateNetwork(BlockGetter level, BlockPos pos) {
+        if (level != null) {
+            var blockEntity = level.getBlockEntity(pos);
+            if (blockEntity != null) {
+                joinOrCreateNetwork(blockEntity);
             }
         }
     }
 
     @Override
-    public void joinOrCreateNetwork(BlockEntity tileEntity) {
-        var level = tileEntity.getLevel();
-        if (!tileEntity.isRemoved() && level != null && !level.isClientSide) {
+    public void joinOrCreateNetwork(BlockEntity BlockEntity) {
+        var level = BlockEntity.getLevel();
+        if (!BlockEntity.isRemoved() && level != null && !level.isClientSide) {
             for (Direction side : Direction.values()) {
-                BlockPos pos = tileEntity.getBlockPos().relative(side);
+                BlockPos pos = BlockEntity.getBlockPos().relative(side);
                 if (level.hasChunk(pos.getX() >> 4, pos.getZ() >> 4)) {
-                    Node localNode = getNetworkNode(tileEntity, side);
-                    BlockEntity neighborTileEntity = level.getBlockEntity(pos);
-                    Node neighborNode = getNetworkNode(neighborTileEntity, side.getOpposite());
+                    Node localNode = getNetworkNode(BlockEntity, side);
+                    BlockEntity neighborBlockEntity = level.getBlockEntity(pos);
+                    Node neighborNode = getNetworkNode(neighborBlockEntity, side.getOpposite());
                     if (localNode instanceof li.cil.oc.core.impl.server.network.Node mutableLocal) {
                         if (neighborNode instanceof li.cil.oc.core.impl.server.network.Node mutableNeighbor && neighborNode != mutableLocal && neighborNode.network() != null) {
-                            boolean canConnectColor = canConnectBasedOnColor(tileEntity, neighborTileEntity);
+                            boolean canConnectColor = canConnectBasedOnColor(BlockEntity, neighborBlockEntity);
                             boolean canConnectCBMultipart = !cbMultipartAvailable ||
-                                    (canConnectFromSideCBMultipart(tileEntity, side) && canConnectFromSideCBMultipart(neighborTileEntity, side.getOpposite()));
+                                    (canConnectFromSideCBMultipart(BlockEntity, side) && canConnectFromSideCBMultipart(neighborBlockEntity, side.getOpposite()));
                             if (canConnectColor && canConnectCBMultipart) {
                                 mutableNeighbor.connect(mutableLocal);
                             } else {
@@ -701,9 +695,9 @@ public class Network implements li.cil.oc.api.detail.NetworkAPI, Distributor {
     }
 
     @Override
-    public void leaveWirelessNetwork(WirelessEndpoint endpoint, String dimension) {
+    public void leaveWirelessNetwork(WirelessEndpoint endpoint, net.minecraft.resources.ResourceKey<Level> dimension) {
         var h = li.cil.oc.core.util.WirelessNetworkHelper.get();
-        if (h != null) h.remove(endpoint, dimension);
+        if (h != null) h.remove(endpoint, dimension.location().toString());
     }
 
     @Override
@@ -719,8 +713,8 @@ public class Network implements li.cil.oc.api.detail.NetworkAPI, Distributor {
     @Override
     public Packet newPacket(String source, String destination, int port, Object[] data) {
         Packet packet = new Packet(source, destination, port, data);
-        if (packet.size > Settings.get().maxNetworkPacketSize) {
-            throw new IllegalArgumentException("packet too big (max " + Settings.get().maxNetworkPacketSize + ")");
+        if (packet.size > OCSettings.get().maxNetworkPacketSize) {
+            throw new IllegalArgumentException("packet too big (max " + OCSettings.get().maxNetworkPacketSize + ")");
         }
         return packet;
     }
@@ -1193,7 +1187,12 @@ public class Network implements li.cil.oc.api.detail.NetworkAPI, Distributor {
         }
     }
 
-    public static class Packet implements li.cil.oc.api.network.Packet {
+    @SuppressWarnings("InnerClassMayBeStatic") // no it cannot
+    public class Packet implements li.cil.oc.api.network.Packet {
+        private static final int MAX_STRING_LENGTH = 65535;
+        private static final int MAX_BYTE_ARRAY_LENGTH = 1048576; // 1MB
+        private static final int MAX_PACKET_SIZE = 10485760; // 10MB
+
         public final int size;
 
         @Override
@@ -1228,18 +1227,26 @@ public class Network implements li.cil.oc.api.detail.NetworkAPI, Distributor {
         public final int ttl;
 
         public Packet(String source, String destination, int port, Object[] data) {
-            this(source, destination, port, data, Settings.get().initialNetworkPacketTTL);
+            this(source, destination, port, data, OCSettings.get().initialNetworkPacketTTL);
         }
 
         public Packet(String source, String destination, int port, Object[] data, int ttl) {
+            if (source != null && source.length() > MAX_STRING_LENGTH) throw new IllegalArgumentException("source too long");
+            if (destination != null && destination.length() > MAX_STRING_LENGTH) throw new IllegalArgumentException("destination too long");
             this.source = source;
             this.destination = destination;
             this.port = port;
             this.data = data != null ? data : new Object[0];
             this.ttl = ttl;
-            if (this.data.length > Settings.get().maxNetworkPacketParts) {
+            if (this.data.length > OCSettings.get().maxNetworkPacketParts) {
                 throw new IllegalArgumentException("packet has too many parts");
             }
+            int s = getPacketSize();
+            if (s > MAX_PACKET_SIZE) throw new IllegalArgumentException("packet too large");
+            this.size = s;
+        }
+
+        private int getPacketSize() {
             int s = this.data.length * 2;
             for (Object arg : this.data) {
                 switch (arg) {
@@ -1251,12 +1258,18 @@ public class Network implements li.cil.oc.api.detail.NetworkAPI, Distributor {
                     case Long ignored -> s += 8;
                     case Float ignored -> s += 4;
                     case Double ignored -> s += 8;
-                    case String string -> s += Math.max(string.length(), 1);
-                    case byte[] bytes -> s += Math.max(bytes.length, 1);
+                    case String string -> {
+                        if (string.length() > MAX_STRING_LENGTH) throw new IllegalArgumentException("string data too large");
+                        s += Math.max(string.length(), 1);
+                    }
+                    case byte[] bytes -> {
+                        if (bytes.length > MAX_BYTE_ARRAY_LENGTH) throw new IllegalArgumentException("byte array data too large");
+                        s += Math.max(bytes.length, 1);
+                    }
                     default -> throw new IllegalArgumentException("unsupported data type");
                 }
             }
-            this.size = s;
+            return s;
         }
 
         @Override

@@ -1,5 +1,6 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.Map;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
@@ -8,20 +9,38 @@ import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.util.ResultWrapper;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.block.entity.FurnaceBlockEntity;
 
+public class UpgradeGenerator extends AbstractManagedEnvironment implements DeviceInfo {
+    public interface IFuelProvider {
+        boolean isFuel(ItemStack stack);
+        int getBurnTime(ItemStack stack);
+    }
 
-import java.util.Map;
+    private static IFuelProvider fuelProvider = new IFuelProvider() {
+        @Override
+        public boolean isFuel(ItemStack stack) {
+            return FurnaceBlockEntity.isFuel(stack);
+        }
 
-public class UpgradeGenerator extends li.cil.oc.api.prefab.ManagedEnvironment implements DeviceInfo {
+        @Override
+        public int getBurnTime(ItemStack stack) {
+            return net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity.getFuel().getOrDefault(stack.getItem(), 0);
+        }
+    };
+
+    public static void setFuelProvider(IFuelProvider provider) {
+        fuelProvider = provider;
+    }
     public final li.cil.oc.api.internal.Agent host;
 
     public final Node node = Network.newNode(this, Visibility.Network)
@@ -52,13 +71,14 @@ public class UpgradeGenerator extends li.cil.oc.api.prefab.ManagedEnvironment im
     public Object[] insert(Context context, Arguments args) {
         int count = args.optInteger(0, 64);
         ItemStack stack = host.mainInventory().getItem(host.selectedSlot());
-        if (stack.getCount() == 0) return ResultWrapper.result(null, "selected slot is empty");
-        if (!FurnaceBlockEntity.isFuel(stack)) {
+        if (stack.isEmpty()) return ResultWrapper.result(null, "selected slot is empty");
+        if (!fuelProvider.isFuel(stack)) {
             return ResultWrapper.result(null, "selected slot does not contain fuel");
         }
-        ItemStack container = stack.getCraftingRemainingItem();
+        Item containerItem = stack.getItem().getCraftingRemainingItem();
+        ItemStack container = containerItem != null ? containerItem.getDefaultInstance() : ItemStack.EMPTY;
         ItemStack inQueue = inventory;
-        if (inQueue != null && inQueue.getCount() > 0) {
+        if (inQueue != null && !inQueue.isEmpty()) {
             if (!ItemStack.isSameItem(inQueue, stack) || !ItemStack.isSameItemSameComponents(inQueue, stack)) {
                 return ResultWrapper.result(null, "different fuel type already queued");
             }
@@ -73,7 +93,7 @@ public class UpgradeGenerator extends li.cil.oc.api.prefab.ManagedEnvironment im
         int insertLimit = Math.min(stack.getCount(), Math.min(space, count));
         ItemStack fuelToInsert = stack.split(insertLimit);
 
-        if (stack.getCount() == 0) {
+        if (stack.isEmpty()) {
             host.mainInventory().setItem(host.selectedSlot(), ItemStack.EMPTY);
         } else {
             host.mainInventory().setItem(host.selectedSlot(), stack);
@@ -115,13 +135,14 @@ public class UpgradeGenerator extends li.cil.oc.api.prefab.ManagedEnvironment im
             return ResultWrapper.result(true);
         }
         ItemStack inQueue = inventory;
-        if (inQueue == null || inQueue.getCount() == 0) {
+        if (inQueue == null || inQueue.isEmpty()) {
             return ResultWrapper.result(false, "queue is empty");
         }
         ItemStack previousSelectedItem = host.mainInventory().getItem(host.selectedSlot());
         previousSelectedItem = previousSelectedItem.copy();
 
-        ItemStack requiredContainer = inQueue.getCraftingRemainingItem();
+        Item requiredContainerItem = inQueue.getItem().getCraftingRemainingItem();
+        ItemStack requiredContainer = requiredContainerItem != null ? requiredContainerItem.getDefaultInstance() : ItemStack.EMPTY;
         ItemStack selectedEmptyContainer = null;
         if (!requiredContainer.isEmpty() && requiredContainer.getCount() > 0) {
             if (previousSelectedItem.getCount() > 0 && previousSelectedItem.getItem() == requiredContainer.getItem() && ItemStack.isSameItemSameComponents(previousSelectedItem, requiredContainer)) {
@@ -138,7 +159,7 @@ public class UpgradeGenerator extends li.cil.oc.api.prefab.ManagedEnvironment im
 
         if (selectedEmptyContainer != null) {
             selectedEmptyContainer.shrink(removeLimit);
-            if (selectedEmptyContainer.getCount() == 0) {
+            if (selectedEmptyContainer.isEmpty()) {
                 host.mainInventory().setItem(host.selectedSlot(), ItemStack.EMPTY);
             } else {
                 host.mainInventory().removeItem(host.selectedSlot(), removeLimit);
@@ -151,7 +172,7 @@ public class UpgradeGenerator extends li.cil.oc.api.prefab.ManagedEnvironment im
             return ResultWrapper.result(false, "no inventory space available for fuel");
         } else {
             previousQueue.setCount(inQueue.getCount() + forUser.getCount());
-            inventory = previousQueue.getCount() == 0 ? null : previousQueue;
+            inventory = previousQueue.isEmpty() ? null : previousQueue;
             return ResultWrapper.result(true, removeLimit - forUser.getCount());
         }
     }
@@ -166,11 +187,11 @@ public class UpgradeGenerator extends li.cil.oc.api.prefab.ManagedEnvironment im
         super.update();
         if (remainingTicks <= 0 && inventory != null) {
             ItemStack stack = inventory;
-            remainingTicks = stack.getBurnTime(RecipeType.SMELTING);
+            remainingTicks = fuelProvider.getBurnTime(stack);
             if (remainingTicks > 0) {
                 updateClient();
                 stack.shrink(1);
-                if (stack.getCount() <= 0) {
+                if (stack.isEmpty()) {
                     inventory = null;
                 }
             }
@@ -181,7 +202,7 @@ public class UpgradeGenerator extends li.cil.oc.api.prefab.ManagedEnvironment im
                 if (remainingTicks == 0 && inventory == null) {
                     updateClient();
                 }
-                ((Connector) node).changeBuffer(Settings.get().generatorEfficiency);
+                ((Connector) node).changeBuffer(OCSettings.get().generatorEfficiency);
             }
         }
     }

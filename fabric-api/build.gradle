@@ -1,0 +1,27 @@
+plugins {
+    id 'fabric-loom' version "${loom_version}"
+    id 'java-library'
+}
+
+base {
+    archivesName = mod_id + "-fabric-api"
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings loom.layered() {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-${parchment_minecraft_version}:${parchment_mappings_version}@zip")
+    }
+    modCompileOnly "net.fabricmc:fabric-loader:${project.loader_version}"
+    modCompileOnly "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+    compileOnly(project(':api'))
+    compileOnly(project(':core-api'))
+    compileOnly(project(':core'))
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}

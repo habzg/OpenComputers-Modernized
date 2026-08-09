@@ -1,5 +1,9 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.Map;
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.component.RackBusConnectable;
@@ -15,6 +19,7 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Slot;
 import li.cil.oc.core.impl.common.Sound;
@@ -23,6 +28,7 @@ import li.cil.oc.core.impl.common.inventory.ItemStackInventory;
 import li.cil.oc.core.impl.util.BlockPosition;
 import li.cil.oc.core.impl.util.InventoryUtils;
 import li.cil.oc.core.util.ResultWrapper;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionHand;
@@ -30,13 +36,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.Map;
-
-public abstract class DiskDriveMountableBase extends li.cil.oc.api.prefab.ManagedEnvironment implements ItemStackInventory, ComponentInventory, RackMountable, Analyzable, DeviceInfo, ItemStackInventory.ItemStackInventoryAccessor {
+public abstract class DiskDriveMountableBase extends AbstractManagedEnvironment implements ItemStackInventory, ComponentInventory, RackMountable, Analyzable, DeviceInfo, ItemStackInventory.ItemStackInventoryAccessor {
     public final Rack rack;
     public final int slot;
     public long lastAccess = 0L;
@@ -106,7 +106,7 @@ public abstract class DiskDriveMountableBase extends li.cil.oc.api.prefab.Manage
     }
 
     @Override
-    public Node[] onAnalyze(Player player, int side, float hitX, float hitY, float hitZ) {
+    public Node[] onAnalyze(Player player, Direction side, float hitX, float hitY, float hitZ) {
         Node fs = filesystemNode();
         return new Node[]{fs};
     }
@@ -218,9 +218,7 @@ public abstract class DiskDriveMountableBase extends li.cil.oc.api.prefab.Manage
         var provider = rack.level().registryAccess();
         var stack = getItem(0);
         if (!stack.isEmpty()) {
-            var diskTag = new CompoundTag();
-            stack.save(provider, diskTag);
-            nbt.put("disk", diskTag);
+            nbt.put("disk", stack.save(provider, new CompoundTag()));
         }
         return nbt;
     }
@@ -255,7 +253,7 @@ public abstract class DiskDriveMountableBase extends li.cil.oc.api.prefab.Manage
         }
     }
 
-    protected abstract void openDiskDriveGui(Player player, BlockPosition pos, int slot);
+    protected abstract void openDiskDriveGui(Player player, BlockPosition ignoredPos, int slot);
 
     @Override
     public EnumSet<State> getCurrentState() {

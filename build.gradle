@@ -1,5 +1,34 @@
 plugins {
-    id 'net.neoforged.moddev' version '2.0.141' apply false
+    id 'java'
+    id 'fabric-loom' version '1.17-SNAPSHOT' apply false
+    id 'net.neoforged.moddev' version '2.0.144' apply false
+    id 'com.gradleup.shadow' version '9.6.1' apply false
+}
+
+apply plugin: 'com.gradleup.shadow'
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    typesafeRaw
+}
+
+dependencies {
+    typesafeRaw "com.typesafe:config:${typesafe_config_version}"
+}
+
+def relocateTypesafe = tasks.register('relocateTypesafe', com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
+    archiveFileName = 'OC-TypesafeConfig.jar'
+    destinationDirectory = layout.buildDirectory.dir('relocated')
+    configurations = [project.configurations.typesafeRaw]
+    relocate 'com.typesafe', 'li.cil.repack.com.typesafe'
+    exclude 'META-INF/**'
+}
+
+tasks.named('shadowJar') {
+    enabled = false
 }
 
 subprojects {
@@ -11,26 +40,168 @@ subprojects {
     java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
     repositories {
-        maven { url = "https://maven.cil.li/" }
-        maven { url = 'https://maven.rover656.dev/releases' }
-        maven { url = "https://maven.neoforged.net/releases/" }
-        maven { url = "https://maven.covers1624.net/" }
-        maven { url = "https://maven.createmod.net" }
-        maven { url = "https://maven.ithundxr.dev/snapshots" }
-        maven { url 'https://modmaven.dev/' }
-        maven { url 'https://maven.squiddev.cc/' }
-        maven { url = "https://maven.blamejared.com/" }
+        maven {
+            url = "https://maven.parchmentmc.org/"
+            content {
+                includeGroup "org.parchmentmc.data"
+            }
+        }
+
+        maven {
+            url = "https://maven.covers1624.net/"
+            content {
+                includeGroup "io.codechicken"
+                includeGroup "net.covers1624"
+                includeGroup "mrtjp"
+            }
+        }
+
+        maven {
+            url = "https://maven.creeperhost.net/"
+            content {
+                includeGroup "com.refinedmods.refinedstorage"
+            }
+        }
+
+        maven {
+            url = "https://maven.createmod.net"
+            content {
+                includeGroup "com.simibubi.create"
+                includeGroup "dev.engine-room.flywheel"
+                includeGroup "dev.engine-room.vanillin"
+                includeGroup "net.createmod"
+                includeGroup "net.createmod.ponder"
+            }
+        }
+
+        maven {
+            url = "https://maven.ryanhcode.dev/releases"
+            content {
+                includeGroup "dev.ryanhcode.sable-companion"
+            }
+        }
+
+        maven {
+            url = "https://maven.ithundxr.dev/snapshots"
+            content {
+                includeGroup "com.tterrag.registrate"
+            }
+        }
+
+        maven {
+            url = "https://maven.fabricmc.net/"
+            content {
+                includeGroup "net.fabricmc"
+                includeGroup "net.fabricmc.fabric-api"
+                includeGroup "teamreborn"
+            }
+        }
+
+        maven {
+            url = "https://maven.terraformersmc.com/releases/"
+            content {
+                includeGroup "com.terraformersmc"
+            }
+        }
+
+        maven {
+            url = "https://maven.architectury.dev/"
+            content {
+                includeGroup "dev.architectury"
+                includeGroup "me.shedaniel"
+                includeGroup "me.shedaniel.cloth"
+            }
+        }
+
+        maven {
+            url = "https://maven.squiddev.cc/"
+            content {
+                includeGroup "cc.tweaked"
+            }
+        }
+
+        maven {
+            url = "https://maven.blamejared.com/"
+            content {
+                includeGroup "mezz.jei"
+            }
+        }
+
+        maven {
+            name = "Sleeping Town"
+            url = "https://repo.sleeping.town/"
+            content {
+                includeGroup "dev.emi"
+            }
+        }
+
         maven {
             name = 'kotlinforforge'
             url = 'https://thedarkcolour.github.io/KotlinForForge/'
+            content {
+                includeGroup "thedarkcolour"
+            }
         }
+
         maven {
-          url "https://maven2.bai.lol"
-          content {
-            includeGroup "lol.bai"
-            includeGroup "mcp.mobius.waila"
-          }
+            url = "https://maven2.bai.lol"
+            content {
+                includeGroup "lol.bai"
+                includeGroup "mcp.mobius.waila"
+            }
         }
+
+        maven {
+            url = "https://maven.rover656.dev/releases"
+            content {
+                includeGroup "com.enderio"
+            }
+        }
+
+        maven {
+            url = "https://dogforce-games.com/maven/"
+            content {
+                includeGroup "dev.gigaherz.graph"
+            }
+        }
+
+        maven {
+            name = "Commoble"
+            url = "https://commoble.net/maven"
+            content {
+                includeGroup "net.commoble.morered"
+            }
+        }
+
+        maven {
+            url = "https://maven.theillusivec4.top/"
+            content {
+                includeGroup "top.theillusivec4.curios"
+            }
+        }
+
+        maven {
+            url = "https://maven.ftb.dev/releases"
+            content {
+                includeGroup "dev.ftb.mods"
+            }
+        }
+
+        maven {
+            url = "https://jm.gserv.me/repository/maven-public"
+            content {
+                includeGroup "info.journeymap"
+            }
+        }
+
+        maven {
+            url = "https://modmaven.dev/"
+            content {
+                includeGroup "mekanism"
+                includeGroup "mcjty.theoneprobe"
+            }
+        }
+
         exclusiveContent {
             forRepository {
                 maven {
@@ -42,7 +213,9 @@ subprojects {
                 includeGroup "maven.modrinth"
             }
         }
+
         mavenCentral()
+
         ivy {
             url = "https://asie.pl/javadeps/"
             patternLayout {

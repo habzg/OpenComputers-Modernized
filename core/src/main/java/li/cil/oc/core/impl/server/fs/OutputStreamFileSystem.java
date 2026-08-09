@@ -1,16 +1,15 @@
 package li.cil.oc.core.impl.server.fs;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import li.cil.oc.api.fs.Mode;
 import li.cil.oc.core.impl.util.FilePathUtil;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
-
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 public abstract class OutputStreamFileSystem extends InputStreamFileSystem {
     private final Map<Integer, OutputHandle> handles = new HashMap<>();

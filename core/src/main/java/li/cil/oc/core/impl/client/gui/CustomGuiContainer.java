@@ -1,6 +1,7 @@
 package li.cil.oc.core.impl.client.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import java.util.List;
 import li.cil.oc.core.impl.client.gui.widget.WidgetContainer;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -8,8 +9,6 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-
-import java.util.List;
 
 public abstract class CustomGuiContainer<C extends AbstractContainerMenu> extends AbstractContainerScreen<C> implements WidgetContainer {
     protected float blitOffset;
@@ -30,6 +29,10 @@ public abstract class CustomGuiContainer<C extends AbstractContainerMenu> extend
 
     public int windowY() {
         return topPos;
+    }
+
+    public int getXSize() {
+        return imageWidth;
     }
 
     @SuppressWarnings("unused")

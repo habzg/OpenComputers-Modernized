@@ -1,5 +1,7 @@
 package li.cil.oc.neoforge.common.capability;
 
+import java.util.HashSet;
+import java.util.Set;
 import li.cil.oc.api.capability.SimpleComponentProvider;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.SimpleComponent;
@@ -10,9 +12,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.common.util.INBTSerializable;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.HashSet;
-import java.util.Set;
 
 public class SimpleComponentCapability implements SimpleComponentProvider, INBTSerializable<CompoundTag> {
     private static final Set<BlockEntity> scheduled = new HashSet<>();

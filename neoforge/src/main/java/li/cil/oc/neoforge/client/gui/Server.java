@@ -1,11 +1,15 @@
 package li.cil.oc.neoforge.client.gui;
 
+import java.util.ArrayList;
+import java.util.List;
 import li.cil.oc.core.impl.client.Textures;
+import li.cil.oc.core.impl.client.gui.DynamicGuiContainer;
 import li.cil.oc.core.impl.client.gui.ImageButton;
 import li.cil.oc.core.impl.client.gui.traits.LockedHotbar;
 import li.cil.oc.core.impl.common.inventory.ServerInventory;
-import li.cil.oc.core.impl.common.tileentity.Rack;
+import li.cil.oc.core.impl.common.blockentity.Rack;
 import li.cil.oc.neoforge.client.PacketSender;
+import li.cil.oc.neoforge.common.init.Menus;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -13,10 +17,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class Server extends DynamicGuiContainer<li.cil.oc.neoforge.common.container.Server> implements LockedHotbar {
+public class Server extends DynamicGuiContainer<li.cil.oc.core.impl.common.container.Server> implements LockedHotbar {
     public final ServerInventory serverInventory;
     private Rack rack;
     private int slot;
@@ -26,14 +27,14 @@ public class Server extends DynamicGuiContainer<li.cil.oc.neoforge.common.contai
 
     @SuppressWarnings("unused")
     public Server(Inventory playerInventory, ServerInventory serverInventory, Rack rack, int slot) {
-        super(new li.cil.oc.neoforge.common.container.Server(0, playerInventory, serverInventory, null, playerInventory.player));
+        super(new li.cil.oc.core.impl.common.container.Server(Menus.SERVER.get(), 0, playerInventory, serverInventory, null, playerInventory.player));
         this.serverInventory = serverInventory;
         this.rack = rack;
         this.slot = slot;
         this.resolvedRackFromContainer = true;
     }
 
-    public Server(li.cil.oc.neoforge.common.container.Server container, Inventory inv, Component title) {
+    public Server(li.cil.oc.core.impl.common.container.Server container, Inventory inv, Component title) {
         super(container, inv, title);
         this.serverInventory = (ServerInventory) container.otherInventory;
         this.rack = resolveRackFromContainer(container);
@@ -41,7 +42,7 @@ public class Server extends DynamicGuiContainer<li.cil.oc.neoforge.common.contai
         this.resolvedRackFromContainer = container.rackPos != null;
     }
 
-    private Rack resolveRackFromContainer(li.cil.oc.neoforge.common.container.Server container) {
+    private Rack resolveRackFromContainer(li.cil.oc.core.impl.common.container.Server container) {
         if (container.rackPos != null && Minecraft.getInstance().level != null) {
             var te = Minecraft.getInstance().level.getBlockEntity(container.rackPos);
             if (te instanceof Rack r) return r;
@@ -91,7 +92,7 @@ public class Server extends DynamicGuiContainer<li.cil.oc.neoforge.common.contai
     }
 
     @Override
-    protected boolean checkHotbarKeyPressed(int keyCode, int scanCode) {
+    protected boolean checkHotbarKeyPressed(int ignoredKeyCode, int ignoredScanCode) {
         return false;
     }
 
@@ -138,8 +139,8 @@ public class Server extends DynamicGuiContainer<li.cil.oc.neoforge.common.contai
     @Override
     protected void drawSecondaryForegroundLayer(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         super.drawSecondaryForegroundLayer(guiGraphics, mouseX, mouseY);
-        guiGraphics.drawString(font, Component.translatable(serverInventory.getInventoryName()).getString(), 8, 6, 0x404040);
-        if (powerButton.isHoveredOrFocused()) {
+        guiGraphics.drawString(font, Component.translatable(serverInventory.getInventoryName()).getString(), 8, 6, 0x404040, false);
+        if (powerButton.isMouseOver(mouseX, mouseY)) {
             List<Component> tooltip = new ArrayList<>();
             for (String line : (menu.isRunning ?
                     Component.translatable("gui.opencomputers.robot.turnoff").getString() : Component.translatable("gui.opencomputers.robot.turnon").getString()).split("\n")) {

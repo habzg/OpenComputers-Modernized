@@ -5,11 +5,13 @@ import li.cil.oc.api.network.WirelessEndpoint;
 public abstract class WirelessNetworkHelper {
     private static WirelessNetworkHelper instance;
 
-    public static void setInstance(WirelessNetworkHelper inst) {
-        instance = inst;
-    }
-
     public static WirelessNetworkHelper get() {
+        if (instance == null) {
+            try {
+                instance = (WirelessNetworkHelper) Class.forName("li.cil.oc.core.util.WirelessNetworkHelperImpl").getDeclaredConstructor().newInstance();
+            } catch (Exception ignored) {
+            }
+        }
         return instance;
     }
 

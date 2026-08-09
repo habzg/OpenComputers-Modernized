@@ -5,7 +5,6 @@ import li.cil.oc.api.manual.InteractiveImageRenderer;
 /**
  * Simple base implementation of {@link li.cil.oc.api.manual.InteractiveImageRenderer}.
  */
-
 @SuppressWarnings("unused")
 public abstract class AbstractInteractiveImageRenderer implements InteractiveImageRenderer {
     @Override

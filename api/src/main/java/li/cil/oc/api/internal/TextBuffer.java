@@ -1,5 +1,6 @@
 package li.cil.oc.api.internal;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import li.cil.oc.api.Persistable;
 import li.cil.oc.api.network.ManagedEnvironment;
 import net.minecraft.world.entity.player.Player;
@@ -373,7 +374,7 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
     /**
      * Overwrites a portion of the text in raw mode.
      * <br>
-     * This will copy the given char array into the buffer, starting at the
+     * This will copy the given int array into the buffer, starting at the
      * specified column and row. The array is expected to be indexed row-
      * first, i.e. the first dimension is the vertical axis, the second
      * the horizontal.
@@ -434,6 +435,22 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
      * @param color  the background color data to write.
      */
     void rawSetBackground(int column, int row, int[][] color);
+
+    /**
+     * Renders the <em>text</em> displayed on the buffer.
+     * <br>
+     * You are responsible for setting up the actual context and applying any
+     * transformations necessary to properly position and scale the text before
+     * calling this. The text should be rendered on a black background.
+     * <br>
+     * You can use this to either render the text in a GUI or in the world.
+     *
+     * @param stack the transformation stack to render with.
+     * @return <code>true</code> if the displayed content changed since the last
+     * call to this method.
+     */
+    @SuppressWarnings("unused")
+    boolean renderText(PoseStack stack);
 
     /**
      * The natural width of the rendered text.

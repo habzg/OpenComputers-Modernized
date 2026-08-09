@@ -1,17 +1,16 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.HashMap;
+import java.util.Map;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
-import li.cil.oc.core.impl.common.tileentity.traits.BundledRedstoneAware;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.common.blockentity.traits.BundledRedstoneAware;
 import li.cil.oc.core.util.ResultWrapper;
 import net.minecraft.core.Direction;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public interface RedstoneBundled extends DeviceInfo {
     int[] COLOR_RANGE = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
@@ -62,7 +61,7 @@ public interface RedstoneBundled extends DeviceInfo {
         return map;
     }
 
-    @Callback(direct = true, doc = "function([side:number[, color:number]]):number or table -- Fewer params returns set of inputs.")
+    @Callback(direct = true, doc = "function([side:number[, color:number]]):number or table -- Fewer params returns set of inputs")
     default Object[] getBundledInput(Context context, Arguments args) {
         Object[] key = getBundleKey(args);
         Direction side = (Direction) key[0];
@@ -73,19 +72,20 @@ public interface RedstoneBundled extends DeviceInfo {
         return ResultWrapper.result(sidesToMap(bundledRedstone().bundledInput()));
     }
 
-    @Callback(direct = true, doc = "function([side:number[, color:number]]):number or table -- Fewer params returns set of outputs.")
+    @Callback(direct = true, doc = "function([side:number[, color:number]]):number or table -- Fewer params returns set of outputs")
     default Object[] getBundledOutput(Context context, Arguments args) {
         Object[] key = getBundleKey(args);
         Direction side = (Direction) key[0];
         Integer color = (Integer) key[1];
         if (color != null) return ResultWrapper.result((double) bundledRedstone().getBundledOutput(side, color));
-        if (side != null)
-            return ResultWrapper.result(colorsToMap(bundledRedstone().bundledOutput()[side.get3DDataValue()]));
+        if (side != null) {
+          return ResultWrapper.result(colorsToMap(bundledRedstone().getBundledOutput(side)));
+        }
         return ResultWrapper.result(sidesToMap(bundledRedstone().getBundledOutput()));
     }
 
     @SuppressWarnings("rawtypes")
-    @Callback(doc = "function([side:number[, color:number,]] value:number or table):number or table -- Fewer params to assign set of outputs. Returns previous values.")
+    @Callback(doc = "function([side:number[, color:number,]] value:number or table):number or table --  Fewer params to assign set of outputs. Returns previous values")
     default Object[] setBundledOutput(Context context, Arguments args) {
         Object ret;
         int count = args.count();
@@ -98,16 +98,16 @@ public interface RedstoneBundled extends DeviceInfo {
         } else if (count == 2) {
             Direction side = checkSide(args, 0);
             Map value = args.checkTable(1);
-            ret = colorsToMap(bundledRedstone().getBundledOutput(side));
+            ret = bundledRedstone().getBundledOutput(side);
             bundledRedstone().setBundledOutput(side, value);
         } else if (count == 1) {
             Map value = args.checkTable(0);
-            ret = sidesToMap(bundledRedstone().getBundledOutput());
+            ret = bundledRedstone().getBundledOutput();
             bundledRedstone().setBundledOutput(value);
         } else {
             throw new RuntimeException("invalid number of arguments, expected 1, 2, or 3");
         }
-        if (Settings.get().redstoneDelay > 0) context.pause(Settings.get().redstoneDelay);
+        if (OCSettings.get().redstoneDelay > 0) context.pause(OCSettings.get().redstoneDelay);
         return ResultWrapper.result(ret);
     }
 

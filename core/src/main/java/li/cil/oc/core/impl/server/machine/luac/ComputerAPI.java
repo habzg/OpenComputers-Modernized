@@ -1,16 +1,15 @@
 package li.cil.oc.core.impl.server.machine.luac;
 
+import java.util.Collection;
+import java.util.List;
 import li.cil.oc.api.Machine;
 import li.cil.oc.api.driver.item.MutableProcessor;
 import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.network.Connector;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.ExtendedLuaState;
 import net.minecraft.world.item.ItemStack;
-
-import java.util.Collection;
-import java.util.List;
 
 public class ComputerAPI extends NativeLuaAPI {
     public ComputerAPI(NativeLuaArchitecture owner) {
@@ -95,7 +94,7 @@ public class ComputerAPI extends NativeLuaAPI {
         lua().setField(-2, "removeUser");
 
         ExtendedLuaState.pushScalaFunction(lua(), l -> {
-            if (Settings.get().ignorePower)
+            if (OCSettings.get().ignorePower)
                 l.pushNumber(Double.POSITIVE_INFINITY);
             else
                 l.pushNumber(((Connector) node()).globalBuffer());

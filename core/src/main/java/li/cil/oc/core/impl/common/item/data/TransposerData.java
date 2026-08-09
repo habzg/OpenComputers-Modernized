@@ -1,13 +1,13 @@
 package li.cil.oc.core.impl.common.item.data;
 
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 
 public class TransposerData extends ItemData {
-    public static final String FLUID_TRANSFER_RATE = Settings.namespace + "fluidTransferRate";
-    public int fluidTransferRate = Settings.get().transposerFluidTransferRate;
+    public static final String FLUID_TRANSFER_RATE = OCSettings.namespace + "fluidTransferRate";
+    public int fluidTransferRate = OCSettings.get().transposerFluidTransferRate;
 
     public TransposerData() {
         super(Constants.BlockName.Transposer);

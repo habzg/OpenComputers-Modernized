@@ -1,12 +1,11 @@
 package li.cil.oc.core.impl.common.template;
 
+import java.util.ArrayList;
 import li.cil.oc.api.Items;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.impl.common.Registrar;
 import li.cil.oc.core.impl.common.inventory.ServerInventory;
 import net.minecraft.world.item.ItemStack;
-
-import java.util.ArrayList;
 
 public final class ServerTemplate {
     private ServerTemplate() {

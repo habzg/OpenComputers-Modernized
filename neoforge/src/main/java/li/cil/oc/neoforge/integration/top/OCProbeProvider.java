@@ -1,21 +1,24 @@
 package li.cil.oc.neoforge.integration.top;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.network.Visibility;
-import li.cil.oc.core.common.tileentity.traits.NotAnalyzable;
-import li.cil.oc.core.impl.common.tileentity.Assembler;
-import li.cil.oc.core.impl.common.tileentity.Charger;
-import li.cil.oc.core.impl.common.tileentity.DiskDrive;
-import li.cil.oc.core.impl.common.tileentity.Hologram;
-import li.cil.oc.core.impl.common.tileentity.Keyboard;
-import li.cil.oc.core.impl.common.tileentity.Printer;
-import li.cil.oc.core.impl.common.tileentity.Rack;
-import li.cil.oc.core.impl.common.tileentity.Screen;
-import li.cil.oc.neoforge.common.tileentity.Relay;
-import li.cil.oc.neoforge.common.tileentity.RobotProxy;
+import li.cil.oc.core.common.blockentity.traits.NotAnalyzable;
+import li.cil.oc.core.impl.common.blockentity.Assembler;
+import li.cil.oc.core.impl.common.blockentity.Charger;
+import li.cil.oc.core.impl.common.blockentity.DiskDrive;
+import li.cil.oc.core.impl.common.blockentity.Hologram;
+import li.cil.oc.core.impl.common.blockentity.Keyboard;
+import li.cil.oc.core.impl.common.blockentity.Printer;
+import li.cil.oc.core.impl.common.blockentity.Rack;
+import li.cil.oc.core.impl.common.blockentity.Relay;
+import li.cil.oc.core.impl.common.blockentity.Screen;
+import li.cil.oc.neoforge.common.blockentity.RobotProxy;
 import mcjty.theoneprobe.api.IProbeHitData;
 import mcjty.theoneprobe.api.IProbeInfo;
 import mcjty.theoneprobe.api.IProbeInfoProvider;
@@ -30,10 +33,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
 
 @SuppressWarnings("unused")
 public class OCProbeProvider implements IProbeInfoProvider {
@@ -133,7 +132,7 @@ public class OCProbeProvider implements IProbeInfoProvider {
         var mountable = rack.getMountable(slotOpt.get());
         if (mountable == null) return;
 
-        if (mountable instanceof li.cil.oc.neoforge.common.component.TerminalServer ts) {
+        if (mountable instanceof li.cil.oc.core.impl.common.component.TerminalServer ts) {
             if (ts.bufferIfLoaded() != null && ts.bufferIfLoaded().node() != null) {
                 writeNode(probeInfo, ts.bufferIfLoaded().node());
             }

@@ -1,24 +1,25 @@
 package li.cil.oc.neoforge.client.gui;
 
+import java.text.DecimalFormat;
 import li.cil.oc.core.impl.client.Textures;
+import li.cil.oc.core.impl.client.gui.DynamicGuiContainer;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 
-import java.text.DecimalFormat;
-
 public class Relay extends DynamicGuiContainer<li.cil.oc.neoforge.common.container.Relay> {
-    public final li.cil.oc.neoforge.common.tileentity.Relay relay;
+    public final li.cil.oc.core.impl.common.blockentity.Relay relay;
     private final DecimalFormat format = new DecimalFormat("#.##hz");
 
-    public Relay(Inventory playerInventory, li.cil.oc.neoforge.common.tileentity.Relay relay) {
+    @SuppressWarnings("unused")
+    public Relay(Inventory playerInventory, li.cil.oc.core.impl.common.blockentity.Relay relay) {
         super(new li.cil.oc.neoforge.common.container.Relay(0, playerInventory, relay, playerInventory.player));
         this.relay = relay;
     }
 
     public Relay(li.cil.oc.neoforge.common.container.Relay container, Inventory inv, net.minecraft.network.chat.Component title) {
         super(container, inv, title);
-        this.relay = (li.cil.oc.neoforge.common.tileentity.Relay) container.otherInventory;
+        this.relay = (li.cil.oc.core.impl.common.blockentity.Relay) container.otherInventory;
     }
 
     @Override
@@ -55,16 +56,16 @@ public class Relay extends DynamicGuiContainer<li.cil.oc.neoforge.common.contain
 
     protected void drawSecondaryForegroundLayer(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         super.drawSecondaryForegroundLayer(guiGraphics, mouseX, mouseY);
-        guiGraphics.drawString(font, Component.translatable(relay.getInventoryName()).getString(), 8, 6, 0x404040);
+        guiGraphics.drawString(font, Component.translatable(relay.getInventoryName()).getString(), 8, 6, 0x404040, false);
 
-        guiGraphics.drawString(font, Component.translatable("gui.opencomputers.switch.transferrate").getString(), 14, 20, 0x404040);
-        guiGraphics.drawString(font, Component.translatable("gui.opencomputers.switch.packetspercycle").getString(), 14, 39, 0x404040);
-        guiGraphics.drawString(font, Component.translatable("gui.opencomputers.switch.queuesize").getString(), 14, 58, 0x404040);
-        guiGraphics.drawString(font, format.format(20f / menu.relayDelay()), 108, 20, 0x404040);
+        guiGraphics.drawString(font, Component.translatable("gui.opencomputers.switch.transferrate").getString(), 14, 20, 0x404040, false);
+        guiGraphics.drawString(font, Component.translatable("gui.opencomputers.switch.packetspercycle").getString(), 14, 39, 0x404040, false);
+        guiGraphics.drawString(font, Component.translatable("gui.opencomputers.switch.queuesize").getString(), 14, 58, 0x404040, false);
+        guiGraphics.drawString(font, format.format(20f / menu.relayDelay()), 108, 20, 0x404040, false);
         guiGraphics.drawString(font, menu.packetsPerCycleAvg() + " / " + menu.relayAmount(), 108, 39,
-                thresholdBasedColor(menu.packetsPerCycleAvg(), (int) Math.ceil(menu.relayAmount() / 2f), menu.relayAmount()));
+                thresholdBasedColor(menu.packetsPerCycleAvg(), (int) Math.ceil(menu.relayAmount() / 2f), menu.relayAmount()), false);
         guiGraphics.drawString(font, menu.queueSize() + " / " + menu.maxQueueSize(), 108, 58,
-                thresholdBasedColor(menu.queueSize(), menu.maxQueueSize() / 2, menu.maxQueueSize()));
+                thresholdBasedColor(menu.queueSize(), menu.maxQueueSize() / 2, menu.maxQueueSize()), false);
     }
 
     private int thresholdBasedColor(int value, int yellow, int red) {

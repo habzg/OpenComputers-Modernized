@@ -1,9 +1,6 @@
 package li.cil.oc.core.impl.server.fs;
 
 import com.google.common.cache.CacheBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -13,6 +10,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ZipFileInputStreamFileSystem extends InputStreamFileSystem {
     private static final Logger LOGGER = LoggerFactory.getLogger(ZipFileInputStreamFileSystem.class);

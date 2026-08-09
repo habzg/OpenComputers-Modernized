@@ -6,7 +6,7 @@ import net.minecraft.world.Container;
 /**
  * This interface is implemented as a marker by adapters.
  * <br>
- * This is implemented by adapter tile entities, which also serve as its
+ * This is implemented by adapter block entities, which also serve as its
  * components' environment. That means you can use this to check for
  * adapters by using either:
  * <pre>
@@ -22,7 +22,7 @@ import net.minecraft.world.Container;
  * for assignability, which allows for items that make no sense in adapters to
  * deny being placed into them, for example.
  * <br>
- * The only purpose is to allow identifying tile entities as adapters
+ * The only purpose is to allow identifying block entities as adapters
  * via the API, i.e. without having to link against internal classes. This
  * also means that <em>you should not implement this</em>.
  */

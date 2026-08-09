@@ -1,5 +1,9 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
@@ -7,6 +11,7 @@ import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.impl.server.component.traits.WorldAware;
 import li.cil.oc.core.impl.util.BlockPosition;
@@ -26,13 +31,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
-public class UpgradeLeash extends li.cil.oc.api.prefab.ManagedEnvironment implements WorldAware, DeviceInfo {
+public class UpgradeLeash extends AbstractManagedEnvironment implements WorldAware, DeviceInfo {
     private static final Logger LOGGER = LoggerFactory.getLogger(UpgradeLeash.class);
     public static final int MaxLeashedEntities = 8;
     public final Entity host;

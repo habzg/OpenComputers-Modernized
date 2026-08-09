@@ -1,10 +1,9 @@
 package li.cil.oc.core.impl.server.machine.luac;
 
+import java.util.Map;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.core.impl.util.ExtendedLuaState;
-
-import java.util.Map;
 
 public class ComponentAPI extends NativeLuaAPI {
     public ComponentAPI(NativeLuaArchitecture owner) {

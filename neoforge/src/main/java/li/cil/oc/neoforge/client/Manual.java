@@ -1,6 +1,14 @@
 package li.cil.oc.neoforge.client;
 
 import com.google.common.base.Strings;
+import java.util.AbstractMap;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import li.cil.oc.api.detail.ManualAPI;
 import li.cil.oc.api.manual.ContentProvider;
 import li.cil.oc.api.manual.ImageProvider;
@@ -13,15 +21,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-
-import java.util.AbstractMap;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 
 public final class Manual implements ManualAPI {
     public static final Manual INSTANCE = new Manual();

@@ -1,5 +1,7 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.HashMap;
+import java.util.Map;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
@@ -7,18 +9,14 @@ import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
-import li.cil.oc.core.impl.common.tileentity.traits.RedstoneAware;
-import li.cil.oc.core.impl.common.tileentity.traits.RedstoneAware.RedstoneChangedEventArgs;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.common.blockentity.traits.RedstoneAware;
+import li.cil.oc.core.impl.common.blockentity.traits.RedstoneAware.RedstoneChangedEventArgs;
 import li.cil.oc.core.impl.util.BlockPosition;
 import li.cil.oc.core.util.ResultWrapper;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
-
-
-import java.util.HashMap;
-import java.util.Map;
 
 public abstract class RedstoneVanilla extends RedstoneSignaller implements DeviceInfo {
     protected static final Direction[] SIDE_RANGE = Direction.values();
@@ -35,7 +33,7 @@ public abstract class RedstoneVanilla extends RedstoneSignaller implements Devic
         return deviceInfo;
     }
 
-    @Callback(direct = true, doc = "function([side:number]):number or table -- Get the redstone input.")
+    @Callback(direct = true, doc = "function([side:number]):number or table -- Get the redstone input (all sides, or optionally on the specified side)")
     public Object[] getInput(Context context, Arguments args) {
         Direction side = getOptionalSide(args);
         if (side != null)
@@ -43,7 +41,7 @@ public abstract class RedstoneVanilla extends RedstoneSignaller implements Devic
         return ResultWrapper.result(valuesToMap(((RedstoneAware) redstone()).input()));
     }
 
-    @Callback(direct = true, doc = "function([side:number]):number or table -- Get the redstone output.")
+    @Callback(direct = true, doc = "function([side:number]):number or table -- Get the redstone output (all sides, or optionally on the specified side)")
     public Object[] getOutput(Context context, Arguments args) {
         Direction side = getOptionalSide(args);
         if (side != null)
@@ -52,7 +50,7 @@ public abstract class RedstoneVanilla extends RedstoneSignaller implements Devic
     }
 
     @SuppressWarnings("rawtypes")
-    @Callback(doc = "function([side:number, ]value:number or table):number or table -- Set the redstone output.")
+    @Callback(doc = "function([side:number, ]value:number or table):number or table --  Set the redstone output (all sides, or optionally on the specified side). Returns previous values")
     public Object[] setOutput(Context context, Arguments args) {
         Object ret;
         if (args.count() == 2) {
@@ -67,8 +65,8 @@ public abstract class RedstoneVanilla extends RedstoneSignaller implements Devic
         } else {
             throw new RuntimeException("invalid number of arguments, expected 1 or 2");
         }
-        if (Settings.get().redstoneDelay > 0)
-            context.pause(Settings.get().redstoneDelay);
+        if (OCSettings.get().redstoneDelay > 0)
+            context.pause(OCSettings.get().redstoneDelay);
         return ResultWrapper.result(ret);
     }
 
@@ -80,7 +78,7 @@ public abstract class RedstoneVanilla extends RedstoneSignaller implements Devic
         if (level.isLoaded(blockPos.toBlockPos())) {
             BlockState state = level.getBlockState(blockPos.toBlockPos());
             if (state.hasAnalogOutputSignal()) {
-                return ResultWrapper.result((double) state.getAnalogOutputSignal(level, blockPos.toBlockPos()));
+                return ResultWrapper.result((double) state.getSignal(level, blockPos.toBlockPos(), side.getOpposite()));
             }
         }
         return ResultWrapper.result(0);

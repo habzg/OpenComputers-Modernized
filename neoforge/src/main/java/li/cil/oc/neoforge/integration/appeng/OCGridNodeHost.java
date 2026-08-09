@@ -3,7 +3,7 @@ package li.cil.oc.neoforge.integration.appeng;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.IInWorldGridNodeHost;
 import appeng.api.util.AECableType;
-import li.cil.oc.core.impl.common.tileentity.traits.power.AppliedEnergistics2;
+import li.cil.oc.core.impl.common.blockentity.traits.power.AppliedEnergistics2;
 
 public final class OCGridNodeHost implements IInWorldGridNodeHost {
     private final AppliedEnergistics2 tile;

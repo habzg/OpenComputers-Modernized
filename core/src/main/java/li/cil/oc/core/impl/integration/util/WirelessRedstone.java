@@ -1,11 +1,10 @@
 package li.cil.oc.core.impl.integration.util;
 
-import li.cil.oc.core.impl.server.component.RedstoneWireless;
-
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import li.cil.oc.core.impl.server.component.RedstoneWireless;
 
 public final class WirelessRedstone {
     private static final Set<WirelessRedstoneSystem> systems = new LinkedHashSet<>();

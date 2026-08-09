@@ -1,10 +1,9 @@
 package li.cil.oc.core.impl.common;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class ReflectionUtil {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReflectionUtil.class);

@@ -3,12 +3,10 @@ package li.cil.oc.core.impl.common.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
-
-
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 
 public abstract class SimpleCommand {
     protected final String name;
@@ -34,8 +32,8 @@ public abstract class SimpleCommand {
     @SuppressWarnings("SameReturnValue")
     protected abstract int execute(CommandSourceStack source, String[] args) ;
 
-    public LiteralArgumentBuilder<CommandSourceStack> createBuilder() {
-        return Commands.literal(name)
+    private LiteralArgumentBuilder<CommandSourceStack> createBuilder(String literalName) {
+        return Commands.literal(literalName)
                 .requires(this::checkPermission)
                 .then(Commands.argument("args", StringArgumentType.greedyString())
                         .executes(context -> {
@@ -47,10 +45,9 @@ public abstract class SimpleCommand {
     }
 
     public void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(createBuilder());
+        dispatcher.register(createBuilder(name));
         for (String alias : aliases) {
-            dispatcher.register(Commands.literal(alias)
-                    .redirect(dispatcher.getRoot().getChild(name)));
+            dispatcher.register(createBuilder(alias));
         }
     }
 }

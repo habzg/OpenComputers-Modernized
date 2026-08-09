@@ -1,9 +1,8 @@
 package li.cil.oc.core.impl.util;
 
-import net.minecraft.core.Direction;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
+import net.minecraft.core.Direction;
 
 public final class RotationHelper {
 

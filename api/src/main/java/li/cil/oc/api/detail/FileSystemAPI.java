@@ -120,7 +120,7 @@ public interface FileSystemAPI {
      *
      * @param fileSystem  the file system to wrap.
      * @param label       the label of the file system.
-     * @param host        the tile entity containing the file system.
+     * @param host        the block entity containing the file system.
      * @param accessSound the name of the sound effect to play when the file
      *                    system is accessed. This has to be the fully
      *                    qualified resource name, e.g.
@@ -140,7 +140,7 @@ public interface FileSystemAPI {
      *
      * @param fileSystem  the file system to wrap.
      * @param label       the read-only label of the file system.
-     * @param host        the tile entity containing the file system.
+     * @param host        the block entity containing the file system.
      * @param accessSound the name of the sound effect to play when the file
      *                    system is accessed. This has to be the fully
      *                    qualified resource name, e.g.

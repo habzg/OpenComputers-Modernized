@@ -18,7 +18,7 @@ public interface InventoryTransfer extends WorldAware, SideRestricted {
 
     int fluidTransferRate();
 
-    @Callback(doc = "function(sourceSide:number, sinkSide:number[, count:number[, sourceSlot:number[, sinkSlot:number]]]):number -- Transfer some items between two inventories.")
+    @Callback(doc = "function(sourceSide:number, sinkSide:number[, count:number[, sourceSlot:number[, sinkSlot:number]]]):boolean -- Transfer some items between two inventories.")
     default Object[] transferItem(Context context, Arguments args) {
         Direction sourceSide = checkSideForAction(args, 0);
         BlockPosition sourcePos = position().offset(sourceSide);
@@ -39,7 +39,7 @@ public interface InventoryTransfer extends WorldAware, SideRestricted {
         } else {
             extractor = InventoryUtils.getTransferBetweenInventoriesAt(sourcePos, sourceSide.getOpposite(), sinkPos, sinkSide.getOpposite(), count);
         }
-        if (extractor != null) return result(extractor.extract());
+        if (extractor != null) return result(extractor.extract() > 0);
         return result(null, "no inventory");
     }
 
@@ -61,7 +61,7 @@ public interface InventoryTransfer extends WorldAware, SideRestricted {
         return result(InventoryUtils.swapBetweenInventoriesSlots(source, sourceSide.getOpposite(), sourceSlot, sink, sinkSide.getOpposite(), sinkSlot, safe));
     }
 
-    @Callback(doc = "function(sourceSide:number, sinkSide:number[, count:number[, sourceTank:number]]):boolean, number -- Transfer some fluid between two tanks.")
+    @Callback(doc = "function(sourceSide:number, sinkSide:number[, count:number [, sourceTank:number]]):boolean, number -- Transfer some fluid between two tanks. Returns operation result and filled amount")
     default Object[] transferFluid(Context context, Arguments args) {
         Direction sourceSide = checkSideForAction(args, 0);
         BlockPosition sourcePos = position().offset(sourceSide);
@@ -74,8 +74,9 @@ public interface InventoryTransfer extends WorldAware, SideRestricted {
         int rate = fluidTransferRate();
         if (rate == 0) return result(null, "device has fluid transfer rate of 0");
         int moved = FluidUtils.transferBetweenFluidHandlersAt(sourcePos, sourceSide.getOpposite(), sinkPos, sinkSide.getOpposite(), count, sourceTank);
-        double delay = (double) moved / (double) rate - 0.05;
-        if (delay > 0) context.pause(delay);
+        if (moved > 0) {
+            context.pause((double) moved / (double) rate);
+        }
         return result(moved > 0, moved);
     }
 

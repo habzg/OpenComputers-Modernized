@@ -1,5 +1,6 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.Map;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.network.Analyzable;
@@ -10,6 +11,7 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.impl.util.BlockPosition;
 import net.minecraft.core.Direction;
@@ -17,10 +19,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.world.entity.player.Player;
 
-
-import java.util.Map;
-
-public class UpgradeBarcodeReader extends li.cil.oc.api.prefab.ManagedEnvironment implements DeviceInfo {
+public class UpgradeBarcodeReader extends AbstractManagedEnvironment implements DeviceInfo {
     public final EnvironmentHost host;
 
     @SuppressWarnings("unused")
@@ -59,7 +58,7 @@ public class UpgradeBarcodeReader extends li.cil.oc.api.prefab.ManagedEnvironmen
 
                 Object te = host.level().getBlockEntity(blockPos.toBlockPos());
                 if (te instanceof Analyzable) {
-                    processNodes(((Analyzable) te).onAnalyze((Player) data[2], side.ordinal(), hitX, hitY, hitZ), nbt);
+                    processNodes(((Analyzable) te).onAnalyze((Player) data[2], side, hitX, hitY, hitZ), nbt);
                 } else if (te instanceof SidedEnvironment) {
                     processNodes(new Node[]{((SidedEnvironment) te).sidedNode(side)}, nbt);
                 } else if (te instanceof Environment) {

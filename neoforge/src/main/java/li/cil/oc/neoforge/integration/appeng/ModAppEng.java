@@ -1,14 +1,29 @@
 package li.cil.oc.neoforge.integration.appeng;
 
-import li.cil.oc.core.impl.common.tileentity.traits.power.AE2Power;
+import li.cil.oc.core.impl.common.blockentity.traits.power.AE2Power;
+import li.cil.oc.core.impl.common.blockentity.traits.power.AppliedEnergistics2;
 import li.cil.oc.neoforge.integration.ModProxy;
 import li.cil.oc.neoforge.integration.Mods;
+import net.minecraft.world.level.block.Block;
+import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 
 @SuppressWarnings("unused")
 public final class ModAppEng implements ModProxy {
     @Override
     public Mods.ModBase getMod() {
         return Mods.AppliedEnergistics2;
+    }
+
+    public static void registerCapabilities(RegisterCapabilitiesEvent event, Block[] powerBlocks) {
+        event.registerBlock(appeng.api.AECapabilities.IN_WORLD_GRID_NODE_HOST,
+                (level, pos, state, blockEntity, side) -> {
+                    if (blockEntity instanceof AppliedEnergistics2 ae2) {
+                        return new OCGridNodeHost(ae2);
+                    }
+                    return null;
+                },
+                powerBlocks
+        );
     }
 
     @Override

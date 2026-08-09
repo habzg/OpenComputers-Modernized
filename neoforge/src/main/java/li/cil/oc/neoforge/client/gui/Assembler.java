@@ -1,30 +1,31 @@
 package li.cil.oc.neoforge.client.gui;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import li.cil.oc.core.impl.client.Textures;
+import li.cil.oc.core.impl.client.gui.DynamicGuiContainer;
 import li.cil.oc.core.impl.client.gui.ImageButton;
 import li.cil.oc.core.impl.client.gui.widget.ProgressBar;
+import li.cil.oc.core.impl.common.container.ComponentSlot;
 import li.cil.oc.core.impl.common.template.AssemblerTemplates;
 import li.cil.oc.neoforge.client.PacketSender;
-import li.cil.oc.neoforge.common.container.ComponentSlot;
+import li.cil.oc.neoforge.common.init.Menus;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-public class Assembler extends DynamicGuiContainer<li.cil.oc.neoforge.common.container.Assembler> {
-    public final li.cil.oc.core.impl.common.tileentity.Assembler assembler;
+public class Assembler extends DynamicGuiContainer<li.cil.oc.core.impl.common.container.Assembler> {
+    public final li.cil.oc.core.impl.common.blockentity.Assembler assembler;
     private final ProgressBar progress;
     private AssemblerTemplates.ValidationResult info = null;
     private ImageButton runButton;
 
     @SuppressWarnings("unused")
-    public Assembler(Inventory playerInventory, li.cil.oc.core.impl.common.tileentity.Assembler assembler) {
-        super(new li.cil.oc.neoforge.common.container.Assembler(0, playerInventory, assembler, playerInventory.player));
+    public Assembler(Inventory playerInventory, li.cil.oc.core.impl.common.blockentity.Assembler assembler) {
+        super(new li.cil.oc.core.impl.common.container.Assembler(Menus.ASSEMBLER.get(), 0, playerInventory, assembler, playerInventory.player));
         this.assembler = assembler;
         imageWidth = 176;
         imageHeight = 192;
@@ -36,9 +37,9 @@ public class Assembler extends DynamicGuiContainer<li.cil.oc.neoforge.common.con
         progress = addWidget(new ProgressBar(28, 92));
     }
 
-    public Assembler(li.cil.oc.neoforge.common.container.Assembler container, Inventory inv, Component title) {
+    public Assembler(li.cil.oc.core.impl.common.container.Assembler container, Inventory inv, Component title) {
         super(container, inv, title);
-        this.assembler = (li.cil.oc.core.impl.common.tileentity.Assembler) container.otherInventory;
+        this.assembler = (li.cil.oc.core.impl.common.blockentity.Assembler) container.otherInventory;
         imageWidth = 176;
         imageHeight = 192;
         for (Slot slot : menu.slots) {
@@ -92,8 +93,8 @@ public class Assembler extends DynamicGuiContainer<li.cil.oc.neoforge.common.con
             } else {
                 message = info != null ? (info.value() != null ? info.value().getString() : null) : (menu.getSlot(0).hasItem() ? Component.translatable("gui.opencomputers.assembler.collect").getString() : "");
             }
-            guiGraphics.drawString(font, message, 30, 94, 0x404040);
-            if (runButton.isHoveredOrFocused()) {
+            guiGraphics.drawString(font, message, 30, 94, 0x404040, false);
+            if (runButton.isMouseOver(mouseX, mouseY)) {
                 List<Component> tooltip = new ArrayList<>();
                 tooltip.add(Component.translatable("gui.opencomputers.assembler.run"));
                 if (info != null && info.valid()) {
@@ -115,7 +116,7 @@ public class Assembler extends DynamicGuiContainer<li.cil.oc.neoforge.common.con
     }
 
     @Override
-    protected void renderBg(GuiGraphics guiGraphics, float dt, int mouseX, int mouseY) {
+    protected void renderBg(GuiGraphics guiGraphics, float ignoredDt, int ignoredMouseX, int ignoredMouseY) {
         guiGraphics.blit(Textures.guiRobotAssembler, leftPos, topPos, 0, 0, imageWidth, imageHeight, 256, 256);
         if (menu.isAssembling()) progress.level = menu.assemblyProgress() / 100.0;
         else progress.level = 0;
@@ -123,7 +124,7 @@ public class Assembler extends DynamicGuiContainer<li.cil.oc.neoforge.common.con
     }
 
     @Override
-    protected void drawDisabledSlot(GuiGraphics guiGraphics, ComponentSlot slot) {
+    protected void drawDisabledSlot(GuiGraphics ignoredGuiGraphics, ComponentSlot ignoredSlot) {
     }
 
 }

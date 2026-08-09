@@ -1,26 +1,6 @@
 package li.cil.oc.core.impl.server.component;
 
 import com.google.common.net.InetAddresses;
-import li.cil.oc.api.Network;
-import li.cil.oc.api.driver.DeviceInfo;
-import li.cil.oc.api.machine.Arguments;
-import li.cil.oc.api.machine.Callback;
-import li.cil.oc.api.machine.Context;
-import li.cil.oc.api.network.Message;
-import li.cil.oc.api.network.Node;
-import li.cil.oc.api.network.Visibility;
-import li.cil.oc.api.prefab.AbstractValue;
-import li.cil.oc.core.Constants;
-import li.cil.oc.core.Tags;
-import li.cil.oc.core.impl.Settings;
-import li.cil.oc.core.impl.util.InternetFilteringRule;
-import li.cil.oc.core.impl.util.Log;
-import li.cil.oc.core.impl.util.SideTracker;
-import li.cil.oc.core.impl.util.ThreadPoolFactory;
-import li.cil.oc.core.util.ResultWrapper;
-import net.minecraft.server.MinecraftServer;
-import org.jetbrains.annotations.Nullable;
-
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -54,10 +34,30 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import li.cil.oc.api.Network;
+import li.cil.oc.api.driver.DeviceInfo;
+import li.cil.oc.api.machine.Arguments;
+import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.network.Message;
+import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.api.prefab.AbstractValue;
+import li.cil.oc.core.Constants;
+import li.cil.oc.core.Tags;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.util.InternetFilteringRule;
+import li.cil.oc.core.impl.util.Log;
+import li.cil.oc.core.impl.util.SideTracker;
+import li.cil.oc.core.impl.util.ThreadPoolFactory;
+import li.cil.oc.core.util.ResultWrapper;
+import net.minecraft.server.MinecraftServer;
+import org.jetbrains.annotations.Nullable;
 
-public class InternetCard extends li.cil.oc.api.prefab.ManagedEnvironment implements DeviceInfo {
+public class InternetCard extends AbstractManagedEnvironment implements DeviceInfo {
     private static final ExecutorService threadPool = ThreadPoolFactory.create("Internet",
-            Settings.get() != null ? Settings.get().internetThreads : 1);
+            OCSettings.get() != null ? OCSettings.get().internetThreads : 1);
     public final Node node = Network.newNode(this, Visibility.Network)
             .withComponent("internet", Visibility.Neighbors)
             .create();
@@ -70,12 +70,37 @@ public class InternetCard extends li.cil.oc.api.prefab.ManagedEnvironment implem
         setNode(this.node);
     }
 
-    public static boolean isRequestAllowed(Settings settings, InetAddress inetAddress, String host) {
+    private static boolean isNAT64Address(Inet6Address addr) {
+        byte[] b = addr.getAddress();
+        // 64:ff9b::/96 — NAT64 well-known prefix (RFC 6052)
+        return b[0] == 0x00 && b[1] == 0x64 && b[2] == (byte) 0xff && b[3] == (byte) 0x9b &&
+                b[4] == 0 && b[5] == 0 && b[6] == 0 && b[7] == 0 &&
+                b[8] == 0 && b[9] == 0 && b[10] == 0 && b[11] == 0;
+    }
+
+    private static InetAddress extractNAT64EmbeddedAddress(Inet6Address addr) {
+        byte[] b = addr.getAddress();
+        try {
+            return InetAddress.getByAddress(new byte[]{b[12], b[13], b[14], b[15]});
+        } catch (java.net.UnknownHostException e) {
+            throw new IllegalArgumentException("invalid embedded IPv4 address", e);
+        }
+    }
+
+    public static boolean isRequestAllowed(OCSettings settings, InetAddress inetAddress, String host) {
         if (settings.internetAccessDenied()) return false;
         InternetFilteringRule[] rules = settings.internetFilteringRules;
         if (inetAddress instanceof Inet6Address inet6) {
             if (InetAddresses.hasEmbeddedIPv4ClientAddress(inet6)) {
                 InetAddress inet4 = InetAddresses.getEmbeddedIPv4ClientAddress(inet6);
+                for (InternetFilteringRule r : rules) {
+                    Boolean result = r.apply(inet4, host);
+                    if (result != null && !result) return false;
+                }
+            }
+            // As above, but with NAT64 addresses.
+            if (isNAT64Address(inet6)) {
+                InetAddress inet4 = extractNAT64EmbeddedAddress(inet6);
                 for (InternetFilteringRule r : rules) {
                     Boolean result = r.apply(inet4, host);
                     if (result != null && !result) return false;
@@ -98,7 +123,7 @@ public class InternetCard extends li.cil.oc.api.prefab.ManagedEnvironment implem
     }
 
     public static void checkLists(InetAddress inetAddress, String host) {
-        if (!isRequestAllowed(Settings.get(), inetAddress, host))
+        if (!isRequestAllowed(OCSettings.get(), inetAddress, host))
             throw new RuntimeException(new FileNotFoundException("address is not allowed"));
     }
 
@@ -107,20 +132,20 @@ public class InternetCard extends li.cil.oc.api.prefab.ManagedEnvironment implem
         return deviceInfo;
     }
 
-    @Callback(direct = true, doc = "function():boolean -- Returns whether HTTP requests can be made.")
+    @Callback(direct = true, doc = "function():boolean -- Returns whether HTTP requests can be made (config setting).")
     public Object[] isHttpEnabled(Context context, Arguments args) {
-        return ResultWrapper.result(Settings.get().httpEnabled);
+        return ResultWrapper.result(OCSettings.get().httpEnabled);
     }
 
-    @Callback(doc = "function(url:string[, postData:string[, headers:table[, method:string]]]):userdata -- Starts an HTTP request.")
+    @Callback(doc = "function(url:string[, postData:string[, headers:table[, method:string]]]):userdata -- Starts an HTTP request. If this returns true, further results will be pushed using `http_response` signals.")
     public synchronized Object[] request(Context context, Arguments args) {
         checkOwner(context);
         String address = args.checkString(0);
-        if (Settings.get().internetAccessDenied())
+        if (OCSettings.get().internetAccessDenied())
             return ResultWrapper.result(null, "internet access is unavailable");
-        if (!Settings.get().httpEnabled)
+        if (!OCSettings.get().httpEnabled)
             return ResultWrapper.result(null, "http requests are unavailable");
-        if (connections.size() >= Settings.get().maxConnections)
+        if (connections.size() >= OCSettings.get().maxConnections)
             throw new RuntimeException(new IOException("too many open connections"));
 
         String post = args.isString(1) ? args.checkString(1) : null;
@@ -133,7 +158,7 @@ public class InternetCard extends li.cil.oc.api.prefab.ManagedEnvironment implem
                     headers.put((String) key, val.toString());
             }
         }
-        if (!Settings.get().httpHeadersEnabled && !headers.isEmpty())
+        if (!OCSettings.get().httpHeadersEnabled && !headers.isEmpty())
             return ResultWrapper.result(null, "http request headers are unavailable");
         String method = args.isString(3) ? args.checkString(3) : null;
         HTTPRequest request = new HTTPRequest(this, checkAddress(address), post, headers, method);
@@ -141,21 +166,21 @@ public class InternetCard extends li.cil.oc.api.prefab.ManagedEnvironment implem
         return ResultWrapper.result(request);
     }
 
-    @Callback(direct = true, doc = "function():boolean -- Returns whether TCP connections can be made.")
+    @Callback(direct = true, doc = "function():boolean -- Returns whether TCP connections can be made (config setting).")
     public Object[] isTcpEnabled(Context context, Arguments args) {
-        return ResultWrapper.result(Settings.get().tcpEnabled);
+        return ResultWrapper.result(OCSettings.get().tcpEnabled);
     }
 
-    @Callback(doc = "function(address:string[, port:number]):userdata -- Opens a new TCP connection.")
+    @Callback(doc = "function(address:string[, port:number]):userdata -- Opens a new TCP connection. Returns the handle of the connection.")
     public synchronized Object[] connect(Context context, Arguments args) {
         checkOwner(context);
         String address = args.checkString(0);
         int port = args.optInteger(1, -1);
-        if (Settings.get().internetAccessDenied())
+        if (OCSettings.get().internetAccessDenied())
             return ResultWrapper.result(null, "internet access is unavailable");
-        if (!Settings.get().tcpEnabled)
+        if (!OCSettings.get().tcpEnabled)
             return ResultWrapper.result(null, "tcp connections are unavailable");
-        if (connections.size() >= Settings.get().maxConnections)
+        if (connections.size() >= OCSettings.get().maxConnections)
             throw new RuntimeException(new IOException("too many open connections"));
         URI uri = checkUri(address, port);
         TCPSocket socket = new TCPSocket(this, uri, port);
@@ -328,16 +353,16 @@ public class InternetCard extends li.cil.oc.api.prefab.ManagedEnvironment implem
             });
         }
 
-        @Callback(doc = "function():boolean -- Ensures a socket is connected.")
+        @Callback(doc = "function():boolean -- Ensures a socket is connected. Errors if the connection failed.")
         public synchronized Object[] finishConnect(Context context, Arguments args) {
             boolean result = checkConnected();
             setupSelector();
             return ResultWrapper.result(result);
         }
 
-        @Callback(doc = "function([n:number]):string -- Tries to read data from the socket stream.")
+        @Callback(doc = "function([n:number]):string -- Tries to read data from the socket stream. Returns the read byte array.")
         public synchronized Object[] read(Context context, Arguments args) {
-            int n = Math.clamp(args.optInteger(0, Integer.MAX_VALUE), 0, Settings.get().maxReadBuffer);
+            int n = Math.clamp(args.optInteger(0, Integer.MAX_VALUE), 0, OCSettings.get().maxReadBuffer);
             if (checkConnected()) {
                 try {
                     ByteBuffer buffer = ByteBuffer.allocate(n);
@@ -349,20 +374,20 @@ public class InternetCard extends li.cil.oc.api.prefab.ManagedEnvironment implem
                     System.arraycopy(buffer.array(), 0, data, 0, read);
                     return ResultWrapper.result((Object) data);
                 } catch (IOException e) {
-                    return ResultWrapper.result((Object) new byte[0]);
+                    throw new RuntimeException(e);
                 }
             }
             return ResultWrapper.result((Object) new byte[0]);
         }
 
-        @Callback(doc = "function(data:string):number -- Tries to write data to the socket stream.")
+        @Callback(doc = "function(data:string):number -- Tries to write data to the socket stream. Returns the number of bytes written.")
         public synchronized Object[] write(Context context, Arguments args) {
             if (checkConnected()) {
                 try {
                     byte[] value = args.checkByteArray(0);
                     return ResultWrapper.result((double) channel.write(ByteBuffer.wrap(value)));
                 } catch (IOException e) {
-                    return ResultWrapper.result(0);
+                    throw new RuntimeException(e);
                 }
             }
             return ResultWrapper.result(0);
@@ -469,7 +494,7 @@ public class InternetCard extends li.cil.oc.api.prefab.ManagedEnvironment implem
             this.stream = threadPool.submit(new RequestSender(url, post, headers, method));
         }
 
-        @Callback(doc = "function():boolean -- Ensures a response is available.")
+        @Callback(doc = "function():boolean -- Ensures a response is available. Errors if the connection failed.")
         public synchronized Object[] finishConnect(Context context, Arguments args) {
             return ResultWrapper.result(checkResponse());
         }
@@ -481,9 +506,9 @@ public class InternetCard extends li.cil.oc.api.prefab.ManagedEnvironment implem
             return ResultWrapper.result((Object) null);
         }
 
-        @Callback(doc = "function([n:number]):string -- Tries to read data from the response.")
+        @Callback(doc = "function([n:number]):string -- Tries to read data from the response. Returns the read byte array.")
         public synchronized Object[] read(Context context, Arguments args) {
-            int n = Math.clamp(args.optInteger(0, Integer.MAX_VALUE), 0, Settings.get().maxReadBuffer);
+            int n = Math.clamp(args.optInteger(0, Integer.MAX_VALUE), 0, OCSettings.get().maxReadBuffer);
             if (checkResponse()) {
                 if (eof && queue.isEmpty()) return ResultWrapper.result((Object) null);
                 byte[] buffer = new byte[n];
@@ -547,7 +572,7 @@ public class InternetCard extends li.cil.oc.api.prefab.ManagedEnvironment implem
                 if (!eof) {
                     reader = threadPool.submit(() -> {
                         try {
-                            byte[] buffer = new byte[Settings.get().maxReadBuffer];
+                            byte[] buffer = new byte[OCSettings.get().maxReadBuffer];
                             int count = stream.get().read(buffer);
                             if (count < 0) eof = true;
                             else for (int i = 0; i < count; i++) queue.add(buffer[i]);
@@ -585,11 +610,11 @@ public class InternetCard extends li.cil.oc.api.prefab.ManagedEnvironment implem
                         http.setDoOutput(post != null);
                         http.setRequestMethod(method != null ? method : (post != null ? "POST" : "GET"));
                         http.setRequestProperty("User-Agent",
-                                Settings.get().httpUserAgent.replace("$version", Tags.VERSION));
+                                OCSettings.get().httpUserAgent.replace("$version", Tags.VERSION));
                         for (Map.Entry<String, String> h : headers.entrySet())
                             http.setRequestProperty(h.getKey(), h.getValue());
                         if (post != null) {
-                            http.setReadTimeout(Settings.get().httpTimeout);
+                            http.setReadTimeout(OCSettings.get().httpTimeout);
                             BufferedWriter out = new BufferedWriter(new OutputStreamWriter(http.getOutputStream()));
                             out.write(post);
                             out.close();

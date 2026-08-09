@@ -3,7 +3,7 @@ package li.cil.oc.core.impl.common.template;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Tier;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.item.data.TabletData;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
@@ -63,11 +63,11 @@ public final class TabletTemplate {
             itemList.add(items.get(i));
         }
         data.items = itemList;
-        data.energy = Settings.get().bufferTablet;
+        data.energy = OCSettings.get().bufferTablet;
         data.maxEnergy = data.energy;
         var stack = li.cil.oc.api.Items.get(Constants.ItemName.Tablet).createItemStack(1);
         data.save(stack);
-        double energy = Settings.get().tabletBaseCost + Template.complexity(inventory, hostClass) * Settings.get().tabletComplexityCost;
+        double energy = OCSettings.get().tabletBaseCost + Template.complexity(inventory, hostClass) * OCSettings.get().tabletComplexityCost;
         return new Object[]{stack, energy};
     }
 

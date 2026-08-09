@@ -1,12 +1,5 @@
 package li.cil.oc.core.server.machine;
 
-import li.cil.oc.api.driver.MethodWhitelist;
-import li.cil.oc.api.driver.NamedBlock;
-import li.cil.oc.api.machine.Callback;
-import li.cil.oc.api.network.FilteredEnvironment;
-import li.cil.oc.api.network.ManagedEnvironment;
-import li.cil.oc.api.network.ManagedPeripheral;
-
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,6 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
+import li.cil.oc.api.driver.MethodWhitelist;
+import li.cil.oc.api.driver.NamedBlock;
+import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.network.FilteredEnvironment;
+import li.cil.oc.api.network.ManagedEnvironment;
+import li.cil.oc.api.network.ManagedPeripheral;
 
 public final class Callbacks {
     private static final Map<Class<?>, Map<String, CallbackWrapper>> cache = new WeakHashMap<>();

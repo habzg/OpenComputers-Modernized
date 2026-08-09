@@ -1,13 +1,12 @@
 package li.cil.oc.neoforge.common.event;
 
+import java.util.HashMap;
+import java.util.Map;
 import li.cil.oc.core.impl.util.BlockPosition;
 import li.cil.oc.neoforge.common.EventHandler;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public final class BlockChangeHandler {
     private static final Map<ChangeListener, BlockPosition> changeListeners = new HashMap<>();

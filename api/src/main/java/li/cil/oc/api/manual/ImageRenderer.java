@@ -1,5 +1,7 @@
 package li.cil.oc.api.manual;
 
+import net.minecraft.client.gui.GuiGraphics;
+
 /**
  * This allows implementing custom image renderers.
  * <br>
@@ -14,8 +16,8 @@ public interface ImageRenderer {
     /**
      * The width of the area this renderer uses.
      * <br>
-     * This is used to offset the OpenGL state properly before calling
-     * {@link #render(com.mojang.blaze3d.vertex.PoseStack, net.minecraft.client.renderer.MultiBufferSource, int, int)}, to correctly align the image horizontally.
+     * This is used to offset the rendering state properly before calling
+     * {@link #render(GuiGraphics, int, int)}, to correctly align the image horizontally.
      *
      * @return the width of the rendered image.
      */
@@ -24,8 +26,8 @@ public interface ImageRenderer {
     /**
      * The height of the area this renderer uses.
      * <br>
-     * This is used to offset the OpenGL state properly before calling
-     * {@link #render(com.mojang.blaze3d.vertex.PoseStack, net.minecraft.client.renderer.MultiBufferSource, int, int)}, as well as to know where to resume rendering
+     * This is used to offset the rendering state properly before calling
+     * {@link #render(GuiGraphics, int, int)}, as well as to know where to resume rendering
      * other content below the image.
      *
      * @return the height of the rendered image.
@@ -35,16 +37,14 @@ public interface ImageRenderer {
     /**
      * Render the image, with specified maximum width.
      * <br>
-     * The pose stack is set up such that the origin (0,0) corresponds to the
-     * top-left corner of the image area and dimensions are in unscaled image
-     * pixels (before the manual's page scaling is applied). Translations in
-     * the pose stack already include page-level scroll and layout offsets.
+     * This should render the image as is, the rendering state will be set up
+     * such that you can start drawing at (0,0,*), and render up to
+     * (getWidth,getHeight,*), i.e. translation and scaling are taken care
+     * of for you.
      *
-     * @param poseStack    the current pose stack, already translated/scaled
-     *                     so (0,0) is the image's top-left corner.
-     * @param bufferSource the buffer source to obtain vertex consumers from.
-     * @param mouseX       the X position of the mouse relative to the element.
-     * @param mouseY       the Y position of the mouse relative to the element.
+     * @param graphics the render transformation for this image
+     * @param mouseX   the X position of the mouse relative to the element.
+     * @param mouseY   the Y position of the mouse relative to the element.
      */
-    void render(com.mojang.blaze3d.vertex.PoseStack poseStack, net.minecraft.client.renderer.MultiBufferSource bufferSource, int mouseX, int mouseY);
+    void render(GuiGraphics graphics, int mouseX, int mouseY);
 }

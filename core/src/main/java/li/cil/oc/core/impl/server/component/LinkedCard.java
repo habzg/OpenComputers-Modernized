@@ -1,5 +1,7 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.Collection;
+import java.util.Map;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
@@ -9,20 +11,17 @@ import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Tier;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.server.component.traits.WakeMessageAware;
 import li.cil.oc.core.server.network.QuantumNetwork;
 import li.cil.oc.core.util.ResultWrapper;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 
-
-import java.util.Collection;
-import java.util.Map;
-
-public class LinkedCard extends li.cil.oc.api.prefab.ManagedEnvironment implements QuantumNetwork.QuantumNode, DeviceInfo, WakeMessageAware {
+public class LinkedCard extends AbstractManagedEnvironment implements QuantumNetwork.QuantumNode, DeviceInfo, WakeMessageAware {
     public final Node node = Network.newNode(this, Visibility.Network)
             .withComponent("tunnel", Visibility.Neighbors)
             .withConnector()
@@ -33,7 +32,7 @@ public class LinkedCard extends li.cil.oc.api.prefab.ManagedEnvironment implemen
     private boolean wakeMessageFuzzy = false;
 
     public LinkedCard() {
-        deviceInfo = Map.of(DeviceAttribute.Class, DeviceClass.Network, DeviceAttribute.Description, "Quantumnet controller", DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor, DeviceAttribute.Product, "HyperLink IV: Ender Edition", DeviceAttribute.Capacity, String.valueOf(Settings.get().maxNetworkPacketSize), DeviceAttribute.Width, String.valueOf(Settings.get().maxNetworkPacketParts));
+        deviceInfo = Map.of(DeviceAttribute.Class, DeviceClass.Network, DeviceAttribute.Description, "Quantumnet controller", DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor, DeviceAttribute.Product, "HyperLink IV: Ender Edition", DeviceAttribute.Capacity, String.valueOf(OCSettings.get().maxNetworkPacketSize), DeviceAttribute.Width, String.valueOf(OCSettings.get().maxNetworkPacketParts));
     }
 
     @Override
@@ -73,7 +72,7 @@ public class LinkedCard extends li.cil.oc.api.prefab.ManagedEnvironment implemen
         Object[] data = new Object[args.count()];
         for (int i = 0; i < args.count(); i++) data[i] = args.checkAny(i);
         Packet packet = Network.newPacket(node.address(), null, 0, data);
-        if (((Connector) node).tryChangeBuffer(-(packet.size() / 32.0 + Settings.get().wirelessCostPerRange[Tier.Two] * Settings.get().maxWirelessRange[Tier.Two] * 5))) {
+        if (((Connector) node).tryChangeBuffer(-(packet.size() / 32.0 + OCSettings.get().wirelessCostPerRange[Tier.Two] * OCSettings.get().maxWirelessRange[Tier.Two] * 5))) {
             for (QuantumNetwork.QuantumNode endpoint : endpoints) {
                 endpoint.receivePacket(packet);
             }
@@ -82,9 +81,9 @@ public class LinkedCard extends li.cil.oc.api.prefab.ManagedEnvironment implemen
         return ResultWrapper.result(null, "not enough energy");
     }
 
-    @Callback(direct = true, doc = "function():number -- Gets the maximum packet size.")
+    @Callback(direct = true, doc = "function():number -- Gets the maximum packet size (config setting).")
     public Object[] maxPacketSize(Context context, Arguments args) {
-        return ResultWrapper.result((double) Settings.get().maxNetworkPacketSize);
+        return ResultWrapper.result((double) OCSettings.get().maxNetworkPacketSize);
     }
 
     public void receivePacket(Packet packet) {
@@ -115,8 +114,8 @@ public class LinkedCard extends li.cil.oc.api.prefab.ManagedEnvironment implemen
     @Override
     public void load(CompoundTag nbt, HolderLookup.Provider provider) {
         super.load(nbt, provider);
-        if (nbt.contains(Settings.namespace + "tunnel")) {
-            tunnel = nbt.getString(Settings.namespace + "tunnel");
+        if (nbt.contains(OCSettings.namespace + "tunnel")) {
+            tunnel = nbt.getString(OCSettings.namespace + "tunnel");
         }
         loadWakeMessage(nbt);
     }
@@ -124,7 +123,7 @@ public class LinkedCard extends li.cil.oc.api.prefab.ManagedEnvironment implemen
     @Override
     public void save(CompoundTag nbt, HolderLookup.Provider provider) {
         super.save(nbt, provider);
-        nbt.putString(Settings.namespace + "tunnel", tunnel);
+        nbt.putString(OCSettings.namespace + "tunnel", tunnel);
         saveWakeMessage(nbt);
     }
 }

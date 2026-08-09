@@ -1,0 +1,64 @@
+{
+    "schemaVersion": 1,
+    "id": "${mod_id}",
+    "version": "${mod_version}",
+    "name": "${mod_name}",
+    "description": "This mod adds modular computers and robots that can be programmed in Lua.",
+    "authors": [
+        "Florian 'Sangar' Nuecke",
+        "Johannes 'Lord Joda' Lohrer"
+    ],
+    "license": "${mod_license}",
+    "icon": "assets/opencomputers/textures/gui/logo.png",
+    "accessWidener": "opencomputers.accesswidener",
+    "environment": "*",
+    "entrypoints": {
+        "main": [
+            "li.cil.oc.fabric.OpenComputers"
+        ],
+        "client": [
+            "li.cil.oc.fabric.client.ClientProxy"
+        ],
+        "jei_mod_plugin": [
+            "li.cil.oc.fabric.integration.jei.OCJEIPlugin"
+        ],
+        "rei_client": [
+            "li.cil.oc.fabric.integration.rei.OCREIPlugin"
+        ],
+        "emi": [
+            "li.cil.oc.fabric.integration.emi.OCEMIPlugin"
+        ],
+        "jade": [
+            "li.cil.oc.fabric.integration.jade.OCJadePlugin"
+        ]
+    },
+    "depends": {
+        "fabricloader": ">=${loader_version}",
+        "minecraft": "~${minecraft_version}",
+        "fabric-api": ">=${fabric_api_version}"
+    },
+    "recommends": {
+        "computercraft": ">=1.120.2",
+        "tis3d": ">=1.7.7",
+        "sable": ">=2.0.5",
+        "jade": ">=15.10.6",
+        "wthit": ">=12.10.2",
+        "jei": ">=19.44.0.403",
+        "rei": ">=16.0.799",
+        "emi": ">=1.1.24",
+        "team_reborn_energy": ">=4.1.0",
+        "refinedstorage": ">=2.0.9"
+    },
+    "breaks": {
+        "computercraft": "<1.120.2",
+        "tis3d": "<1.7.7",
+        "sable": "<2.0.5",
+        "jade": "<15.10.6",
+        "wthit": "<12.10.2",
+        "jei": "<19.44.0.403",
+        "rei": "<16.0.799",
+        "emi": "<1.1.24",
+        "team_reborn_energy": "<4.1.0",
+        "refinedstorage": "<2.0.9"
+    }
+}

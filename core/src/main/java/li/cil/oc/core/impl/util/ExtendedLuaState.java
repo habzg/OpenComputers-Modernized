@@ -1,15 +1,14 @@
 package li.cil.oc.core.impl.util;
 
+import java.util.IdentityHashMap;
+import java.util.Iterator;
+import java.util.Map;
 import li.cil.oc.api.machine.Value;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.repack.com.naef.jnlua.LuaState;
 import li.cil.repack.com.naef.jnlua.LuaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.IdentityHashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 public final class ExtendedLuaState {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExtendedLuaState.class);
@@ -42,6 +41,13 @@ public final class ExtendedLuaState {
                 case Double v -> lua.pushNumber(v);
                 case String s -> lua.pushString(s);
                 case byte[] bytes -> lua.pushByteArray(bytes);
+                case float[] arr -> pushPrimitiveArray(lua, value, arr, i -> arr[i], arr.length, memo);
+                case double[] arr -> pushPrimitiveArray(lua, value, arr, i -> arr[i], arr.length, memo);
+                case int[] arr -> pushPrimitiveArray(lua, value, arr, i -> arr[i], arr.length, memo);
+                case short[] arr -> pushPrimitiveArray(lua, value, arr, i -> arr[i], arr.length, memo);
+                case long[] arr -> pushPrimitiveArray(lua, value, arr, i -> arr[i], arr.length, memo);
+                case char[] arr -> pushPrimitiveArray(lua, value, arr, i -> arr[i], arr.length, memo);
+                case boolean[] arr -> pushPrimitiveArray(lua, value, arr, i -> arr[i], arr.length, memo);
                 case Object[] arr -> {
                     java.util.List<Map.Entry<Object, Integer>> list = new java.util.ArrayList<>();
                     for (int i = 0; i < arr.length; i++) {
@@ -49,7 +55,7 @@ public final class ExtendedLuaState {
                     }
                     pushList(lua, value, list.iterator(), memo);
                 }
-                case Value ignored when Settings.get().allowUserdata -> lua.pushJavaObjectRaw(value);
+                case Value ignored when OCSettings.get().allowUserdata -> lua.pushJavaObjectRaw(value);
                 case Map<?, ?> map -> pushTableFromJavaMap(lua, value, map, memo);
                 default -> {
                     LOGGER.warn("Tried to push an unsupported value of type to Lua: {}.", value.getClass().getName());
@@ -63,8 +69,15 @@ public final class ExtendedLuaState {
         }
     }
 
-    private static void pushList(LuaState lua, Object obj, Iterator<java.util.Map.Entry<Object, Integer>> list, IdentityHashMap<Object, Integer> memo) {
-        lua.newTable();
+    private static void pushPrimitiveArray(LuaState lua, Object obj, Object ignoredArray, java.util.function.IntFunction<Object> get, int length, IdentityHashMap<Object, Integer> memo) {
+        java.util.List<Map.Entry<Object, Integer>> list = new java.util.ArrayList<>();
+        for (int i = 0; i < length; i++) {
+            list.add(new java.util.AbstractMap.SimpleEntry<>(get.apply(i), i));
+        }
+        pushList(lua, obj, list.iterator(), memo);
+    }
+
+    private static void pushList(LuaState lua, Object obj, Iterator<java.util.Map.Entry<Object, Integer>> list, IdentityHashMap<Object, Integer> memo) {        lua.newTable();
         int tableIndex = lua.getTop();
         memo.put(obj, tableIndex);
         while (list.hasNext()) {

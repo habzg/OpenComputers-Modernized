@@ -1,5 +1,6 @@
 package li.cil.oc.api.internal;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
@@ -19,13 +20,11 @@ public interface Wrench {
      * This is usually called from blocks' activation logic.
      *
      * @param player   the player using the tool
-     * @param Level    the Level containing the block the wrench is used on.
-     * @param x        the X coordinate of the block.
-     * @param y        the Y coordinate of the block.
-     * @param z        the Z coordinate of the block.
+     * @param world    the world containing the block the wrench is used on.
+     * @param pos      the position of the block.
      * @param simulate whether to simulate the usage.
      * @return whether the wrench can be used on the block.
      */
     @SuppressWarnings({"SameReturnValue", "unused"})
-    boolean useWrenchOnBlock(Player player, Level Level, int x, int y, int z, boolean simulate);
+    boolean useWrenchOnBlock(Player player, Level world, BlockPos pos, boolean simulate);
 }

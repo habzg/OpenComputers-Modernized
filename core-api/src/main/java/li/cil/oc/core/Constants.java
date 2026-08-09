@@ -147,7 +147,6 @@ public final class Constants {
         public static final String RawCircuitBoard = "rawCircuitBoard";
         public static final String RedstoneCardTier1 = "redstoneCard1";
         public static final String RedstoneCardTier2 = "redstoneCard2";
-        public static final String RITEGUpgrade = "ritegUpgrade";
         public static final String ServerCreative = "serverCreative";
         public static final String ServerTier1 = "server1";
         public static final String ServerTier2 = "server2";
@@ -163,7 +162,6 @@ public final class Constants {
         public static final String Terminal = "terminal";
         public static final String TerminalServer = "terminalServer";
         public static final String TexturePicker = "texturePicker";
-        public static final String TpsCard = "tpsCard";
         public static final String TractorBeamUpgrade = "tractorBeamUpgrade";
         public static final String TradingUpgrade = "tradingUpgrade";
         public static final String Transistor = "transistor";

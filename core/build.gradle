@@ -8,7 +8,7 @@ base {
 }
 
 neoForge {
-    version = neo_version
+    neoFormVersion = "1.21.1-20240808.144430"
 }
 
 configurations {
@@ -30,7 +30,10 @@ artifacts {
 dependencies {
     implementation(project(':api'))
     implementation(project(':core-api'))
-    implementation("com.typesafe:config:${typesafe_config_version}")
+    implementation files(rootProject.tasks.named('relocateTypesafe'))
     implementation("li.cil.repack:OC-LuaJ:${luaj_version}")
     compileOnly("li.cil.repack:OC-JNLua:${jnlua_version}")
+    compileOnly("cc.tweaked:cc-tweaked-${minecraft_version}-common-api:${cc_version}")
+    compileOnly("maven.modrinth:tis3d:MC1.21.1-neoforge-${tis3d_version}")
+    compileOnly("dev.architectury:architectury-neoforge:${architectury_version}")
 }

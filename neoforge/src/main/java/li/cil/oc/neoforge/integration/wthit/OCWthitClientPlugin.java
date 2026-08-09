@@ -2,6 +2,7 @@ package li.cil.oc.neoforge.integration.wthit;
 
 import codechicken.multipart.block.TileMultipart;
 import codechicken.multipart.util.PartRayTraceResult;
+import java.util.ArrayList;
 import li.cil.oc.neoforge.common.init.Items;
 import li.cil.oc.neoforge.integration.cbmultipart.CablePart;
 import mcp.mobius.waila.api.IBlockAccessor;
@@ -32,19 +33,57 @@ import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-
 @SuppressWarnings("unused")
 public class OCWthitClientPlugin implements IWailaClientPlugin {
     @Override
     public void register(IClientRegistrar registrar) {
         registrar.body(OCNodeInfoProvider.INSTANCE, BlockEntity.class, 1000);
-        registrar.body(OCRackItemProvider.INSTANCE, li.cil.oc.core.impl.common.tileentity.Rack.class, 1100);
+        registrar.body(OCRackItemProvider.INSTANCE, li.cil.oc.core.impl.common.blockentity.Rack.class, 1100);
         registrar.icon(OCDroneIconProvider.INSTANCE, li.cil.oc.core.impl.common.entity.Drone.class, 1000);
         registrar.icon(OCPrintIconProvider.INSTANCE, li.cil.oc.neoforge.common.block.Print.class, 900);
-        registrar.icon(OCChameliumIconProvider.INSTANCE, li.cil.oc.neoforge.common.block.ChameliumBlock.class, 900);
+        registrar.icon(OCChameliumIconProvider.INSTANCE, li.cil.oc.core.impl.common.block.ChameliumBlock.class, 900);
         registrar.head(OCCableMultipartProvider.INSTANCE, TileMultipart.class, 900);
         registrar.icon(OCCableMultipartProvider.INSTANCE, TileMultipart.class, 900);
+        registrar.head(OCBlockNameProvider.INSTANCE, li.cil.oc.core.impl.common.block.AbstractBlock.class, 1000);
+        registrar.head(OCEntityNameProvider.INSTANCE, li.cil.oc.core.impl.common.entity.Drone.class, 1000);
+    }
+
+    private enum OCBlockNameProvider implements IBlockComponentProvider {
+        INSTANCE;
+
+        @Override
+        public void appendHead(ITooltip tooltip, IBlockAccessor accessor, IPluginConfig config) {
+            if (!config.getBoolean(OCWthitCommonPlugin.CONFIG_BLOCK_NAME)) return;
+            ItemStack stack = accessor.getStack();
+            if (stack.isEmpty()) return;
+            net.minecraft.world.item.Rarity rarity = stack.getRarity();
+            if (rarity == net.minecraft.world.item.Rarity.COMMON && !(accessor.getBlock() instanceof li.cil.oc.core.impl.common.block.Print)) {
+                return;
+            }
+            net.minecraft.network.chat.MutableComponent name = Component.empty().append(stack.getHoverName());
+            if (rarity != net.minecraft.world.item.Rarity.COMMON) {
+                name = name.withStyle(rarity.getStyleModifier());
+            } else {
+                name = name.withStyle(net.minecraft.ChatFormatting.WHITE);
+            }
+            tooltip.setLine(WailaConstants.OBJECT_NAME_TAG, name);
+        }
+    }
+
+    private enum OCEntityNameProvider implements IEntityComponentProvider {
+        INSTANCE;
+
+        @Override
+        public void appendHead(ITooltip tooltip, IEntityAccessor accessor, IPluginConfig config) {
+            if (!config.getBoolean(OCWthitCommonPlugin.CONFIG_DRONE_NAME)) return;
+            if (!(accessor.getEntity() instanceof li.cil.oc.core.impl.common.entity.Drone drone)) return;
+            net.minecraft.world.item.Rarity rarity = li.cil.oc.core.impl.util.Rarity.byTier(drone.tier());
+            if (rarity == net.minecraft.world.item.Rarity.COMMON) return;
+            String ocName = drone.name();
+            tooltip.setLine(WailaConstants.OBJECT_NAME_TAG,
+                    Component.empty().append(ocName.isEmpty() ? accessor.getEntity().getName() : Component.literal(ocName))
+                            .withStyle(rarity.getStyleModifier()));
+        }
     }
 
     private enum OCNodeInfoProvider implements IBlockComponentProvider {
@@ -52,6 +91,7 @@ public class OCWthitClientPlugin implements IWailaClientPlugin {
 
         @Override
         public void appendBody(ITooltip tooltip, IBlockAccessor accessor, IPluginConfig config) {
+            if (!config.getBoolean(OCWthitCommonPlugin.CONFIG_NODE_INFO)) return;
             CompoundTag data = accessor.getData().raw();
             if (data.isEmpty()) return;
 
@@ -87,7 +127,7 @@ public class OCWthitClientPlugin implements IWailaClientPlugin {
 
             if (data.contains(OCWthitCommonPlugin.TAG_RACK_MOUNTABLE_NODES)) {
                 BlockEntity be = accessor.getBlockEntity();
-                if (be instanceof li.cil.oc.core.impl.common.tileentity.Rack rack) {
+                if (be instanceof li.cil.oc.core.impl.common.blockentity.Rack rack) {
                     Direction facing = accessor.getSide();
                     if (facing == rack.facing()) {
                         BlockHitResult hit = accessor.getBlockHitResult();
@@ -137,7 +177,8 @@ public class OCWthitClientPlugin implements IWailaClientPlugin {
         INSTANCE;
 
         @Override
-        public @NotNull ITooltipComponent getIcon(IEntityAccessor accessor, IPluginConfig config) {
+        public ITooltipComponent getIcon(IEntityAccessor accessor, IPluginConfig config) {
+            if (!config.getBoolean(OCWthitCommonPlugin.CONFIG_DRONE_ICON)) return null;
             return new ItemComponent(Items.DRONE.get());
         }
     }

@@ -6,6 +6,7 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Slot;
 import li.cil.oc.core.common.Tier;
+import li.cil.oc.core.impl.integration.opencomputers.Item;
 import li.cil.oc.neoforge.server.component.UpgradeTrading;
 import net.minecraft.world.item.ItemStack;
 

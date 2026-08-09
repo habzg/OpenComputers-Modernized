@@ -1,22 +1,30 @@
 package li.cil.oc.neoforge.client.gui;
 
-import li.cil.oc.core.impl.Settings;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import java.util.ArrayList;
+import java.util.List;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.client.Textures;
+import li.cil.oc.core.impl.client.gui.DynamicGuiContainer;
 import li.cil.oc.core.impl.client.gui.ImageButton;
 import li.cil.oc.core.impl.client.gui.widget.ProgressBar;
 import li.cil.oc.core.impl.client.renderer.TextBufferRenderCache;
 import li.cil.oc.core.impl.client.renderer.gui.BufferRenderer;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class Robot extends DynamicGuiContainer<li.cil.oc.neoforge.common.container.Robot> implements li.cil.oc.neoforge.client.gui.traits.InputBuffer {
-    public final li.cil.oc.neoforge.common.tileentity.Robot robot;
+public class Robot extends DynamicGuiContainer<li.cil.oc.neoforge.common.container.Robot> implements li.cil.oc.core.impl.client.gui.traits.InputBuffer {
+    public final li.cil.oc.neoforge.common.blockentity.Robot robot;
+    public final String address;
     public final int deltaY;
     private li.cil.oc.api.internal.TextBuffer buffer;
     private String bufferAddress;
@@ -28,13 +36,14 @@ public class Robot extends DynamicGuiContainer<li.cil.oc.neoforge.common.contain
     private double currentScale = 0;
 
     @SuppressWarnings("unused")
-    public Robot(Inventory playerInventory, li.cil.oc.neoforge.common.tileentity.Robot robot) {
+    public Robot(Inventory playerInventory, li.cil.oc.neoforge.common.blockentity.Robot robot) {
         this(new li.cil.oc.neoforge.common.container.Robot(0, playerInventory, robot), playerInventory, net.minecraft.network.chat.Component.literal("Robot"));
     }
 
     public Robot(li.cil.oc.neoforge.common.container.Robot container, Inventory inv, net.minecraft.network.chat.Component title) {
         super(container, inv, title);
-        this.robot = (li.cil.oc.neoforge.common.tileentity.Robot) container.otherInventory;
+        this.robot = container.robot;
+        this.address = container.address;
         deltaY = container.deltaY;
         imageWidth = 256;
         imageHeight = 256 - deltaY;
@@ -43,8 +52,23 @@ public class Robot extends DynamicGuiContainer<li.cil.oc.neoforge.common.contain
         buffer = findBuffer();
     }
 
+    private li.cil.oc.neoforge.common.blockentity.Robot current() {
+        var level = robot.getLevel();
+        if (level != null && address != null && !address.isEmpty()) {
+            var resolved = li.cil.oc.core.impl.common.container.RobotLookup.get(level, address);
+            if (resolved instanceof li.cil.oc.neoforge.common.blockentity.Robot lr) return lr;
+        }
+        var clientLevel = net.minecraft.client.Minecraft.getInstance().level;
+        if (clientLevel != null && clientLevel != level && address != null && !address.isEmpty()) {
+            var resolved = li.cil.oc.core.impl.common.container.RobotLookup.get(clientLevel, address);
+            if (resolved instanceof li.cil.oc.neoforge.common.blockentity.Robot lr) return lr;
+        }
+        return robot;
+    }
+
     private li.cil.oc.api.internal.TextBuffer findBuffer() {
-        var buf = robot.agentComponents().stream()
+        var r = current();
+        var buf = r.agentComponents().stream()
                 .filter(c -> c instanceof li.cil.oc.api.internal.TextBuffer)
                 .map(c -> (li.cil.oc.api.internal.TextBuffer) c)
                 .findFirst().orElse(null);
@@ -64,7 +88,8 @@ public class Robot extends DynamicGuiContainer<li.cil.oc.neoforge.common.contain
 
     @Override
     public li.cil.oc.api.internal.TextBuffer buffer() {
-        var buf = robot.agentComponents().stream()
+        var r = current();
+        var buf = r.agentComponents().stream()
                 .filter(c -> c instanceof li.cil.oc.api.internal.TextBuffer)
                 .map(c -> (li.cil.oc.api.internal.TextBuffer) c)
                 .findFirst().orElse(null);
@@ -89,7 +114,8 @@ public class Robot extends DynamicGuiContainer<li.cil.oc.neoforge.common.contain
     @Override
     @SuppressWarnings("unused")
     public boolean hasKeyboard() {
-        return robot != null && robot.agentComponents().stream()
+        var r = current();
+        return r != null && r.agentComponents().stream()
                 .anyMatch(c -> c instanceof li.cil.oc.api.internal.Keyboard);
     }
 
@@ -116,11 +142,11 @@ public class Robot extends DynamicGuiContainer<li.cil.oc.neoforge.common.contain
     }
 
     private double bufferRenderWidth() {
-        return Math.min(240.0, TextBufferRenderCache.renderer.charRenderWidth() * Settings.screenResolutionsByTier[0][0]);
+        return Math.min(240.0, TextBufferRenderCache.renderer.charRenderWidth() * OCSettings.screenResolutionsByTier[0][0]);
     }
 
     private double bufferRenderHeight() {
-        return Math.min(140.0, TextBufferRenderCache.renderer.charRenderHeight() * Settings.screenResolutionsByTier[0][1]);
+        return Math.min(140.0, TextBufferRenderCache.renderer.charRenderHeight() * OCSettings.screenResolutionsByTier[0][1]);
     }
 
     @Override
@@ -143,7 +169,7 @@ public class Robot extends DynamicGuiContainer<li.cil.oc.neoforge.common.contain
         powerButton.toggled = isRunning();
         scrollButton.active = canScroll();
         scrollButton.hoverOverride = isDragging;
-        if (robot.inventorySize < 16 + inventoryOffset * 4) scrollTo(0);
+        if (current().inventorySize < 16 + inventoryOffset * 4) scrollTo(0);
         super.render(guiGraphics, mouseX, mouseY, dt);
     }
 
@@ -161,12 +187,13 @@ public class Robot extends DynamicGuiContainer<li.cil.oc.neoforge.common.contain
     }
 
     private boolean isRunning() {
-        return robot.isRunning;
+        return current().isRunning;
     }
 
     @SuppressWarnings("unused")
     private void onPowerButton(ImageButton button) {
-        li.cil.oc.neoforge.client.PacketSender.sendComputerPower(robot, !robot.isRunning);
+        var r = current();
+        li.cil.oc.neoforge.client.PacketSender.sendComputerPower(r, !r.isRunning);
     }
 
     public void drawGui(GuiGraphics guiGraphics) {
@@ -199,7 +226,7 @@ public class Robot extends DynamicGuiContainer<li.cil.oc.neoforge.common.contain
             transform.scale((float) fitScale, (float) fitScale, (float) fitScale);
             transform.scale((float) this.scale(), (float) this.scale(), 1.0f);
 
-            BufferRenderer.drawGui(guiGraphics, buffer, vw, vh, transform, robot.isRunning, 1.0f, leftPos + bufferX() - 3, topPos + bufferY() - 3);
+            BufferRenderer.drawGui(guiGraphics, buffer, vw, vh, transform, current().isRunning, 1.0f, leftPos + bufferX() - 3, topPos + bufferY() - 3);
 
             pose.popPose();
         }
@@ -209,28 +236,39 @@ public class Robot extends DynamicGuiContainer<li.cil.oc.neoforge.common.contain
     protected void drawSecondaryForegroundLayer(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         drawBufferLayer(guiGraphics);
         drawGui(guiGraphics);
+        var r = current();
         if (isHovering(power.x, power.y, power.width(), power.height(), mouseX, mouseY)) {
-            List<String> tooltip = new ArrayList<>();
+            List<Component> tooltip = new ArrayList<>();
             String format = Component.translatable("gui.opencomputers.robot.power").getString() + ": %d%% (%d/%d)";
-            tooltip.add(String.format(format,
-                    (int) ((robot.globalBuffer / robot.globalBufferSize) * 100),
-                    (int) robot.globalBuffer, (int) robot.globalBufferSize));
-            renderTooltip(guiGraphics, tooltip, mouseX - leftPos, mouseY - topPos, font);
+            tooltip.add(Component.literal(String.format(format,
+                    (int) ((r.globalBuffer / r.globalBufferSize) * 100),
+                    (int) r.globalBuffer, (int) r.globalBufferSize)));
+            guiGraphics.renderTooltip(font, tooltip, java.util.Optional.empty(), mouseX - leftPos, mouseY - topPos);
         }
-        if (powerButton.isHoveredOrFocused()) {
-            List<String> tooltip = new ArrayList<>(java.util.Arrays.asList(
-                    (isRunning() ? Component.translatable("gui.opencomputers.robot.turnoff").getString() : Component.translatable("gui.opencomputers.robot.turnon").getString()).split("\n")));
-            renderTooltip(guiGraphics, tooltip, mouseX - leftPos, mouseY - topPos, font);
+        if (powerButton.isMouseOver(mouseX, mouseY)) {
+            List<Component> tooltip = new ArrayList<>();
+            for (String line : (isRunning() ? Component.translatable("gui.opencomputers.robot.turnoff").getString() : Component.translatable("gui.opencomputers.robot.turnon").getString()).split("\n")) {
+                tooltip.add(Component.literal(line));
+            }
+            guiGraphics.renderTooltip(font, tooltip, java.util.Optional.empty(), mouseX - leftPos, mouseY - topPos);
         }
     }
 
     @Override
-    protected void renderBg(GuiGraphics guiGraphics, float dt, int mouseX, int mouseY) {
+    protected void renderBg(GuiGraphics guiGraphics, float ignoredDt, int ignoredMouseX, int ignoredMouseY) {
         buffer();
         guiGraphics.blit(buffer != null ? Textures.guiRobot : Textures.guiRobotNoScreen, leftPos, topPos, 0, 0, imageWidth, imageHeight, 256, 256);
-        power.level = robot.globalBuffer / robot.globalBufferSize;
+        power.level = current().globalBuffer / current().globalBufferSize;
         drawWidgets(guiGraphics);
-        if (robot.inventorySize > 0) drawSelection(guiGraphics);
+    }
+
+    @Override
+    protected void renderLabels(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        if (current().inventorySize > 0) {
+            guiGraphics.flush();
+            drawSelection(guiGraphics);
+        }
+        super.renderLabels(guiGraphics, mouseX, mouseY);
     }
 
     @Override
@@ -264,7 +302,7 @@ public class Robot extends DynamicGuiContainer<li.cil.oc.neoforge.common.contain
         scrollTo((int) Math.round((mouseY - topPos - scrollY + 1 - 6.5) * maxOffset() / (94 - 13.0)));
     }
 
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double ignoredScrollX, double scrollY) {
         int mx = (int) mouseX - leftPos;
         int my = (int) mouseY - topPos;
         int scrollYPos = 155 - deltaY;
@@ -282,11 +320,11 @@ public class Robot extends DynamicGuiContainer<li.cil.oc.neoforge.common.contain
     }
 
     private boolean canScroll() {
-        return robot.mainInventory().getContainerSize() > 16;
+        return current().mainInventory().getContainerSize() > 16;
     }
 
     private int maxOffset() {
-        return Math.max(0, robot.mainInventory().getContainerSize() / 4 - 4);
+        return Math.max(0, current().mainInventory().getContainerSize() / 4 - 4);
     }
 
     private void scrollUp() {
@@ -331,14 +369,27 @@ public class Robot extends DynamicGuiContainer<li.cil.oc.neoforge.common.contain
     }
 
     private void drawSelection(GuiGraphics guiGraphics) {
-        int slot = robot.selectedSlot - inventoryOffset * 4;
+        int slot = current().selectedSlot - inventoryOffset * 4;
         if (slot >= 0 && slot < 16) {
             double now = System.currentTimeMillis() / 1000.0;
             float selectionStepV = 1.0f / 17.0f;
-            float offsetV = (int) ((now - (int) now) * 17) * selectionStepV;
-            int x = leftPos + 169 - 1 + (slot % 4) * 18;
-            int y = topPos + 155 - deltaY - 1 + (slot / 4) * 18;
-            guiGraphics.blit(Textures.guiRobotSelection, x, y, 0, offsetV * 289, 20, 17, 20, 289);
+            float v0 = (int) ((now - (int) now) * 17) * selectionStepV;
+            int x = 169 - 1 + (slot % 4) * 18;
+            int y = 155 - deltaY - 1 + (slot / 4) * 18;
+            float v1 = v0 + 20f / 340f;
+            RenderSystem.disableDepthTest();
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+            RenderSystem.setShaderTexture(0, Textures.guiRobotSelection);
+            RenderSystem.setShader(GameRenderer::getPositionTexShader);
+            Matrix4f matrix = guiGraphics.pose().last().pose();
+            BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+            buffer.addVertex(matrix, x, y, 0).setUv(0f, v0);
+            buffer.addVertex(matrix, x, y + 20, 0).setUv(0f, v1);
+            buffer.addVertex(matrix, x + 20, y + 20, 0).setUv(1f, v1);
+            buffer.addVertex(matrix, x + 20, y, 0).setUv(1f, v0);
+            BufferUploader.drawWithShader(buffer.buildOrThrow());
+            RenderSystem.enableDepthTest();
         }
     }
 

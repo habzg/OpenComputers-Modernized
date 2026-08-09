@@ -1,5 +1,7 @@
 package li.cil.oc.api.prefab;
 
+import java.util.HashMap;
+import java.util.TreeMap;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
@@ -7,9 +9,6 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.world.item.ItemStack;
-
-import java.util.HashMap;
-import java.util.TreeMap;
 
 public class ItemStackArrayValue extends AbstractValue {
 

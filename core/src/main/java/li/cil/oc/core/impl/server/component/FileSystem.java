@@ -1,5 +1,11 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.fs.Label;
@@ -13,10 +19,10 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractValue;
-import li.cil.oc.api.prefab.ManagedEnvironment;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
-import li.cil.oc.core.impl.common.tileentity.traits.TileEntity;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.common.blockentity.traits.BlockEntity;
 import li.cil.oc.core.util.ResultWrapper;
 import li.cil.oc.core.util.ServerNetwork;
 import net.minecraft.core.HolderLookup;
@@ -26,14 +32,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-public class FileSystem extends ManagedEnvironment implements DeviceInfo {
+public class FileSystem extends AbstractManagedEnvironment implements DeviceInfo {
     public final li.cil.oc.api.fs.FileSystem fileSystem;
     public final Label label;
     public final String sound;
@@ -65,7 +64,7 @@ public class FileSystem extends ManagedEnvironment implements DeviceInfo {
         return deviceInfo;
     }
 
-    @Callback(direct = true, doc = "function():string -- Get the current label.")
+    @Callback(direct = true, doc = "function():string -- Get the current label of the drive.")
     public Object @Nullable [] getLabel(Context ignoredContext, Arguments ignoredArgs) {
         synchronized (fileSystem) {
             if (label != null) return ResultWrapper.result(label.getLabel());
@@ -73,7 +72,7 @@ public class FileSystem extends ManagedEnvironment implements DeviceInfo {
         }
     }
 
-    @Callback(doc = "function(value:string):string -- Sets the label.")
+    @Callback(doc = "function(value:string):string -- Sets the label of the drive. Returns the new value, which may be truncated.")
     public Object[] setLabel(Context ignoredContext, Arguments args) {
         synchronized (fileSystem) {
             if (label == null) throw new RuntimeException("drive does not support labeling");
@@ -90,7 +89,7 @@ public class FileSystem extends ManagedEnvironment implements DeviceInfo {
         }
     }
 
-    @Callback(direct = true, doc = "function():number -- The overall capacity.")
+    @Callback(direct = true, doc = "function():number -- The overall capacity of the file system, in bytes.")
     public Object[] spaceTotal(Context ignoredContext, Arguments ignoredArgs) {
         synchronized (fileSystem) {
             long space = fileSystem.spaceTotal();
@@ -99,14 +98,14 @@ public class FileSystem extends ManagedEnvironment implements DeviceInfo {
         }
     }
 
-    @Callback(direct = true, doc = "function():number -- The currently used capacity.")
+    @Callback(direct = true, doc = "function():number -- The currently used capacity of the file system, in bytes.")
     public Object[] spaceUsed(Context ignoredContext, Arguments ignoredArgs) {
         synchronized (fileSystem) {
             return ResultWrapper.result((double) fileSystem.spaceUsed());
         }
     }
 
-    @Callback(direct = true, doc = "function(path:string):boolean -- Returns whether an object exists.")
+    @Callback(direct = true, doc = "function(path:string):boolean -- Returns whether an object exists at the specified absolute path in the file system.")
     public Object[] exists(Context ignoredContext, Arguments args) {
         synchronized (fileSystem) {
             diskActivity();
@@ -114,7 +113,7 @@ public class FileSystem extends ManagedEnvironment implements DeviceInfo {
         }
     }
 
-    @Callback(direct = true, doc = "function(path:string):number -- Returns the size.")
+    @Callback(direct = true, doc = "function(path:string):number -- Returns the size of the object at the specified absolute path in the file system.")
     public Object[] size(Context ignoredContext, Arguments args) {
         synchronized (fileSystem) {
             diskActivity();
@@ -122,7 +121,7 @@ public class FileSystem extends ManagedEnvironment implements DeviceInfo {
         }
     }
 
-    @Callback(direct = true, doc = "function(path:string):boolean -- Returns whether it is a directory.")
+    @Callback(direct = true, doc = "function(path:string):boolean -- Returns whether the object at the specified absolute path in the file system is a directory.")
     public Object[] isDirectory(Context ignoredContext, Arguments args) {
         synchronized (fileSystem) {
             diskActivity();
@@ -130,7 +129,7 @@ public class FileSystem extends ManagedEnvironment implements DeviceInfo {
         }
     }
 
-    @Callback(direct = true, doc = "function(path:string):number -- Returns last modified timestamp.")
+    @Callback(direct = true, doc = "function(path:string):number -- Returns the (real world) timestamp of when the object at the specified absolute path in the file system was modified.")
     public Object[] lastModified(Context ignoredContext, Arguments args) {
         synchronized (fileSystem) {
             diskActivity();
@@ -138,7 +137,7 @@ public class FileSystem extends ManagedEnvironment implements DeviceInfo {
         }
     }
 
-    @Callback(doc = "function(path:string):table -- Returns a list of names in the directory.")
+    @Callback(doc = "function(path:string):table -- Returns a list of names of objects in the directory at the specified absolute path in the file system.")
     public Object @Nullable [] list(Context ignoredContext, Arguments args) {
         synchronized (fileSystem) {
             String[] list = fileSystem.list(clean(args.checkString(0)));
@@ -150,7 +149,7 @@ public class FileSystem extends ManagedEnvironment implements DeviceInfo {
         }
     }
 
-    @Callback(doc = "function(path:string):boolean -- Creates a directory.")
+    @Callback(doc = "function(path:string):boolean -- Creates a directory at the specified absolute path in the file system. Creates parent directories, if necessary.")
     public Object[] makeDirectory(Context ignoredContext, Arguments args) {
         synchronized (fileSystem) {
             boolean success = recurseMkdir(clean(args.checkString(0)));
@@ -170,7 +169,7 @@ public class FileSystem extends ManagedEnvironment implements DeviceInfo {
         return fileSystem.makeDirectory(path);
     }
 
-    @Callback(doc = "function(path:string):boolean -- Removes the object.")
+    @Callback(doc = "function(path:string):boolean -- Removes the object at the specified absolute path in the file system.")
     public Object[] remove(Context ignoredContext, Arguments args) {
         synchronized (fileSystem) {
             boolean success = recurseDelete(clean(args.checkString(0)));
@@ -192,7 +191,7 @@ public class FileSystem extends ManagedEnvironment implements DeviceInfo {
         return fileSystem.delete(path);
     }
 
-    @Callback(doc = "function(from:string, to:string):boolean -- Renames/moves an object.")
+    @Callback(doc = "function(from:string, to:string):boolean -- Renames/moves an object from the first specified absolute path in the file system to the second.")
     public Object[] rename(Context ignoredContext, Arguments args) {
         synchronized (fileSystem) {
             boolean success = fileSystem.rename(clean(args.checkString(0)), clean(args.checkString(1)));
@@ -201,7 +200,7 @@ public class FileSystem extends ManagedEnvironment implements DeviceInfo {
         }
     }
 
-    @Callback(direct = true, doc = "function(handle:userdata) -- Closes an open file descriptor.")
+    @Callback(direct = true, doc = "function(handle:userdata) -- Closes an open file descriptor with the specified handle.")
     @SuppressWarnings("SameReturnValue")
     public Object @Nullable [] close(Context context, Arguments args) {
         synchronized (fileSystem) {
@@ -210,11 +209,11 @@ public class FileSystem extends ManagedEnvironment implements DeviceInfo {
         }
     }
 
-    @Callback(direct = true, limit = 4, doc = "function(path:string[, mode:string='r']):userdata -- Opens a new file descriptor.")
+    @Callback(direct = true, limit = 4, doc = "function(path:string[, mode:string='r']):userdata -- Opens a new file descriptor and returns its handle.")
     public Object[] open(Context context, Arguments args) {
         synchronized (fileSystem) {
             Set<Integer> ctxOwners = owners.get(context.node().address());
-            if (ctxOwners != null && ctxOwners.size() >= Settings.get().maxHandles) {
+            if (ctxOwners != null && ctxOwners.size() >= OCSettings.get().maxHandles) {
                 throw new RuntimeException(new IOException("too many open handles"));
             }
             String path = args.checkString(0);
@@ -228,12 +227,12 @@ public class FileSystem extends ManagedEnvironment implements DeviceInfo {
         }
     }
 
-    @Callback(direct = true, limit = 15, doc = "function(handle:userdata, count:number):string -- Reads data.")
+    @Callback(direct = true, limit = 15, doc = "function(handle:userdata, count:number):string or nil -- Reads up to the specified amount of data from an open file descriptor with the specified handle. Returns nil when EOF is reached.")
     public Object @Nullable [] read(Context context, Arguments args) {
         synchronized (fileSystem) {
             context.consumeCallBudget(readCosts[speed]);
             int handle = checkHandle(args, 0);
-            int n = Math.clamp(args.checkInteger(1), 0, Settings.get().maxReadBuffer);
+            int n = Math.clamp(args.checkInteger(1), 0, OCSettings.get().maxReadBuffer);
             checkOwner(context.node().address(), handle);
             li.cil.oc.api.fs.Handle file = fileSystem.getHandle(handle);
             if (file != null) {
@@ -241,7 +240,7 @@ public class FileSystem extends ManagedEnvironment implements DeviceInfo {
                 int read = file.read(buffer);
                 if (read >= 0) {
                     byte[] bytes = read == buffer.length ? buffer : java.util.Arrays.copyOf(buffer, read);
-                    if (!node.tryChangeBuffer(-Settings.get().hddReadCost * bytes.length)) {
+                    if (!node.tryChangeBuffer(-OCSettings.get().hddReadCost * bytes.length)) {
                         throw new RuntimeException(new IOException("not enough energy"));
                     }
                     diskActivity();
@@ -253,7 +252,7 @@ public class FileSystem extends ManagedEnvironment implements DeviceInfo {
         }
     }
 
-    @Callback(direct = true, doc = "function(handle:userdata, whence:string, offset:number):number -- Seeks in an open file descriptor.")
+    @Callback(direct = true, doc = "function(handle:userdata, whence:string, offset:number):number -- Seeks in an open file descriptor with the specified handle. Returns the new pointer position.")
     public Object[] seek(Context context, Arguments args) {
         synchronized (fileSystem) {
             context.consumeCallBudget(seekCosts[speed]);
@@ -282,13 +281,13 @@ public class FileSystem extends ManagedEnvironment implements DeviceInfo {
         }
     }
 
-    @Callback(direct = true, doc = "function(handle:userdata, value:string):boolean -- Writes data.")
+    @Callback(direct = true, doc = "function(handle:userdata, value:string):boolean -- Writes the specified data to an open file descriptor with the specified handle.")
     public Object[] write(Context context, Arguments args) {
         synchronized (fileSystem) {
             context.consumeCallBudget(writeCosts[speed]);
             int handle = checkHandle(args, 0);
             byte[] value = args.checkByteArray(1);
-            if (!node.tryChangeBuffer(-Settings.get().hddWriteCost * value.length)) {
+            if (!node.tryChangeBuffer(-OCSettings.get().hddWriteCost * value.length)) {
                 throw new RuntimeException(new IOException("not enough energy"));
             }
             checkOwner(context.node().address(), handle);
@@ -395,7 +394,7 @@ public class FileSystem extends ManagedEnvironment implements DeviceInfo {
             if (label != null) {
                 label.save(nbt, provider);
             }
-            if (!TileEntity.savingForClients) {
+            if (!BlockEntity.savingForClients) {
                 ListTag ownersNbt = new ListTag();
                 for (Map.Entry<String, Set<Integer>> entry : owners.entrySet()) {
                     CompoundTag ownerNbt = new CompoundTag();

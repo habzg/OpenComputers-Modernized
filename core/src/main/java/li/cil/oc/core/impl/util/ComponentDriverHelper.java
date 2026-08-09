@@ -1,20 +1,19 @@
 package li.cil.oc.core.impl.util;
 
-import li.cil.oc.api.driver.Item;
-
 import java.util.function.Predicate;
+import li.cil.oc.api.driver.DriverItem;
 
 public final class ComponentDriverHelper {
-    private static Predicate<Item> redstoneCardCheck = d -> false;
+    private static Predicate<DriverItem> redstoneCardCheck = d -> false;
 
     private ComponentDriverHelper() {
     }
 
-    public static void setRedstoneCardCheck(Predicate<Item> check) {
+    public static void setRedstoneCardCheck(Predicate<DriverItem> check) {
         redstoneCardCheck = check;
     }
 
-    public static boolean isRedstoneCard(Item driver) {
+    public static boolean isRedstoneCard(DriverItem driver) {
         return redstoneCardCheck.test(driver);
     }
 }

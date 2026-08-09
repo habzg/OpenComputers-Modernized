@@ -8,7 +8,7 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-public class Database extends li.cil.oc.neoforge.common.container.Player {
+public class Database extends li.cil.oc.core.impl.common.container.Player {
     private final int databaseSize;
 
     public Database(int containerId, Inventory playerInventory, DatabaseInventory databaseInventory) {

@@ -1,7 +1,16 @@
 package li.cil.oc.neoforge.integration.vanilla;
 
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.integration.util.BundledRedstone;
+import li.cil.oc.core.impl.integration.vanilla.ConverterItemStack;
+import li.cil.oc.core.impl.integration.vanilla.ConverterNBT;
+import li.cil.oc.core.impl.integration.vanilla.ConverterWorld;
+import li.cil.oc.core.impl.integration.vanilla.ConverterWorldProvider;
+import li.cil.oc.core.impl.integration.vanilla.DriverCommandBlock;
+import li.cil.oc.core.impl.integration.vanilla.DriverComparator;
+import li.cil.oc.core.impl.integration.vanilla.DriverMobSpawner;
+import li.cil.oc.core.impl.integration.vanilla.DriverNoteBlock;
+import li.cil.oc.core.impl.integration.vanilla.DriverRecordPlayer;
 import li.cil.oc.core.impl.util.BlockPosition;
 import li.cil.oc.neoforge.integration.ModProxy;
 import li.cil.oc.neoforge.integration.Mods;
@@ -35,14 +44,14 @@ public final class ModVanilla implements ModProxy, BundledRedstone.RedstoneProvi
         li.cil.oc.api.API.driver.add(new DriverNoteBlock.Provider());
         li.cil.oc.api.API.driver.add(new DriverRecordPlayer.Provider());
 
-        if (Settings.get().enableInventoryDriver) {
+        if (OCSettings.get().enableInventoryDriver) {
             li.cil.oc.api.API.driver.add(new DriverInventory());
         }
-        if (Settings.get().enableTankDriver) {
+        if (OCSettings.get().enableTankDriver) {
             li.cil.oc.api.API.driver.add(new DriverFluidHandler());
             li.cil.oc.api.API.driver.add(new DriverFluidTank());
         }
-        if (Settings.get().enableCommandBlockDriver) {
+        if (OCSettings.get().enableCommandBlockDriver) {
             li.cil.oc.api.API.driver.add(new DriverCommandBlock());
         }
 

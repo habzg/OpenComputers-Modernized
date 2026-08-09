@@ -13,12 +13,7 @@ public interface GUI {
         if (!player.isShiftKeyDown()) {
             if (!world.isClientSide) {
                 int gt = guiType();
-                player.openMenu(ContainerProviderDelegate.get().getContainerProvider(gt, world, pos.getX(), pos.getY(), pos.getZ()), (net.minecraft.network.RegistryFriendlyByteBuf buf) -> {
-                    buf.writeInt(gt);
-                    buf.writeInt(pos.getX());
-                    buf.writeInt(pos.getY());
-                    buf.writeInt(pos.getZ());
-                });
+                ContainerProviderDelegate.get().openMenu(player, gt, world, pos.getX(), pos.getY(), pos.getZ());
             }
             return true;
         }

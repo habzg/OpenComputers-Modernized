@@ -2,14 +2,15 @@ package li.cil.oc.neoforge.common.container;
 
 import li.cil.oc.core.common.Slot;
 import li.cil.oc.core.common.Tier;
+import li.cil.oc.core.impl.common.container.Player;
 import li.cil.oc.neoforge.common.init.Menus;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Inventory;
 
 public class Relay extends Player {
-    public final li.cil.oc.neoforge.common.tileentity.Relay relay;
+    public final li.cil.oc.core.impl.common.blockentity.Relay relay;
 
-    public Relay(int containerId, Inventory playerInventory, li.cil.oc.neoforge.common.tileentity.Relay relay, net.minecraft.world.entity.player.Player player) {
+    public Relay(int containerId, Inventory playerInventory, li.cil.oc.core.impl.common.blockentity.Relay relay, net.minecraft.world.entity.player.Player player) {
         super(Menus.RELAY.get(), containerId, playerInventory, relay, player);
         this.relay = relay;
         addSlot(151, 15, Slot.CPU, Tier.Any);

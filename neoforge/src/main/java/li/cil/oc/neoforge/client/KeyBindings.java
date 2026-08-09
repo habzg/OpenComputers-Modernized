@@ -1,14 +1,13 @@
 package li.cil.oc.neoforge.client;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
 import li.cil.oc.neoforge.OpenComputers;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import org.lwjgl.glfw.GLFW;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
 
 @SuppressWarnings("unused")
 public final class KeyBindings {

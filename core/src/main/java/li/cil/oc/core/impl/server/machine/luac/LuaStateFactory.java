@@ -2,8 +2,15 @@ package li.cil.oc.core.impl.server.machine.luac;
 
 import com.google.common.base.Strings;
 import com.google.common.io.PatternFilenameFilter;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.nio.channels.Channels;
+import java.util.Random;
+import java.util.regex.Pattern;
 import li.cil.oc.core.Tags;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.ExtendedLuaState;
 import li.cil.repack.com.naef.jnlua.LuaState;
 import li.cil.repack.com.naef.jnlua.LuaStateFiveFour;
@@ -14,16 +21,49 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.nio.channels.Channels;
-import java.util.Random;
-import java.util.regex.Pattern;
-
 public abstract class LuaStateFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(LuaStateFactory.class);
+
+    // Native Lua factories initialize one after another (5.2, 5.3, 5.4).
+    // Clean stale extracted OC natives exactly once, before the first factory
+    // extracts/loads anything for this JVM. Without the guard, a later factory
+    // could delete a library that an earlier factory just extracted.
+    private static boolean cleanedOldLibraries = false;
+
+    private static synchronized void cleanupOldLibraries(File libDir) {
+        if (cleanedOldLibraries) {
+            return;
+        }
+
+        cleanedOldLibraries = true;
+
+        if (!libDir.isDirectory()) {
+            return;
+        }
+
+        File[] files = libDir.listFiles(new PatternFilenameFilter(
+                "^" + Pattern.quote("OpenComputersMod-") + ".*\\.(dll|so|dylib)$"
+        ));
+
+        if (files != null) {
+            for (File file : files) {
+                if (file.isFile()) {
+                    try {
+                        if (file.delete()) {
+                            LOGGER.debug("Deleted stale native library '{}'.", file.getName());
+                        } else if (file.exists()) {
+                            // This is expected on Windows if another running JVM still has
+                            // the native library loaded and therefore locked.
+                            LOGGER.debug("Could not delete stale native library '{}'. It may still be in use.", file.getName());
+                        }
+                    } catch (Throwable t) {
+                        LOGGER.debug("Could not delete stale native library '{}'.", file.getName(), t);
+                    }
+                }
+            }
+        }
+    }
+
     private final String libraryName;
 
     private final String libraryFileName;
@@ -49,8 +89,8 @@ public abstract class LuaStateFactory {
     }
 
     private static String getPlatformSystemName() {
-        if (!Strings.isNullOrEmpty(Settings.get().forceNativeLibPlatform)) {
-            return Settings.get().forceNativeLibPlatform;
+        if (!Strings.isNullOrEmpty(OCSettings.get().forceNativeLibPlatform)) {
+            return OCSettings.get().forceNativeLibPlatform;
         }
         String systemName = getSystemName();
         String archName = getArchName();
@@ -88,7 +128,7 @@ public abstract class LuaStateFactory {
     }
 
     public static boolean luajRequested() {
-        return Settings.get().forceLuaJ || Settings.get().registerLuaJArchitecture;
+        return OCSettings.get().forceLuaJ || OCSettings.get().registerLuaJArchitecture;
     }
 
     public static boolean includeLuaJ() {
@@ -96,7 +136,7 @@ public abstract class LuaStateFactory {
     }
 
     public static boolean include52() {
-        return Lua52.INSTANCE.haveLibrary() && !Settings.get().forceLuaJ;
+        return Lua52.INSTANCE.haveLibrary() && !OCSettings.get().forceLuaJ;
     }
 
     private static boolean isExistingFileMatching(java.net.URL libraryUrl, File tmpLibFile) {
@@ -121,15 +161,15 @@ public abstract class LuaStateFactory {
     }
 
     public static boolean include53() {
-        return Lua53.INSTANCE.haveLibrary() && Settings.get().enableLua53 && !Settings.get().forceLuaJ;
+        return Lua53.INSTANCE.haveLibrary() && OCSettings.get().enableLua53 && !OCSettings.get().forceLuaJ;
     }
 
     public static boolean include54() {
-        return Lua54.INSTANCE.haveLibrary() && Settings.get().enableLua54 && !Settings.get().forceLuaJ;
+        return Lua54.INSTANCE.haveLibrary() && OCSettings.get().enableLua54 && !OCSettings.get().forceLuaJ;
     }
 
     public static boolean default53() {
-        return include53() && Settings.get().defaultLua53;
+        return include53() && OCSettings.get().defaultLua53;
     }
 
     public static ItemStack setDefaultArch(ItemStack stack) {
@@ -157,7 +197,7 @@ public abstract class LuaStateFactory {
             return;
         }
 
-        if (SystemUtils.IS_OS_WINDOWS && !Settings.get().alwaysTryNative) {
+        if (SystemUtils.IS_OS_WINDOWS && !OCSettings.get().alwaysTryNative) {
             if (SystemUtils.IS_OS_WINDOWS_XP) {
                 LOGGER.warn("Sorry, but Windows XP isn't supported. I'm afraid you'll have to use a newer Windows. I very much recommend upgrading your Windows, anyway, since Microsoft has stopped supporting Windows XP in April 2014.");
                 return;
@@ -170,8 +210,8 @@ public abstract class LuaStateFactory {
         }
 
         File tmpLibFile = null;
-        if (!Strings.isNullOrEmpty(Settings.get().forceNativeLibPathFirst)) {
-            File libraryTest = new File(Settings.get().forceNativeLibPathFirst, libraryFileName);
+        if (!Strings.isNullOrEmpty(OCSettings.get().forceNativeLibPathFirst)) {
+            File libraryTest = new File(OCSettings.get().forceNativeLibPathFirst, libraryFileName);
             if (libraryTest.canRead()) {
                 tmpLibFile = libraryTest;
                 currentLib = libraryTest.getAbsolutePath();
@@ -182,15 +222,15 @@ public abstract class LuaStateFactory {
         }
 
         if (currentLib.isEmpty()) {
-            java.net.URL libraryUrl = LuaStateFactory.class.getResource("/assets/" + Settings.resourceDomain + "/lib/" + libraryFileName);
+            java.net.URL libraryUrl = LuaStateFactory.class.getResource("/assets/" + OCSettings.resourceDomain + "/lib/" + libraryFileName);
             if (libraryUrl == null) {
                 var tccl = Thread.currentThread().getContextClassLoader();
                 if (tccl != null) {
-                    libraryUrl = tccl.getResource("assets/" + Settings.resourceDomain + "/lib/" + libraryFileName);
+                    libraryUrl = tccl.getResource("assets/" + OCSettings.resourceDomain + "/lib/" + libraryFileName);
                 }
                 if (libraryUrl == null) {
                     libraryUrl = ClassLoader.getSystemClassLoader()
-                            .getResource("assets/" + Settings.resourceDomain + "/lib/" + libraryFileName);
+                            .getResource("assets/" + OCSettings.resourceDomain + "/lib/" + libraryFileName);
                 }
             }
             if (libraryUrl == null) {
@@ -200,30 +240,25 @@ public abstract class LuaStateFactory {
 
             String tmpLibName = "OpenComputersMod-" + Tags.VERSION + "-" + version() + "-" + libraryFileName;
             String tmpBasePath;
-            if (Settings.get().nativeInTmpDir) {
+            if (OCSettings.get().nativeInTmpDir) {
                 String path = System.getProperty("java.io.tmpdir");
                 if (path == null) tmpBasePath = "";
                 else if (path.endsWith("/") || path.endsWith("\\")) tmpBasePath = path;
                 else tmpBasePath = path + "/";
             } else {
-                tmpBasePath = "./";
+                File nativesDir = new File("opencomputers", "natives");
+                //noinspection ResultOfMethodCallIgnored
+                nativesDir.mkdirs();
+                tmpBasePath = nativesDir.getAbsolutePath() + File.separator;
             }
             tmpLibFile = new File(tmpBasePath + tmpLibName);
 
-            if (!Settings.get().nativeInTmpDir) {
-                File libDir = new File(tmpBasePath);
-                if (libDir.isDirectory()) {
-                    File[] files = libDir.listFiles(new PatternFilenameFilter("^" + Pattern.quote("OpenComputersMod-") + ".*" + Pattern.quote("-" + libraryFileName) + "$"));
-                    if (files != null) {
-                        for (File file : files) {
-                            if (!file.equals(tmpLibFile)) {
-                                if (!file.delete()) {
-                                    LOGGER.warn("Failed to delete old library file: {}", file);
-                                }
-                            }
-                        }
-                    }
-                }
+            // Clean up stale OC native libraries once before this run extracts and
+            // loads any of its bundled natives. Do not do this once per Lua version:
+            // Lua 5.3/5.4 initialization must not delete the library Lua 5.2 just
+            // extracted and loaded.
+            if (!OCSettings.get().nativeInTmpDir) {
+                cleanupOldLibraries(new File(tmpBasePath));
             }
 
             if (tmpLibFile.exists()) {
@@ -241,22 +276,31 @@ public abstract class LuaStateFactory {
             }
 
             try {
+                File tmpFile = new File(tmpLibFile.getAbsolutePath() + ".tmp");
                 try (java.nio.channels.ReadableByteChannel in = Channels.newChannel(libraryUrl.openStream())) {
-                    try (FileOutputStream fos = new FileOutputStream(tmpLibFile)) {
+                    try (FileOutputStream fos = new FileOutputStream(tmpFile)) {
                         try (java.nio.channels.FileChannel out = fos.getChannel()) {
                             out.transferFrom(in, 0, Long.MAX_VALUE);
-                            tmpLibFile.deleteOnExit();
-                            if (!tmpLibFile.setReadable(true, false)) {
-                                LOGGER.warn("Failed to set readable on: {}", tmpLibFile);
-                            }
-                            if (!tmpLibFile.setWritable(true, false)) {
-                                LOGGER.warn("Failed to set writable on: {}", tmpLibFile);
-                            }
-                            if (!tmpLibFile.setExecutable(true, false)) {
-                                LOGGER.warn("Failed to set executable on: {}", tmpLibFile);
-                            }
                         }
                     }
+                }
+                try {
+                    java.nio.file.Files.move(tmpFile.toPath(), tmpLibFile.toPath(),
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+                        java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+                } catch (java.nio.file.AtomicMoveNotSupportedException e) {
+                    java.nio.file.Files.move(tmpFile.toPath(), tmpLibFile.toPath(),
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                }
+                tmpLibFile.deleteOnExit();
+                if (!tmpLibFile.setReadable(true, true)) {
+                    LOGGER.warn("Failed to set readable on: {}", tmpLibFile);
+                }
+                if (!tmpLibFile.setWritable(true, true)) {
+                    LOGGER.warn("Failed to set writable on: {}", tmpLibFile);
+                }
+                if (!tmpLibFile.setExecutable(true, true)) {
+                    LOGGER.warn("Failed to set executable on: {}", tmpLibFile);
                 }
             } catch (Throwable ignored) {
             }
@@ -275,7 +319,7 @@ public abstract class LuaStateFactory {
             haveNativeLibrary = true;
         } catch (Throwable t) {
             if (tmpLibFile != null) {
-                if (Settings.get().logFullLibLoadErrors) {
+                if (OCSettings.get().logFullLibLoadErrors) {
                     LOGGER.warn("Could not load native library '{}'.", tmpLibFile.getName(), t);
                 } else {
                     LOGGER.trace("Could not load native library '{}'.", tmpLibFile.getName());
@@ -294,13 +338,13 @@ public abstract class LuaStateFactory {
             LuaState state;
             synchronized (LuaStateFactory.class) {
                 System.load(currentLib);
-                if (Settings.get().limitMemory) state = create(Integer.MAX_VALUE);
+                if (OCSettings.get().limitMemory) state = create(Integer.MAX_VALUE);
                 else state = create(null);
             }
             try {
                 openLibs(state);
 
-                if (!Settings.get().disableLocaleChanging) {
+                if (!OCSettings.get().disableLocaleChanging) {
                     state.openLib(LuaState.Library.OS);
                     state.getField(-1, "setlocale");
                     state.pushString("C");
@@ -314,6 +358,7 @@ public abstract class LuaStateFactory {
                 state.setGlobal("unpack");
                 state.pushNil();
                 state.setGlobal("loadstring");
+
                 state.getGlobal("math");
                 state.pushNil();
                 state.setField(-2, "log10");
@@ -362,6 +407,33 @@ public abstract class LuaStateFactory {
                 state.setField(-2, "randomseed");
 
                 state.pop(1);
+
+                ExtendedLuaState.pushScalaFunction(state, l -> {
+                    l.getGlobal("type");
+                    if (!l.isFunction(-1)) {
+                        l.pop(1);
+                        l.pushString("global 'type' is not a function");
+                        return 1;
+                    }
+                    l.pop(1);
+                    l.getGlobal("pcall");
+                    if (!l.isFunction(-1)) {
+                        l.pop(1);
+                        l.pushString("global 'pcall' is not a function");
+                        return 1;
+                    }
+                    l.pop(1);
+                    l.getGlobal("assert");
+                    if (!l.isFunction(-1)) {
+                        l.pop(1);
+                        l.pushString("global 'assert' is not a function");
+                        return 1;
+                    }
+                    l.pop(1);
+                    l.pushBoolean(true);
+                    return 1;
+                });
+                state.setGlobal("_OC_sandboxCheck");
 
                 return state;
             } catch (Throwable t) {

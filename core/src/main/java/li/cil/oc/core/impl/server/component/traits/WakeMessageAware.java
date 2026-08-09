@@ -56,15 +56,16 @@ public interface WakeMessageAware extends NetworkAware {
             String msg = getWakeMessage();
             if (msg != null) {
                 Object[] pdata = packet.data();
+                boolean firstMatches = false;
                 if (pdata.length >= 1) {
-                    if (pdata[0] instanceof byte[] && msg.equals(new String((byte[]) pdata[0], Charsets.UTF_8)))
-                        wakeup = true;
-                    else if (pdata[0] instanceof String && msg.equals(pdata[0])) wakeup = true;
-                    else if (isWakeMessageFuzzy() && pdata.length >= 2) {
-                        if (pdata[0] instanceof byte[] && msg.equals(new String((byte[]) pdata[0], Charsets.UTF_8)))
-                            wakeup = true;
-                        else if (pdata[0] instanceof String && msg.equals(pdata[0])) wakeup = true;
+                    if (pdata[0] instanceof byte[]) {
+                        firstMatches = msg.equals(new String((byte[]) pdata[0], Charsets.UTF_8));
+                    } else if (pdata[0] instanceof String) {
+                        firstMatches = msg.equals(pdata[0]);
                     }
+                }
+                if (firstMatches && (pdata.length == 1 || isWakeMessageFuzzy())) {
+                    wakeup = true;
                 }
             }
             if (wakeup) {

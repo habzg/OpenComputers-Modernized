@@ -16,7 +16,7 @@ package li.cil.oc.api.network;
  * </ul>
  * <br>
  * See <code>Node</code> for more details on the behavior of single nodes, and in
- * particular how nodes represented by tile entities should be added.
+ * particular how nodes represented by block entities should be added.
  * <br>
  * Another important concept of node networks is reachability and visibility,
  * see {@link Visibility}.
@@ -48,7 +48,7 @@ public interface Network {
      *
      * @param nodeA the first node.
      * @param nodeB the second node.
-     * @return <tt>true</tt> if a new connection was added, <tt>false</tt> if the
+     * @return <code>true</code> if a new connection was added, <code>false</code> if the
      *         connection already existed.
      * @throws IllegalArgumentException if neither node is in this network.
      */
@@ -67,7 +67,7 @@ public interface Network {
      *
      * @param nodeA the first node.
      * @param nodeB the second node.
-     * @return <tt>true</tt> if a connection was removed, <tt>false</tt> if there
+     * @return <code>true</code> if a connection was removed, <code>false</code> if there
      *         was no connection between the two nodes.
      * @throws IllegalArgumentException if the nodes are not in this network.
      */
@@ -84,8 +84,8 @@ public interface Network {
      * bridge node, i.e. the only node connecting the resulting networks.
      *
      * @param node the node to remove from the network.
-     * @return <tt>true</tt> if the node was part of this network and has been
-     *         removed, <tt>false</tt> otherwise.
+     * @return <code>true</code> if the node was part of this network and has been
+     *         removed, <code>false</code> otherwise.
      */
     @SuppressWarnings("UnusedReturnValue")
     boolean remove(Node node);

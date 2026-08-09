@@ -1,10 +1,13 @@
 package li.cil.oc.neoforge.integration.jade;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import li.cil.oc.api.internal.Agent;
-import li.cil.oc.core.impl.common.tileentity.Case;
-import li.cil.oc.core.impl.common.tileentity.Microcontroller;
-import li.cil.oc.core.impl.common.tileentity.RobotBase;
-import li.cil.oc.neoforge.common.tileentity.RobotProxy;
+import li.cil.oc.core.impl.common.blockentity.Case;
+import li.cil.oc.core.impl.common.blockentity.Microcontroller;
+import li.cil.oc.core.impl.common.blockentity.RobotBase;
+import li.cil.oc.neoforge.common.blockentity.RobotProxy;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
@@ -15,10 +18,6 @@ import snownee.jade.api.view.IClientExtensionProvider;
 import snownee.jade.api.view.IServerExtensionProvider;
 import snownee.jade.api.view.ItemView;
 import snownee.jade.api.view.ViewGroup;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 @SuppressWarnings("unused")
 public enum OCItemSuppressionProvider implements IServerExtensionProvider<ItemStack>, IClientExtensionProvider<ItemStack, ItemView> {

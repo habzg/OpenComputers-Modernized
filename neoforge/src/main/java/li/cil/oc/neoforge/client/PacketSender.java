@@ -1,12 +1,13 @@
 package li.cil.oc.neoforge.client;
 
+import java.io.IOException;
 import li.cil.oc.core.common.PacketType;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.entity.Drone;
-import li.cil.oc.core.impl.common.tileentity.Assembler;
-import li.cil.oc.core.impl.common.tileentity.Rack;
-import li.cil.oc.core.impl.common.tileentity.Waypoint;
-import li.cil.oc.core.impl.common.tileentity.traits.Computer;
+import li.cil.oc.core.impl.common.blockentity.Assembler;
+import li.cil.oc.core.impl.common.blockentity.Rack;
+import li.cil.oc.core.impl.common.blockentity.Waypoint;
+import li.cil.oc.core.impl.common.blockentity.traits.Computer;
 import li.cil.oc.neoforge.common.PacketBuilder;
 import li.cil.oc.neoforge.common.SimplePacketBuilder;
 import net.minecraft.client.Minecraft;
@@ -15,14 +16,24 @@ import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.ItemStack;
 
-import java.io.IOException;
-
 public final class PacketSender {
     private static long clipboardCooldown = 0L;
 
     public static void sendComputerPower(Computer t, boolean power) {
         try (SimplePacketBuilder pb = new SimplePacketBuilder(PacketType.ComputerPower)) {
-            pb.writeTileEntity((net.minecraft.world.level.block.entity.BlockEntity) t);
+            if (t instanceof li.cil.oc.core.impl.common.blockentity.Robot r) {
+                var addr = r.computerAddress();
+                if (addr != null && !addr.isEmpty()) {
+                    pb.writeByte(1);
+                    pb.writeUTF(addr);
+                } else {
+                    pb.writeByte(0);
+                    pb.writeBlockEntity((net.minecraft.world.level.block.entity.BlockEntity) t);
+                }
+            } else {
+                pb.writeByte(0);
+                pb.writeBlockEntity((net.minecraft.world.level.block.entity.BlockEntity) t);
+            }
             pb.writeBoolean(power);
             pb.sendToServer();
         } catch (IOException e) {
@@ -79,7 +90,7 @@ public final class PacketSender {
 
     public static void sendClipboard(String address, String value) {
         if (value != null && !value.isEmpty()) {
-            if (value.length() > Settings.get().maxClipboard || System.currentTimeMillis() < clipboardCooldown) {
+            if (value.length() > OCSettings.get().maxClipboard || System.currentTimeMillis() < clipboardCooldown) {
                 var handler = Minecraft.getInstance().getSoundManager();
                 handler.play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_HARP.value(), 1, 1));
             } else {
@@ -154,7 +165,7 @@ public final class PacketSender {
 
     public static void sendPetVisibility() {
         try (SimplePacketBuilder pb = new SimplePacketBuilder(PacketType.PetVisibility)) {
-            pb.writeBoolean(!Settings.get().hideOwnPet);
+            pb.writeBoolean(!OCSettings.get().hideOwnPet);
             pb.sendToServer();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -163,7 +174,7 @@ public final class PacketSender {
 
     public static void sendRackMountableMapping(Rack t, int mountableIndex, int nodeIndex, Direction side) {
         try (SimplePacketBuilder pb = new SimplePacketBuilder(PacketType.RackMountableMapping)) {
-            pb.writeTileEntity(t);
+            pb.writeBlockEntity(t);
             pb.writeInt(mountableIndex);
             pb.writeInt(nodeIndex);
             pb.writeDirection(side);
@@ -175,7 +186,7 @@ public final class PacketSender {
 
     public static void sendRackRelayState(Rack t, boolean enabled) {
         try (SimplePacketBuilder pb = new SimplePacketBuilder(PacketType.RackRelayState)) {
-            pb.writeTileEntity(t);
+            pb.writeBlockEntity(t);
             pb.writeBoolean(enabled);
             pb.sendToServer();
         } catch (IOException e) {
@@ -197,7 +208,7 @@ public final class PacketSender {
 
     public static void sendRobotAssemblerStart(Assembler t) {
         try (SimplePacketBuilder pb = new SimplePacketBuilder(PacketType.RobotAssemblerStart)) {
-            pb.writeTileEntity(t);
+            pb.writeBlockEntity(t);
             pb.sendToServer();
         }
     }
@@ -216,7 +227,7 @@ public final class PacketSender {
 
     public static void sendServerPower(Rack t, int mountableIndex, boolean power) {
         try (SimplePacketBuilder pb = new SimplePacketBuilder(PacketType.ServerPower)) {
-            pb.writeTileEntity(t);
+            pb.writeBlockEntity(t);
             pb.writeInt(mountableIndex);
             pb.writeBoolean(power);
             pb.sendToServer();
@@ -245,7 +256,7 @@ public final class PacketSender {
 
     public static void sendWaypointLabel(Waypoint t) {
         try (SimplePacketBuilder pb = new SimplePacketBuilder(PacketType.WaypointLabel)) {
-            pb.writeTileEntity(t);
+            pb.writeBlockEntity(t);
             pb.writeUTF(t.label);
             pb.sendToServer();
         } catch (IOException e) {

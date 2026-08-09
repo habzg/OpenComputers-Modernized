@@ -1,0 +1,16 @@
+{
+  "type": "opencomputers:shapeless",
+  "ingredients": [
+    {
+      "item": "opencomputers:print"
+    },
+    {
+      "type": "opencomputers:block_tag",
+      "tag": "minecraft:beacon_base_blocks"
+    }
+  ],
+  "result": {
+    "id": "opencomputers:beaconbaseprint"
+  },
+  "category": "misc"
+}

@@ -1,5 +1,6 @@
 package li.cil.oc.neoforge.server.component;
 
+import java.util.UUID;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.core.impl.server.component.TradeInfoBase;
 import net.minecraft.core.BlockPos;
@@ -10,8 +11,6 @@ import net.minecraft.world.item.trading.Merchant;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.UUID;
 
 public class TradeInfo extends TradeInfoBase {
     public TradeInfo() {
@@ -46,7 +45,7 @@ public class TradeInfo extends TradeInfoBase {
     }
 
     @Override
-    protected @Nullable EnvironmentHost loadHostTileEntity(@NotNull CompoundTag nbt) {
+    protected @Nullable EnvironmentHost loadHostBlockEntity(@NotNull CompoundTag nbt) {
         int dimension = nbt.getInt("dimensionID");
         var server = ServerLifecycleHooks.getCurrentServer();
         if (server == null) return null;
@@ -56,7 +55,7 @@ public class TradeInfo extends TradeInfoBase {
                 int y = nbt.getInt("hostY");
                 int z = nbt.getInt("hostZ");
                 var te = world.getBlockEntity(new BlockPos(x, y, z));
-                if (te instanceof li.cil.oc.neoforge.common.tileentity.RobotProxy proxy) {
+                if (te instanceof li.cil.oc.neoforge.common.blockentity.RobotProxy proxy) {
                     return proxy.robot;
                 }
                 if (te instanceof EnvironmentHost) return (EnvironmentHost) te;

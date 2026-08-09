@@ -7,43 +7,45 @@ import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.network.WirelessEndpoint;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 public interface NetworkAPI {
     /**
-     * Tries to add a tile entity's network node(s) at the specified coordinates
+     * Tries to add a block entity's network node(s) at the specified coordinates
      * to adjacent networks.
      * <br>
-     * If the tile entity implements {@link Environment} its one node will be
-     * connected to any existing adjacent tile entity nodes. If none exist a
-     * new network with the specified tile entity's node as its sole entry.
+     * If the block entity implements {@link Environment} its one node will be
+     * connected to any existing adjacent block entity nodes. If none exist a
+     * new network with the specified block entity's node as its sole entry.
      * <br>
-     * If the tile entity is a {@link li.cil.oc.api.network.SidedEnvironment}
+     * If the block entity is a {@link li.cil.oc.api.network.SidedEnvironment}
      * the same rules as for simple environments apply, except that the
      * respective for each side is used when connecting, and each side's node
      * is added to its own new network, if necessary.
      *
-     * @param BlockEntity the tile entity to initialize.
+     * @param BlockEntity the block entity to initialize.
      */
     @SuppressWarnings("unused")
     void joinOrCreateNetwork(BlockEntity BlockEntity);
 
     /**
      * Convenience overload of {@link #joinOrCreateNetwork(BlockEntity)} that
-     * looks up the tile entity at the specified position in the specified level
+     * looks up the block entity at the specified position in the specified level
      * first.
      *
-     * @param level the level containing the tile entity.
-     * @param pos   the position of the tile entity.
+     * @param level the level containing the block entity.
+     * @param pos   the position of the block entity.
      */
     @SuppressWarnings("unused")
-    void joinOrCreateNetwork(Level level, BlockPos pos);
+    void joinOrCreateNetwork(BlockGetter level, BlockPos pos);
 
     /**
      * Creates a new network with the specified node as its initial node.
      * <br>
-     * This can be used to create networks that are not bound to any tile
+     * This can be used to create networks that are not bound to any block
      * entity. For example, this is used to create the internal networks of
      * robots.
      *
@@ -103,9 +105,10 @@ public interface NetworkAPI {
      * Calling this for an endpoint that was not added before does nothing.
      *
      * @param endpoint  the endpoint to remove from the wireless network.
-     * @param dimension the dimension identifier (e.g. "minecraft:overworld") with the wireless network to remove the endpoint from.
+     * @param dimension the dimension identifier (e.g. "<code>minecraft:overworld</code>") with the wireless network to remove the endpoint from.
      */
-    void leaveWirelessNetwork(WirelessEndpoint endpoint, String dimension);
+    @SuppressWarnings("unused")
+    void leaveWirelessNetwork(WirelessEndpoint endpoint, ResourceKey<Level> dimension);
 
     /**
      * Sends a packet via the wireless network.
@@ -126,7 +129,7 @@ public interface NetworkAPI {
     /**
      * Factory function for creating new nodes.
      * <br>
-     * Use this to create a node for your environment (e.g. tile entity). This
+     * Use this to create a node for your environment (e.g. block entity). This
      * will return a builder that can be used to further specialize the node,
      * making it either a component node (for callbacks), a connector node
      * (for power interaction) or both.

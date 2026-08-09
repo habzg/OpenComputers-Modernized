@@ -3,17 +3,13 @@ package li.cil.oc.core.impl.server.component;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
-import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.EnvironmentHost;
-import li.cil.oc.core.impl.Settings;
 import li.cil.oc.core.impl.util.BlockPosition;
 import li.cil.oc.core.util.ResultWrapper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.PushReaction;
 
@@ -32,30 +28,23 @@ public abstract class UpgradeStickyPiston extends UpgradePiston {
         Direction side = pushDirection(args, 0);
         BlockPosition hostPos = pushOrigin(side);
         var blockPos = new BlockPos(hostPos.x(), hostPos.y(), hostPos.z());
-        if (!((Connector) node).tryChangeBuffer(-Settings.get().pistonCost)) {
-            return ResultWrapper.result(false, "not enough energy");
+        BlockPos frontPos = blockPos.relative(side);
+        BlockState frontState = host.level().getBlockState(frontPos);
+        if (!frontState.isAir()) {
+            if (frontState.getPistonPushReaction() == PushReaction.DESTROY) {
+                host.level().destroyBlock(frontPos, true);
+            } else {
+                return ResultWrapper.result(false, "path is obstructed");
+            }
         }
-        if (pullBlock(host.level(), blockPos, side)) {
+        if (movePiston(host.level(), blockPos, side, false)) {
             host.level().playSeededSound(null, host.xPosition(), host.yPosition(), host.zPosition(),
                     SoundEvents.PISTON_CONTRACT, SoundSource.BLOCKS, 0.5f,
                     host.level().random.nextFloat() * 0.25f + 0.6f, host.level().random.nextLong());
-            context.pause(0.5);
+            context.pause(0.05);
             return ResultWrapper.result(true);
         }
         return ResultWrapper.result(false, "move failed");
-    }
-
-    private static boolean pullBlock(Level level, BlockPos hostPos, Direction side) {
-        BlockPos frontPos = hostPos.relative(side);
-        BlockState frontState = level.getBlockState(frontPos);
-        if (frontState.isAir()) return false;
-        PushReaction reaction = frontState.getPistonPushReaction();
-        if (reaction == PushReaction.BLOCK || reaction == PushReaction.IGNORE) return false;
-        BlockState targetState = level.getBlockState(hostPos);
-        if (!targetState.isAir()) return false;
-        level.setBlock(hostPos, frontState, 2);
-        level.setBlock(frontPos, Blocks.AIR.defaultBlockState(), 2 | 1024);
-        return true;
     }
 
     public static class Drone extends UpgradeStickyPiston {

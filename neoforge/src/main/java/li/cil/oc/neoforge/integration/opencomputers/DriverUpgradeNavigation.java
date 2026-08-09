@@ -7,6 +7,7 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Slot;
 import li.cil.oc.core.common.Tier;
+import li.cil.oc.core.impl.integration.opencomputers.Item;
 import net.minecraft.world.item.ItemStack;
 
 @SuppressWarnings("unused")
@@ -20,7 +21,7 @@ public final class DriverUpgradeNavigation extends Item implements HostAware {
     public li.cil.oc.api.network.ManagedEnvironment createEnvironment(ItemStack stack, EnvironmentHost host) {
         if (host.level() != null && host.level().isClientSide()) return null;
         if (host instanceof Rotatable) {
-            return new li.cil.oc.neoforge.server.component.UpgradeNavigation(host);
+            return new li.cil.oc.core.impl.server.component.UpgradeNavigation(host);
         }
         return null;
     }
@@ -41,7 +42,7 @@ public final class DriverUpgradeNavigation extends Item implements HostAware {
         @Override
         public Class<?> getEnvironment(ItemStack stack) {
             if (INSTANCE.worksWith(stack)) {
-                return li.cil.oc.neoforge.server.component.UpgradeNavigation.class;
+                return li.cil.oc.core.impl.server.component.UpgradeNavigation.class;
             }
             return null;
         }

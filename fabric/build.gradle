@@ -1,0 +1,150 @@
+plugins {
+    id 'fabric-loom' version "${loom_version}"
+}
+
+base {
+    archivesName = mod_id + "-fabric"
+}
+
+loom {
+    def aw = project.file("src/main/resources/${mod_id}.accesswidener")
+    if (aw.exists()) {
+        accessWidenerPath.set(aw)
+    }
+
+    runs {
+        client {
+            client()
+            setConfigName('Fabric Client')
+            ideConfigGenerated(true)
+            runDir('runs/client')
+            programArgs(["--username", "Dev", "--uuid", "380df991-f603-344c-a090-369bad2a924a"])
+        }
+        client2 {
+            client()
+            setConfigName('Fabric Client 2')
+            ideConfigGenerated(true)
+            runDir('runs/client2')
+            programArgs(["--username", "Player", "--uuid", "a01e3843-e521-3998-958a-f459800e4d11"])
+        }
+        server {
+            server()
+            setConfigName('Fabric Server')
+            ideConfigGenerated(true)
+            runDir('runs/server')
+        }
+    }
+}
+
+configurations {
+    commonResources { canBeResolved = true; canBeConsumed = false }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings loom.layered() {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-${parchment_minecraft_version}:${parchment_mappings_version}@zip")
+    }
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+    modCompileOnly("teamreborn:energy:4.1.0")
+    modRuntimeOnly("teamreborn:energy:4.1.0")
+
+    compileOnly(project(':api'))
+    compileOnly(project(':core-api'))
+    compileOnly(project(':core'))
+
+    compileOnly("li.cil.repack:OC-JNLua:${jnlua_version}")
+    compileOnly("dev.ryanhcode.sable-companion:sable-companion-common-${minecraft_version}:${sable_companion_version}")
+    modCompileOnly("cc.tweaked:cc-tweaked-${minecraft_version}-fabric-api:${cc_version}")
+    modImplementation("com.refinedmods.refinedstorage:refinedstorage-fabric:${rs2_version}")
+    modCompileOnly("maven.modrinth:tis3d:MC1.21.1-fabric-${tis3d_version}")
+    modCompileOnly("dev.architectury:architectury-fabric:${architectury_version}")
+    modRuntimeOnly("maven.modrinth:tis3d:MC1.21.1-fabric-${tis3d_version}")
+    modRuntimeOnly("dev.architectury:architectury-fabric:${architectury_version}")
+    modRuntimeOnly("maven.modrinth:markdownmanual:MC1.21.1-fabric-${markdownmanual_version}")
+    modRuntimeOnly("maven.modrinth:forge-config-api-port:${forgeconfigapiport_version}")
+    modRuntimeOnly("cc.tweaked:cc-tweaked-${minecraft_version}-fabric:${cc_version}")
+    modCompileOnly("mezz.jei:jei-${minecraft_version}-fabric-api:${jei_version}")
+    modRuntimeOnly("mezz.jei:jei-${minecraft_version}-fabric:${jei_version}")
+    modCompileOnly("me.shedaniel:RoughlyEnoughItems-api-fabric:${rei_version}")
+    modCompileOnly("me.shedaniel:RoughlyEnoughItems-default-plugin-fabric:${rei_version}")
+    modRuntimeOnly("me.shedaniel:RoughlyEnoughItems-fabric:${rei_version}")
+    modCompileOnly("mcp.mobius.waila:wthit-api:fabric-${wthit_version}")
+    modRuntimeOnly("mcp.mobius.waila:wthit:fabric-${wthit_version}")
+    modCompileOnly("dev.emi:emi-fabric:${emi_version}+${minecraft_version}:api")
+    modLocalRuntime("dev.emi:emi-fabric:${emi_version}+${minecraft_version}")
+    modImplementation("maven.modrinth:jade:${jade_version}+fabric")
+    implementation files(rootProject.tasks.named('relocateTypesafe'))
+    implementation("li.cil.repack:OC-LuaJ:${luaj_version}")
+    implementation("li.cil.repack:OC-JNLua-Natives:${jnlua_natives_version}")
+
+    commonResources(project(path: ':core-api', configuration: 'commonResources'))
+    commonResources(project(path: ':core', configuration: 'commonResources'))
+    commonResources(project(path: ':api', configuration: 'commonResources'))
+}
+
+def embeddedConfig = configurations.create('embedded') {
+    canBeResolved = true
+    canBeConsumed = false
+}
+dependencies {
+    embedded("li.cil.repack:OC-JNLua:${jnlua_version}")
+    embedded("li.cil.repack:OC-LuaJ:${luaj_version}")
+    embedded("li.cil.repack:OC-JNLua-Natives:${jnlua_natives_version}")
+    embedded files(rootProject.tasks.named('relocateTypesafe'))
+}
+def embeddedDir = layout.buildDirectory.dir('embedded')
+def extractEmbedded = tasks.register('extractEmbedded', Copy) {
+    dependsOn(rootProject.tasks.named('relocateTypesafe'))
+    doFirst {
+        delete embeddedDir
+    }
+    from({ embeddedConfig.collect { zipTree(it) } }) {
+        exclude 'META-INF/**'
+        exclude '.keep'
+    }
+    into embeddedDir
+}
+sourceSets.main.output.dir(['builtBy': extractEmbedded], embeddedDir)
+sourceSets.main.java.srcDirs += "${rootProject.projectDir}/core/src/main/java"
+sourceSets.main.java.srcDirs += "${rootProject.projectDir}/api/src/main/java"
+sourceSets.main.java.srcDirs += "${rootProject.projectDir}/core-api/src/main/java"
+sourceSets.main.java.srcDirs += "${rootProject.projectDir}/fabric-api/src/main/java"
+sourceSets.main.java.srcDirs += file("${rootProject.projectDir}/core-api/build/generated/sources/tags/java/main")
+
+tasks.named('compileJava', JavaCompile) {
+    dependsOn(':core-api:generateTags')
+    dependsOn(':api:compileJava')
+    dependsOn(':core-api:compileJava')
+    dependsOn(':core:compileJava')
+    dependsOn(':fabric-api:compileJava')
+}
+
+processResources {
+    dependsOn(configurations.commonResources)
+    from(configurations.commonResources)
+    filesMatching("application.conf") {
+        filter { line ->
+            line.replace("@version@", project.findProperty("mod_version") ?: "0.0.0")
+        }
+    }
+}
+
+var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
+    var replaceProperties = [
+            minecraft_version      : minecraft_version,
+            loader_version         : loader_version,
+            fabric_api_version     : fabric_api_version,
+            mod_id                 : mod_id,
+            mod_name               : mod_name,
+            mod_license            : mod_license,
+            mod_version            : mod_version,
+    ]
+    inputs.properties replaceProperties
+    expand replaceProperties
+    from "src/main/templates"
+    into "build/generated/sources/modMetadata"
+}
+sourceSets.main.resources.srcDir generateModMetadata

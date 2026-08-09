@@ -1,13 +1,11 @@
 package li.cil.oc.core.server.network;
 
-import li.cil.oc.api.network.Packet;
-
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
+import li.cil.oc.api.network.Packet;
 
 public final class QuantumNetwork {
     private static final Map<String, Map<QuantumNode, Boolean>> tunnels = new HashMap<>();

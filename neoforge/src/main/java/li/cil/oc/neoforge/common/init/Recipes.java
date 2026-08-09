@@ -1,15 +1,17 @@
 package li.cil.oc.neoforge.common.init;
 
 import li.cil.oc.core.impl.common.recipe.ColorizeRecipe;
+import li.cil.oc.core.impl.common.recipe.ColorizeRecipeSerializer;
 import li.cil.oc.core.impl.common.recipe.DecolorizeRecipe;
+import li.cil.oc.core.impl.common.recipe.DecolorizeRecipeSerializer;
+import li.cil.oc.core.impl.common.recipe.ExtendedShapedRecipe;
+import li.cil.oc.core.impl.common.recipe.ExtendedShapelessOreRecipe;
+import li.cil.oc.core.impl.common.recipe.LootDiskCyclingRecipe;
+import li.cil.oc.core.impl.common.recipe.LuaBiosRecipe;
+import li.cil.oc.core.impl.common.recipe.OPPMRecipe;
+import li.cil.oc.core.impl.common.recipe.OpenOSRecipe;
 import li.cil.oc.neoforge.OpenComputers;
-import li.cil.oc.neoforge.common.recipe.ColorizeRecipeSerializer;
-import li.cil.oc.neoforge.common.recipe.DecolorizeRecipeSerializer;
-import li.cil.oc.neoforge.common.recipe.ExtendedShapelessOreRecipe;
-import li.cil.oc.neoforge.common.recipe.LootDiskCyclingRecipe;
-import li.cil.oc.neoforge.common.recipe.LuaBiosRecipe;
-import li.cil.oc.neoforge.common.recipe.OPPMRecipe;
-import li.cil.oc.neoforge.common.recipe.OpenOSRecipe;
+import li.cil.oc.neoforge.common.recipe.ExtendedRecipe;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -47,9 +49,14 @@ public final class Recipes {
     public static final DeferredHolder<RecipeSerializer<?>, ExtendedShapelessOreRecipe.Serializer> SHAPELESS =
             RECIPE_SERIALIZERS.register("shapeless", () -> ExtendedShapelessOreRecipe.Serializer.INSTANCE);
 
+    @SuppressWarnings("unused")
+    public static final DeferredHolder<RecipeSerializer<?>, ExtendedShapedRecipe.Serializer> SHAPED =
+            RECIPE_SERIALIZERS.register("shaped", () -> ExtendedShapedRecipe.Serializer.INSTANCE);
+
     static {
         ColorizeRecipe.setSerializer(ColorizeRecipeSerializer.INSTANCE);
         DecolorizeRecipe.setSerializer(DecolorizeRecipeSerializer.INSTANCE);
+        ExtendedRecipe.init();
     }
 
     private Recipes() {

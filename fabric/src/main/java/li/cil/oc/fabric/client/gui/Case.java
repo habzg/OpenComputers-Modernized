@@ -1,0 +1,71 @@
+package li.cil.oc.fabric.client.gui;
+
+import java.util.ArrayList;
+import java.util.List;
+import li.cil.oc.core.impl.client.Textures;
+import li.cil.oc.core.impl.client.gui.DynamicGuiContainer;
+import li.cil.oc.core.impl.client.gui.ImageButton;
+import li.cil.oc.fabric.client.PacketSender;
+import li.cil.oc.fabric.common.init.Menus;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Inventory;
+import org.jetbrains.annotations.NotNull;
+
+public class Case extends DynamicGuiContainer<li.cil.oc.core.impl.common.container.Case> {
+    public final li.cil.oc.core.impl.common.blockentity.Case computer;
+    private ImageButton powerButton;
+
+    @SuppressWarnings("unused")
+    public Case(Inventory playerInventory, li.cil.oc.core.impl.common.blockentity.Case computer) {
+        super(new li.cil.oc.core.impl.common.container.Case(Menus.CASE, 0, playerInventory, computer));
+        this.computer = computer;
+    }
+
+    public Case(li.cil.oc.core.impl.common.container.Case container, Inventory inv, Component title) {
+        super(container, inv, title);
+        this.computer = (li.cil.oc.core.impl.common.blockentity.Case) container.otherInventory;
+    }
+
+    @Override
+    public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float dt) {
+        powerButton.toggled = computer.isRunning();
+        super.render(guiGraphics, mouseX, mouseY, dt);
+    }
+
+    @Override
+    public void init() {
+        super.init();
+        powerButton = new ImageButton(0, leftPos + 70, topPos + 33, 18, 18, Textures.guiButtonPower, true);
+        addRenderableWidget(powerButton);
+        powerButton.setPressHandler(this::actionPerformed);
+    }
+
+    protected void actionPerformed(AbstractWidget button) {
+        if (button == powerButton) {
+            PacketSender.sendComputerPower(computer, !computer.isRunning());
+        }
+    }
+
+    @SuppressWarnings("unused")
+    @Override
+    protected void drawSecondaryForegroundLayer(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        super.drawSecondaryForegroundLayer(guiGraphics, mouseX, mouseY);
+        guiGraphics.drawString(font, Component.translatable(computer.getInventoryName()).getString(), 8, 6, 0x404040, false);
+        if (powerButton.isMouseOver(mouseX, mouseY)) {
+            List<Component> tooltip = new ArrayList<>();
+            for (String line : (computer.isRunning() ?
+                    Component.translatable("gui.opencomputers.robot.turnoff").getString() : Component.translatable("gui.opencomputers.robot.turnon").getString()).split("\n")) {
+                tooltip.add(Component.literal(line));
+            }
+            guiGraphics.renderTooltip(font, tooltip, java.util.Optional.empty(), mouseX - leftPos, mouseY - topPos);
+        }
+    }
+
+    @SuppressWarnings("unused")
+    @Override
+    protected void drawSecondaryBackgroundLayer(GuiGraphics guiGraphics) {
+        guiGraphics.blit(Textures.guiComputer, leftPos, topPos, 0, 0, imageWidth, imageHeight, 256, 256);
+    }
+}

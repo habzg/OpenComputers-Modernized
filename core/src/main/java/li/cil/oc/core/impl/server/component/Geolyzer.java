@@ -4,7 +4,7 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.core.impl.common.entity.Drone;
 import li.cil.oc.core.impl.common.item.TabletWrapper;
-import li.cil.oc.core.impl.common.tileentity.Microcontroller;
+import li.cil.oc.core.impl.common.blockentity.Microcontroller;
 import li.cil.oc.core.impl.util.BlockPosition;
 import li.cil.oc.core.impl.util.ExtendedArguments;
 import li.cil.oc.core.impl.util.GeolyzerHostHelper;

@@ -20,23 +20,14 @@ public abstract class RedstoneAware extends SimpleBlock {
     }
 
     @Override
-    public boolean isSignalSource(@NotNull BlockState state) {
+    public boolean isSignalSource(@NotNull BlockState ignoredState) {
         return true;
     }
 
     @Override
-    public boolean canConnectRedstone(@NotNull BlockState state, BlockGetter world, @NotNull BlockPos pos, Direction side) {
+    public int getSignal(@NotNull BlockState ignoredState, BlockGetter world, @NotNull BlockPos pos, @NotNull Direction side) {
         BlockEntity te = world.getBlockEntity(pos);
-        if (te instanceof li.cil.oc.core.impl.common.tileentity.traits.RedstoneAware redstone) {
-            return redstone.isOutputEnabled();
-        }
-        return false;
-    }
-
-    @Override
-    public int getSignal(@NotNull BlockState state, BlockGetter world, @NotNull BlockPos pos, @NotNull Direction side) {
-        BlockEntity te = world.getBlockEntity(pos);
-        if (te instanceof li.cil.oc.core.impl.common.tileentity.traits.RedstoneAware redstone) {
+        if (te instanceof li.cil.oc.core.impl.common.blockentity.traits.RedstoneAware redstone) {
             return Math.max(0, redstone.getOutput(side.getOpposite()));
         }
         return 0;
@@ -50,8 +41,17 @@ public abstract class RedstoneAware extends SimpleBlock {
     @Override
     public void neighborChanged(@NotNull BlockState state, Level world, @NotNull BlockPos pos, @NotNull Block block, @NotNull BlockPos fromPos, boolean isMoving) {
         BlockEntity te = world.getBlockEntity(pos);
-        if (te instanceof li.cil.oc.core.impl.common.tileentity.traits.RedstoneAware redstone) {
+        if (te instanceof li.cil.oc.core.impl.common.blockentity.traits.RedstoneAware redstone) {
             if (!world.isClientSide) redstone.checkRedstoneInputChanged();
         }
+    }
+
+    @Override
+    public boolean canConnectRedstone(@NotNull BlockState ignoredState, BlockGetter world, @NotNull BlockPos pos, Direction ignoredSide) {
+        BlockEntity te = world.getBlockEntity(pos);
+        if (te instanceof li.cil.oc.core.impl.common.blockentity.traits.RedstoneAware redstone) {
+            return redstone.isOutputEnabled();
+        }
+        return false;
     }
 }

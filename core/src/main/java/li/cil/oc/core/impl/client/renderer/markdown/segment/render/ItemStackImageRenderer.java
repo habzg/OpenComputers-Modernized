@@ -1,12 +1,7 @@
 package li.cil.oc.core.impl.client.renderer.markdown.segment.render;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import li.cil.oc.api.manual.ImageRenderer;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
 
 public class ItemStackImageRenderer implements ImageRenderer {
@@ -34,22 +29,16 @@ public class ItemStackImageRenderer implements ImageRenderer {
     }
 
     @Override
-    public void render(PoseStack poseStack, MultiBufferSource bufferSource, int mouseX, int mouseY) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY) {
         if (stacks.length == 0) return;
         int index = (int) ((System.currentTimeMillis() % (CYCLE_SPEED * stacks.length)) / CYCLE_SPEED);
         var stack = stacks[index];
         if (stack.isEmpty()) return;
 
-        var mc = Minecraft.getInstance();
-        var itemRenderer = mc.getItemRenderer();
-
-        poseStack.pushPose();
-        poseStack.translate(getWidth() / 2f, getHeight() / 2f, 150);
-        poseStack.scale((float) getWidth(), (float) -getHeight(), (float) getWidth());
-
-        var model = itemRenderer.getModel(stack, mc.level, null, 0);
-        itemRenderer.render(stack, ItemDisplayContext.GUI, false, poseStack, bufferSource, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, model);
-
-        poseStack.popPose();
+        graphics.pose().pushPose();
+        graphics.pose().translate(0, 0, 150);
+        graphics.pose().scale(2f, 2f, 2f);
+        graphics.renderItem(stack, 0, 0);
+        graphics.pose().popPose();
     }
 }

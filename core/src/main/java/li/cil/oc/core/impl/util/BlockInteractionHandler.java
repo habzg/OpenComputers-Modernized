@@ -7,7 +7,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
 public interface BlockInteractionHandler {
-    Player getFakePlayer(Level level, BlockPosition pos);
+    Player getFakePlayer(Level level, BlockPosition ignoredPos);
 
     boolean mayInteract(Level level, BlockPosition pos, Direction face);
 

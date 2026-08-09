@@ -1,9 +1,8 @@
 package li.cil.oc.core.server.component;
 
+import java.util.Map;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.core.Constants;
-
-import java.util.Map;
 
 @SuppressWarnings("unused")
 public class UpgradeInventoryControllerBase {

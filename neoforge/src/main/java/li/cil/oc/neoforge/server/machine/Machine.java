@@ -1,17 +1,15 @@
 package li.cil.oc.neoforge.server.machine;
 
+import java.util.function.BooleanSupplier;
 import li.cil.oc.api.detail.MachineAPI;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.core.impl.common.PacketSender;
-import li.cil.oc.core.impl.common.tileentity.traits.Computer;
+import li.cil.oc.core.impl.common.blockentity.traits.Computer;
 import li.cil.oc.core.impl.server.machine.MachineBase;
 import li.cil.oc.neoforge.common.EventHandler;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
-
-
-import java.util.function.BooleanSupplier;
 
 public class Machine extends MachineBase {
     private static BooleanSupplier gamePausedCheck = () -> false;

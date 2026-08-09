@@ -5,11 +5,13 @@ import codechicken.multipart.api.PartConverter;
 import codechicken.multipart.api.SimpleMultipartType;
 import codechicken.multipart.api.part.MultiPart;
 import codechicken.multipart.util.MultipartPlaceContext;
+import java.util.Collection;
+import java.util.Collections;
 import li.cil.oc.api.Items;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
-import li.cil.oc.core.impl.common.tileentity.Cable;
-import li.cil.oc.core.impl.common.tileentity.Print;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.common.blockentity.Cable;
+import li.cil.oc.core.impl.common.blockentity.Print;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
@@ -21,16 +23,13 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
-import java.util.Collections;
-
 @SuppressWarnings("unused")
 public final class MultipartRegistrations {
     private static final DeferredRegister<MultipartType<?>> TYPES =
-            DeferredRegister.create(MultipartType.MULTIPART_TYPES, Settings.resourceDomain);
+            DeferredRegister.create(MultipartType.MULTIPART_TYPES, OCSettings.resourceDomain);
 
     private static final DeferredRegister<PartConverter> CONVERTERS =
-            DeferredRegister.create(PartConverter.PART_CONVERTERS, Settings.resourceDomain);
+            DeferredRegister.create(PartConverter.PART_CONVERTERS, OCSettings.resourceDomain);
 
     public static final DeferredHolder<MultipartType<?>, MultipartType<CablePart>> CABLE_TYPE =
             TYPES.register("cable", () -> new SimpleMultipartType<>(client -> new CablePart()));

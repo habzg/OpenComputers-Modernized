@@ -1,5 +1,9 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.regex.Pattern;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.internal.TextBuffer;
@@ -11,8 +15,9 @@ import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.component.GpuTextBuffer;
 import li.cil.oc.core.impl.common.component.traits.VideoRamRasterizer;
 import li.cil.oc.core.impl.util.PackedColor;
@@ -24,12 +29,7 @@ import net.minecraft.nbt.ListTag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.regex.Pattern;
-
-public class GraphicsCardBase extends li.cil.oc.api.prefab.ManagedEnvironment implements DeviceInfo {
+public class GraphicsCardBase extends AbstractManagedEnvironment implements DeviceInfo {
     private static final Logger LOGGER = LoggerFactory.getLogger(GraphicsCardBase.class);
     public final int tier;
     public final Connector node = Network.newNode(this, Visibility.Neighbors)
@@ -57,10 +57,10 @@ public class GraphicsCardBase extends li.cil.oc.api.prefab.ManagedEnvironment im
 
     public GraphicsCardBase(int tier) {
         this.tier = tier;
-        this.maxResolution = Settings.screenResolutionsByTier[tier];
-        this.maxDepth = Settings.screenDepthsByTier[tier];
-        this.bitbltCost = Settings.get().bitbltCost * Math.pow(2, tier);
-        this.totalVRAM = (maxResolution[0] * maxResolution[1]) * Settings.get().vramSizes[Math.clamp(tier, 0, 2)];
+        this.maxResolution = OCSettings.screenResolutionsByTier[tier];
+        this.maxDepth = OCSettings.screenDepthsByTier[tier];
+        this.bitbltCost = OCSettings.get().bitbltCost * Math.pow(2, tier);
+        this.totalVRAM = (maxResolution[0] * maxResolution[1]) * OCSettings.get().vramSizes[Math.clamp(tier, 0, 2)];
 
         deviceInfo = Map.of(DeviceAttribute.Class, DeviceClass.Display, DeviceAttribute.Description, "Graphics controller", DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor, DeviceAttribute.Product, "MPG" + ((tier + 1) * 1000) + " GTZ", DeviceAttribute.Capacity, capacityInfo(), DeviceAttribute.Width, widthInfo(), DeviceAttribute.Clock, clockInfo());
         setNode(this.node);
@@ -181,15 +181,15 @@ public class GraphicsCardBase extends li.cil.oc.api.prefab.ManagedEnvironment im
     }
 
     private double determineBitbltEnergyCost(TextBuffer dst) {
-        return dst instanceof GpuTextBuffer ? 0 : Settings.get().gpuCopyCost / 15;
+        return dst instanceof GpuTextBuffer ? 0 : OCSettings.get().gpuCopyCost / 15;
     }
 
-    @Callback(direct = true, doc = "function():number -- returns the index of the currently selected buffer.")
+    @Callback(direct = true, doc = "function(): number -- returns the index of the currently selected buffer. 0 is reserved for the screen. Can return 0 even when there is no screen")
     public Object[] getActiveBuffer(Context context, Arguments args) {
         return ResultWrapper.result((double) bufferIndex);
     }
 
-    @Callback(direct = true, doc = "function(index:number):number -- Sets the active buffer. Returns the previously active buffer index.")
+    @Callback(direct = true, doc = "function(index: number): number -- Sets the active buffer to `index`. 1 is the first vram buffer and 0 is reserved for the screen. returns nil for invalid index (0 is always valid)")
     public Object[] setActiveBuffer(Context context, Arguments args) {
         int previousIndex = bufferIndex;
         int newIndex = args.checkInteger(0);
@@ -203,22 +203,25 @@ public class GraphicsCardBase extends li.cil.oc.api.prefab.ManagedEnvironment im
         return ResultWrapper.result((double) previousIndex);
     }
 
-    @Callback(direct = true, doc = "function():number[] -- Returns array of indexes of allocated buffers.")
+    @Callback(direct = true, doc = "function(): number -- Returns an array of indexes of the allocated buffers")
     public Object[] buffers(Context context, Arguments args) {
         return ResultWrapper.result((Object) bufferIndexes());
     }
 
-    @Callback(direct = true, doc = "function([width:number, height:number]):number -- allocates a new buffer.")
+    @Callback(direct = true, doc = "function([width: number, height: number]): number -- allocates a new buffer with dimensions width*height (defaults to max resolution) and appends it to the buffer list. Returns the index of the new buffer and returns nil with an error message on failure. A buffer can be allocated even when there is no screen bound to this gpu. Index 0 is always reserved for the screen and thus the lowest index of an allocated buffer is always 1.")
     public Object[] allocateBuffer(Context context, Arguments args) {
         int width = args.optInteger(0, maxResolution[0]);
         int height = args.optInteger(1, maxResolution[1]);
-        int size = width * height;
         if (width <= 0 || height <= 0)
             return ResultWrapper.result(null, "invalid page dimensions: must be greater than zero");
-        if (size > (totalVRAM - calculateUsedMemory()))
+        long size = (long) width * (long) height;
+        if (size > (long)(totalVRAM - calculateUsedMemory()))
             return ResultWrapper.result(null, "not enough video memory");
+        if (node == null) {
+            return ResultWrapper.result(null, "graphics card appears disconnected");
+        }
 
-        PackedColor.ColorFormat format = PackedColor.Depth.format(Settings.screenDepthsByTier[tier]);
+        PackedColor.ColorFormat format = PackedColor.Depth.format(OCSettings.screenDepthsByTier[tier]);
         li.cil.oc.core.impl.util.TextBuffer buffer = new li.cil.oc.core.impl.util.TextBuffer(width, height, format);
         int idx = nextAvailableBufferIndex();
         GpuTextBuffer page = GpuTextBuffer.wrap(node.address(), idx, buffer);
@@ -226,14 +229,14 @@ public class GraphicsCardBase extends li.cil.oc.api.prefab.ManagedEnvironment im
         return ResultWrapper.result((double) page.id);
     }
 
-    @Callback(direct = true, doc = "function(index:number):boolean -- Closes buffer at index. Returns true if a buffer closed. If the active buffer is closed, index moves to 0.")
+    @Callback(direct = true, doc = "function(index: number): boolean -- Closes buffer at `index`. Returns true if a buffer closed. If the current buffer is closed, index moves to 0")
     public Object[] freeBuffer(Context context, Arguments args) {
         int index = args.optInteger(0, bufferIndex);
         if (removeBuffers(new int[]{index}) == 1) return ResultWrapper.result(true);
         return ResultWrapper.result(null, "no buffer at index");
     }
 
-    @Callback(direct = true, doc = "function():number -- Closes all buffers and returns the count.")
+    @Callback(direct = true, doc = "function(): number -- Closes all buffers and returns the count. If the active buffer is closed, index moves to 0")
     public Object[] freeAllBuffers(Context context, Arguments args) {
         int count = bufferIndexes().length;
         removeAllBuffers();
@@ -241,23 +244,23 @@ public class GraphicsCardBase extends li.cil.oc.api.prefab.ManagedEnvironment im
         return ResultWrapper.result((double) count);
     }
 
-    @Callback(direct = true, doc = "function():number -- Returns the total VRAM size.")
+    @Callback(direct = true, doc = "function(): number -- returns the total memory size of the gpu vram. This does not include the screen.")
     public Object[] totalMemory(Context context, Arguments args) {
         return ResultWrapper.result(totalVRAM);
     }
 
-    @Callback(direct = true, doc = "function():number -- Returns the free VRAM not allocated to buffers.")
+    @Callback(direct = true, doc = "function(): number -- returns the total free memory not allocated to buffers. This does not include the screen.")
     public Object[] freeMemory(Context context, Arguments args) {
         return ResultWrapper.result(totalVRAM - calculateUsedMemory());
     }
 
-    @Callback(direct = true, doc = "function(index:number):number, number -- Returns the buffer size at index. Returns screen resolution for index 0.")
+    @Callback(direct = true, doc = "function(index: number): number, number -- returns the buffer size at index. Returns the screen resolution for index 0. returns nil for invalid indexes")
     public Object[] getBufferSize(Context context, Arguments args) {
         int idx = args.optInteger(0, bufferIndex);
         return screen(idx, s -> ResultWrapper.result((double) s.getWidth(), (double) s.getHeight()));
     }
 
-    @Callback(direct = true, doc = "function([dst:number, col:number, row:number, width:number, height:number, src:number, fromCol:number, fromRow:number]):boolean -- Bitblt from buffer to screen.")
+    @Callback(direct = true, doc = "function([dst: number, col: number, row: number, width: number, height: number, src: number, fromCol: number, fromRow: number]):boolean -- bitblt from buffer to screen. All parameters are optional. Writes to `dst` page in rectangle `x, y, width, height`, defaults to the bound screen and its viewport. Reads data from `src` page at `fx, fy`, default is the active page from position 1, 1")
     public Object[] bitblt(Context context, Arguments args) {
         int dstIdx = args.optInteger(0, 0);
         return screen(dstIdx, dst -> {
@@ -305,7 +308,7 @@ public class GraphicsCardBase extends li.cil.oc.api.prefab.ManagedEnvironment im
         });
     }
 
-    @Callback(doc = "function(address:string[, reset:boolean=true]):boolean -- Binds the GPU to the screen with the specified address.")
+    @Callback(doc = "function(address:string[, reset:boolean=true]):boolean -- Binds the GPU to the screen with the specified address and resets screen settings if `reset` is true.")
     public Object[] bind(Context context, Arguments args) {
         String address = args.checkString(0);
         boolean reset = args.optBoolean(1, true);
@@ -318,9 +321,6 @@ public class GraphicsCardBase extends li.cil.oc.api.prefab.ManagedEnvironment im
             screenInstance = (TextBuffer) screenNode.host();
             return screen(s -> {
                 if (reset) {
-                    if (s instanceof VideoRamRasterizer rasterizer) {
-                        rasterizer.removeAllBuffers();
-                    }
                     int gmw = maxResolution[0];
                     int gmh = maxResolution[1];
                     int smw = s.getMaximumWidth();
@@ -329,6 +329,9 @@ public class GraphicsCardBase extends li.cil.oc.api.prefab.ManagedEnvironment im
                     s.setColorDepth(TextBuffer.ColorDepth.values()[Math.min(maxDepth.ordinal(), s.getMaximumColorDepth().ordinal())]);
                     s.setForegroundColor(0xFFFFFF);
                     s.setBackgroundColor(0x000000);
+                    if (s instanceof VideoRamRasterizer rasterizer) {
+                        rasterizer.removeAllBuffers();
+                    }
                 } else {
                     context.pause(0);
                 }
@@ -338,17 +341,17 @@ public class GraphicsCardBase extends li.cil.oc.api.prefab.ManagedEnvironment im
         return ResultWrapper.result(null, "not a screen");
     }
 
-    @Callback(direct = true, doc = "function():string -- Gets the address of the bound screen.")
+    @Callback(direct = true, doc = "function():string -- Get the address of the screen the GPU is currently bound to.")
     public Object[] getScreen(Context context, Arguments args) {
         return screen(0, s -> ResultWrapper.result(s.node().address()));
     }
 
-    @Callback(direct = true, doc = "function():number, boolean -- Gets current background color and whether from palette.")
+    @Callback(direct = true, doc = "function():number, boolean -- Get the current background color and whether it's from the palette or not.")
     public Object[] getBackground(Context context, Arguments args) {
         return screen(bufferIndex, s -> ResultWrapper.result(s.getBackgroundColor(), s.isBackgroundFromPalette()));
     }
 
-    @Callback(direct = true, doc = "function(value:number[, palette:boolean]):number, number or nil -- Sets the background color.")
+    @Callback(direct = true, doc = "function(value:number[, palette:boolean]):number, number or nil -- Sets the background color to the specified value. Optionally takes an explicit palette index. Returns the old value and if it was from the palette its palette index.")
     public Object[] setBackground(Context context, Arguments args) {
         int color = args.checkInteger(0);
         if (bufferIndex == 0) {
@@ -369,12 +372,12 @@ public class GraphicsCardBase extends li.cil.oc.api.prefab.ManagedEnvironment im
         });
     }
 
-    @Callback(direct = true, doc = "function():number, boolean -- Gets current foreground color and whether from palette.")
+    @Callback(direct = true, doc = "function():number, boolean -- Get the current foreground color and whether it's from the palette or not.")
     public Object[] getForeground(Context context, Arguments args) {
         return screen(bufferIndex, s -> ResultWrapper.result(s.getForegroundColor(), s.isForegroundFromPalette()));
     }
 
-    @Callback(direct = true, doc = "function(value:number[, palette:boolean]):number, number or nil -- Sets the foreground color.")
+    @Callback(direct = true, doc = "function(value:number[, palette:boolean]):number, number or nil -- Sets the foreground color to the specified value. Optionally takes an explicit palette index. Returns the old value and if it was from the palette its palette index.")
     public Object[] setForeground(Context context, Arguments args) {
         int color = args.checkInteger(0);
         if (bufferIndex == 0) {
@@ -395,7 +398,7 @@ public class GraphicsCardBase extends li.cil.oc.api.prefab.ManagedEnvironment im
         });
     }
 
-    @Callback(direct = true, doc = "function(index:number):number -- Gets the palette color at the specified index.")
+    @Callback(direct = true, doc = "function(index:number):number -- Get the palette color at the specified palette index.")
     public Object[] getPaletteColor(Context context, Arguments args) {
         int index = args.checkInteger(0);
         return screen(s -> {
@@ -407,7 +410,7 @@ public class GraphicsCardBase extends li.cil.oc.api.prefab.ManagedEnvironment im
         });
     }
 
-    @Callback(direct = true, doc = "function(index:number, color:number):number -- Sets the palette color at the specified index. Returns the previous value.")
+    @Callback(direct = true, doc = "function(index:number, color:number):number -- Set the palette color at the specified palette index. Returns the previous value.")
     public Object[] setPaletteColor(Context context, Arguments args) {
         int index = args.checkInteger(0);
         int color = args.checkInteger(1);
@@ -431,7 +434,7 @@ public class GraphicsCardBase extends li.cil.oc.api.prefab.ManagedEnvironment im
         return screen(s -> ResultWrapper.result((double) PackedColor.Depth.bits(s.getColorDepth())));
     }
 
-    @Callback(doc = "function(depth:number):number -- Sets the color depth. Returns the previous value.")
+    @Callback(doc = "function(depth:number):number -- Set the color depth. Returns the previous value.")
     public Object[] setDepth(Context context, Arguments args) {
         int depth = args.checkInteger(0);
         return screen(s -> {
@@ -450,7 +453,7 @@ public class GraphicsCardBase extends li.cil.oc.api.prefab.ManagedEnvironment im
                 }
                 default -> throw new IllegalArgumentException("unsupported depth");
             }
-            return ResultWrapper.result((double) PackedColor.Depth.bits(oldDepth));
+            return ResultWrapper.result(oldDepth);
         });
     }
 
@@ -459,12 +462,12 @@ public class GraphicsCardBase extends li.cil.oc.api.prefab.ManagedEnvironment im
         return screen(s -> ResultWrapper.result((double) PackedColor.Depth.bits(TextBuffer.ColorDepth.values()[Math.min(maxDepth.ordinal(), s.getMaximumColorDepth().ordinal())])));
     }
 
-    @Callback(direct = true, doc = "function():number, number -- Gets the current screen resolution.")
+    @Callback(direct = true, doc = "function():number, number -- Get the current screen resolution.")
     public Object[] getResolution(Context context, Arguments args) {
         return screen(s -> ResultWrapper.result((double) s.getWidth(), (double) s.getHeight()));
     }
 
-    @Callback(doc = "function(width:number, height:number):boolean -- Sets the screen resolution.")
+    @Callback(doc = "function(width:number, height:number):boolean -- Set the screen resolution. Returns true if the resolution changed.")
     public Object[] setResolution(Context context, Arguments args) {
         int w = args.checkInteger(0);
         int h = args.checkInteger(1);
@@ -478,7 +481,7 @@ public class GraphicsCardBase extends li.cil.oc.api.prefab.ManagedEnvironment im
         });
     }
 
-    @Callback(direct = true, doc = "function():number, number -- Gets the maximum supported resolution.")
+    @Callback(direct = true, doc = "function():number, number -- Get the maximum screen resolution.")
     public Object[] maxResolution(Context context, Arguments args) {
         return screen(s -> {
             int gmw = maxResolution[0];
@@ -489,12 +492,12 @@ public class GraphicsCardBase extends li.cil.oc.api.prefab.ManagedEnvironment im
         });
     }
 
-    @Callback(direct = true, doc = "function():number, number -- Gets the current viewport size.")
+    @Callback(direct = true, doc = "function():number, number -- Get the current viewport resolution.")
     public Object[] getViewport(Context context, Arguments args) {
         return screen(s -> ResultWrapper.result((double) s.getViewportWidth(), (double) s.getViewportHeight()));
     }
 
-    @Callback(doc = "function(width:number, height:number):boolean -- Sets the viewport size.")
+    @Callback(doc = "function(width:number, height:number):boolean -- Set the viewport resolution. Cannot exceed the screen resolution. Returns true if the resolution changed.")
     public Object[] setViewport(Context context, Arguments args) {
         int w = args.checkInteger(0);
         int h = args.checkInteger(1);
@@ -509,7 +512,7 @@ public class GraphicsCardBase extends li.cil.oc.api.prefab.ManagedEnvironment im
         });
     }
 
-    @Callback(direct = true, doc = "function(x:number, y:number):string, number, number, number or nil, number or nil -- Gets the character and colors at the specified position.")
+    @Callback(direct = true, doc = "function(x:number, y:number):string, number, number, number or nil, number or nil -- Get the value displayed on the screen at the specified index, as well as the foreground and background color. If the foreground or background is from the palette, returns the palette indices as fourth and fifth results, else nil, respectively.")
     public Object[] get(Context context, Arguments args) {
         int x = args.checkInteger(0) - 1;
         int y = args.checkInteger(1) - 1;
@@ -538,14 +541,14 @@ public class GraphicsCardBase extends li.cil.oc.api.prefab.ManagedEnvironment im
         });
     }
 
-    @Callback(direct = true, doc = "function(x:number, y:number, value:string[, vertical:boolean]):boolean -- Writes a string to the screen at the specified position.")
+    @Callback(direct = true, doc = "function(x:number, y:number, value:string[, vertical:boolean]):boolean -- Plots a string value to the screen at the specified position. Optionally writes the string vertically.")
     public Object[] set(Context context, Arguments args) {
         int x = args.checkInteger(0) - 1;
         int y = args.checkInteger(1) - 1;
         String value = args.checkString(2);
         boolean vertical = args.optBoolean(3, false);
         return screen(s -> {
-            if (resolveInvokeCosts(bufferIndex, context, setCosts[tier], ExtendedUnicodeHelper.length(value), Settings.get().gpuSetCost)) {
+            if (resolveInvokeCosts(bufferIndex, context, setCosts[tier], ExtendedUnicodeHelper.length(value), OCSettings.get().gpuSetCost)) {
                 s.set(x, y, value, vertical);
                 return ResultWrapper.result(true);
             }
@@ -553,7 +556,7 @@ public class GraphicsCardBase extends li.cil.oc.api.prefab.ManagedEnvironment im
         });
     }
 
-    @Callback(direct = true, doc = "function(x:number, y:number, width:number, height:number, tx:number, ty:number):boolean -- Copies a portion of the screen.")
+    @Callback(direct = true, doc = "function(x:number, y:number, width:number, height:number, tx:number, ty:number):boolean -- Copies a portion of the screen from the specified location with the specified size by the specified translation.")
     public Object[] copy(Context context, Arguments args) {
         int x = args.checkInteger(0) - 1;
         int y = args.checkInteger(1) - 1;
@@ -562,7 +565,7 @@ public class GraphicsCardBase extends li.cil.oc.api.prefab.ManagedEnvironment im
         int tx = args.checkInteger(4);
         int ty = args.checkInteger(5);
         return screen(s -> {
-            if (resolveInvokeCosts(bufferIndex, context, copyCosts[tier], w * h, Settings.get().gpuCopyCost)) {
+            if (resolveInvokeCosts(bufferIndex, context, copyCosts[tier], w * h, OCSettings.get().gpuCopyCost)) {
                 s.copy(x, y, w, h, tx, ty);
                 return ResultWrapper.result(true);
             }
@@ -570,7 +573,7 @@ public class GraphicsCardBase extends li.cil.oc.api.prefab.ManagedEnvironment im
         });
     }
 
-    @Callback(direct = true, doc = "function(x:number, y:number, width:number, height:number, char:string):boolean -- Fills a portion of the screen with the specified character.")
+    @Callback(direct = true, doc = "function(x:number, y:number, width:number, height:number, char:string):boolean -- Fills a portion of the screen at the specified position with the specified size with the specified character.")
     public Object[] fill(Context context, Arguments args) {
         int x = args.checkInteger(0) - 1;
         int y = args.checkInteger(1) - 1;
@@ -580,7 +583,7 @@ public class GraphicsCardBase extends li.cil.oc.api.prefab.ManagedEnvironment im
         if (ExtendedUnicodeHelper.length(value) == 1) {
             return screen(s -> {
                 int c = value.codePointAt(0);
-                double cost = (c == ' ') ? Settings.get().gpuClearCost : Settings.get().gpuFillCost;
+                double cost = (c == ' ') ? OCSettings.get().gpuClearCost : OCSettings.get().gpuFillCost;
                 if (resolveInvokeCosts(bufferIndex, context, fillCosts[tier], w * h, cost)) {
                     s.fill(x, y, w, h, c);
                     return ResultWrapper.result(true);

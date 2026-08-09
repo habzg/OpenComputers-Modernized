@@ -3,7 +3,7 @@ package li.cil.oc.core.impl.common.template;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Tier;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.item.data.MicrocontrollerData;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
@@ -56,9 +56,9 @@ public final class MicrocontrollerTemplate {
             if (!stack.isEmpty()) components.add(stack);
         }
         data.components = components;
-        data.storedEnergy = (int) Settings.get().bufferMicrocontroller;
+        data.storedEnergy = (int) OCSettings.get().bufferMicrocontroller;
         var stack = data.createItemStack();
-        double energy = Settings.get().microcontrollerBaseCost + Template.complexity(inventory, hostClass) * Settings.get().microcontrollerComplexityCost;
+        double energy = OCSettings.get().microcontrollerBaseCost + Template.complexity(inventory, hostClass) * OCSettings.get().microcontrollerComplexityCost;
         return new Object[]{stack, energy};
     }
 

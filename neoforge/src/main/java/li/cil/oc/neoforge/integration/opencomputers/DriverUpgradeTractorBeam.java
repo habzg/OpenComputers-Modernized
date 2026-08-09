@@ -9,6 +9,7 @@ import li.cil.oc.core.common.Slot;
 import li.cil.oc.core.common.Tier;
 import li.cil.oc.core.impl.common.entity.Drone;
 import li.cil.oc.core.impl.common.item.TabletWrapper;
+import li.cil.oc.core.impl.integration.opencomputers.Item;
 import li.cil.oc.core.impl.server.component.UpgradeTractorBeam;
 import net.minecraft.world.item.ItemStack;
 

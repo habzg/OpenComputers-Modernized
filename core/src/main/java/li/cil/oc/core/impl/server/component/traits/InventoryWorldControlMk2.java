@@ -3,7 +3,7 @@ package li.cil.oc.core.impl.server.component.traits;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.BlockPosition;
 import li.cil.oc.core.impl.util.ExtendedArguments;
 import li.cil.oc.core.impl.util.InventoryUtils;
@@ -34,7 +34,7 @@ public interface InventoryWorldControlMk2 extends InventoryAware, WorldAware, Si
                 } else {
                     inventory().setChanged();
                 }
-                context.pause(Settings.get().dropDelay);
+                context.pause(OCSettings.get().dropDelay);
                 return result(true);
             });
         }
@@ -57,7 +57,7 @@ public interface InventoryWorldControlMk2 extends InventoryAware, WorldAware, Si
                     },
                     inv, fromSide, slot, count);
             if (extracted > 0) {
-                context.pause(Settings.get().suckDelay);
+                context.pause(OCSettings.get().suckDelay);
                 return result(extracted);
             }
             return result(false);

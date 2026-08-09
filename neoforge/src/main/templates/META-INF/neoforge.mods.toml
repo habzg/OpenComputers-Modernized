@@ -6,7 +6,7 @@ license = "${mod_license}"
 modId = "${mod_id}"
 version = "${mod_version}"
 displayName = "${mod_name}"
-logoFile = "opencomputers/textures/gui/logo.png"
+logoFile = "assets/opencomputers/textures/gui/logo.png"
 credits = "Inspired by a couple of other mods, most notably ComputerCraft."
 authors = "Florian 'Sangar' Nuecke, Johannes 'Lord Joda' Lohrer"
 description = '''
@@ -15,28 +15,161 @@ This mod adds modular computers and robots that can be programmed in Lua.
 
 [[dependencies.${mod_id}]]
     modId = "neoforge"
-    mandatory = true
+    type = "required"
     versionRange = "${neo_version_range}"
     ordering = "NONE"
     side = "BOTH"
 
 [[dependencies.${mod_id}]]
     modId = "minecraft"
-    mandatory = true
+    type = "required"
     versionRange = "${minecraft_version_range}"
     ordering = "NONE"
     side = "BOTH"
 
 [[dependencies.${mod_id}]]
-    modId = "projectred_transmission"
-    mandatory = false
-    versionRange = "[4.22.0,)"
+    modId = "ae2"
+    type = "optional"
+    versionRange = "[19.2.17,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.${mod_id}]]
+    modId = "appmek"
+    type = "optional"
+    versionRange = "[1.6.3,)"
     ordering = "NONE"
     side = "BOTH"
 
 [[dependencies.${mod_id}]]
     modId = "cb_multipart"
-    mandatory = false
-    versionRange = "[1.21.1-3.5.0,)"
-    ordering = "AFTER"
+    type = "optional"
+    versionRange = "[1.21.1-3.5.0.155,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.${mod_id}]]
+    modId = "computercraft"
+    type = "optional"
+    versionRange = "[1.120.2,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.${mod_id}]]
+    modId = "create"
+    type = "optional"
+    versionRange = "[6.0.10,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.${mod_id}]]
+    modId = "emi"
+    type = "optional"
+    versionRange = "[1.1.24,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.${mod_id}]]
+    modId = "enderio"
+    type = "optional"
+    versionRange = "[8.2.11-beta,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.${mod_id}]]
+    modId = "enderstorage"
+    type = "optional"
+    versionRange = "[1.21.1-2.13.0.191,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.${mod_id}]]
+    modId = "jade"
+    type = "optional"
+    versionRange = "[15.10.6,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.${mod_id}]]
+    modId = "jei"
+    type = "optional"
+    versionRange = "[19.44.0.403,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.${mod_id}]]
+    modId = "mekanism"
+    type = "optional"
+    versionRange = "[10.7.19,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.${mod_id}]]
+    modId = "morered"
+    type = "optional"
+    versionRange = "[6.0.0.3,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.${mod_id}]]
+    modId = "projectred_transmission"
+    type = "optional"
+    versionRange = "[4.23.0,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.${mod_id}]]
+    modId = "rei"
+    type = "optional"
+    versionRange = "[16.0.799,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.${mod_id}]]
+    modId = "rftoolsutility"
+    type = "optional"
+    versionRange = "[1.21-7.0.12,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.${mod_id}]]
+    modId = "refinedstorage"
+    type = "optional"
+    versionRange = "[2.0.9,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.${mod_id}]]
+    modId = "refinedstorage_mekanism_integration"
+    type = "optional"
+    versionRange = "[1.1.1,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.${mod_id}]]
+    modId = "sable"
+    type = "optional"
+    versionRange = "[2.0.5,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.${mod_id}]]
+    modId = "theoneprobe"
+    type = "optional"
+    versionRange = "[1.21_neo-12.0.8,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.${mod_id}]]
+    modId = "tis3d"
+    type = "optional"
+    versionRange = "[1.7.7,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.${mod_id}]]
+    modId = "wthit"
+    type = "optional"
+    versionRange = "[12.10.2,)"
+    ordering = "NONE"
     side = "BOTH"

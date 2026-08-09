@@ -4,8 +4,8 @@ import li.cil.oc.api.internal.MultiTank;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
-import li.cil.oc.api.prefab.ManagedEnvironment;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.BlockPosition;
 import li.cil.oc.core.util.ResultWrapper;
 import net.minecraft.core.BlockPos;
@@ -14,6 +14,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.vehicle.Minecart;
 import net.minecraft.world.item.ItemStack;
@@ -22,7 +23,7 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 
 
-public abstract class AgentBase extends ManagedEnvironment implements
+public abstract class AgentBase extends AbstractManagedEnvironment implements
         li.cil.oc.core.impl.server.component.traits.WorldControl,
         li.cil.oc.core.impl.server.component.traits.InventoryControl,
         li.cil.oc.core.impl.server.component.traits.InventoryWorldControl,
@@ -105,11 +106,28 @@ public abstract class AgentBase extends ManagedEnvironment implements
 
     protected abstract HitResult playerPick(Player player, double range);
 
-    protected abstract void beginConsumeDrops(Entity entity);
+    private java.util.List<ItemEntity> capturedDropsBefore;
 
-    protected abstract void endConsumeDrops(Player player, Entity entity);
+    protected void beginConsumeDrops(Entity entity) {
+        capturedDropsBefore = new java.util.ArrayList<>(
+                entity.level().getEntitiesOfClass(ItemEntity.class, entity.getBoundingBox().inflate(2, 2, 2)));
+    }
 
-    @Callback(doc = "function(side:number[, face:number=side[, sneaky:boolean=false]]):boolean, string -- Perform a 'left click'.")
+    protected void endConsumeDrops(Player player, Entity entity) {
+        if (capturedDropsBefore != null) {
+            var itemsAfter = entity.level().getEntitiesOfClass(ItemEntity.class, entity.getBoundingBox().inflate(2, 2, 2));
+            for (ItemEntity drop : itemsAfter) {
+                if (!capturedDropsBefore.contains(drop) && !drop.isRemoved()) {
+                    ItemStack stack = drop.getItem();
+                    li.cil.oc.core.impl.util.InventoryUtils.addToPlayerInventory(stack, player, false);
+                    drop.discard();
+                }
+            }
+            capturedDropsBefore = null;
+        }
+    }
+
+    @Callback(doc = "function(side:number[, face:number=side[, sneaky:boolean=false]]):boolean, string -- Perform a 'left click' towards the specified side. The `face' allows a more precise click calibration, and is relative to the targeted blockspace.")
     public Object[] swing(Context context, Arguments args) {
         Direction facing = checkSideForAction(args, 0);
         Direction[] sides;
@@ -127,12 +145,13 @@ public abstract class AgentBase extends ManagedEnvironment implements
         }
         boolean sneaky = args.isBoolean(2) && args.checkBoolean(2);
 
+        String reason = null;
         for (Direction side : sides) {
             if (side == null) continue;
             Player player = rotatedPlayer(facing, side);
             setPlayerSneaking(player, sneaky);
 
-            HitResult hit = playerPick(player, Settings.get().swingRange);
+            HitResult hit = playerPick(player, OCSettings.get().swingRange);
             Object[] result;
 
             if (hit.getType() == HitResult.Type.ENTITY) {
@@ -144,7 +163,7 @@ public abstract class AgentBase extends ManagedEnvironment implements
                     }
                 }
                 endConsumeDrops(player, ((EntityHitResult) hit).getEntity());
-                onWorldInteraction(context, Settings.get().swingDelay);
+                onWorldInteraction(context, OCSettings.get().swingDelay);
                 result = ResultWrapper.result(true, "entity");
             } else if (hit.getType() == HitResult.Type.BLOCK) {
                 double breakTime = playerBreakBlock(player, ((BlockHitResult) hit).getBlockPos().getX(), ((BlockHitResult) hit).getBlockPos().getY(), ((BlockHitResult) hit).getBlockPos().getZ(), ((BlockHitResult) hit).getDirection().ordinal());
@@ -159,15 +178,12 @@ public abstract class AgentBase extends ManagedEnvironment implements
                         beginConsumeDrops(closest);
                         playerAttackEntity(player, closest);
                         endConsumeDrops(player, closest);
-                        onWorldInteraction(context, Settings.get().swingDelay);
+                        onWorldInteraction(context, OCSettings.get().swingDelay);
                         result = ResultWrapper.result(true, "entity");
                     } else {
-                        var blockPos = position().offset(facing);
                         var level = agent().level();
-                        BlockPos pos = new BlockPos(blockPos.x(), blockPos.y(), blockPos.z());
-                        if (level != null && level.getBlockState(pos).is(net.minecraft.tags.BlockTags.FIRE)) {
-                            level.destroyBlock(pos, false);
-                            onWorldInteraction(context, Settings.get().swingDelay);
+                        if (level != null && extinguishFire(level, position(), facing)) {
+                            onWorldInteraction(context, OCSettings.get().swingDelay);
                             result = ResultWrapper.result(true, "fire");
                         } else {
                             result = ResultWrapper.result(false, "air");
@@ -178,6 +194,9 @@ public abstract class AgentBase extends ManagedEnvironment implements
             setPlayerSneaking(player, false);
             if (result.length > 0 && result[0] instanceof Boolean && (Boolean) result[0]) {
                 return result;
+            }
+            if (reason == null && result.length > 1 && result[1] instanceof String) {
+                reason = (String) result[1];
             }
         }
 
@@ -192,7 +211,7 @@ public abstract class AgentBase extends ManagedEnvironment implements
             return ResultWrapper.result(ok, "block");
         }
 
-        return ResultWrapper.result(false);
+        return ResultWrapper.result(false, reason);
     }
 
     protected Direction checkSideForFace(Arguments args, Direction facing) {
@@ -203,13 +222,30 @@ public abstract class AgentBase extends ManagedEnvironment implements
         return agent().toGlobal(li.cil.oc.core.impl.util.ExtendedArguments.checkSide(args, 1, allowed));
     }
 
+    private static boolean extinguishFire(net.minecraft.world.level.Level level, BlockPosition base, Direction facing) {
+        BlockPos center = new BlockPos(base.x(), base.y(), base.z()).relative(facing);
+        if (tryExtinguishFire(level, center)) return true;
+        for (Direction d : Direction.values()) {
+            if (tryExtinguishFire(level, center.relative(d))) return true;
+        }
+        return false;
+    }
+
+    private static boolean tryExtinguishFire(net.minecraft.world.level.Level level, BlockPos pos) {
+        if (level.getBlockState(pos).is(net.minecraft.tags.BlockTags.FIRE)) {
+            level.destroyBlock(pos, false);
+            return true;
+        }
+        return false;
+    }
+
     protected abstract boolean playerPlaceBlock(Player player, int slot, int x, int y, int z, int side, float hitX, float hitY, float hitZ);
 
     protected abstract int playerActivateBlockOrUseItem(Player player, int x, int y, int z, int side, float hitX, float hitY, float hitZ, double duration);
 
     protected abstract boolean playerUseEquippedItem(Player player, double duration);
 
-    @Callback(doc = "function(side:number[, face:number=side[, sneaky:boolean=false]]):boolean -- Place a block towards the specified side.")
+    @Callback(doc = "function(side:number[, face:number=side[, sneaky:boolean=false]]):boolean -- Place a block towards the specified side. The `face' allows a more precise click calibration, and is relative to the targeted blockspace.")
     public Object[] place(Context context, Arguments args) {
         Direction facing = checkSideForAction(args, 0);
         Direction[] sides;
@@ -237,8 +273,8 @@ public abstract class AgentBase extends ManagedEnvironment implements
             Player player = rotatedPlayer(facing, side);
             setPlayerSneaking(player, sneaky);
 
-            HitResult hit = playerPick(player, Settings.get().useAndPlaceRange);
-            boolean success;
+            HitResult hit = playerPick(player, OCSettings.get().useAndPlaceRange);
+            boolean success = false;
 
             if (hit.getType() == HitResult.Type.BLOCK) {
                 BlockHitResult blockHit = (BlockHitResult) hit;
@@ -248,31 +284,27 @@ public abstract class AgentBase extends ManagedEnvironment implements
                         (float) (blockHit.getLocation().x - blockHit.getBlockPos().getX()),
                         (float) (blockHit.getLocation().y - blockHit.getBlockPos().getY()),
                         (float) (blockHit.getLocation().z - blockHit.getBlockPos().getZ()));
-            } else {
-                BlockPosition bp = position().offset(facing);
-                var level = agent().level();
-                if (level != null) {
-                    var targetState = level.getBlockState(new BlockPos(bp.x(), bp.y(), bp.z()));
-                    if (targetState.canBeReplaced()) {
-                        Entity closest = playerClosestEntity(player, facing, Entity.class);
-                        if (canPlaceInAir() && closest == null) {
+            } else if (hit.getType() == HitResult.Type.MISS && canPlaceInAir()) {
+                Entity closest = playerClosestEntity(player, facing, Entity.class);
+                if (closest == null) {
+                    BlockPosition bp = position().offset(facing);
+                    var level = agent().level();
+                    if (level != null) {
+                        var targetState = level.getBlockState(new BlockPos(bp.x(), bp.y(), bp.z()));
+                        if (targetState.canBeReplaced()) {
                             success = playerPlaceBlock(player, agent().selectedSlot(),
-                                    bp.x(), bp.y(), bp.z(), Direction.UP.ordinal(),
-                                    0.5f, 1.0f, 0.5f);
-                        } else {
-                            success = false;
+                                    bp.x(), bp.y(), bp.z(), facing.ordinal(),
+                                    0.5f + facing.getStepX() * 0.5f,
+                                    0.5f + facing.getStepY() * 0.5f,
+                                    0.5f + facing.getStepZ() * 0.5f);
                         }
-                    } else {
-                        success = false;
                     }
-                } else {
-                    success = false;
                 }
             }
 
             setPlayerSneaking(player, false);
             if (success) {
-                onWorldInteraction(context, Settings.get().placeDelay);
+                onWorldInteraction(context, OCSettings.get().placeDelay);
                 return ResultWrapper.result(true);
             }
         }
@@ -280,7 +312,7 @@ public abstract class AgentBase extends ManagedEnvironment implements
         return ResultWrapper.result(false);
     }
 
-    @Callback(doc = "function(side:number[, face:number=side[, sneaky:boolean=false[, duration:number=0]]]):boolean, string -- Perform a 'right click' towards the specified side.")
+    @Callback(doc = "function(side:number[, face:number=side[, sneaky:boolean=false[, duration:number=0]]]):boolean, string -- Perform a 'right click' towards the specified side. The `face' allows a more precise click calibration, and is relative to the targeted blockspace.")
     public Object[] use(Context context, Arguments args) {
         Direction facing = checkSideForAction(args, 0);
         Direction[] sides;
@@ -307,7 +339,7 @@ public abstract class AgentBase extends ManagedEnvironment implements
             boolean success = false;
             String what = "";
 
-            HitResult hit = playerPick(player, Settings.get().useAndPlaceRange);
+            HitResult hit = playerPick(player, OCSettings.get().useAndPlaceRange);
 
             if (hit.getType() == HitResult.Type.ENTITY) {
                 Entity entity = ((EntityHitResult) hit).getEntity();
@@ -320,8 +352,11 @@ public abstract class AgentBase extends ManagedEnvironment implements
                 } finally {
                     endConsumeDrops(player, entity);
                 }
-            } else if (hit.getType() == HitResult.Type.BLOCK) {
-                BlockHitResult blockHit = (BlockHitResult) hit;
+            }
+
+            if (!success && hit.getType() == HitResult.Type.BLOCK) {
+              assert hit instanceof BlockHitResult;
+              BlockHitResult blockHit = (BlockHitResult) hit;
                 int activationType = playerActivateBlockOrUseItem(player,
                         blockHit.getBlockPos().getX(), blockHit.getBlockPos().getY(), blockHit.getBlockPos().getZ(),
                         blockHit.getDirection().ordinal(),
@@ -339,77 +374,49 @@ public abstract class AgentBase extends ManagedEnvironment implements
                     success = true;
                     what = "item_used";
                 }
-            } else {
-                BlockPosition bp = position().offset(facing);
-                var level = agent().level();
-                if (level != null) {
-                    var targetState = level.getBlockState(new BlockPos(bp.x(), bp.y(), bp.z()));
-                    if (targetState.isAir()) {
-                        Entity closest = playerClosestEntity(player, facing, Entity.class);
-                        if (canPlaceInAir() && closest == null) {
-                            if (playerPlaceBlock(player, 0, bp.x(), bp.y(), bp.z(), facing.ordinal(), 0.5f, 1.0f, 0.5f)) {
-                                success = true;
-                                what = "item_placed";
-                            }
-                        }
+            }
+
+            if (!success && hit.getType() != HitResult.Type.BLOCK) {
+                int airActivation = li.cil.oc.core.server.agent.ActivationType.None;
+                if (canPlaceInAir()) {
+                    BlockPosition placePos = position();
+                    if (playerPlaceBlock(player, 0, placePos.x(), placePos.y(), placePos.z(), facing.ordinal(),
+                            0.5f + facing.getStepX() * 0.5f, 0.5f + facing.getStepY() * 0.5f, 0.5f + facing.getStepZ() * 0.5f)) {
+                        airActivation = li.cil.oc.core.server.agent.ActivationType.ItemPlaced;
+                    } else {
+                        BlockPosition usePos = position().offset(facing).offset(side);
+                        airActivation = playerActivateBlockOrUseItem(player,
+                                usePos.x(), usePos.y(), usePos.z(),
+                                side.getOpposite().ordinal(),
+                                0.5f - side.getStepX() * 0.5f, 0.5f - side.getStepY() * 0.5f, 0.5f - side.getStepZ() * 0.5f,
+                                duration);
                     }
                 }
-                if (!success) {
-                    BlockPosition usePos = position().offset(facing);
-                    int activationType = playerActivateBlockOrUseItem(player,
-                            usePos.x(), usePos.y(), usePos.z(),
-                            side.ordinal(), 0.5f, 0.5f, 0.5f,
-                            duration);
-                    if (activationType == li.cil.oc.core.server.agent.ActivationType.BlockActivated) {
-                        success = true;
-                        what = "block_activated";
-                    } else if (activationType == li.cil.oc.core.server.agent.ActivationType.ItemPlaced) {
-                        success = true;
-                        what = "item_placed";
-                    } else if (activationType == li.cil.oc.core.server.agent.ActivationType.ItemUsed) {
+                if (airActivation == li.cil.oc.core.server.agent.ActivationType.None) {
+                    if (playerUseEquippedItem(player, duration)) {
                         success = true;
                         what = "item_used";
+                    } else {
+                        what = "air";
                     }
-                }
-                if (!success && playerUseEquippedItem(player, duration)) {
+                } else {
                     success = true;
-                    what = "item_used";
-                }
-                if (!success) {
-                    what = "air";
+                    if (airActivation == li.cil.oc.core.server.agent.ActivationType.BlockActivated) {
+                        what = "block_activated";
+                    } else if (airActivation == li.cil.oc.core.server.agent.ActivationType.ItemPlaced) {
+                        what = "item_placed";
+                    } else {
+                        what = "item_used";
+                    }
                 }
             }
 
             setPlayerSneaking(player, false);
             if (success) {
-                onWorldInteraction(context, Settings.get().useDelay);
+                onWorldInteraction(context, OCSettings.get().useDelay);
                 return ResultWrapper.result(true, what);
             }
         }
-
-        Object[] bc = blockContent(facing);
-        if ((Boolean) bc[0]) {
-            BlockPosition blockPos = position().offset(facing);
-            Player player = rotatedPlayer(facing, facing);
-            setPlayerSneaking(player, sneaky);
-            int activationType = playerActivateBlockOrUseItem(player,
-                    blockPos.x(), blockPos.y(), blockPos.z(),
-                    facing.ordinal(), 0.5f, 0.5f, 0.5f,
-                    duration);
-            boolean ok = activationType != li.cil.oc.core.server.agent.ActivationType.None;
-            setPlayerSneaking(player, false);
-            if (ok) {
-                String resultWhat;
-                if (activationType == li.cil.oc.core.server.agent.ActivationType.BlockActivated)
-                    resultWhat = "block_activated";
-                else if (activationType == li.cil.oc.core.server.agent.ActivationType.ItemPlaced)
-                    resultWhat = "item_placed";
-                else resultWhat = "item_used";
-                onWorldInteraction(context, Settings.get().useDelay);
-                return ResultWrapper.result(true, resultWhat);
-            }
-        }
-
         return ResultWrapper.result(false);
     }
 }

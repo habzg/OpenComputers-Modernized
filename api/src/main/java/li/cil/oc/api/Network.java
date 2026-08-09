@@ -16,10 +16,10 @@ import net.minecraft.world.level.block.entity.BlockEntity;
  * This class provides factories for networks and nodes.
  * <br>
  * The first two functions provided provided by this API are to allow existing
- * environments - implemented in a tile entity for example - to join an existing
+ * environments - implemented in a block entity for example - to join an existing
  * network or create new ones. The third one is used to create nodes that may
  * then be connected to an existing network. It is not possible to create
- * networks that do not belong to at least one tile entity or node.
+ * networks that do not belong to at least one block entity or node.
  * <br>
  * It is important to understand that component networks only exist on the
  * server side. It is impossible to create nodes, and therefore networks, on
@@ -35,19 +35,19 @@ public final class Network {
     }
 
     /**
-     * Tries to add a tile entity's network node(s) at the specified coordinates
+     * Tries to add a block entity's network node(s) at the specified coordinates
      * to adjacent networks.
      * <br>
-     * If the tile entity implements {@link Environment} its one node will be
-     * connected to any existing adjacent tile entity nodes. If none exist a
-     * new network with the specified tile entity's node as its sole entry.
+     * If the block entity implements {@link Environment} its one node will be
+     * connected to any existing adjacent block entity nodes. If none exist a
+     * new network with the specified block entity's node as its sole entry.
      * <br>
-     * If the tile entity is a {@link SidedEnvironment}
+     * If the block entity is a {@link SidedEnvironment}
      * the same rules as for simple environments apply, except that the
      * respective for each side is used when connecting, and each side's node
      * is added to its own new network, if necessary.
      *
-     * @param BlockEntity the tile entity to initialize.
+     * @param BlockEntity the block entity to initialize.
      */
     public static void joinOrCreateNetwork(final BlockEntity BlockEntity) {
         if (API.network == null) throw new IllegalStateException(API.ERROR_NOT_INITIALIZED);
@@ -55,11 +55,11 @@ public final class Network {
     }
 
     /**
-     * Tries to add the network node(s) of the tile entity at the specified
+     * Tries to add the network node(s) of the block entity at the specified
      * position in the specified level to adjacent networks.
      *
-     * @param level the level containing the tile entity.
-     * @param pos   the position of the tile entity.
+     * @param level the level containing the block entity.
+     * @param pos   the position of the block entity.
      */
     @SuppressWarnings("unused")
     public static void joinOrCreateNetwork(final Level level, final BlockPos pos) {
@@ -70,7 +70,7 @@ public final class Network {
     /**
      * Creates a new network with the specified node as its initial node.
      * <br>
-     * This can be used to create networks that are not bound to any tile
+     * This can be used to create networks that are not bound to any block
      * entity. For example, this is used to create the internal networks of
      * robots.
      *
@@ -144,7 +144,9 @@ public final class Network {
      */
     public static void leaveWirelessNetwork(final WirelessEndpoint endpoint, final String dimension) {
         if (API.network == null) throw new IllegalStateException(API.ERROR_NOT_INITIALIZED);
-        API.network.leaveWirelessNetwork(endpoint, dimension);
+        API.network.leaveWirelessNetwork(endpoint,
+                net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION,
+                        net.minecraft.resources.ResourceLocation.parse(dimension)));
     }
 
     /**
@@ -168,7 +170,7 @@ public final class Network {
     /**
      * Factory function for creating new nodes.
      * <br>
-     * Use this to create a node for your environment (e.g. tile entity). This
+     * Use this to create a node for your environment (e.g. block entity). This
      * will return a builder that can be used to further specialize the node,
      * making it either a component node (for callbacks), a connector node
      * (for power interaction) or both.

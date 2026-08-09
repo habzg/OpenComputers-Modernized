@@ -1,5 +1,8 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.internal.Rotatable;
@@ -9,9 +12,10 @@ import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Tier;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.item.data.NavigationUpgradeData;
 import li.cil.oc.core.impl.util.BlockPosition;
 import li.cil.oc.core.util.ResultWrapper;
@@ -19,12 +23,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.phys.Vec3;
 
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-public abstract class UpgradeNavigationBase extends li.cil.oc.api.prefab.ManagedEnvironment implements DeviceInfo {
+public abstract class UpgradeNavigationBase extends AbstractManagedEnvironment implements DeviceInfo {
     public final EnvironmentHost host;
 
     public final li.cil.oc.api.network.Node node = Network.newNode(this, Visibility.Network)
@@ -57,10 +56,10 @@ public abstract class UpgradeNavigationBase extends li.cil.oc.api.prefab.Managed
     public Object[] getPosition(Context context, Arguments args) {
         NavigationUpgradeData.MapData info = data.mapData(host.level());
         int size = data.getSize(host.level());
-        int relativeX = (int) (host.xPosition() - info.xCenter());
-        int relativeZ = (int) (host.zPosition() - info.zCenter());
+        double relativeX = host.xPosition() - info.xCenter();
+        double relativeZ = host.zPosition() - info.zCenter();
 
-        if (Math.abs(relativeX) <= size / 2 && Math.abs(relativeZ) <= size / 2)
+        if (Math.abs(relativeX) <= (double) size / 2 && Math.abs(relativeZ) <= (double) size / 2)
             return ResultWrapper.result(relativeX, host.yPosition(), relativeZ);
         else
             return ResultWrapper.result(null, "out of range");
@@ -81,9 +80,9 @@ public abstract class UpgradeNavigationBase extends li.cil.oc.api.prefab.Managed
 
     @Callback(doc = "function(range:number):table -- Find waypoints in the specified range.")
     public Object[] findWaypoints(Context context, Arguments args) {
-        double range = Math.clamp(args.checkDouble(0), 0, Settings.get().maxWirelessRange[Tier.Two]);
+        double range = Math.clamp(args.checkDouble(0), 0, OCSettings.get().maxWirelessRange[Tier.Two]);
         if (range <= 0) return ResultWrapper.result();
-        if (!consumeEnergy(range * Settings.get().wirelessCostPerRange[Tier.Two] * 0.25))
+        if (!consumeEnergy(range * OCSettings.get().wirelessCostPerRange[Tier.Two] * 0.25))
             return ResultWrapper.result(null, "not enough energy");
         context.pause(0.5);
         BlockPosition position = BlockPosition.apply(host);

@@ -1,8 +1,15 @@
 package li.cil.oc.core.impl.common.item.data;
 
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import li.cil.oc.api.Items;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.ReflectionUtil;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -11,20 +18,12 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-
 public class PrintData extends ItemData {
     private static final int stepping = 4;
     private static final float step = stepping / 16f;
     private static final float invMaxVolume = 1f / (stepping * stepping * stepping);
     private static final Set<Method> inkProviders = new LinkedHashSet<>();
-    private static final int materialPerItem = Settings.get().printMaterialValue;
+    private static final int materialPerItem = OCSettings.get().printMaterialValue;
     public final Set<Shape> stateOff = new LinkedHashSet<>();
     public final Set<Shape> stateOn = new LinkedHashSet<>();
     public String label;
@@ -38,6 +37,18 @@ public class PrintData extends ItemData {
     public boolean noclipOn = false;
     private float opacityCache = 0f;
     private boolean opacityDirty = true;
+
+    public static List<Shape> getRenderShapes(ItemStack stack, boolean extendedTooltips) {
+        var data = new PrintData(stack);
+        var shapes = data.hasActiveState() && extendedTooltips ? data.stateOn : data.stateOff;
+        List<Shape> result = new ArrayList<>(shapes.size());
+        for (var shape : shapes) {
+            if (shape.texture() != null && !shape.texture().isEmpty()) {
+                result.add(shape);
+            }
+        }
+        return result;
+    }
 
     public PrintData() {
         super(Constants.BlockName.Print);
@@ -107,12 +118,12 @@ public class PrintData extends ItemData {
             totalVolume += volume(shape.bounds);
             totalSurface += surface(shape.bounds);
         }
-        double multiplier = (data.noclipOff || data.noclipOn) ? Settings.get().noclipMultiplier : 1;
+        double multiplier = (data.noclipOff || data.noclipOn) ? OCSettings.get().noclipMultiplier : 1;
 
         if (totalVolume > 0) {
             int baseMaterialRequired = Math.max(totalVolume / 2, 1);
             int materialRequired = (data.redstoneLevel > 0 && data.redstoneLevel < 15)
-                    ? baseMaterialRequired + Settings.get().printCustomRedstone
+                    ? baseMaterialRequired + OCSettings.get().printCustomRedstone
                     : baseMaterialRequired;
             int inkRequired = Math.max(totalSurface / 6, 1);
             return new int[]{(int) (materialRequired * multiplier), inkRequired};
@@ -141,7 +152,7 @@ public class PrintData extends ItemData {
             var data = new PrintData(stack);
             var costs = computeCosts(data);
             if (costs != null) {
-                return (int) (costs[0] * Settings.get().printRecycleRate);
+                return (int) (costs[0] * OCSettings.get().printRecycleRate);
             }
         }
         return 0;

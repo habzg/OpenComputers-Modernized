@@ -1,19 +1,18 @@
 package li.cil.oc.core.impl.common.nanomachines.provider;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import li.cil.oc.api.nanomachines.Behavior;
 import li.cil.oc.api.nanomachines.DisableReason;
 import li.cil.oc.api.prefab.AbstractBehavior;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Player;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 public class PotionProvider extends ScalaProvider {
     public static Set<MobEffect> PotionWhitelist = null;
@@ -24,7 +23,7 @@ public class PotionProvider extends ScalaProvider {
 
     public static Set<MobEffect> getWhitelist() {
         if (PotionWhitelist == null) {
-            PotionWhitelist = filterPotions(Settings.get().nanomachinePotionWhitelist);
+            PotionWhitelist = filterPotions(OCSettings.get().nanomachinePotionWhitelist);
         }
         return PotionWhitelist;
     }
@@ -111,7 +110,7 @@ public class PotionProvider extends ScalaProvider {
 
         @Override
         public void update() {
-            player.addEffect(new MobEffectInstance(potion, Duration, amplifier(player), true, Settings.get().enableNanomachinePfx));
+            player.addEffect(new MobEffectInstance(potion, Duration, amplifier(player), true, OCSettings.get().enableNanomachinePfx));
         }
     }
 }

@@ -8,7 +8,7 @@ import net.minecraft.world.WorldlyContainer;
  * This interface allows interaction with robots.
  * <br>
  * It is intended to be used by components when installed in a robot. In that
- * case, the robot in question is the tile entity passed to item driver when
+ * case, the robot in question is the block entity passed to item driver when
  * asked to create the component's environment.
  * <br>
  * A robot's inventory contains component items and items in the actual
@@ -26,7 +26,7 @@ import net.minecraft.world.WorldlyContainer;
  * <br>
  * This interface is <em>not meant to be implemented</em>, just used.
  * <br>
- * Note: the concrete robot tile entity classes also implement
+ * Note: the concrete robot block entity classes also implement
  * {@code net.neoforged.neoforge.fluids.capability.IFluidHandler} for
  * NeoForge's fluid system integration, but that interface is not declared
  * here to keep the API loader-independent. Callers that need fluid

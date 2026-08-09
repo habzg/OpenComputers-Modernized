@@ -1,12 +1,10 @@
 package li.cil.oc.core.impl.common;
 
-import net.minecraft.world.item.ItemStack;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-
+import net.minecraft.world.item.ItemStack;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public final class ToolDurabilityProviders {

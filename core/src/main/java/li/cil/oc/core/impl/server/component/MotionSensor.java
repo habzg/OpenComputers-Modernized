@@ -1,5 +1,10 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
@@ -8,8 +13,9 @@ import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.util.ResultWrapper;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -23,15 +29,8 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-public class MotionSensor extends li.cil.oc.api.prefab.ManagedEnvironment implements DeviceInfo {
-    private static final String SensitivityTag = Settings.namespace + "sensitivity";
+public class MotionSensor extends AbstractManagedEnvironment implements DeviceInfo {
+    private static final String SensitivityTag = OCSettings.namespace + "sensitivity";
     public final EnvironmentHost host;
     public final Node node = Network.newNode(this, Visibility.Network)
             .withComponent("motion_sensor")
@@ -117,7 +116,7 @@ public class MotionSensor extends li.cil.oc.api.prefab.ManagedEnvironment implem
     }
 
     private void sendSignal(LivingEntity entity) {
-        if (Settings.get().inputUsername) {
+        if (OCSettings.get().inputUsername) {
             node.sendToReachable("computer.signal", "motion",
                     entity.getX() - (host.xPosition() + 0.5),
                     entity.getY() - (host.yPosition() + 0.5),

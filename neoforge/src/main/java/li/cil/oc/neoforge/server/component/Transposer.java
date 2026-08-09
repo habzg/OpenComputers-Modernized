@@ -5,7 +5,7 @@ import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.PacketSender;
 import li.cil.oc.core.impl.common.item.data.TransposerData;
 import li.cil.oc.core.impl.server.component.TransposerBase;
@@ -31,9 +31,9 @@ public final class Transposer {
     }
 
     public static class Block extends Common {
-        private final li.cil.oc.neoforge.common.tileentity.Transposer host;
+        private final li.cil.oc.neoforge.common.blockentity.Transposer host;
 
-        public Block(li.cil.oc.neoforge.common.tileentity.Transposer host) {
+        public Block(li.cil.oc.neoforge.common.blockentity.Transposer host) {
             this.host = host;
         }
 
@@ -73,7 +73,7 @@ public final class Transposer {
 
         @Override
         public int fluidTransferRate() {
-            if (host instanceof li.cil.oc.core.impl.common.tileentity.Microcontroller mc) {
+            if (host instanceof li.cil.oc.core.impl.common.blockentity.Microcontroller mc) {
                 for (int i = 0; i < mc.info.components.size(); i++) {
                     ItemStack stack = mc.info.components.get(i);
                     if (stack != null && ItemStack.isSameItemSameComponents(stack,
@@ -85,7 +85,7 @@ public final class Transposer {
                                 return _tag.getInt(TransposerData.FLUID_TRANSFER_RATE);
                             }
                         }
-                        return Settings.get().transposerFluidTransferRate;
+                        return OCSettings.get().transposerFluidTransferRate;
                     }
                 }
             }

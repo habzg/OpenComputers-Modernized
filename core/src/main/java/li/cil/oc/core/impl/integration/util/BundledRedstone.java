@@ -1,21 +1,14 @@
 package li.cil.oc.core.impl.integration.util;
 
+import java.util.ArrayList;
+import java.util.List;
 import li.cil.oc.core.impl.util.BlockPosition;
 import net.minecraft.core.Direction;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.BooleanSupplier;
-
 public final class BundledRedstone {
     private static final List<RedstoneProvider> providers = new ArrayList<>();
-    private static BooleanSupplier availableCheck = () -> false;
 
     private BundledRedstone() {
-    }
-
-    public static void setAvailableCheck(BooleanSupplier check) {
-        availableCheck = check;
     }
 
     public static void addProvider(RedstoneProvider provider) {
@@ -23,7 +16,7 @@ public final class BundledRedstone {
     }
 
     public static boolean isAvailable() {
-        return availableCheck.getAsBoolean() || !providers.isEmpty();
+        return !providers.isEmpty();
     }
 
     public static int computeInput(BlockPosition pos, Direction side) {
@@ -62,6 +55,6 @@ public final class BundledRedstone {
     public interface RedstoneProvider {
         int computeInput(BlockPosition pos, Direction side);
 
-        int[] computeBundledInput(BlockPosition pos, Direction side);
+        int[] computeBundledInput(BlockPosition ignoredPos, Direction ignoredSide);
     }
 }

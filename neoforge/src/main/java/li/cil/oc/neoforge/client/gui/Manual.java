@@ -128,7 +128,8 @@ public class Manual extends Screen {
         int clipH = documentMaxHeight + 2;
         guiGraphics.enableScissor(clipX, clipY, clipX + clipW, clipY + clipH);
         try {
-            currentSegment = Document.render(document, leftPos + 8, topPos + 8, documentMaxWidth, documentMaxHeight, offset(), font, guiGraphics.bufferSource(), mouseX, mouseY);
+            currentSegment = Document.render(document, leftPos + 8, topPos + 8, documentMaxWidth, documentMaxHeight, offset(), font, guiGraphics, mouseX, mouseY);
+            guiGraphics.flush();
         } finally {
             guiGraphics.disableScissor();
         }

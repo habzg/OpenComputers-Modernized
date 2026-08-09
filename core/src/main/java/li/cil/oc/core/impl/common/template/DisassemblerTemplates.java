@@ -1,13 +1,12 @@
 package li.cil.oc.core.impl.common.template;
 
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import li.cil.oc.core.impl.common.ReflectionUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.lang.reflect.Method;
-import java.util.ArrayList;
 
 public final class DisassemblerTemplates {
     private static final Logger LOGGER = LoggerFactory.getLogger(DisassemblerTemplates.class);

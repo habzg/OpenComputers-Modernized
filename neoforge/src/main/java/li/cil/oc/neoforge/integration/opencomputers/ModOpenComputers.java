@@ -1,32 +1,66 @@
 package li.cil.oc.neoforge.integration.opencomputers;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import li.cil.oc.api.detail.ItemInfo;
 import li.cil.oc.api.driver.item.Chargeable;
 import li.cil.oc.api.internal.Wrench;
 import li.cil.oc.api.manual.PathProvider;
 import li.cil.oc.api.prefab.ResourceContentProvider;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.client.renderer.markdown.segment.render.BlockImageProvider;
 import li.cil.oc.core.impl.client.renderer.markdown.segment.render.ItemImageProvider;
 import li.cil.oc.core.impl.client.renderer.markdown.segment.render.OreDictImageProvider;
 import li.cil.oc.core.impl.client.renderer.markdown.segment.render.TextureImageProvider;
-import li.cil.oc.core.impl.common.item.data.RobotData;
+import li.cil.oc.core.impl.common.block.SimpleBlock;
+import li.cil.oc.core.impl.common.item.DelegateItem;
+import li.cil.oc.core.impl.common.nanomachines.provider.HungryProvider;
 import li.cil.oc.core.impl.common.nanomachines.provider.MagnetProvider;
 import li.cil.oc.core.impl.common.nanomachines.provider.ParticleProvider;
 import li.cil.oc.core.impl.common.nanomachines.provider.PotionProvider;
+import li.cil.oc.core.impl.common.template.DroneTemplate;
 import li.cil.oc.core.impl.common.template.MicrocontrollerTemplate;
 import li.cil.oc.core.impl.common.template.NavigationUpgradeTemplate;
+import li.cil.oc.core.impl.common.template.RobotTemplate;
 import li.cil.oc.core.impl.common.template.ServerTemplate;
 import li.cil.oc.core.impl.common.template.TabletTemplate;
 import li.cil.oc.core.impl.common.template.TemplateBlacklist;
+import li.cil.oc.core.impl.integration.opencomputers.ConverterLinkedCard;
+import li.cil.oc.core.impl.integration.opencomputers.ConverterNanomachines;
+import li.cil.oc.core.impl.integration.opencomputers.DriverComponentBus;
+import li.cil.oc.core.impl.integration.opencomputers.DriverContainerCard;
+import li.cil.oc.core.impl.integration.opencomputers.DriverContainerFloppy;
+import li.cil.oc.core.impl.integration.opencomputers.DriverContainerUpgrade;
+import li.cil.oc.core.impl.integration.opencomputers.DriverDataCard;
+import li.cil.oc.core.impl.integration.opencomputers.DriverEEPROM;
+import li.cil.oc.core.impl.integration.opencomputers.DriverGeolyzer;
+import li.cil.oc.core.impl.integration.opencomputers.DriverGraphicsCard;
+import li.cil.oc.core.impl.integration.opencomputers.DriverInternetCard;
+import li.cil.oc.core.impl.integration.opencomputers.DriverKeyboard;
+import li.cil.oc.core.impl.integration.opencomputers.DriverLinkedCard;
+import li.cil.oc.core.impl.integration.opencomputers.DriverMemory;
+import li.cil.oc.core.impl.integration.opencomputers.DriverMotionSensor;
+import li.cil.oc.core.impl.integration.opencomputers.DriverNetworkCard;
+import li.cil.oc.core.impl.integration.opencomputers.DriverScreen;
+import li.cil.oc.core.impl.integration.opencomputers.DriverTerminalServer;
+import li.cil.oc.core.impl.integration.opencomputers.DriverUpgradeAngel;
+import li.cil.oc.core.impl.integration.opencomputers.DriverUpgradeBarcodeReader;
+import li.cil.oc.core.impl.integration.opencomputers.DriverUpgradeBattery;
+import li.cil.oc.core.impl.integration.opencomputers.DriverUpgradeExperience;
+import li.cil.oc.core.impl.integration.opencomputers.DriverUpgradeGenerator;
+import li.cil.oc.core.impl.integration.opencomputers.DriverUpgradeHover;
+import li.cil.oc.core.impl.integration.opencomputers.DriverUpgradeInventory;
+import li.cil.oc.core.impl.integration.opencomputers.DriverUpgradeLeash;
+import li.cil.oc.core.impl.integration.opencomputers.DriverUpgradePiston;
+import li.cil.oc.core.impl.integration.opencomputers.DriverUpgradeSolarGenerator;
+import li.cil.oc.core.impl.integration.opencomputers.DriverWirelessNetworkCard;
 import li.cil.oc.core.impl.integration.util.WirelessRedstone;
 import li.cil.oc.core.impl.util.Color;
 import li.cil.oc.neoforge.common.EventHandler;
 import li.cil.oc.neoforge.common.Loot;
 import li.cil.oc.neoforge.common.SaveHandler;
 import li.cil.oc.neoforge.common.asm.SimpleComponentTickHandler;
-import li.cil.oc.neoforge.common.block.SimpleBlock;
 import li.cil.oc.neoforge.common.event.AngelUpgradeHandler;
 import li.cil.oc.neoforge.common.event.BlockChangeHandler;
 import li.cil.oc.neoforge.common.event.ChunkloaderUpgradeHandler;
@@ -37,13 +71,7 @@ import li.cil.oc.neoforge.common.event.NanomachinesHandler;
 import li.cil.oc.neoforge.common.event.NetworkActivityHandler;
 import li.cil.oc.neoforge.common.event.RobotCommonHandler;
 import li.cil.oc.neoforge.common.event.WirelessNetworkCardHandler;
-import li.cil.oc.neoforge.common.item.Analyzer;
-
-import li.cil.oc.neoforge.common.item.traits.DelegateItem;
 import li.cil.oc.neoforge.common.nanomachines.provider.DisintegrationProvider;
-import li.cil.oc.neoforge.common.nanomachines.provider.HungryProvider;
-import li.cil.oc.neoforge.common.template.DroneTemplate;
-import li.cil.oc.neoforge.common.template.RobotTemplate;
 import li.cil.oc.neoforge.integration.ModProxy;
 import li.cil.oc.neoforge.integration.Mods;
 import li.cil.oc.neoforge.integration.util.JEI;
@@ -57,14 +85,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.neoforge.common.NeoForge;
 
-import java.util.Arrays;
-import java.util.HashSet;
-
 @SuppressWarnings("unused")
 public final class ModOpenComputers implements ModProxy {
     public static boolean useWrench(Player player, int x, int y, int z, boolean changeDurability) {
         if (player.getMainHandItem().getItem() instanceof Wrench wrench) {
-            return wrench.useWrenchOnBlock(player, player.level(), x, y, z, !changeDurability);
+            return wrench.useWrenchOnBlock(player, player.level(), new BlockPos(x, y, z), !changeDurability);
         }
         return false;
     }
@@ -89,14 +114,14 @@ public final class ModOpenComputers implements ModProxy {
 
     public static int inkCartridgeInkProvider(ItemStack stack) {
         if (li.cil.oc.api.Items.get(stack) == li.cil.oc.api.Items.get(Constants.ItemName.InkCartridge)) {
-            return Settings.get().printInkValue;
+            return OCSettings.get().printInkValue;
         }
         return 0;
     }
 
     public static int dyeInkProvider(ItemStack stack) {
         if (Color.isDye(stack)) {
-            return Settings.get().printInkValue / 10;
+            return OCSettings.get().printInkValue / 10;
         }
         return 0;
     }
@@ -125,27 +150,20 @@ public final class ModOpenComputers implements ModProxy {
         TabletTemplate.register();
         TemplateBlacklist.register();
 
-        JEI.hide(li.cil.oc.api.Items.get(Constants.BlockName.Microcontroller).block());
-        JEI.hide(li.cil.oc.api.Items.get(Constants.BlockName.Robot).block());
         JEI.hide(li.cil.oc.api.Items.get(Constants.BlockName.RobotAfterimage).block());
         JEI.hide(li.cil.oc.api.Items.get(Constants.BlockName.Print).block());
-        JEI.hide((DelegateItem) li.cil.oc.api.Items.get(Constants.ItemName.Drone).item());
-        JEI.hide((DelegateItem) li.cil.oc.api.Items.get(Constants.ItemName.Tablet).item());
+        JEI.hide(li.cil.oc.api.Items.get(Constants.BlockName.BeaconBasePrint).block());
+        JEI.hide((DelegateItem) li.cil.oc.api.Items.get(Constants.ItemName.Present).item());
 
-        li.cil.oc.core.impl.util.DriverScreenHelper.setInstance(new li.cil.oc.neoforge.util.NeoDriverScreenHelper());
         li.cil.oc.core.impl.util.ComponentDriverHelper.setRedstoneCardCheck(d -> d instanceof DriverRedstoneCard);
-        li.cil.oc.core.impl.integration.util.BundledRedstone.setAvailableCheck(() -> false);
-        li.cil.oc.core.util.FluidTankHelper.setInstance(new li.cil.oc.neoforge.util.NeoFluidTankHelper());
-        li.cil.oc.core.impl.util.DroneHelper.setInstance(new li.cil.oc.neoforge.util.NeoDroneHelper());
-        li.cil.oc.core.impl.util.GeolyzerHostHelper.setInstance(new li.cil.oc.neoforge.util.NeoGeolyzerHostHelper());
+        li.cil.oc.core.util.FluidTankHelper.setInstance(new li.cil.oc.neoforge.util.FluidTankHelper());
+        li.cil.oc.core.impl.util.DroneHelper.setInstance(new li.cil.oc.neoforge.util.DroneHelper());
+        li.cil.oc.core.impl.util.GeolyzerHostHelper.setInstance(new li.cil.oc.neoforge.util.GeolyzerHostHelper());
         li.cil.oc.core.impl.common.entity.Drone.setEntityType(li.cil.oc.neoforge.common.init.Entities.DRONE.get());
         li.cil.oc.core.impl.common.entity.Drone.setControlFactory(Drone::new);
-        li.cil.oc.core.impl.common.entity.Drone.setMenuOpener(li.cil.oc.neoforge.util.NeoDroneMenuOpener.INSTANCE);
-        li.cil.oc.core.common.item.data.NameProvider.setRandomNameSupplier(RobotData::randomName);
-        li.cil.oc.core.util.RobotChargeableFactory.setInstance(new li.cil.oc.neoforge.util.NeoRobotChargeableFactory());
-        li.cil.oc.core.util.WaypointHelper.setInstance(new li.cil.oc.neoforge.util.NeoWaypointHelper());
-        li.cil.oc.core.util.WirelessNetworkHelper.setInstance(new li.cil.oc.neoforge.util.NeoWirelessNetworkHelper());
-        li.cil.oc.core.impl.util.TabletCache.setInstance(new li.cil.oc.neoforge.util.NeoTabletCache());
+        li.cil.oc.core.impl.common.entity.Drone.setMenuOpener(li.cil.oc.neoforge.util.DroneMenuOpener.INSTANCE);
+        li.cil.oc.core.util.RobotChargeableFactory.setInstance(new li.cil.oc.neoforge.util.RobotChargeableFactory());
+
         li.cil.oc.core.impl.common.Registrar.registerWrenchTool("li.cil.oc.neoforge.integration.opencomputers.ModOpenComputers.useWrench");
         li.cil.oc.core.impl.common.Registrar.registerWrenchToolCheck("li.cil.oc.neoforge.integration.opencomputers.ModOpenComputers.isWrench");
         li.cil.oc.core.impl.common.Registrar.registerItemCharge(
@@ -178,7 +196,7 @@ public final class ModOpenComputers implements ModProxy {
         NeoForge.EVENT_BUS.register(NanomachinesHandler.Common.class);
         NeoForge.EVENT_BUS.register(SimpleComponentTickHandler.Instance);
 
-        NeoForge.EVENT_BUS.register(Analyzer.EventHandler.class);
+        NeoForge.EVENT_BUS.register(li.cil.oc.neoforge.common.event.AnalyzerEventHandler.class);
         NeoForge.EVENT_BUS.register(AngelUpgradeHandler.class);
         NeoForge.EVENT_BUS.register(BlockChangeHandler.class);
         NeoForge.EVENT_BUS.register(ChunkloaderUpgradeHandler.class);
@@ -216,14 +234,12 @@ public final class ModOpenComputers implements ModProxy {
         li.cil.oc.api.Driver.add(new DriverGraphicsCard());
         li.cil.oc.api.Driver.add(new DriverInternetCard());
         li.cil.oc.api.Driver.add(new DriverLinkedCard());
-        li.cil.oc.api.Driver.add(new DriverLootDisk());
         li.cil.oc.api.Driver.add(new DriverMemory());
         li.cil.oc.api.Driver.add(new DriverNetworkCard());
         li.cil.oc.api.Driver.add(new DriverKeyboard());
         li.cil.oc.api.Driver.add(new DriverRedstoneCard());
         li.cil.oc.api.Driver.add(new DriverTablet());
         li.cil.oc.api.Driver.add(new DriverWirelessNetworkCard());
-        li.cil.oc.api.Driver.add(new DriverTpsCard());
 
         li.cil.oc.api.Driver.add(new DriverContainerCard());
         li.cil.oc.api.Driver.add(new DriverContainerFloppy());
@@ -252,7 +268,6 @@ public final class ModOpenComputers implements ModProxy {
         li.cil.oc.api.Driver.add(new DriverUpgradeLeash());
         li.cil.oc.api.Driver.add(new DriverUpgradeNavigation());
         li.cil.oc.api.Driver.add(new DriverUpgradePiston());
-        li.cil.oc.api.Driver.add(new DriverUpgradeRITEG());
         li.cil.oc.api.Driver.add(new DriverUpgradeSign());
         li.cil.oc.api.Driver.add(new DriverUpgradeSolarGenerator());
         li.cil.oc.api.Driver.add(new DriverUpgradeTank());
@@ -271,7 +286,6 @@ public final class ModOpenComputers implements ModProxy {
         li.cil.oc.api.Driver.add(new DriverRedstoneCard.Provider());
         li.cil.oc.api.Driver.add(new DriverWirelessNetworkCard.Provider());
         li.cil.oc.api.Driver.add(new DriverUpgradeDatabase.Provider());
-        li.cil.oc.api.Driver.add(new DriverTpsCard.Provider());
 
         li.cil.oc.api.Driver.add(new DriverGeolyzer.Provider());
         li.cil.oc.api.Driver.add(new DriverMotionSensor.Provider());
@@ -322,8 +336,7 @@ public final class ModOpenComputers implements ModProxy {
                 Constants.ItemName.TankUpgrade,
                 Constants.ItemName.TractorBeamUpgrade,
                 Constants.ItemName.LeashUpgrade,
-                Constants.ItemName.TradingUpgrade,
-                Constants.ItemName.RITEGUpgrade);
+                Constants.ItemName.TradingUpgrade);
         blacklistHost(li.cil.oc.api.internal.Drone.class,
                 Constants.BlockName.Keyboard,
                 Constants.BlockName.ScreenTier1,
@@ -340,8 +353,7 @@ public final class ModOpenComputers implements ModProxy {
                 Constants.ItemName.AngelUpgrade,
                 Constants.ItemName.CraftingUpgrade,
                 Constants.ItemName.HoverUpgradeTier1,
-                Constants.ItemName.HoverUpgradeTier2,
-                Constants.ItemName.RITEGUpgrade);
+                Constants.ItemName.HoverUpgradeTier2);
         blacklistHost(li.cil.oc.api.internal.Microcontroller.class,
                 Constants.BlockName.Keyboard,
                 Constants.BlockName.ScreenTier1,
@@ -373,8 +385,7 @@ public final class ModOpenComputers implements ModProxy {
                 Constants.BlockName.Transposer,
                 Constants.BlockName.CarpetedCapacitor,
                 Constants.ItemName.Analyzer,
-                Constants.ItemName.LeashUpgrade,
-                Constants.ItemName.RITEGUpgrade);
+                Constants.ItemName.LeashUpgrade);
         blacklistHost(li.cil.oc.api.internal.Tablet.class,
                 Constants.BlockName.ScreenTier1,
                 Constants.BlockName.Transposer,
@@ -404,7 +415,7 @@ public final class ModOpenComputers implements ModProxy {
         }
 
         li.cil.oc.api.Manual.addProvider(new DefinitionPathProvider());
-        li.cil.oc.api.Manual.addProvider(new ResourceContentProvider(Settings.resourceDomain, "doc/"));
+        li.cil.oc.api.Manual.addProvider(new ResourceContentProvider(OCSettings.resourceDomain, "doc/"));
         li.cil.oc.api.Manual.addProvider("", new TextureImageProvider());
         li.cil.oc.api.Manual.addProvider("item", new ItemImageProvider());
         li.cil.oc.api.Manual.addProvider("block", new BlockImageProvider());
@@ -427,8 +438,6 @@ public final class ModOpenComputers implements ModProxy {
                 Constants.ItemName.Debugger,
                 Constants.ItemName.DiamondChip,
                 Constants.ItemName.Present,
-                Constants.ItemName.RITEGUpgrade,
-                Constants.ItemName.TpsCard,
                 Constants.BlockName.CarpetedCapacitor,
                 Constants.BlockName.Endstone,
                 Constants.BlockName.RobotAfterimage));
@@ -436,6 +445,9 @@ public final class ModOpenComputers implements ModProxy {
         private static String checkBlacklisted(ItemInfo info) {
             if (info == null || Blacklist.contains(info.name())) {
                 return null;
+            }
+            if (info.name().equals(Constants.BlockName.BeaconBasePrint)) {
+                return "%LANGUAGE%/block/" + Constants.BlockName.Print + ".md";
             }
             if (info.block() != null) {
                 return "%LANGUAGE%/block/" + info.name() + ".md";

@@ -1,10 +1,12 @@
 package li.cil.oc.api;
 
+import java.util.Collection;
+import java.util.Set;
 import li.cil.oc.api.driver.Converter;
 import li.cil.oc.api.driver.EnvironmentProvider;
 import li.cil.oc.api.driver.InventoryProvider;
-import li.cil.oc.api.driver.Item;
-import li.cil.oc.api.driver.SidedBlock;
+import li.cil.oc.api.driver.DriverItem;
+import li.cil.oc.api.driver.DriverBlock;
 import li.cil.oc.api.network.EnvironmentHost;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -12,9 +14,6 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-
-import java.util.Collection;
-import java.util.Set;
 
 /**
  * This API allows registering new drivers with the mod.
@@ -30,8 +29,8 @@ import java.util.Set;
  * at that time. Only start calling these methods in the init phase or later.
  *
  * @see Network
- * @see SidedBlock
- * @see Item
+ * @see DriverBlock
+ * @see DriverItem
  */
 public final class Driver {
     private Driver() {
@@ -50,7 +49,7 @@ public final class Driver {
      * @param driver the driver to register.
      */
     @SuppressWarnings("unused")
-    public static void add(final SidedBlock driver) {
+    public static void add(final DriverBlock driver) {
         if (API.driver == null) throw new IllegalStateException(API.ERROR_NOT_INITIALIZED);
         API.driver.add(driver);
     }
@@ -66,7 +65,7 @@ public final class Driver {
      *
      * @param driver the driver to register.
      */
-    public static void add(final Item driver) {
+    public static void add(final DriverItem driver) {
         if (API.driver == null) throw new IllegalStateException(API.ERROR_NOT_INITIALIZED);
         API.driver.add(driver);
     }
@@ -122,14 +121,14 @@ public final class Driver {
      * Note that several drivers for a single block can exist. Because of this
      * block drivers are always encapsulated in a 'compound' driver, which is
      * what will be returned here. In other words, you should will <em>not</em>
-     * get actual instances of drivers registered via {@link #add(SidedBlock)}.
+     * get actual instances of drivers registered via {@link #add(DriverBlock)}.
      *
      * @param level the Level containing the block.
      * @param pos   the position of the block.
      * @param side  the side of the block.
      * @return a driver for the block, or <code>null</code> if there is none.
      */
-    public static SidedBlock driverFor(Level level, BlockPos pos, Direction side) {
+    public static DriverBlock driverFor(Level level, BlockPos pos, Direction side) {
         if (API.driver == null) throw new IllegalStateException(API.ERROR_NOT_INITIALIZED);
         return API.driver.driverFor(level, pos, side);
     }
@@ -145,7 +144,7 @@ public final class Driver {
      * @param host  the type that will host the environment created by returned driver.
      * @return a driver for the item, or <code>null</code> if there is none.
      */
-    public static Item driverFor(ItemStack stack, Class<? extends EnvironmentHost> host) {
+    public static DriverItem driverFor(ItemStack stack, Class<? extends EnvironmentHost> host) {
         if (API.driver == null) throw new IllegalStateException(API.ERROR_NOT_INITIALIZED);
         return API.driver.driverFor(stack, host);
     }
@@ -163,7 +162,7 @@ public final class Driver {
      * @param stack the item stack to get a driver for.
      * @return a driver for the item, or <code>null</code> if there is none.
      */
-    public static Item driverFor(ItemStack stack) {
+    public static DriverItem driverFor(ItemStack stack) {
         if (API.driver == null) throw new IllegalStateException(API.ERROR_NOT_INITIALIZED);
         return API.driver.driverFor(stack);
     }
@@ -213,7 +212,7 @@ public final class Driver {
      * @return the list of all registered block drivers.
      */
     @SuppressWarnings("unused")
-    public static Collection<SidedBlock> blockDrivers() {
+    public static Collection<DriverBlock> blockDrivers() {
         if (API.driver == null) throw new IllegalStateException(API.ERROR_NOT_INITIALIZED);
         return API.driver.blockDrivers();
     }
@@ -229,7 +228,7 @@ public final class Driver {
      * @return the list of all registered item drivers.
      */
     @SuppressWarnings("unused")
-    public static Collection<Item> itemDrivers() {
+    public static Collection<DriverItem> itemDrivers() {
         if (API.driver == null) throw new IllegalStateException(API.ERROR_NOT_INITIALIZED);
         return API.driver.itemDrivers();
     }

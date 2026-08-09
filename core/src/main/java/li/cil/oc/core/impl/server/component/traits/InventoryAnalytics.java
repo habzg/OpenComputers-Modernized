@@ -3,7 +3,7 @@ package li.cil.oc.core.impl.server.component.traits;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.DatabaseAccess;
 import li.cil.oc.core.impl.util.ExtendedArguments;
 import li.cil.oc.core.impl.util.InventoryUtils;
@@ -15,7 +15,7 @@ import static li.cil.oc.core.util.ResultWrapper.result;
 public interface InventoryAnalytics extends InventoryAware, NetworkAware {
     @Callback(doc = "function([slot:number]):table -- Get a description of the stack in the specified slot or the selected slot.")
     default Object[] getStackInInternalSlot(Context context, Arguments args) {
-        if (Settings.get().allowItemStackInspection) {
+        if (OCSettings.get().allowItemStackInspection) {
             int slot = optSlot(args, 0);
             return result(inventory().getItem(slot));
         }

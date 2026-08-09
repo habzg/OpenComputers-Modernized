@@ -1,19 +1,21 @@
 package li.cil.oc.neoforge.server;
 
+import java.io.IOException;
 import li.cil.oc.api.internal.Server;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.core.common.item.traits.FileSystemLike;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.Achievement;
 import li.cil.oc.core.impl.common.PacketSender;
 import li.cil.oc.core.impl.common.component.TextBuffer;
 import li.cil.oc.core.impl.common.entity.Drone;
 import li.cil.oc.core.impl.common.item.data.DriveData;
-import li.cil.oc.core.impl.common.tileentity.Assembler;
-import li.cil.oc.core.impl.common.tileentity.Rack;
-import li.cil.oc.core.impl.common.tileentity.Screen;
-import li.cil.oc.core.impl.common.tileentity.Waypoint;
-import li.cil.oc.core.impl.common.tileentity.traits.Computer;
+import li.cil.oc.core.impl.common.blockentity.Assembler;
+import li.cil.oc.core.impl.common.blockentity.Rack;
+import li.cil.oc.core.impl.common.blockentity.Screen;
+import li.cil.oc.core.impl.common.blockentity.Waypoint;
+import li.cil.oc.core.impl.common.blockentity.traits.Computer;
 import li.cil.oc.core.server.PetVisibility;
 import li.cil.oc.neoforge.OpenComputers;
 import net.minecraft.core.BlockPos;
@@ -27,8 +29,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-import java.io.IOException;
-
 public final class PacketHandler extends li.cil.oc.neoforge.common.PacketHandler {
     public static final PacketHandler INSTANCE = new PacketHandler();
     private static final Marker securityMarker = MarkerFactory.getMarker("SuspiciousPackets");
@@ -41,10 +41,26 @@ public final class PacketHandler extends li.cil.oc.neoforge.common.PacketHandler
     }
 
     public static void onComputerPower(li.cil.oc.neoforge.common.PacketHandler.PacketParser p) throws IOException {
-        Computer entity = p.readTileEntity(Computer.class);
+        byte mode = p.readByte();
+        if (mode == 1) {
+            String address = p.readUTF();
+            boolean setPower = p.readBoolean();
+            if (p.player instanceof ServerPlayer player) {
+                if (player.containerMenu instanceof li.cil.oc.core.impl.common.container.Player container
+                    && container instanceof li.cil.oc.neoforge.common.container.Robot rc
+                    && rc.address.equals(address)
+                    && rc.current() instanceof Computer computer) {
+                    trySetComputerPower(computer.machine(), setPower, player);
+                    return;
+                }
+                logForgedPacket(player);
+            }
+            return;
+        }
+        Computer entity = p.readBlockEntity(Computer.class);
         boolean setPower = p.readBoolean();
         if (p.player instanceof ServerPlayer player) {
-            if (player.containerMenu instanceof li.cil.oc.neoforge.common.container.Player container) {
+            if (player.containerMenu instanceof li.cil.oc.core.impl.common.container.Player container) {
                 if (container.otherInventory instanceof Computer computer && entity != null) {
                     if (computer instanceof BlockEntity be1 && entity instanceof BlockEntity be2) {
                         if (be1.getBlockPos().equals(be2.getBlockPos())) {
@@ -61,14 +77,14 @@ public final class PacketHandler extends li.cil.oc.neoforge.common.PacketHandler
     }
 
     public static void onServerPower(li.cil.oc.neoforge.common.PacketHandler.PacketParser p) throws IOException {
-        Rack entity = p.readTileEntity(Rack.class);
+        Rack entity = p.readBlockEntity(Rack.class);
         int index = p.readInt();
         if (entity == null) return;
         var mountable = entity.getMountable(index);
         if (!(mountable instanceof Server server)) return;
         boolean setPower = p.readBoolean();
         if (p.player instanceof ServerPlayer player) {
-            if (player.containerMenu instanceof li.cil.oc.neoforge.common.container.Server container && container.server != null && container.server == server) {
+            if (player.containerMenu instanceof li.cil.oc.core.impl.common.container.Server container && container.server != null && container.server == server) {
                 trySetComputerPower(server.machine(), setPower, player);
             } else {
                 logForgedPacket(player);
@@ -110,7 +126,7 @@ public final class PacketHandler extends li.cil.oc.neoforge.common.PacketHandler
         Drone entity = p.readEntity(Drone.class);
         boolean power = p.readBoolean();
         if (p.player instanceof ServerPlayer player) {
-            if (player.containerMenu instanceof li.cil.oc.neoforge.common.container.Drone c && entity != null && c.drone == entity) {
+            if (player.containerMenu instanceof li.cil.oc.core.impl.common.container.Drone c && entity != null && c.drone == entity) {
                 Drone drone = c.drone;
                 if (power) drone.preparePowerUp();
                 trySetComputerPower(drone.machine(), power, player);
@@ -121,7 +137,8 @@ public final class PacketHandler extends li.cil.oc.neoforge.common.PacketHandler
     }
 
     private static void trySetComputerPower(Machine computer, boolean value, ServerPlayer player) {
-        if (computer.canInteract(player.getScoreboardName())) {
+        boolean canInteract = computer.canInteract(player.getScoreboardName());
+        if (canInteract) {
             if (value) {
                 if (!computer.isPaused()) {
                     computer.start();
@@ -159,7 +176,7 @@ public final class PacketHandler extends li.cil.oc.neoforge.common.PacketHandler
     public static void onClipboard(li.cil.oc.neoforge.common.PacketHandler.PacketParser p) throws IOException {
         String address = p.readUTF();
         String copy = p.readUTF();
-        if (copy.length() > li.cil.oc.core.impl.Settings.get().maxClipboard) return;
+        if (copy.length() > OCSettings.get().maxClipboard) return;
         ManagedEnvironment opt = ComponentTracker.INSTANCE.get(p.player.level(), address);
         if (opt instanceof li.cil.oc.api.internal.TextBuffer buffer) {
             buffer.clipboard(copy, p.player);
@@ -240,39 +257,47 @@ public final class PacketHandler extends li.cil.oc.neoforge.common.PacketHandler
     }
 
     public static void onRackMountableMapping(li.cil.oc.neoforge.common.PacketHandler.PacketParser p) throws IOException {
-        Rack entity = p.readTileEntity(Rack.class);
+        Rack entity = p.readBlockEntity(Rack.class);
         int mountableIndex = p.readInt();
         int nodeIndex = p.readInt();
         Direction side = p.readDirection();
-        if (entity != null) {
-            if (p.player instanceof ServerPlayer player && entity.isUseableByPlayer(player)) {
+        if (p.player instanceof ServerPlayer player) {
+            if (player.containerMenu instanceof li.cil.oc.core.impl.common.container.Rack container && container.rack == entity) {
                 entity.connect(mountableIndex, nodeIndex - 1, side);
+            } else {
+                logForgedPacket(player);
             }
         }
     }
 
     public static void onRackRelayState(li.cil.oc.neoforge.common.PacketHandler.PacketParser p) throws IOException {
-        Rack entity = p.readTileEntity(Rack.class);
+        Rack entity = p.readBlockEntity(Rack.class);
         boolean enabled = p.readBoolean();
-        if (entity != null) {
-            if (p.player instanceof ServerPlayer player && entity.isUseableByPlayer(player)) {
+        if (p.player instanceof ServerPlayer player) {
+            if (player.containerMenu instanceof li.cil.oc.core.impl.common.container.Rack container && container.rack == entity) {
                 entity.isRelayEnabled = enabled;
+            } else {
+                logForgedPacket(player);
             }
         }
     }
 
     public static void onRobotAssemblerStart(li.cil.oc.neoforge.common.PacketHandler.PacketParser p) {
-        Assembler entity = p.readTileEntity(Assembler.class);
-        if (entity != null) {
-            boolean creative = p.player instanceof ServerPlayer player && player.getAbilities().instabuild;
-            if (entity.start(creative)) {
-                if (entity.output != null) Achievement.onAssemble(entity.output, p.player);
+        Assembler entity = p.readBlockEntity(Assembler.class);
+        if (p.player instanceof ServerPlayer player) {
+            if (player.containerMenu instanceof li.cil.oc.core.impl.common.container.Assembler container && container.assembler == entity) {
+                boolean creative = player.getAbilities().instabuild;
+                if (entity.start(creative)) {
+                    if (entity.output != null) Achievement.onAssemble(entity.output, p.player);
+                }
+            } else {
+                logForgedPacket(player);
             }
         }
     }
 
     public static void onRobotStateRequest(li.cil.oc.neoforge.common.PacketHandler.PacketParser p) {
-        var opt = p.readTileEntity(li.cil.oc.neoforge.common.tileentity.Robot.class);
+        var opt = p.readBlockEntity(li.cil.oc.neoforge.common.blockentity.Robot.class);
         if (opt != null) {
             BlockPos pos = opt.getBlockPos();
             opt.level().sendBlockUpdated(pos, opt.level().getBlockState(pos), opt.level().getBlockState(pos), 3);
@@ -281,9 +306,13 @@ public final class PacketHandler extends li.cil.oc.neoforge.common.PacketHandler
 
     public static void onMachineItemStateRequest(li.cil.oc.neoforge.common.PacketHandler.PacketParser p) {
         if (p.player instanceof net.minecraft.server.level.ServerPlayer player) {
-            var stack = p.readItemStack();
-            var isRunning = li.cil.oc.neoforge.common.item.Tablet.get(stack, p.player).machine().isRunning();
-            PacketSender.sendMachineItemState(player, stack, isRunning);
+            if (player.containerMenu instanceof li.cil.oc.core.impl.common.container.Tablet) {
+                var stack = p.readItemStack();
+                var isRunning = li.cil.oc.core.impl.common.item.Tablet.get(stack, p.player).machine().isRunning();
+                PacketSender.sendMachineItemState(player, stack, isRunning);
+            } else {
+                logForgedPacket(player);
+            }
         }
     }
 
@@ -306,7 +335,7 @@ public final class PacketHandler extends li.cil.oc.neoforge.common.PacketHandler
     }
 
     public static void onWaypointLabel(li.cil.oc.neoforge.common.PacketHandler.PacketParser p) throws IOException {
-        Waypoint entity = p.readTileEntity(Waypoint.class);
+        Waypoint entity = p.readBlockEntity(Waypoint.class);
         String label = p.readUTF();
         if (label.length() > 32) label = label.substring(0, 32);
         if (entity != null && p.player instanceof ServerPlayer player) {
@@ -323,12 +352,12 @@ public final class PacketHandler extends li.cil.oc.neoforge.common.PacketHandler
     }
 
     @Override
-    protected Level world(Player player, int dimension) {
+    public Level world(Player player, int ignoredDimension) {
         return player instanceof ServerPlayer sp ? sp.serverLevel() : null;
     }
 
     @Override
-    public void dispatch(li.cil.oc.neoforge.common.PacketHandler.PacketParser p) {
+    public void dispatch(PacketParser p) {
         try {
             switch (p.packetType) {
                 case ComputerPower -> onComputerPower(p);

@@ -1,6 +1,8 @@
 package li.cil.oc.api.network;
 
 import li.cil.oc.api.Persistable;
+import li.cil.oc.api.driver.DriverBlock;
+import li.cil.oc.api.driver.DriverItem;
 
 /**
  * A single node in a {@link Network}.
@@ -8,7 +10,7 @@ import li.cil.oc.api.Persistable;
  * All nodes in a network have a unique address; the network will generate a
  * unique address and assign it to new nodes.
  * <br>
- * Per default there are two kinds of nodes: tile entities and items.
+ * Per default there are two kinds of nodes: block entities and items.
  * <br>
  * Items will usually only have nodes when in containers, such as a computer or
  * disk drive. Otherwise you'll have to connect/disconnect them manually as
@@ -17,9 +19,9 @@ import li.cil.oc.api.Persistable;
  * All other kinds of nodes you may come up with will also have to be
  * handled manually.
  * <br>
- * Items have to be handled by a corresponding {@link li.cil.oc.api.driver.Item}.
+ * Items have to be handled by a corresponding {@link DriverItem}.
  * Existing blocks may be interfaced with the adapter block if a
- * {@link li.cil.oc.api.driver.SidedBlock} exists that supports the block.
+ * {@link DriverBlock} exists that supports the block.
  * <br>
  * <em>Important</em>: like the <code>Network</code> interface you must not create
  * your own implementations of this interface. Use the factory methods in the
@@ -31,8 +33,8 @@ public interface Node extends Persistable {
     /**
      * The environment hosting this node.
      * <br>
-     * For blocks whose tile entities implement {@link Environment} this will
-     * be the tile entity. For all other implementations this will be a managed
+     * For blocks whose block entities implement {@link Environment} this will
+     * be the block entity. For all other implementations this will be a managed
      * environment.
      */
     Environment host();

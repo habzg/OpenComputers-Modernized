@@ -1,10 +1,9 @@
 package li.cil.oc.core.impl.server.fs;
 
+import java.io.FileNotFoundException;
 import li.cil.oc.api.fs.Mode;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-
-import java.io.FileNotFoundException;
 
 class ReadOnlyWrapper implements li.cil.oc.api.fs.FileSystem {
     private final li.cil.oc.api.fs.FileSystem fileSystem;

@@ -19,10 +19,10 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.ManagedEnvironment;
-import li.cil.oc.api.prefab.DriverSidedTileEntity;
+import li.cil.oc.api.prefab.DriverSidedBlockEntity;
+import li.cil.oc.core.impl.integration.ManagedBlockEntityEnvironment;
 import li.cil.oc.core.impl.util.ExtendedArguments;
 import li.cil.oc.core.util.ResultWrapper;
-import li.cil.oc.neoforge.integration.ManagedTileEntityEnvironment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
@@ -32,15 +32,15 @@ import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.items.IItemHandler;
 
 @SuppressWarnings("unused")
-public class DriverExportBus extends DriverSidedTileEntity {
+public class DriverExportBus extends DriverSidedBlockEntity {
     @Override
-    public Class<?> getTileEntityClass() {
+    public Class<?> getBlockEntityClass() {
         return IPartHost.class;
     }
 
     @Override
-    public boolean worksWith(Level world, int x, int y, int z, Direction side) {
-        BlockEntity tile = world.getBlockEntity(new BlockPos(x, y, z));
+    public boolean worksWith(Level world, BlockPos pos, Direction side) {
+        BlockEntity tile = world.getBlockEntity(pos);
         if (tile instanceof IPartHost host) {
             for (Direction dir : Direction.values()) {
                 if (host.getPart(dir) instanceof ExportBusPart) return true;
@@ -50,18 +50,18 @@ public class DriverExportBus extends DriverSidedTileEntity {
     }
 
     @Override
-    public ManagedEnvironment createEnvironment(Level world, int x, int y, int z, Direction side) {
-        return new Environment((IPartHost) world.getBlockEntity(new BlockPos(x, y, z)));
+    public ManagedEnvironment createEnvironment(Level world, BlockPos pos, Direction side) {
+        return new Environment((IPartHost) world.getBlockEntity(pos));
     }
 
-    public static final class Environment extends ManagedTileEntityEnvironment<IPartHost> implements NamedBlock, PartEnvironmentBase {
+    public static final class Environment extends ManagedBlockEntityEnvironment<IPartHost> implements NamedBlock, PartEnvironmentBase {
         public Environment(IPartHost host) {
             super(host, "me_exportbus");
         }
 
         @Override
         public IPartHost partHost() {
-            return getTileEntity();
+            return getBlockEntity();
         }
 
         @Override
@@ -79,7 +79,7 @@ public class DriverExportBus extends DriverSidedTileEntity {
             return getPartConfig(context, args);
         }
 
-        @Callback(doc = "function(side:number[, slot:number][, database:address, entry:number]):boolean -- Configure the export bus pointing in the specified direction.")
+        @Callback(doc = "function(side:number[, slot:number][, database:address, entry:number):boolean -- Configure the export bus pointing in the specified direction to export item stacks matching the specified descriptor.")
         public Object[] setExportConfiguration(Context context, Arguments args) {
             return setPartConfig(context, args);
         }
@@ -105,12 +105,12 @@ public class DriverExportBus extends DriverSidedTileEntity {
         @Callback(doc = "function(side:number, [slot:number]):boolean -- Make the export bus facing the specified direction perform a single export operation into the specified slot.")
         public Object[] exportIntoSlot(Context context, Arguments args) {
             Direction side = ExtendedArguments.checkSideAny(args, 0);
-            IPart part = getTileEntity().getPart(side);
+            IPart part = getBlockEntity().getPart(side);
             if (!(part instanceof ExportBusPart exportBus)) {
                 return ResultWrapper.result(null, "no export bus");
             }
 
-            var host = getTileEntity();
+            var host = getBlockEntity();
             if (!(host instanceof BlockEntity be)) return ResultWrapper.result(null, "no block entity");
             var pos = be.getBlockPos();
             var level = be.getLevel();

@@ -1,14 +1,12 @@
 package li.cil.oc.core.impl.util;
 
 public abstract class DriverScreenHelper {
-    private static DriverScreenHelper instance;
-
-    public static void setInstance(DriverScreenHelper inst) {
-        instance = inst;
+    private static class Holder {
+        static final DriverScreenHelper instance = new DriverScreenHelperImpl();
     }
 
     public static DriverScreenHelper get() {
-        return instance;
+        return Holder.instance;
     }
 
     public abstract boolean isDriverScreen(Object driver);

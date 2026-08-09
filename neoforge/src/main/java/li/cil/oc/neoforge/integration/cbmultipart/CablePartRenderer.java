@@ -6,10 +6,12 @@ import codechicken.multipart.api.part.render.PartRenderer;
 import codechicken.multipart.block.TileMultipart;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import java.util.ArrayList;
+import java.util.List;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.SidedEnvironment;
-import li.cil.oc.core.impl.Settings;
-import li.cil.oc.core.impl.common.tileentity.Cable;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.common.blockentity.Cable;
 import li.cil.oc.core.impl.util.Color;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
@@ -30,13 +32,10 @@ import net.neoforged.neoforge.client.model.data.ModelData;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @SuppressWarnings("unused")
 public class CablePartRenderer implements PartRenderer<CablePart> {
-    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(Settings.resourceDomain, "block/cable");
-    private static final ResourceLocation TEXTURE_CAP = ResourceLocation.fromNamespaceAndPath(Settings.resourceDomain, "block/cablecap");
+    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(OCSettings.resourceDomain, "block/cable");
+    private static final ResourceLocation TEXTURE_CAP = ResourceLocation.fromNamespaceAndPath(OCSettings.resourceDomain, "block/cablecap");
     private static final double BASE = 2.0 / 16.0;
     private static final double PLUG_HALF = 6.0 / 16.0 / 2.0 - 1e-4;
     private static final double OFFSET = 0.25;

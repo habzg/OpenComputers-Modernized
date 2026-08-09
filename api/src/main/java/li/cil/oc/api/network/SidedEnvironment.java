@@ -8,8 +8,8 @@ import net.minecraft.world.level.block.entity.BlockEntity;
  * {@link net.minecraft.world.Container}, it allows an environment to
  * specify different node access for its different sides.
  * <br>
- * This interface is intended to be used on tile entities that are environments.
- * It is used to determine which neighbors a tile entity can connect to when
+ * This interface is intended to be used on block entities that are environments.
+ * It is used to determine which neighbors a block entity can connect to when
  * calling {@link li.cil.oc.api.Network#joinOrCreateNetwork(BlockEntity)}. It is
  * used by the keyboard to only interface with the side on which it is attached,
  * as well as the switch to offer a different node for each side.
@@ -21,7 +21,7 @@ public interface SidedEnvironment {
      * This is the side aware version of the normal {@link li.cil.oc.api.network.Environment#node}
      * method.
      * <br>
-     * The provided side is relative to the environment, i.e. when the tile
+     * The provided side is relative to the environment, i.e. when the block
      * entity hosting the environment sits at (0, 0, 0) and is asked for its
      * southern node (positive Z axis) it has to return the node for the face
      * between it and the block at (0, 0, 1).

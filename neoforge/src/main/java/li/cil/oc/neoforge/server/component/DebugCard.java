@@ -1,9 +1,10 @@
 package li.cil.oc.neoforge.server.component;
 
+import java.util.Map;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.EnvironmentHost;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.PacketSender;
 import li.cil.oc.core.impl.server.component.DebugCardBase;
 import li.cil.oc.core.impl.util.BlockPosition;
@@ -19,8 +20,6 @@ import net.neoforged.neoforge.common.util.FakePlayerFactory;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Map;
-
 public class DebugCard extends DebugCardBase {
     public DebugCard(EnvironmentHost host) {
         super(host);
@@ -29,7 +28,7 @@ public class DebugCard extends DebugCardBase {
     @Override
     protected Object @NotNull [] platformScanContentsAt(@NotNull Level world, int x, int y, int z) {
         BlockPosition position = BlockPosition.apply(x, y, z, world);
-        FakePlayer fakePlayer = FakePlayerFactory.get((net.minecraft.server.level.ServerLevel) world, Settings.get().fakePlayerProfile);
+        FakePlayer fakePlayer = FakePlayerFactory.get((net.minecraft.server.level.ServerLevel) world, OCSettings.get().fakePlayerProfile);
         fakePlayer.setPos(position.x() + 0.5, position.y() + 0.5, position.z() + 0.5);
 
         Entity entity = world.getNearestPlayer(fakePlayer.getX(), fakePlayer.getY(), fakePlayer.getZ(), 1, false);
@@ -51,7 +50,7 @@ public class DebugCard extends DebugCardBase {
     }
 
     @Override
-    protected Object @NotNull [] platformRunCommand(@NotNull Context context, @NotNull Arguments args) {
+    protected Object @NotNull [] platformRunCommand(@NotNull Context ignoredContext, @NotNull Arguments args) {
         CommandSender sender = new CommandSender();
         sender.prepare();
         int value = 0;
@@ -82,7 +81,7 @@ public class DebugCard extends DebugCardBase {
     }
 
     @Override
-    protected Object @NotNull [] platformGetPlayers(@NotNull Context context) {
+    protected Object @NotNull [] platformGetPlayers(@NotNull Context ignoredContext) {
         var server = ServerLifecycleHooks.getCurrentServer();
         if (server == null) return ResultWrapper.result((Object) new String[0]);
         return ResultWrapper.result((Object) server.getPlayerList().getPlayers().stream()
@@ -128,7 +127,7 @@ public class DebugCard extends DebugCardBase {
         public String messages = null;
 
         public CommandSender() {
-            super((net.minecraft.server.level.ServerLevel) host().level(), Settings.get().fakePlayerProfile);
+            super((net.minecraft.server.level.ServerLevel) host().level(), OCSettings.get().fakePlayerProfile);
         }
 
         public void prepare() {

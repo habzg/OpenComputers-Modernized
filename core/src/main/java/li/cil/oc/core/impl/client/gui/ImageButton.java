@@ -1,5 +1,6 @@
 package li.cil.oc.core.impl.client.gui;
 
+import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -7,8 +8,6 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.function.Consumer;
 
 public class ImageButton extends AbstractWidget {
     private final int id;
@@ -59,7 +58,7 @@ public class ImageButton extends AbstractWidget {
     }
 
     @Override
-    public void onClick(double mouseX, double mouseY, int button) {
+    public void onClick(double mouseX, double mouseY) {
         if (pressHandler != null) {
             pressHandler.accept(this);
         }

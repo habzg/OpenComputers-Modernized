@@ -1,28 +1,35 @@
 package li.cil.oc.neoforge.integration.opencomputers;
 
+import java.util.UUID;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Slot;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.common.LootManager;
+import li.cil.oc.core.impl.common.item.FloppyDisk;
+import li.cil.oc.core.impl.common.item.HardDiskDrive;
 import li.cil.oc.core.impl.common.item.data.DriveData;
+import li.cil.oc.core.impl.integration.opencomputers.Item;
 import li.cil.oc.core.impl.server.component.Drive;
 import li.cil.oc.core.impl.server.fs.FileSystem.ItemLabel;
 import li.cil.oc.core.impl.server.fs.FileSystem.ReadOnlyLabel;
 import li.cil.oc.neoforge.OpenComputers;
-import li.cil.oc.neoforge.common.Loot;
-import li.cil.oc.neoforge.common.item.FloppyDisk;
-import li.cil.oc.neoforge.common.item.HardDiskDrive;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 
-
-import java.util.regex.Pattern;
-
 @SuppressWarnings("unused")
 public final class DriverFileSystem extends Item {
-    private static final Pattern UUIDVerifier = Pattern.compile("^([0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12})$");
+    private static boolean isValidUUID(String s) {
+        if (s == null) return false;
+        try {
+            UUID.fromString(s);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
 
     @Override
     public boolean worksWith(ItemStack stack) {
@@ -40,7 +47,7 @@ public final class DriverFileSystem extends Item {
         if (subItem instanceof HardDiskDrive hdd) {
             return createEnvironment(stack, hdd.kiloBytes() * 1024, hdd.platterCount(), host, hdd.tier() + 2);
         } else if (subItem instanceof FloppyDisk disk) {
-            return createEnvironment(stack, Settings.get().floppySize * 1024, 1, host, 1);
+            return createEnvironment(stack, OCSettings.get().floppySize * 1024, 1, host, 1);
         }
         return null;
     }
@@ -67,18 +74,18 @@ public final class DriverFileSystem extends Item {
 
     private li.cil.oc.api.network.ManagedEnvironment createEnvironment(ItemStack stack, int capacity, int platterCount, EnvironmentHost host, int speed) {
         CustomData cd = stack.get(DataComponents.CUSTOM_DATA);
-        if (cd != null && !cd.isEmpty() && cd.copyTag().contains(Settings.namespace + "lootFactory")) {
-            String factoryKey = cd.copyTag().getString(Settings.namespace + "lootFactory");
-            java.util.concurrent.Callable<li.cil.oc.api.fs.FileSystem> factory = Loot.factories.get(factoryKey);
+        if (cd != null && !cd.isEmpty() && cd.copyTag().contains(OCSettings.namespace + "lootFactory")) {
+            String factoryKey = cd.copyTag().getString(OCSettings.namespace + "lootFactory");
+            java.util.concurrent.Callable<li.cil.oc.api.fs.FileSystem> factory = LootManager.factories.get(factoryKey);
             if (factory != null) {
-                String label = getTag(stack).contains(Settings.namespace + "fs.label")
-                        ? getTag(stack).getString(Settings.namespace + "fs.label") : null;
+                String label = getTag(stack).contains(OCSettings.namespace + "fs.label")
+                        ? getTag(stack).getString(OCSettings.namespace + "fs.label") : null;
                 try {
                     var fs = factory.call();
                     if (fs == null) {
                         OpenComputers.log().warn("Loot factory '{}' returned null filesystem.", factoryKey);
                     }
-                    return li.cil.oc.api.FileSystem.asManagedEnvironment(fs, label, host, Settings.resourceDomain + ":floppy_access");
+                    return li.cil.oc.api.FileSystem.asManagedEnvironment(fs, label, host, OCSettings.resourceDomain + ":floppy_access");
                 } catch (Exception e) {
                     OpenComputers.log().warn("Loot factory '{}' threw an exception.", factoryKey, e);
                     return null;
@@ -89,13 +96,13 @@ public final class DriverFileSystem extends Item {
             String address = addressFromTag(getTag(stack));
             li.cil.oc.api.fs.Label label = new ReadWriteItemLabel();
             boolean isFloppy = li.cil.oc.api.Items.get(stack) == li.cil.oc.api.Items.get(Constants.ItemName.Floppy);
-            String sound = Settings.resourceDomain + ":" + (isFloppy ? "floppy_access" : "hdd_access");
+            String sound = OCSettings.resourceDomain + ":" + (isFloppy ? "floppy_access" : "hdd_access");
             DriveData drive = new DriveData(stack);
             li.cil.oc.api.network.ManagedEnvironment environment;
             if (drive.isUnmanaged) {
                 environment = new Drive(Math.max(capacity, 0), platterCount, label, host, sound, speed, drive.isLocked());
             } else {
-                li.cil.oc.api.fs.FileSystem fs = li.cil.oc.api.FileSystem.fromSaveDirectory(address, Math.max(capacity, 0), Settings.get().bufferChanges);
+                li.cil.oc.api.fs.FileSystem fs = li.cil.oc.api.FileSystem.fromSaveDirectory(address, Math.max(capacity, 0), OCSettings.get().bufferChanges);
                 if (drive.isLocked()) {
                     fs = li.cil.oc.api.FileSystem.asReadOnly(fs);
                     label = new ReadOnlyLabel(label.getLabel());
@@ -112,7 +119,7 @@ public final class DriverFileSystem extends Item {
     private String addressFromTag(CompoundTag tag) {
         if (tag.contains("node") && tag.getCompound("node").contains("address")) {
             String address = tag.getCompound("node").getString("address");
-            if (UUIDVerifier.matcher(address).matches()) {
+            if (isValidUUID(address)) {
                 return address;
             } else {
                 String newAddress = java.util.UUID.randomUUID().toString();
@@ -128,8 +135,8 @@ public final class DriverFileSystem extends Item {
         CustomData cd = stack.get(DataComponents.CUSTOM_DATA);
         if (cd != null && !cd.isEmpty()) {
             CompoundTag nbt = cd.copyTag();
-            if (nbt.contains(Settings.namespace + "data")) {
-                return nbt.getCompound(Settings.namespace + "data");
+            if (nbt.contains(OCSettings.namespace + "data")) {
+                return nbt.getCompound(OCSettings.namespace + "data");
             }
             return nbt;
         }
@@ -154,14 +161,14 @@ public final class DriverFileSystem extends Item {
 
         @Override
         public void load(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider provider) {
-            if (nbt.contains(Settings.namespace + "fs.label")) {
-                label = nbt.getString(Settings.namespace + "fs.label");
+            if (nbt.contains(OCSettings.namespace + "fs.label")) {
+                label = nbt.getString(OCSettings.namespace + "fs.label");
             }
         }
 
         @Override
         public void save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider provider) {
-            if (label != null) nbt.putString(Settings.namespace + "fs.label", label);
+            if (label != null) nbt.putString(OCSettings.namespace + "fs.label", label);
         }
     }
 }

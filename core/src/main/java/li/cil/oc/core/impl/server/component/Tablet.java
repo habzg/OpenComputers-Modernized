@@ -1,5 +1,6 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.Map;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
@@ -7,18 +8,17 @@ import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.item.TabletWrapper;
 import li.cil.oc.core.util.ResultWrapper;
 
-import java.util.Map;
-
-public class Tablet extends li.cil.oc.api.prefab.ManagedEnvironment implements DeviceInfo {
+public class Tablet extends AbstractManagedEnvironment implements DeviceInfo {
     public final TabletWrapper tablet;
     public final Node node = Network.newNode(this, Visibility.Network)
             .withComponent("tablet")
-            .withConnector(Settings.get().bufferTablet)
+            .withConnector(OCSettings.get().bufferTablet)
             .create();
     private final Map<String, String> deviceInfo;
 

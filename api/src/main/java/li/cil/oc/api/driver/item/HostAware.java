@@ -1,6 +1,6 @@
 package li.cil.oc.api.driver.item;
 
-import li.cil.oc.api.driver.Item;
+import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.network.EnvironmentHost;
 import net.minecraft.world.item.ItemStack;
 
@@ -11,7 +11,7 @@ import net.minecraft.world.item.ItemStack;
  * This is useful for drivers for components that should only go into certain
  * environments, such as robot specific upgrades.
  */
-public interface HostAware extends Item {
+public interface HostAware extends DriverItem {
     /**
      * Used to determine the item types this driver handles.
      * <br>

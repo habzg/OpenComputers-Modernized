@@ -5,8 +5,8 @@ import dan200.computercraft.api.media.MediaCapability;
 import li.cil.oc.api.fs.Label;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.core.common.Slot;
-import li.cil.oc.core.impl.Settings;
-import li.cil.oc.neoforge.integration.opencomputers.Item;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.integration.opencomputers.Item;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
@@ -29,9 +29,9 @@ public final class DriverComputerCraftMedia extends Item {
                     var ocFs = li.cil.oc.api.FileSystem.fromComputerCraft(mount);
                     if (ocFs != null) {
                         var label = new ComputerCraftLabel(stack, media);
-                        var environment = li.cil.oc.api.FileSystem.asManagedEnvironment(ocFs, label, host, Settings.resourceDomain + ":floppy_access");
+                        var environment = li.cil.oc.api.FileSystem.asManagedEnvironment(ocFs, label, host, OCSettings.resourceDomain + ":floppy_access");
                         if (environment != null && environment.node() != null) {
-                            var address = li.cil.oc.neoforge.integration.opencomputers.Item.address(stack);
+                            var address = li.cil.oc.core.impl.integration.opencomputers.Item.address(stack);
                             if (address != null) {
                                 ((li.cil.oc.core.impl.server.network.Node) environment.node()).address_$eq(address);
                             }

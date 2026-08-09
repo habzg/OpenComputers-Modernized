@@ -1,12 +1,11 @@
 package li.cil.oc.neoforge.integration.vanilla;
 
+import java.util.Map;
 import li.cil.oc.api.driver.Converter;
-import li.cil.oc.core.impl.Settings;
-import li.cil.oc.neoforge.integration.util.MapUtils;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.util.MapUtils;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.neoforged.neoforge.fluids.FluidStack;
-
-import java.util.Map;
 
 @SuppressWarnings("unused")
 public final class ConverterFluidStack implements Converter {
@@ -23,13 +22,26 @@ public final class ConverterFluidStack implements Converter {
         if (value instanceof FluidStack stack) {
             var fluid = stack.getFluid();
             var fluidType = fluid.getFluidType();
-            if (Settings.get().insertIdsInConverters) {
-                output.put("id", BuiltInRegistries.FLUID.getId(fluid));
-            }
-            output.put("name", BuiltInRegistries.FLUID.getKey(fluid).toString());
-            output.put("label", fluidType.getDescription().getString());
             output.put("amount", stack.getAmount());
             output.put("hasTag", !stack.getComponents().isEmpty());
+            if (!stack.isEmpty()) {
+                if (OCSettings.get().insertIdsInConverters) {
+                    output.put("id", BuiltInRegistries.FLUID.getId(fluid));
+                }
+                output.put("name", BuiltInRegistries.FLUID.getKey(fluid).toString());
+                output.put("label", fluidType.getDescription().getString());
+            }
+        } else if (value instanceof li.cil.oc.core.util.FluidStack stack) {
+            output.put("amount", stack.amount());
+            output.put("hasTag", stack.hasTag());
+            if (!stack.isEmpty()) {
+                var fluid = BuiltInRegistries.FLUID.get(net.minecraft.resources.ResourceLocation.parse(stack.fluidName()));
+                if (OCSettings.get().insertIdsInConverters) {
+                    output.put("id", BuiltInRegistries.FLUID.getId(fluid));
+                }
+                output.put("name", stack.fluidName());
+                output.put("label", fluid.getFluidType().getDescription().getString());
+            }
         }
     }
 }

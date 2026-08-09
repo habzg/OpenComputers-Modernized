@@ -1,19 +1,19 @@
 package li.cil.oc.core.impl.server.machine.luac;
 
-import li.cil.oc.core.impl.Settings;
+import java.util.ArrayList;
+import java.util.UUID;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.ExtendedLuaState;
 import li.cil.repack.com.naef.jnlua.LuaState;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 
-import java.util.ArrayList;
-import java.util.UUID;
-
 public class PersistenceAPI extends NativeLuaAPI {
-    private String persistKey = "__persist" + UUID.randomUUID().toString().replace("-", "");
+    private String persistKey;
 
     public PersistenceAPI(NativeLuaArchitecture owner) {
         super(owner);
+        this.persistKey = "__persist" + UUID.randomUUID().toString().replace("-", "");
     }
 
     @Override
@@ -24,7 +24,7 @@ public class PersistenceAPI extends NativeLuaAPI {
         });
         lua().setGlobal("persistKey");
 
-        if (Settings.get().allowPersistence) {
+        if (OCSettings.get().allowPersistence) {
             lua().newTable();
             lua().newTable();
 
@@ -128,7 +128,7 @@ public class PersistenceAPI extends NativeLuaAPI {
 
         lua().getField(-1, "settings");
         lua().pushString("path");
-        lua().pushBoolean(Settings.get().debugPersistence);
+        lua().pushBoolean(OCSettings.get().debugPersistence);
         lua().call(2, 0);
 
         lua().pop(1);
@@ -143,7 +143,7 @@ public class PersistenceAPI extends NativeLuaAPI {
     }
 
     public byte[] persist(int index) {
-        if (Settings.get().allowPersistence) {
+        if (OCSettings.get().allowPersistence) {
             configure();
             try {
                 lua().gc(LuaState.GcAction.STOP, 0);
@@ -173,7 +173,7 @@ public class PersistenceAPI extends NativeLuaAPI {
     }
 
     public void unpersist(byte[] value) {
-        if (Settings.get().allowPersistence) {
+        if (OCSettings.get().allowPersistence) {
             configure();
             try {
                 lua().gc(LuaState.GcAction.STOP, 0);

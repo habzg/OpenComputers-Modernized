@@ -1,6 +1,6 @@
 package li.cil.oc.core.impl.common.inventory;
 
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -37,9 +37,9 @@ public interface ItemStackInventory extends Inventory {
             } else {
                 nbt = customData.copyTag();
             }
-            CompoundTag data = nbt.contains(Settings.namespace + "data") ? nbt.getCompound(Settings.namespace + "data") : new CompoundTag();
+            CompoundTag data = nbt.contains(OCSettings.namespace + "data") ? nbt.getCompound(OCSettings.namespace + "data") : new CompoundTag();
             save(data, provider);
-            nbt.put(Settings.namespace + "data", data);
+            nbt.put(OCSettings.namespace + "data", data);
             c.set(DataComponents.CUSTOM_DATA, CustomData.of(nbt));
         }
     }
@@ -53,10 +53,10 @@ public interface ItemStackInventory extends Inventory {
         } else {
             nbt = customData.copyTag();
         }
-        if (!nbt.contains(Settings.namespace + "data")) {
-            nbt.put(Settings.namespace + "data", new CompoundTag());
+        if (!nbt.contains(OCSettings.namespace + "data")) {
+            nbt.put(OCSettings.namespace + "data", new CompoundTag());
         }
-        return nbt.getCompound(Settings.namespace + "data");
+        return nbt.getCompound(OCSettings.namespace + "data");
     }
 
     interface ItemStackInventoryAccessor {

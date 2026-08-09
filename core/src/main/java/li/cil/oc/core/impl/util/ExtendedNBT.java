@@ -1,6 +1,12 @@
 package li.cil.oc.core.impl.util;
 
 import com.google.common.base.Charsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.ByteArrayTag;
 import net.minecraft.nbt.ByteTag;
@@ -16,15 +22,11 @@ import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 @SuppressWarnings("unused")
 public final class ExtendedNBT {
+    private static final int MAX_BYTE_ARRAY_SIZE = 1048576; // 1MB
+    private static final int MAX_INT_ARRAY_SIZE = 262144; // 1MB / 4
+    private static final int MAX_LIST_SIZE = 65536;
 
     public static ByteTag toNbt(boolean value) {
         return ByteTag.valueOf(value);
@@ -73,11 +75,10 @@ public final class ExtendedNBT {
     }
 
     public static CompoundTag toNbt(ItemStack value, net.minecraft.core.HolderLookup.Provider provider) {
-        CompoundTag nbt = new CompoundTag();
-        if (value != null) {
-            value.save(provider, nbt);
+        if (value != null && !value.isEmpty()) {
+            return (CompoundTag) value.save(provider);
         }
-        return nbt;
+        return new CompoundTag();
     }
 
     @SuppressWarnings("unchecked")
@@ -118,6 +119,7 @@ public final class ExtendedNBT {
             }
             case Tag.TAG_BYTE_ARRAY -> {
                 List<?> list = asList(nbtValue);
+                if (list.size() > MAX_BYTE_ARRAY_SIZE) throw new IllegalArgumentException("Byte array too large: " + list.size() + " (max " + MAX_BYTE_ARRAY_SIZE + ")");
                 byte[] bytes = new byte[list.size()];
                 for (int i = 0; i < list.size(); i++) {
                     if (list.get(i) instanceof Number n) bytes[i] = n.byteValue();
@@ -131,8 +133,10 @@ public final class ExtendedNBT {
                 throw new IllegalArgumentException("Illegal or missing value.");
             }
             case Tag.TAG_LIST -> {
+                List<?> listValues = asList(nbtValue);
+                if (listValues.size() > MAX_LIST_SIZE) throw new IllegalArgumentException("List too large: " + listValues.size() + " (max " + MAX_LIST_SIZE + ")");
                 ListTag list = new ListTag();
-                for (Object v : asList(nbtValue)) {
+                for (Object v : listValues) {
 
                     Map<String, Object> m = (Map<String, Object>) v;
                     list.add(typedMapToNbt(m));
@@ -156,6 +160,7 @@ public final class ExtendedNBT {
             }
             case Tag.TAG_INT_ARRAY -> {
                 List<?> intList = asList(nbtValue);
+                if (intList.size() > MAX_INT_ARRAY_SIZE) throw new IllegalArgumentException("Int array too large: " + intList.size() + " (max " + MAX_INT_ARRAY_SIZE + ")");
                 int[] ints = new int[intList.size()];
                 for (int i = 0; i < intList.size(); i++) {
                     if (intList.get(i) instanceof Number n) ints[i] = n.intValue();

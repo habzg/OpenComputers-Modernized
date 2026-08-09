@@ -1,7 +1,7 @@
 package li.cil.oc.core.impl.common.item.data;
 
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -48,7 +48,7 @@ public class NavigationUpgradeData extends ItemData {
     public void load(ItemStack stack, HolderLookup.Provider provider) {
         var tag = stack.get(DataComponents.CUSTOM_DATA);
         if (tag != null && !tag.isEmpty()) {
-            load(tag.copyTag().getCompound(Settings.namespace + "data"), provider);
+            load(tag.copyTag().getCompound(OCSettings.namespace + "data"), provider);
         }
     }
 
@@ -56,21 +56,21 @@ public class NavigationUpgradeData extends ItemData {
     public void save(ItemStack stack, HolderLookup.Provider provider) {
         var tag = stack.get(DataComponents.CUSTOM_DATA);
         var nbt = tag != null && !tag.isEmpty() ? tag.copyTag() : new CompoundTag();
-        save(nbt.getCompound(Settings.namespace + "data"), provider);
+        save(nbt.getCompound(OCSettings.namespace + "data"), provider);
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(nbt));
     }
 
     @Override
     public void load(CompoundTag nbt, HolderLookup.Provider provider) {
-        if (nbt.contains(Settings.namespace + "map")) {
-            map = ItemStack.parseOptional(provider, nbt.getCompound(Settings.namespace + "map"));
+        if (nbt.contains(OCSettings.namespace + "map")) {
+            map = ItemStack.parseOptional(provider, nbt.getCompound(OCSettings.namespace + "map"));
         }
     }
 
     @Override
     public void save(CompoundTag nbt, HolderLookup.Provider provider) {
         if (map != null && !map.isEmpty()) {
-            nbt.put(Settings.namespace + "map", map.save(provider, new CompoundTag()));
+            nbt.put(OCSettings.namespace + "map", map.save(provider, new CompoundTag()));
         }
     }
 }

@@ -1,7 +1,10 @@
 package li.cil.oc.neoforge.model;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import li.cil.oc.core.impl.Settings;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import li.cil.oc.core.impl.OCSettings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.RenderType;
@@ -25,12 +28,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 public class RobotModel implements IDynamicBakedModel {
-    private static final ResourceLocation ROBOT_TEXTURE = ResourceLocation.fromNamespaceAndPath(Settings.resourceDomain, "item/robot");
+    private static final ResourceLocation ROBOT_TEXTURE = ResourceLocation.fromNamespaceAndPath(OCSettings.resourceDomain, "item/robot");
 
     private final BakedModel originalModel;
 

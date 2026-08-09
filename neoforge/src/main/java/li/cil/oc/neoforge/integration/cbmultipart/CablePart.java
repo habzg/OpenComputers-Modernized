@@ -14,7 +14,7 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.Color;
 import li.cil.oc.neoforge.common.block.Cable;
 import net.minecraft.core.BlockPos;
@@ -34,7 +34,7 @@ public final class CablePart extends SimpleBlockPart
 
     private static final VoxelShape OCCLUSION_BOX = Shapes.box(0.375, 0.375, 0.375, 0.625, 0.625, 0.625);
 
-    private final li.cil.oc.core.impl.common.tileentity.Cable original;
+    private final li.cil.oc.core.impl.common.blockentity.Cable original;
     public final Node node;
     private int color = Color.LightGray;
 
@@ -42,7 +42,7 @@ public final class CablePart extends SimpleBlockPart
         this(null);
     }
 
-    public CablePart(li.cil.oc.core.impl.common.tileentity.Cable original) {
+    public CablePart(li.cil.oc.core.impl.common.blockentity.Cable original) {
         this.original = original;
         node = Network.newNode(this, Visibility.None).create();
         if (original != null) color = original.color();
@@ -175,19 +175,19 @@ public final class CablePart extends SimpleBlockPart
         if (node != null) {
             var nodeNbt = new CompoundTag();
             node.save(nodeNbt, registries);
-            nbt.put(Settings.namespace + "node", nodeNbt);
+            nbt.put(OCSettings.namespace + "node", nodeNbt);
         }
-        nbt.putInt(Settings.namespace + "renderColor", color);
+        nbt.putInt(OCSettings.namespace + "renderColor", color);
     }
 
     @Override
     public void load(@NotNull CompoundTag nbt, HolderLookup.@NotNull Provider registries) {
         super.load(nbt, registries);
-        if (node != null && nbt.contains(Settings.namespace + "node")) {
-            node.load(nbt.getCompound(Settings.namespace + "node"), registries);
+        if (node != null && nbt.contains(OCSettings.namespace + "node")) {
+            node.load(nbt.getCompound(OCSettings.namespace + "node"), registries);
         }
-        if (nbt.contains(Settings.namespace + "renderColor")) {
-            color = nbt.getInt(Settings.namespace + "renderColor");
+        if (nbt.contains(OCSettings.namespace + "renderColor")) {
+            color = nbt.getInt(OCSettings.namespace + "renderColor");
         }
     }
 

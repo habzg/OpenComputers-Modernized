@@ -1,7 +1,12 @@
 package li.cil.oc.core.impl.server.machine.luaj;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import li.cil.oc.api.machine.Value;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.repack.org.luaj.vm2.LuaString;
 import li.cil.repack.org.luaj.vm2.LuaTable;
 import li.cil.repack.org.luaj.vm2.LuaValue;
@@ -9,12 +14,6 @@ import li.cil.repack.org.luaj.vm2.Varargs;
 import li.cil.repack.org.luaj.vm2.lib.VarArgFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 
 public final class ScalaClosure {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScalaClosure.class);
@@ -89,7 +88,7 @@ public final class ScalaClosure {
             case Double d -> LuaValue.valueOf(d);
             case String s -> LuaValue.valueOf(s);
             case byte[] b -> LuaValue.valueOf(b);
-            case Value v when Settings.get().allowUserdata -> LuaValue.userdataOf(v);
+            case Value v when OCSettings.get().allowUserdata -> LuaValue.userdataOf(v);
             case Object[] a -> toLuaList(java.util.Arrays.asList(a));
             case Map<?, ?> m -> toLuaTable(m);
             case Iterable<?> it -> toLuaList(it);

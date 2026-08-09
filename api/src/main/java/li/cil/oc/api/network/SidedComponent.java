@@ -7,14 +7,14 @@ import net.minecraft.core.Direction;
  * which allows controlling connectivity on a side-by-side basis.
  * <br>
  * Like the <code>SimpleComponent</code> interface, this is intended to be used
- * with tile entities that should act as OC components. Please see the
+ * with block entities that should act as OC components. Please see the
  * <code>SimpleComponent</code> interface for more information.
  */
 public interface SidedComponent {
     /**
      * Whether this component can connect to a node on the specified side.
      * <br>
-     * The provided side is relative to the component, i.e. when the tile
+     * The provided side is relative to the component, i.e. when the block
      * entity sits at (0, 0, 0) and is asked for its southern node (positive
      * Z axis) it has to return the connectivity for the face between it and
      * the block at (0, 0, 1).

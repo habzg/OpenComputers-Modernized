@@ -4,7 +4,7 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.prefab.AbstractValue;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.InventoryUtils;
 import li.cil.oc.core.util.ResultWrapper;
 import net.minecraft.core.HolderLookup;
@@ -23,7 +23,7 @@ public abstract class TradeBase extends AbstractValue {
     }
 
     public double maxRange() {
-        return Settings.get().tradingRange;
+        return OCSettings.get().tradingRange;
     }
 
     public boolean isInRange() {
@@ -46,12 +46,12 @@ public abstract class TradeBase extends AbstractValue {
         info.save(nbt, provider);
     }
 
-    @Callback(doc = "function():number -- Returns the merchant ID.")
+    @Callback(doc = "function():number -- Returns a sort index of the merchant that provides this trade")
     public Object[] getMerchantId(Context context, Arguments arguments) {
         return ResultWrapper.result((double) info.merchantID);
     }
 
-    @Callback(doc = "function():table, table -- Returns the items the merchant wants.")
+    @Callback(doc = "function():table, table -- Returns the items the merchant wants for this trade.")
     public Object[] getInput(Context context, Arguments arguments) {
         MerchantOffer recipe = info.recipe();
         if (recipe != null) {
@@ -62,7 +62,7 @@ public abstract class TradeBase extends AbstractValue {
         return ResultWrapper.result(null, null);
     }
 
-    @Callback(doc = "function():table -- Returns the item the merchant offers.")
+    @Callback(doc = "function():table -- Returns the item the merchant offers for this trade.")
     public Object[] getOutput(Context context, Arguments arguments) {
         MerchantOffer recipe = info.recipe();
         if (recipe != null) return ResultWrapper.result(recipe.getResult().copy());
@@ -72,12 +72,13 @@ public abstract class TradeBase extends AbstractValue {
     @Callback(doc = "function():boolean -- Returns whether the merchant currently wants to trade this.")
     public Object[] isEnabled(Context context, Arguments arguments) {
         Merchant m = info.merchant.get();
+        if (m == null) return ResultWrapper.result(false);
         MerchantOffer recipe = info.recipe();
-        if (m != null && recipe != null) return ResultWrapper.result(!recipe.isOutOfStock());
-        return ResultWrapper.result(false);
+        if (recipe == null) return ResultWrapper.result(true);
+        return ResultWrapper.result(!recipe.isOutOfStock());
     }
 
-    @Callback(doc = "function():boolean, string -- Returns true when trade succeeds.")
+    @Callback(doc = "function():boolean, string -- Returns true when trade succeeds and nil, error when not.")
     public Object[] trade(Context context, Arguments arguments) {
         Container inventory = info.inventory();
         if (inventory == null)
@@ -86,9 +87,9 @@ public abstract class TradeBase extends AbstractValue {
         if (m == null)
             return ResultWrapper.result(false, "trade has become invalid");
         if (!(m instanceof Entity) || !((Entity) m).isAlive())
-            return ResultWrapper.result(false, "trader died");
+            return ResultWrapper.result(false, "trade has become invalid");
         if (!isInRange())
-            return ResultWrapper.result(false, "out of range");
+            return ResultWrapper.result(false, "trade has become invalid");
         MerchantOffer recipe = info.recipe();
         if (recipe == null)
             return ResultWrapper.result(false, "trade has become invalid");

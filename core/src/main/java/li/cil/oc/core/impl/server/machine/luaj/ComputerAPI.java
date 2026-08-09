@@ -4,7 +4,7 @@ import li.cil.oc.api.driver.item.MutableProcessor;
 import li.cil.oc.api.driver.item.Processor;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.network.Connector;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.repack.org.luaj.vm2.LuaValue;
 import net.minecraft.world.item.ItemStack;
 
@@ -57,7 +57,7 @@ public class ComputerAPI extends LuaJAPI {
         computer.set("removeUser", ScalaClosure.wrapClosure(args -> LuaValue.valueOf(machine.removeUser(args.checkjstring(1)))));
 
         computer.set("energy", ScalaClosure.wrapClosure(args -> {
-            if (Settings.get().ignorePower)
+            if (OCSettings.get().ignorePower)
                 return LuaValue.valueOf(Double.POSITIVE_INFINITY);
             else
                 return LuaValue.valueOf(((Connector) node()).globalBuffer());

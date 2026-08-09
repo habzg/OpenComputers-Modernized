@@ -1,15 +1,14 @@
 package li.cil.oc.core.impl.common.template;
 
-import li.cil.oc.core.impl.Settings;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Pattern;
+import li.cil.oc.core.impl.OCSettings;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Pattern;
 
 public final class TemplateBlacklist {
     private static final Logger LOGGER = LoggerFactory.getLogger(TemplateBlacklist.class);
@@ -22,7 +21,7 @@ public final class TemplateBlacklist {
         if (TheBlacklist != null) return;
         var pattern = Pattern.compile("^([^@]+)(?:@(\\d+))?$");
         List<ItemStack> list = new ArrayList<>();
-        for (var entry : Settings.get().assemblerBlacklist) {
+        for (var entry : OCSettings.get().assemblerBlacklist) {
             var m = pattern.matcher(entry);
             if (m.matches()) {
                 var id = m.group(1);

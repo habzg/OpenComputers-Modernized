@@ -1,6 +1,9 @@
 package li.cil.oc.core.impl.common.template;
 
 import com.google.common.base.Strings;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.core.impl.common.ReflectionUtil;
@@ -11,10 +14,6 @@ import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
 
 public final class AssemblerTemplates {
     private static final Logger LOGGER = LoggerFactory.getLogger(AssemblerTemplates.class);

@@ -5,15 +5,15 @@ import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.network.Visibility;
-import li.cil.oc.core.common.tileentity.traits.NotAnalyzable;
-import li.cil.oc.core.impl.common.tileentity.Assembler;
-import li.cil.oc.core.impl.common.tileentity.Charger;
-import li.cil.oc.core.impl.common.tileentity.DiskDrive;
-import li.cil.oc.core.impl.common.tileentity.Hologram;
-import li.cil.oc.core.impl.common.tileentity.Keyboard;
-import li.cil.oc.core.impl.common.tileentity.Printer;
-import li.cil.oc.core.impl.common.tileentity.Screen;
-import li.cil.oc.neoforge.common.tileentity.Relay;
+import li.cil.oc.core.common.blockentity.traits.NotAnalyzable;
+import li.cil.oc.core.impl.common.blockentity.Assembler;
+import li.cil.oc.core.impl.common.blockentity.Charger;
+import li.cil.oc.core.impl.common.blockentity.DiskDrive;
+import li.cil.oc.core.impl.common.blockentity.Hologram;
+import li.cil.oc.core.impl.common.blockentity.Keyboard;
+import li.cil.oc.core.impl.common.blockentity.Printer;
+import li.cil.oc.core.impl.common.blockentity.Relay;
+import li.cil.oc.core.impl.common.blockentity.Screen;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -99,14 +99,14 @@ public enum OCDataProvider implements IBlockComponentProvider, IServerDataProvid
             }
         } else if (be instanceof final Relay relay) {
             data.putDouble(TAG_SIGNAL_STRENGTH, relay.strength);
-        } else if (be instanceof final li.cil.oc.core.impl.common.tileentity.Rack rack) {
+        } else if (be instanceof final li.cil.oc.core.impl.common.blockentity.Rack rack) {
             final ListTag mountableNodes = new ListTag();
             for (int slot = 0; slot < rack.getContainerSize(); slot++) {
                 final var mountable = rack.getMountable(slot);
                 final CompoundTag nodeTag = new CompoundTag();
                 if (mountable != null) {
                     writeNode(mountable.node(), nodeTag);
-                    if (mountable instanceof final li.cil.oc.neoforge.common.component.TerminalServer ts) {
+                    if (mountable instanceof final li.cil.oc.core.impl.common.component.TerminalServer ts) {
                         final ListTag subNodes = new ListTag();
                         if (ts.bufferIfLoaded() != null && ts.bufferIfLoaded().node() != null) {
                             subNodes.add(writeNode(ts.bufferIfLoaded().node(), new CompoundTag()));
@@ -188,7 +188,7 @@ public enum OCDataProvider implements IBlockComponentProvider, IServerDataProvid
 
         if (data.contains(TAG_RACK_MOUNTABLE_NODES)) {
             final BlockEntity be = accessor.getBlockEntity();
-            if (be instanceof final li.cil.oc.core.impl.common.tileentity.Rack rack) {
+            if (be instanceof final li.cil.oc.core.impl.common.blockentity.Rack rack) {
                 final Direction facing = accessor.getSide();
                 if (facing == rack.facing()) {
                     final var hit = accessor.getHitResult();

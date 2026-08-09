@@ -1,10 +1,9 @@
 package li.cil.oc.api.internal;
 
+import java.util.UUID;
 import li.cil.oc.api.machine.MachineHost;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
-
-import java.util.UUID;
 
 /**
  * General marker interface for autonomous agents such as robots and drones.

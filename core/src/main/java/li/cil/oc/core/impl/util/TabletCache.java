@@ -3,37 +3,37 @@ package li.cil.oc.core.impl.util;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableMap;
-import li.cil.oc.core.impl.Settings;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.server.component.TabletHostBase;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
 public abstract class TabletCache {
     private static TabletCache serverInstance;
     private static TabletCache clientInstance;
 
-    public static void setInstance(TabletCache inst) {
-        serverInstance = inst;
-    }
-
     public static TabletCache get() {
+        if (serverInstance == null) {
+            serverInstance = new ServerTabletCache();
+        }
         return serverInstance;
     }
 
-    public static void setClientInstance(TabletCache inst) {
-        clientInstance = inst;
+    public static TabletCache forSide(final boolean isClientSide) {
+        if (isClientSide) {
+            if (clientInstance == null) {
+                clientInstance = new ClientTabletCache();
+            }
+            return clientInstance;
+        }
+        return get();
     }
 
-    public static TabletCache forSide(boolean isClientSide) {
-        return isClientSide ? clientInstance : serverInstance;
-    }
-
-    private static final String ID_TAG = Settings.namespace + "tablet";
+    private static final String ID_TAG = OCSettings.namespace + "tablet";
 
     public static String getOrCreateId(ItemStack stack) {
         var tag = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);

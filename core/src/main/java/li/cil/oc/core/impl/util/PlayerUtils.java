@@ -1,18 +1,20 @@
 package li.cil.oc.core.impl.util;
 
+import li.cil.oc.core.impl.IPlayerDataProvider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 
 public final class PlayerUtils {
+    private static IPlayerDataProvider dataProvider = DefaultProvider.INSTANCE;
+
+    public static void setDataProvider(IPlayerDataProvider p) {
+        dataProvider = p;
+    }
 
     public static CompoundTag persistedData(Player player) {
-        CompoundTag nbt = player.getPersistentData();
-        if (!nbt.contains(Player.PERSISTED_NBT_TAG)) {
-            nbt.put(Player.PERSISTED_NBT_TAG, new CompoundTag());
-        }
-        return nbt.getCompound(Player.PERSISTED_NBT_TAG);
+        return dataProvider.getPersistentData(player);
     }
 
     public static void spawnParticleAround(Player player, String effectName, double chance) {
@@ -27,6 +29,15 @@ public final class PlayerUtils {
             if (particleType instanceof net.minecraft.core.particles.ParticleOptions particle) {
                 player.level().addParticle(particle, x, y, z, 0, 0, 0);
             }
+        }
+    }
+
+    private static final class DefaultProvider implements IPlayerDataProvider {
+        static final IPlayerDataProvider INSTANCE = new DefaultProvider();
+
+        @Override
+        public CompoundTag getPersistentData(Player player) {
+            return new CompoundTag();
         }
     }
 }

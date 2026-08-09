@@ -1,5 +1,7 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.io.IOException;
+import java.util.Map;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
@@ -11,15 +13,12 @@ import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.network.WirelessEndpoint;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Tier;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.BlockPosition;
 import li.cil.oc.core.util.ResultWrapper;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
-
-import java.io.IOException;
-import java.util.Map;
 
 
 public abstract class WirelessNetworkCard extends NetworkCard implements WirelessEndpoint {
@@ -114,7 +113,7 @@ public abstract class WirelessNetworkCard extends NetworkCard implements Wireles
 
     private void checkPower() {
         double cost = wirelessCostPerRange();
-        if (cost > 0 && !Settings.get().ignorePower) {
+        if (cost > 0 && !OCSettings.get().ignorePower) {
             if (!((li.cil.oc.api.network.Connector) node).tryChangeBuffer(-strength * cost)) {
                 throw new RuntimeException(new IOException("not enough energy"));
             }
@@ -172,7 +171,7 @@ public abstract class WirelessNetworkCard extends NetworkCard implements Wireles
             put(DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor);
             put(DeviceAttribute.Product, "39i110 (LPPW-01)");
             put(DeviceAttribute.Version, "1.0");
-            put(DeviceAttribute.Capacity, String.valueOf(Settings.get().maxNetworkPacketSize));
+            put(DeviceAttribute.Capacity, String.valueOf(OCSettings.get().maxNetworkPacketSize));
             put(DeviceAttribute.Size, String.valueOf(maxOpenPorts()));
             put(DeviceAttribute.Width, String.valueOf(maxWirelessRange()));
         }};
@@ -183,17 +182,17 @@ public abstract class WirelessNetworkCard extends NetworkCard implements Wireles
 
         @Override
         protected double wirelessCostPerRange() {
-            return Settings.get().wirelessCostPerRange[Tier.One];
+            return OCSettings.get().wirelessCostPerRange[Tier.One];
         }
 
         @Override
         protected double maxWirelessRange() {
-            return Settings.get().maxWirelessRange[Tier.One];
+            return OCSettings.get().maxWirelessRange[Tier.One];
         }
 
         @Override
         protected int maxOpenPorts() {
-            return Settings.get().maxOpenPorts[Tier.One + 1];
+            return OCSettings.get().maxOpenPorts[Tier.One + 1];
         }
 
         @Override
@@ -222,7 +221,7 @@ public abstract class WirelessNetworkCard extends NetworkCard implements Wireles
             put(DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor);
             put(DeviceAttribute.Product, "62i230 (MPW-01)");
             put(DeviceAttribute.Version, "2.0");
-            put(DeviceAttribute.Capacity, String.valueOf(Settings.get().maxNetworkPacketSize));
+            put(DeviceAttribute.Capacity, String.valueOf(OCSettings.get().maxNetworkPacketSize));
             put(DeviceAttribute.Size, String.valueOf(maxOpenPorts()));
             put(DeviceAttribute.Width, String.valueOf(maxWirelessRange()));
         }};
@@ -233,17 +232,17 @@ public abstract class WirelessNetworkCard extends NetworkCard implements Wireles
 
         @Override
         protected double wirelessCostPerRange() {
-            return Settings.get().wirelessCostPerRange[Tier.Two];
+            return OCSettings.get().wirelessCostPerRange[Tier.Two];
         }
 
         @Override
         protected double maxWirelessRange() {
-            return Settings.get().maxWirelessRange[Tier.Two];
+            return OCSettings.get().maxWirelessRange[Tier.Two];
         }
 
         @Override
         protected int maxOpenPorts() {
-            return Settings.get().maxOpenPorts[Tier.Two + 1];
+            return OCSettings.get().maxOpenPorts[Tier.Two + 1];
         }
 
         @Override

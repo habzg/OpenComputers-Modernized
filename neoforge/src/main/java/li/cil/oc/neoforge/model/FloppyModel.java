@@ -1,6 +1,7 @@
 package li.cil.oc.neoforge.model;
 
-import li.cil.oc.core.impl.Settings;
+import java.util.List;
+import li.cil.oc.core.impl.OCSettings;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.block.model.ItemOverrides;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -14,8 +15,6 @@ import net.neoforged.neoforge.client.model.IDynamicBakedModel;
 import net.neoforged.neoforge.client.model.data.ModelData;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
 
 public class FloppyModel implements IDynamicBakedModel {
     private final BakedModel[] dyeModels;
@@ -31,8 +30,8 @@ public class FloppyModel implements IDynamicBakedModel {
                 var data = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
                 if (data != null && !data.isEmpty()) {
                     var tag = data.copyTag();
-                    if (tag.contains(Settings.namespace + "color")) {
-                        color = tag.getInt(Settings.namespace + "color");
+                    if (tag.contains(OCSettings.namespace + "color")) {
+                        color = tag.getInt(OCSettings.namespace + "color");
                     }
                 }
                 color = Math.clamp(color, 0, 15);

@@ -8,7 +8,8 @@ import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Visibility;
-import li.cil.oc.api.prefab.DriverSidedTileEntity;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.api.prefab.DriverSidedBlockEntity;
 import li.cil.oc.core.util.ResultWrapper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -19,27 +20,30 @@ import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 
 @SuppressWarnings("unused")
-public final class DriverEnergyStorage extends DriverSidedTileEntity {
+public final class DriverEnergyStorage extends DriverSidedBlockEntity {
     @Override
-    public Class<?> getTileEntityClass() {
+    public boolean isGeneric() {
+        return true;
+    }
+
+    @Override
+    public Class<?> getBlockEntityClass() {
         return BlockEntity.class;
     }
 
     @Override
-    public boolean worksWith(final Level world, final int x, final int y, final int z, final Direction side) {
-        var pos = new BlockPos(x, y, z);
+    public boolean worksWith(final Level world, final BlockPos pos, final Direction side) {
         return world.getCapability(Capabilities.EnergyStorage.BLOCK, pos, side) != null;
     }
 
     @Override
-    public ManagedEnvironment createEnvironment(final Level world, final int x, final int y, final int z, final Direction side) {
-        var pos = new BlockPos(x, y, z);
+    public ManagedEnvironment createEnvironment(final Level world, final BlockPos pos, final Direction side) {
         var storage = world.getCapability(Capabilities.EnergyStorage.BLOCK, pos, side);
         if (storage == null) return null;
         return new Environment(storage);
     }
 
-    public static final class Environment extends li.cil.oc.api.prefab.ManagedEnvironment implements NamedBlock {
+    public static final class Environment extends AbstractManagedEnvironment implements NamedBlock {
         private final IEnergyStorage storage;
 
         public Environment(final IEnergyStorage storage) {

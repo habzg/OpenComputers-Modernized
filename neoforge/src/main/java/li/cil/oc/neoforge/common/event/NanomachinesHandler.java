@@ -1,11 +1,14 @@
 package li.cil.oc.neoforge.common.event;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import li.cil.oc.api.nanomachines.Controller;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.client.Textures;
+import li.cil.oc.core.impl.common.nanomachines.ControllerImpl;
 import li.cil.oc.neoforge.OpenComputers;
 import li.cil.oc.neoforge.common.EventHandler;
-import li.cil.oc.neoforge.common.nanomachines.ControllerImpl;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.world.entity.player.Player;
@@ -13,18 +16,26 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-
 @SuppressWarnings("unused")
 public final class NanomachinesHandler {
     public static final class Client {
         @SuppressWarnings("unused")
         @SubscribeEvent
+        public static void onClientTick(net.neoforged.neoforge.client.event.ClientTickEvent.Post e) {
+            var mc = net.minecraft.client.Minecraft.getInstance();
+            if (mc.player != null && !mc.isPaused()) {
+                Controller ctrl = li.cil.oc.api.Nanomachines.getController(mc.player);
+                if (ctrl instanceof ControllerImpl controller && controller.player == mc.player) {
+                    controller.update();
+                }
+            }
+        }
+
+        @SuppressWarnings("unused")
+        @SubscribeEvent
         public static void onRenderGui(net.neoforged.neoforge.client.event.RenderGuiEvent.Post e) {
             var mc = net.minecraft.client.Minecraft.getInstance();
-            if (mc.player == null) return;
+            if (mc.player == null || mc.options.hideGui) return;
             Controller controller = li.cil.oc.api.Nanomachines.getController(mc.player);
             if (controller == null) return;
             var guiGraphics = e.getGuiGraphics();
@@ -32,7 +43,7 @@ public final class NanomachinesHandler {
             int sizeY = 12;
             int width = guiGraphics.guiWidth();
             int height = guiGraphics.guiHeight();
-            double[] pos = Settings.get().nanomachineHudPos;
+            double[] pos = OCSettings.get().nanomachineHudPos;
             double x = pos[0];
             double y = pos[1];
             double leftValue;
@@ -125,7 +136,7 @@ public final class NanomachinesHandler {
                     try {
                         FileInputStream fis = new FileInputStream(file);
                         try {
-                            impl.load(NbtIo.readCompressed(fis, net.minecraft.nbt.NbtAccounter.unlimitedHeap()), e.getEntity().level().registryAccess());
+                            impl.load(NbtIo.readCompressed(fis, net.minecraft.nbt.NbtAccounter.create(0x200000L)), e.getEntity().level().registryAccess());
                         } catch (Throwable t) {
                             OpenComputers.log().warn("Error loading nanomachine state.", t);
                         }

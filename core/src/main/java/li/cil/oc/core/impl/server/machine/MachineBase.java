@@ -1,5 +1,19 @@
 package li.cil.oc.core.impl.server.machine;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.driver.item.CallBudget;
@@ -17,9 +31,10 @@ import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.common.Slot;
-import li.cil.oc.core.impl.Settings;
-import li.cil.oc.core.impl.common.tileentity.traits.Computer;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.common.blockentity.traits.Computer;
 import li.cil.oc.core.impl.server.fs.FileSystem;
 import li.cil.oc.core.impl.util.Log;
 import li.cil.oc.core.impl.util.SaveHandlerDelegate;
@@ -44,24 +59,9 @@ import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
-public abstract class MachineBase extends li.cil.oc.api.prefab.ManagedEnvironment implements li.cil.oc.api.machine.Machine, Runnable, DeviceInfo {
+public abstract class MachineBase extends AbstractManagedEnvironment implements li.cil.oc.api.machine.Machine, Runnable, DeviceInfo {
     private static final Logger LOGGER = LoggerFactory.getLogger(MachineBase.class);
-    private static final ScheduledExecutorService threadPool = ThreadPoolFactory.create("Computer", Settings.get().threads);
+    private static final ScheduledExecutorService threadPool = ThreadPoolFactory.create("Computer", OCSettings.get().threads);
     private static final Set<Class<? extends Architecture>> checked = new LinkedHashSet<>();
     public final MachineHost host;
     public final Node node;
@@ -120,13 +120,13 @@ public abstract class MachineBase extends li.cil.oc.api.prefab.ManagedEnvironmen
         this.host = host;
         this.node = Network.newNode(this, Visibility.Network)
                 .withComponent("computer", Visibility.Neighbors)
-                .withConnector(Settings.get().bufferComputer).create();
-        this.tmp = Settings.get().tmpSize > 0 ?
+                .withConnector(OCSettings.get().bufferComputer).create();
+        this.tmp = OCSettings.get().tmpSize > 0 ?
                 FileSystem.INSTANCE.asManagedEnvironment(
-                        FileSystem.INSTANCE.fromMemory(Settings.get().tmpSize * 1024L), "tmpfs", null, null, 5) :
+                        FileSystem.INSTANCE.fromMemory(OCSettings.get().tmpSize * 1024L), "tmpfs", null, null, 5) :
                 null;
-        this.cost = Settings.get().computerCost * Settings.get().tickFrequency;
-        this.maxSignalQueueSize = Settings.get().maxSignalQueueSize;
+        this.cost = OCSettings.get().computerCost * OCSettings.get().tickFrequency;
+        this.maxSignalQueueSize = OCSettings.get().maxSignalQueueSize;
         state.push(MachineBase.State.Stopped);
     }
 
@@ -220,12 +220,12 @@ public abstract class MachineBase extends li.cil.oc.api.prefab.ManagedEnvironmen
 
     @Override
     public double getCostPerTick() {
-        return cost / Settings.get().tickFrequency;
+        return cost / OCSettings.get().tickFrequency;
     }
 
     @Override
     public void setCostPerTick(double value) {
-        cost = value * Settings.get().tickFrequency;
+        cost = value * OCSettings.get().tickFrequency;
     }
 
     @Override
@@ -253,7 +253,7 @@ public abstract class MachineBase extends li.cil.oc.api.prefab.ManagedEnvironmen
 
     @Override
     public boolean canInteract(String player) {
-        if (!Settings.get().canComputersBeOwned) return true;
+        if (!OCSettings.get().canComputersBeOwned) return true;
         synchronized (_users) {
             if (_users.isEmpty() || _users.contains(player)) return true;
         }
@@ -287,7 +287,7 @@ public abstract class MachineBase extends li.cil.oc.api.prefab.ManagedEnvironmen
                 onHostChanged();
                 processAddedComponents();
                 verifyComponents();
-                if (!Settings.get().ignorePower && ((Connector) node).globalBuffer() < cost) {
+                if (!OCSettings.get().ignorePower && ((Connector) node).globalBuffer() < cost) {
                     crash("gui.opencomputers.error.noenergy");
                     return false;
                 }
@@ -383,14 +383,15 @@ public abstract class MachineBase extends li.cil.oc.api.prefab.ManagedEnvironmen
     }
 
     @Override
-    public void crash(String message) {
+    public boolean crash(String message) {
         this.message = message;
         synchronized (state) {
-            stop();
+            boolean result = stop();
             if (state.peek() == State.Stopping) {
                 state.clear();
                 state.push(State.Stopping);
             }
+            return result;
         }
     }
 
@@ -485,9 +486,9 @@ public abstract class MachineBase extends li.cil.oc.api.prefab.ManagedEnvironmen
 
     @Override
     public void addUser(String name) {
-        if (_users.size() >= Settings.get().maxUsers) throw new RuntimeException("too many users");
+        if (_users.size() >= OCSettings.get().maxUsers) throw new RuntimeException("too many users");
         if (_users.contains(name)) throw new RuntimeException("user exists");
-        if (name.length() > Settings.get().maxUsernameLength) throw new RuntimeException("username too long");
+        if (name.length() > OCSettings.get().maxUsernameLength) throw new RuntimeException("username too long");
         var server = host.level().getServer();
         if (server == null || !java.util.Arrays.asList(server.getPlayerNames()).contains(name))
             throw new RuntimeException("player must be online");
@@ -506,22 +507,22 @@ public abstract class MachineBase extends li.cil.oc.api.prefab.ManagedEnvironmen
         }
     }
 
-    @Callback(doc = "function():boolean -- Starts the computer.")
-    public Object[] start(Context context, Arguments args) {
+    @Callback(doc = "function():boolean -- Starts the computer. Returns true if the state changed.")
+    public Object[] start(Context ignoredContext, Arguments ignoredArgs) {
         return ResultWrapper.result(!isPaused() && start());
     }
 
-    @Callback(doc = "function():boolean -- Stops the computer.")
-    public Object[] stop(Context context, Arguments args) {
+    @Callback(doc = "function():boolean -- Stops the computer. Returns true if the state changed.")
+    public Object[] stop(Context ignoredContext, Arguments ignoredArgs) {
         return ResultWrapper.result(stop());
     }
 
     @Callback(direct = true, doc = "function():boolean -- Returns whether the computer is running.")
-    public Object[] isRunning(Context context, Arguments args) {
+    public Object[] isRunning(Context ignoredContext, Arguments ignoredArgs) {
         return ResultWrapper.result(isRunning());
     }
 
-    @Callback(doc = "function([frequency:string or number[, duration:number]]) -- Plays a tone.")
+    @Callback(doc = "function([frequency:string or number[, duration:number]]) -- Plays a tone, useful to alert users via audible feedback.")
     @SuppressWarnings("SameReturnValue")
     public Object[] beep(Context context, Arguments args) {
         if (args.count() == 1 && args.isString(0)) {
@@ -538,12 +539,18 @@ public abstract class MachineBase extends li.cil.oc.api.prefab.ManagedEnvironmen
     }
 
     @Callback(doc = "function():table -- Collect information on all connected devices.")
-    public Object[] getDeviceInfo(Context context, Arguments args) {
+    public Object[] getDeviceInfo(Context context, Arguments ignoredArgs) {
         context.pause(1);
         Map<Object, Object> r = new LinkedHashMap<>();
         for (Node n : node.network().nodes()) {
             if (n.host() instanceof DeviceInfo) {
-                if (n instanceof Component && (((Component) n).canBeSeenFrom(node) || n == node) || n.canBeReachedFrom(node)) {
+                boolean include;
+                if (n instanceof Component) {
+                    include = ((Component) n).canBeSeenFrom(node) || n == node;
+                } else {
+                    include = n.canBeReachedFrom(node);
+                }
+                if (include) {
                     Map<String, String> info = ((DeviceInfo) n.host()).getDeviceInfo();
                     if (info != null) r.put(n.address(), info);
                 }
@@ -552,8 +559,8 @@ public abstract class MachineBase extends li.cil.oc.api.prefab.ManagedEnvironmen
         return ResultWrapper.result(r);
     }
 
-    @Callback(doc = "function():table -- Returns a map of program name to disk label.")
-    public Object[] getProgramLocations(Context context, Arguments args) {
+    @Callback(doc = "function():table -- Returns a map of program name to disk label for known programs.")
+    public Object[] getProgramLocations(Context ignoredContext, Arguments ignoredArgs) {
         return ResultWrapper.result(ProgramLocations.getMappings(getArchitectureName(architecture.getClass())));
     }
 
@@ -590,12 +597,12 @@ public abstract class MachineBase extends li.cil.oc.api.prefab.ManagedEnvironmen
         uptime++;
         if (remainIdle > 0) remainIdle--;
         callBudget = maxCallBudget;
-        if (host.level().getGameTime() % Settings.get().tickFrequency == 0) {
+        if (host.level().getGameTime() % OCSettings.get().tickFrequency == 0) {
             synchronized (state) {
                 State t = state.peek();
                 if (t != State.Paused && t != State.Restarting && t != State.Stopping && t != State.Stopped) {
                     if (t == State.Sleeping && remainIdle > 0 && signals.isEmpty()) {
-                        if (!((Connector) node).tryChangeBuffer(-cost * Settings.get().sleepCostFactor))
+                        if (!((Connector) node).tryChangeBuffer(-cost * OCSettings.get().sleepCostFactor))
                             crash("gui.opencomputers.error.noenergy");
                     } else {
                         if (!((Connector) node).tryChangeBuffer(-cost)) crash("gui.opencomputers.error.noenergy");
@@ -623,7 +630,7 @@ public abstract class MachineBase extends li.cil.oc.api.prefab.ManagedEnvironmen
                 break;
             case "Restarting":
                 close();
-                if (Settings.get().eraseTmpOnReboot) {
+                if (OCSettings.get().eraseTmpOnReboot) {
                     if (tmp != null) tmp.node().remove();
                     if (tmp != null) node.connect(tmp.node());
                 }
@@ -690,10 +697,12 @@ public abstract class MachineBase extends li.cil.oc.api.prefab.ManagedEnvironmen
     @Override
     public void onMessage(Message msg) {
         if ("computer.signal".equals(msg.name()) && msg.data().length >= 1 && msg.data()[0] instanceof String) {
-            Object[] a = new Object[msg.data().length];
-            a[0] = msg.source().address();
-            System.arraycopy(msg.data(), 1, a, 1, msg.data().length - 1);
-            signal((String) msg.data()[0], a);
+            if (msg.source() != null && msg.source().address() != null && _components.containsKey(msg.source().address())) {
+                Object[] a = new Object[msg.data().length];
+                a[0] = msg.source().address();
+                System.arraycopy(msg.data(), 1, a, 1, msg.data().length - 1);
+                signal((String) msg.data()[0], a);
+            }
         } else if ("computer.checked_signal".equals(msg.name()) && msg.data().length >= 2 && msg.data()[0] instanceof Player && msg.data()[1] instanceof String && canInteract(((Player) msg.data()[0]).getScoreboardName())) {
             Object[] a = new Object[msg.data().length - 1];
             a[0] = msg.source().address();
@@ -835,7 +844,7 @@ public abstract class MachineBase extends li.cil.oc.api.prefab.ManagedEnvironmen
                         uptime = nbt.getLong("uptime");
                         cpuTotal = nbt.getLong("cpuTime");
                         remainingPause = nbt.getInt("remainingPause");
-                        if (state.peek() != State.Restarting) pause(Settings.get().startupDelay);
+                        if (state.peek() != State.Restarting) pause(OCSettings.get().startupDelay);
                     } catch (Throwable t) {
                         LOGGER.error("Error loading computer state", t);
                         close();
@@ -981,7 +990,7 @@ public abstract class MachineBase extends li.cil.oc.api.prefab.ManagedEnvironmen
             state.push(value);
             if (value == State.Yielded || value == State.SynchronizedReturn) {
                 remainIdle = 0;
-                threadPool.schedule(this, Settings.get().executionDelay, TimeUnit.MILLISECONDS);
+                threadPool.schedule(this, OCSettings.get().executionDelay, TimeUnit.MILLISECONDS);
             }
         }
         host.markChanged();

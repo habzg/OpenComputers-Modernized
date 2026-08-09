@@ -1,19 +1,18 @@
 package li.cil.oc.core.impl.client.renderer.font;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import li.cil.oc.core.impl.Settings;
-import li.cil.oc.core.impl.util.FontUtils;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.resources.ResourceLocation;
-
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.util.FontUtils;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.resources.ResourceLocation;
 
 public final class DynamicFontRenderer extends TextureFontRenderer {
     private static final int ATLAS_SIZE = 256;
@@ -114,7 +113,7 @@ public final class DynamicFontRenderer extends TextureFontRenderer {
         private CharTexture(DynamicFontRenderer owner) {
             this.owner = owner;
             this.texture = new DynamicTexture(ATLAS_SIZE, ATLAS_SIZE, false);
-            this.location = ResourceLocation.fromNamespaceAndPath(Settings.resourceDomain, "textures/font/dynamic_" + textureCounter.getAndIncrement());
+            this.location = ResourceLocation.fromNamespaceAndPath(OCSettings.resourceDomain, "textures/font/dynamic_" + textureCounter.getAndIncrement());
             this.cellWidth = owner.charWidth() + 2;
             this.cellHeight = owner.charHeight() + 2;
             this.cols = ATLAS_SIZE / cellWidth;

@@ -1,5 +1,7 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.lang.ref.WeakReference;
+import java.util.UUID;
 import li.cil.oc.api.network.EnvironmentHost;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -8,9 +10,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.trading.Merchant;
 import net.minecraft.world.item.trading.MerchantOffer;
 import org.jetbrains.annotations.Nullable;
-
-import java.lang.ref.WeakReference;
-import java.util.UUID;
 
 public abstract class TradeInfoBase {
     public EnvironmentHost host;
@@ -46,7 +45,7 @@ public abstract class TradeInfoBase {
 
     public void load(CompoundTag nbt, HolderLookup.Provider ignoredProvider) {
         boolean isEntity = nbt.getBoolean("hostIsEntity");
-        host = isEntity ? loadHostEntity(nbt) : loadHostTileEntity(nbt);
+        host = isEntity ? loadHostEntity(nbt) : loadHostBlockEntity(nbt);
         UUID merchantUUID = new UUID(nbt.getLong("merchantUUIDMost"), nbt.getLong("merchantUUIDLeast"));
         Entity merchantEntity = loadEntity(nbt, merchantUUID);
         merchant = new WeakReference<>(merchantEntity instanceof Merchant ? (Merchant) merchantEntity : null);
@@ -81,5 +80,5 @@ public abstract class TradeInfoBase {
 
     protected abstract @Nullable EnvironmentHost loadHostEntity(CompoundTag nbt);
 
-    protected abstract @Nullable EnvironmentHost loadHostTileEntity(CompoundTag nbt);
+    protected abstract @Nullable EnvironmentHost loadHostBlockEntity(CompoundTag nbt);
 }

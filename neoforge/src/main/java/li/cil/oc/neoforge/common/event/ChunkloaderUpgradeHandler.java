@@ -1,18 +1,17 @@
 package li.cil.oc.neoforge.common.event;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import li.cil.oc.api.event.RobotMoveEvent;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.core.impl.util.BlockPosition;
-import li.cil.oc.neoforge.event.RobotMoveEventImpl;
 import li.cil.oc.neoforge.server.component.UpgradeChunkloader;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 public final class ChunkloaderUpgradeHandler {
     private static final Map<Level, Map<String, Set<Long>>> worldChunks = new HashMap<>();
@@ -74,8 +73,8 @@ public final class ChunkloaderUpgradeHandler {
     }
 
     @SubscribeEvent
-    public static void onMove(RobotMoveEventImpl.Post e) {
-        Node machineNode = e.agent().machine().node();
+    public static void onMove(RobotMoveEvent.Post e) {
+        Node machineNode = e.agent.machine().node();
         for (Node node : machineNode.reachableNodes()) {
             if (node.host() instanceof UpgradeChunkloader) {
                 updateLoadedChunk((UpgradeChunkloader) node.host());

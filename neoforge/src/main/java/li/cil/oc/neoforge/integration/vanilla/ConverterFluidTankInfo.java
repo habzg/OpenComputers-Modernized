@@ -1,11 +1,10 @@
 package li.cil.oc.neoforge.integration.vanilla;
 
+import java.util.Map;
 import li.cil.oc.api.driver.Converter;
 import li.cil.oc.core.util.FluidTankInfo;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
-
-import java.util.Map;
 
 @SuppressWarnings("unused")
 public final class ConverterFluidTankInfo implements Converter {
@@ -22,10 +21,10 @@ public final class ConverterFluidTankInfo implements Converter {
         } else if (value instanceof FluidTankInfo(li.cil.oc.core.util.FluidStack fs, int capacity)) {
             output.put("capacity", capacity);
             if (fs != null && !fs.isEmpty()) {
-                output.put("name", fs.fluidName());
-                output.put("amount", fs.amount());
+                new ConverterFluidStack().convert(fs, output);
             } else {
                 output.put("amount", 0);
+                output.put("hasTag", false);
             }
         }
     }

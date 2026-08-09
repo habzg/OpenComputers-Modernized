@@ -1,20 +1,27 @@
 package li.cil.oc.neoforge.server.agent;
 
 import com.mojang.authlib.GameProfile;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Function;
+import li.cil.oc.api.event.RobotAttackEntityEvent;
+import li.cil.oc.api.event.RobotBreakBlockEvent;
+import li.cil.oc.api.event.RobotExhaustionEvent;
+import li.cil.oc.api.event.RobotPlaceBlockEvent;
+import li.cil.oc.api.event.RobotUsedToolEvent;
 import li.cil.oc.api.network.Connector;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.BlockPosition;
 import li.cil.oc.core.impl.util.InventoryUtils;
 import li.cil.oc.core.server.agent.ActivationType;
 import li.cil.oc.neoforge.OpenComputers;
 import li.cil.oc.neoforge.common.EventHandler;
-import li.cil.oc.neoforge.event.RobotAttackEntityEventImpl;
-import li.cil.oc.neoforge.event.RobotExhaustionEventImpl;
-import li.cil.oc.neoforge.event.RobotUsedToolEventImpl;
-import li.cil.oc.neoforge.integration.util.PortalGun;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
@@ -24,12 +31,13 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.piston.PistonBaseBlock;
@@ -39,15 +47,11 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.common.NeoForgeMod;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.common.util.TriState;
 import net.neoforged.neoforge.event.entity.living.LivingEntityUseItemEvent;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-import java.util.function.Function;
 
 public class Player extends FakePlayer implements li.cil.oc.core.impl.server.agent.AgentPlayer {
     public final li.cil.oc.api.internal.Agent agent;
@@ -57,7 +61,12 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
     public Player(ServerLevel world, li.cil.oc.api.internal.Agent agent) {
         super(world, profileFor(agent));
         this.agent = agent;
-        getAbilities().instabuild = true;
+        var flightAttr = getAttribute(NeoForgeMod.CREATIVE_FLIGHT);
+        if (flightAttr != null) {
+            flightAttr.addTransientModifier(new AttributeModifier(
+                    ResourceLocation.fromNamespaceAndPath(OCSettings.resourceDomain, "robot_flight"),
+                    1, AttributeModifier.Operation.ADD_VALUE));
+        }
         getAbilities().flying = true;
         setOnGround(true);
     }
@@ -94,14 +103,14 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
         } else {
             randomId = new java.util.Random().nextInt(0xFFFFFF) + 1;
         }
-        String name = Settings.get().nameFormat
+        String name = OCSettings.get().nameFormat
                 .replace("$player$", agent.ownerName())
                 .replace("$random$", Integer.toString(randomId));
         return new GameProfile(uuid, name);
     }
 
     public static UUID determineUUID(UUID playerUUID) {
-        String format = Settings.get().uuidFormat;
+        String format = OCSettings.get().uuidFormat;
         UUID randomUUID = UUID.randomUUID();
         try {
             return UUID.fromString(format
@@ -171,14 +180,14 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
     @Override
     public void attackTargetEntityWithCurrentItem(Entity entity) {
         callUsingItemInSlot(agent.equipmentInventory(), stack -> {
-            if (entity instanceof Player && !Settings.get().canAttackPlayers) {
+            if (entity instanceof Player && !OCSettings.get().canAttackPlayers) {
                 return null;
             }
-            RobotAttackEntityEventImpl.Pre event = new RobotAttackEntityEventImpl.Pre(agent, entity);
-            li.cil.oc.api.event.OCEventBus.post(event);
+            RobotAttackEntityEvent.Pre event = new RobotAttackEntityEvent.Pre(agent, entity);
+            NeoForge.EVENT_BUS.post(event);
             if (!event.isCanceled()) {
                 super.attack(entity);
-                li.cil.oc.api.event.OCEventBus.post(new RobotAttackEntityEventImpl.Post(agent, entity));
+                NeoForge.EVENT_BUS.post(new RobotAttackEntityEvent.Post(agent, entity));
             }
             return null;
         });
@@ -203,7 +212,7 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
             }
 
             BlockState state = level().getBlockState(pos);
-            if (!state.isAir() && Settings.get().allowActivateBlocks) {
+            if (!state.isAir() && OCSettings.get().allowActivateBlocks) {
                 boolean shouldActivate = !isShiftKeyDown() || (stack.isEmpty() || stack.doesSneakBypassUse(level(), pos, this));
                 if (shouldActivate) {
                     if (state.useWithoutItem(level(), this, blockHit).consumesAction()) {
@@ -273,14 +282,14 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
             float hardness = state.getDestroySpeed(level(), pos);
             if (hardness < 0) return 0.0;
 
-            boolean cobwebOverride = state.is(Blocks.COBWEB) && Settings.get().screwCobwebs;
+            boolean cobwebOverride = state.is(Blocks.COBWEB) && OCSettings.get().screwCobwebs;
             float strength = getDigSpeed(state, pos);
-            double breakTime = cobwebOverride ? Settings.get().swingDelay : hardness * 1.5 / strength;
+            double breakTime = cobwebOverride ? OCSettings.get().swingDelay : hardness * 1.5 / strength;
 
             if (Double.isInfinite(breakTime)) return 0.0;
 
-            var preEvent = new li.cil.oc.neoforge.event.RobotBreakBlockEventImpl.Pre(agent, level(), x, y, z, breakTime * Settings.get().harvestRatio);
-            li.cil.oc.api.event.OCEventBus.post(preEvent);
+            var preEvent = new RobotBreakBlockEvent.Pre(agent, level(), new BlockPos(x, y, z), breakTime * OCSettings.get().harvestRatio);
+            NeoForge.EVENT_BUS.post(preEvent);
             if (preEvent.isCanceled()) return 0.0;
             double adjustedBreakTime = Math.max(0.05, preEvent.getBreakTime());
 
@@ -304,8 +313,8 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
 
     private boolean tryPlaceBlockWhileHandlingFunnySpecialCases(ItemStack stack, BlockPos pos, Direction side, float hitX, float hitY, float hitZ) {
         if (stack.isEmpty() || stack.getCount() <= 0) return false;
-        var preEvent = new li.cil.oc.neoforge.event.RobotPlaceBlockEventImpl.Pre(agent, stack, level(), pos.getX(), pos.getY(), pos.getZ());
-        li.cil.oc.api.event.OCEventBus.post(preEvent);
+        var preEvent = new RobotPlaceBlockEvent.Pre(agent, stack, level(), pos);
+        NeoForge.EVENT_BUS.post(preEvent);
         if (preEvent.isCanceled()) return false;
 
         double fakeEyeHeight = 0;
@@ -323,11 +332,11 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
             detectInventoryPlayerChanges(this);
 
             if (didPlace == InteractionResult.SUCCESS) {
-                li.cil.oc.api.event.OCEventBus.post(new li.cil.oc.neoforge.event.RobotPlaceBlockEventImpl.Post(agent, stack, level(), pos.getX(), pos.getY(), pos.getZ()));
+                NeoForge.EVENT_BUS.post(new RobotPlaceBlockEvent.Post(agent, stack, level(), pos));
                 return true;
             }
             if (didPlace == InteractionResult.CONSUME) {
-                li.cil.oc.api.event.OCEventBus.post(new li.cil.oc.neoforge.event.RobotPlaceBlockEventImpl.Post(agent, stack, level(), pos.getX(), pos.getY(), pos.getZ()));
+                NeoForge.EVENT_BUS.post(new RobotPlaceBlockEvent.Post(agent, stack, level(), pos));
                 return true;
             }
             return false;
@@ -422,8 +431,7 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
     }
 
     private boolean isItemUseAllowed(ItemStack stack) {
-        return stack == null || (Settings.get().allowUseItemsWithDuration || stack.getMaxStackSize() <= 0) &&
-                (!PortalGun.isPortalGun(stack) || PortalGun.isStandardPortalGun(stack)) &&
+        return stack == null || (OCSettings.get().allowUseItemsWithDuration || stack.getMaxStackSize() <= 0) &&
                 !stack.is(Items.LEAD);
     }
 
@@ -434,12 +442,12 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
 
     @Override
     public void causeFoodExhaustion(float amount) {
-        if (Settings.get().robotExhaustionCost > 0) {
+        if (OCSettings.get().robotExhaustionCost > 0) {
             if (agent.machine().node() instanceof Connector connector) {
-                connector.changeBuffer(-Settings.get().robotExhaustionCost * amount);
+                connector.changeBuffer(-OCSettings.get().robotExhaustionCost * amount);
             }
         }
-        li.cil.oc.api.event.OCEventBus.post(new RobotExhaustionEventImpl(agent, amount));
+        NeoForge.EVENT_BUS.post(new RobotExhaustionEvent(agent, amount));
     }
 
     @Override
@@ -569,10 +577,10 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
 
     private void tryRepair(ItemStack stack, ItemStack oldStack) {
         if (!stack.isEmpty() && !oldStack.isEmpty() && stack.getItem() == oldStack.getItem()) {
-            RobotUsedToolEventImpl.ComputeDamageRate damageRate = new RobotUsedToolEventImpl.ComputeDamageRate(agent, oldStack, stack, Settings.get().itemDamageRate);
-            li.cil.oc.api.event.OCEventBus.post(damageRate);
+            RobotUsedToolEvent.ComputeDamageRate damageRate = new RobotUsedToolEvent.ComputeDamageRate(agent, oldStack, stack, OCSettings.get().itemDamageRate);
+            NeoForge.EVENT_BUS.post(damageRate);
             if (damageRate.getDamageRate() < 1) {
-                li.cil.oc.api.event.OCEventBus.post(new RobotUsedToolEventImpl.ApplyDamageRate(agent, oldStack, stack, damageRate.getDamageRate()));
+                NeoForge.EVENT_BUS.post(new RobotUsedToolEvent.ApplyDamageRate(agent, oldStack, stack, damageRate.getDamageRate()));
             }
         }
     }
@@ -698,7 +706,7 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
                 player.callUsingItemInSlot(player.agent.equipmentInventory(), stack -> {
                     int expGained = PlayerInteractionManagerHelper.blockRemoving(player, new BlockPos(x, y, z));
                     if (expGained >= 0) {
-                        li.cil.oc.api.event.OCEventBus.post(new li.cil.oc.neoforge.event.RobotBreakBlockEventImpl.Post(player.agent, expGained));
+                        NeoForge.EVENT_BUS.post(new RobotBreakBlockEvent.Post(player.agent, expGained));
                     }
                     return null;
                 });

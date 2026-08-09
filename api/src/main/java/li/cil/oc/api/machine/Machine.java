@@ -1,8 +1,7 @@
 package li.cil.oc.api.machine;
 
-import li.cil.oc.api.network.ManagedEnvironment;
-
 import java.util.Map;
+import li.cil.oc.api.network.ManagedEnvironment;
 
 /**
  * This interface allows interacting with a Machine obtained via the factory
@@ -10,7 +9,7 @@ import java.util.Map;
  */
 public interface Machine extends ManagedEnvironment, Context {
     /**
-     * The owner of the machine, usually a tile entity hosting the machine.
+     * The owner of the machine, usually a block entity hosting the machine.
      *
      * @return the owner of the machine.
      */
@@ -195,8 +194,10 @@ public interface Machine extends ManagedEnvironment, Context {
      * Analyzer is used on computer cases, for example.
      *
      * @param message the message to set.
+     * @return <code>true</code> if the computer switched to the stopping state.
      */
-    void crash(String message);
+    @SuppressWarnings("unused")
+    boolean crash(String message);
 
     /**
      * Tries to pop a signal from the queue and returns it.

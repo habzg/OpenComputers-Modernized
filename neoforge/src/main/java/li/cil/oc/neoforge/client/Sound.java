@@ -1,8 +1,16 @@
 package li.cil.oc.neoforge.client;
 
-import li.cil.oc.core.impl.Settings;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.PriorityQueue;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.client.ClientDistanceHelper;
+import li.cil.oc.core.impl.common.blockentity.traits.Computer;
 import li.cil.oc.neoforge.OpenComputers;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.SoundManager;
@@ -11,16 +19,12 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.event.level.ChunkEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.PriorityQueue;
 
 public final class Sound {
     private static final Map<BlockEntity, PseudoLoopingStream> sources = new HashMap<>();
@@ -63,26 +67,26 @@ public final class Sound {
         }
     }
 
-    public static void startLoop(BlockEntity tileEntity, String name, float volume, long delay) {
-        if (Settings.get().soundVolume > 0 && Minecraft.getInstance().level != null) {
+    public static void startLoop(BlockEntity blockEntity, String name, float volume, long delay) {
+        if (OCSettings.get().soundVolume > 0 && Minecraft.getInstance().level != null) {
             synchronized (commandQueue) {
-                commandQueue.offer(new StartCommand(System.currentTimeMillis() + delay, tileEntity, name, volume));
+                commandQueue.offer(new StartCommand(System.currentTimeMillis() + delay, blockEntity, name, volume));
             }
         }
     }
 
-    public static void stopLoop(BlockEntity tileEntity) {
-        if (Settings.get().soundVolume > 0 && Minecraft.getInstance().level != null) {
+    public static void stopLoop(BlockEntity blockEntity) {
+        if (OCSettings.get().soundVolume > 0 && Minecraft.getInstance().level != null) {
             synchronized (commandQueue) {
-                commandQueue.offer(new StopCommand(tileEntity));
+                commandQueue.offer(new StopCommand(blockEntity));
             }
         }
     }
 
-    public static void updatePosition(BlockEntity tileEntity) {
-        if (Settings.get().soundVolume > 0 && Minecraft.getInstance().level != null) {
+    public static void updatePosition(BlockEntity blockEntity) {
+        if (OCSettings.get().soundVolume > 0 && Minecraft.getInstance().level != null) {
             synchronized (commandQueue) {
-                commandQueue.offer(new UpdatePositionCommand(tileEntity));
+                commandQueue.offer(new UpdatePositionCommand(blockEntity));
             }
         }
     }
@@ -91,12 +95,36 @@ public final class Sound {
     @SuppressWarnings("unused")
     public static void onTick(ClientTickEvent.Post e) {
         manager();
-        if (Minecraft.getInstance().level != null && Settings.get().soundVolume > 0) {
+        if (Minecraft.getInstance().level != null && OCSettings.get().soundVolume > 0) {
             tickCount++;
             if (tickCount % 10 == 0) {
                 synchronized (sources) {
+                    sources.entrySet().removeIf(entry -> entry.getKey().isRemoved());
                     updateVolume();
                     processQueue();
+                }
+            }
+        }
+    }
+
+    @SubscribeEvent
+    @SuppressWarnings("unused")
+    public static void onChunkLoad(ChunkEvent.Load event) {
+        if (!event.getLevel().isClientSide()) return;
+        if (event.getChunk() instanceof LevelChunk chunk && Minecraft.getInstance().level != null) {
+            handleChunkLoad((ClientLevel) event.getLevel(), chunk);
+        }
+    }
+
+    private static void handleChunkLoad(ClientLevel level, LevelChunk chunk) {
+        if (OCSettings.get().soundVolume <= 0) return;
+        var player = Minecraft.getInstance().player;
+        if (player == null) return;
+        for (BlockEntity be : chunk.getBlockEntities().values()) {
+            if (be instanceof Computer computer && computer.isRunning() && computer.runSound() != null) {
+                if (ClientDistanceHelper.distanceSquared(be.getLevel(),
+                        be.getBlockPos().getX() + 0.5, be.getBlockPos().getY() + 0.5, be.getBlockPos().getZ() + 0.5, player) <= 32 * 32) {
+                    startLoop(be, computer.runSound(), 0.5f, 50 + level.random.nextInt(50));
                 }
             }
         }
@@ -121,11 +149,11 @@ public final class Sound {
 
     private abstract static class Command implements Comparable<Command> {
         final long when;
-        final BlockEntity tileEntity;
+        final BlockEntity blockEntity;
 
-        Command(long when, BlockEntity tileEntity) {
+        Command(long when, BlockEntity blockEntity) {
             this.when = when;
-            this.tileEntity = tileEntity;
+            this.blockEntity = blockEntity;
         }
 
         abstract void run();
@@ -140,8 +168,8 @@ public final class Sound {
         final String name;
         final float volume;
 
-        StartCommand(long when, BlockEntity tileEntity, String name, float volume) {
-            super(when, tileEntity);
+        StartCommand(long when, BlockEntity blockEntity, String name, float volume) {
+            super(when, blockEntity);
             this.name = name;
             this.volume = volume;
         }
@@ -149,26 +177,26 @@ public final class Sound {
         @Override
         void run() {
             synchronized (sources) {
-                sources.computeIfAbsent(tileEntity, k -> new PseudoLoopingStream(tileEntity, volume)).play(name);
+                sources.computeIfAbsent(blockEntity, k -> new PseudoLoopingStream(blockEntity, volume)).play(name);
             }
         }
     }
 
     private static class StopCommand extends Command {
-        StopCommand(BlockEntity tileEntity) {
-            super(System.currentTimeMillis() + 1, tileEntity);
+        StopCommand(BlockEntity blockEntity) {
+            super(System.currentTimeMillis() + 1, blockEntity);
         }
 
         @Override
         void run() {
             synchronized (sources) {
-                PseudoLoopingStream sound = sources.remove(tileEntity);
+                PseudoLoopingStream sound = sources.remove(blockEntity);
                 if (sound != null) sound.stop();
             }
             synchronized (commandQueue) {
                 List<Command> remaining = new ArrayList<>();
                 for (Command cmd : commandQueue) {
-                    if (cmd.tileEntity != tileEntity) remaining.add(cmd);
+                    if (cmd.blockEntity != blockEntity) remaining.add(cmd);
                 }
                 commandQueue.clear();
                 commandQueue.addAll(remaining);
@@ -177,32 +205,32 @@ public final class Sound {
     }
 
     private static class UpdatePositionCommand extends Command {
-        UpdatePositionCommand(BlockEntity tileEntity) {
-            super(System.currentTimeMillis(), tileEntity);
+        UpdatePositionCommand(BlockEntity blockEntity) {
+            super(System.currentTimeMillis(), blockEntity);
         }
 
         @Override
         void run() {
             synchronized (sources) {
-                PseudoLoopingStream sound = sources.get(tileEntity);
+                PseudoLoopingStream sound = sources.get(blockEntity);
                 if (sound != null) sound.updatePosition();
             }
         }
     }
 
     private static class PseudoLoopingStream {
-        final BlockEntity tileEntity;
+        final BlockEntity blockEntity;
         final float volume;
         SoundInstance current;
 
-        PseudoLoopingStream(BlockEntity tileEntity, float volume) {
-            this.tileEntity = tileEntity;
+        PseudoLoopingStream(BlockEntity blockEntity, float volume) {
+            this.blockEntity = blockEntity;
             this.volume = volume;
         }
 
         void updateVolume() {
             if (current instanceof ComputerRunningSound s) {
-                float baseVolume = volume * Settings.get().soundVolume;
+                float baseVolume = volume * OCSettings.get().soundVolume;
                 float userVolume = Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.BLOCKS);
                 s.setVolume(baseVolume * (isGamePaused() ? 0f : userVolume));
             }
@@ -210,20 +238,20 @@ public final class Sound {
 
         void updatePosition() {
             if (current instanceof ComputerRunningSound s) {
-                if (tileEntity != null) {
-                    BlockPos pos = tileEntity.getBlockPos();
+                if (blockEntity != null) {
+                    BlockPos pos = blockEntity.getBlockPos();
                     s.setPosition(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
                 }
             }
         }
 
         void play(String name) {
-            String resourceName = Settings.resourceDomain + ":" + name;
+            String resourceName = OCSettings.resourceDomain + ":" + name;
             var location = ResourceLocation.parse(resourceName);
-            var soundEvent = SoundEvent.createVariableRangeEvent(location);
+            var soundEvent = SoundEvent.createFixedRangeEvent(location, 16.0F);
             if (!initialized) {
                 initialized = true;
-                current = new ComputerRunningSound(soundEvent, tileEntity, volume);
+                current = new ComputerRunningSound(soundEvent, blockEntity, volume);
                 manager().play(current);
                 updateVolume();
             }
@@ -244,18 +272,18 @@ public final class Sound {
     }
 
     private static class ComputerRunningSound extends AbstractTickableSoundInstance {
-        private final BlockEntity tileEntity;
+        private final BlockEntity blockEntity;
 
-        protected ComputerRunningSound(SoundEvent soundEvent, BlockEntity tileEntity, float volume) {
+        protected ComputerRunningSound(SoundEvent soundEvent, BlockEntity blockEntity, float volume) {
             super(soundEvent, SoundSource.BLOCKS, SoundInstance.createUnseededRandom());
-            this.tileEntity = tileEntity;
+            this.blockEntity = blockEntity;
             this.looping = true;
             this.delay = 0;
-            this.volume = volume * Settings.get().soundVolume;
+            this.volume = volume * OCSettings.get().soundVolume;
             this.relative = false;
             this.attenuation = Attenuation.LINEAR;
-            if (tileEntity != null) {
-                BlockPos pos = tileEntity.getBlockPos();
+            if (blockEntity != null) {
+                BlockPos pos = blockEntity.getBlockPos();
                 this.x = pos.getX() + 0.5;
                 this.y = pos.getY() + 0.5;
                 this.z = pos.getZ() + 0.5;
@@ -264,7 +292,7 @@ public final class Sound {
 
         @Override
         public void tick() {
-            if (tileEntity == null || tileEntity.isRemoved()) {
+            if (blockEntity == null || blockEntity.isRemoved()) {
                 stop();
             }
         }

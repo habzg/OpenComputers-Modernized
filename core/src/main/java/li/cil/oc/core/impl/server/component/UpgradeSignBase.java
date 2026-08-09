@@ -1,8 +1,10 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.Map;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.impl.util.BlockPosition;
 import li.cil.oc.core.util.ResultWrapper;
@@ -14,10 +16,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import org.jetbrains.annotations.Nullable;
 
-
-import java.util.Map;
-
-public abstract class UpgradeSignBase extends li.cil.oc.api.prefab.ManagedEnvironment implements DeviceInfo {
+public abstract class UpgradeSignBase extends AbstractManagedEnvironment implements DeviceInfo {
     private final Map<String, String> deviceInfo = new java.util.HashMap<>() {{
         put(DeviceAttribute.Class, DeviceClass.Generic);
         put(DeviceAttribute.Description, "Sign upgrade");
@@ -32,12 +31,12 @@ public abstract class UpgradeSignBase extends li.cil.oc.api.prefab.ManagedEnviro
 
     public abstract EnvironmentHost host();
 
-    protected Object[] getValue(@Nullable SignBlockEntity tileEntity) {
-        if (tileEntity == null) {
+    protected Object[] getValue(@Nullable SignBlockEntity blockEntity) {
+        if (blockEntity == null) {
             return ResultWrapper.result(null, "no sign");
         }
         StringBuilder sb = new StringBuilder();
-        var text = tileEntity.getFrontText();
+        var text = blockEntity.getFrontText();
         for (int i = 0; i < 4; i++) {
             if (i > 0) sb.append("\n");
             String line = text.getMessage(i, false).getString();
@@ -50,12 +49,12 @@ public abstract class UpgradeSignBase extends li.cil.oc.api.prefab.ManagedEnviro
 
     protected abstract boolean checkSignBreak(Player player, BlockPos pos, net.minecraft.world.level.block.state.BlockState state);
 
-    protected abstract boolean fireSignPreEvent(SignBlockEntity tileEntity, String[] lines);
+    protected abstract boolean fireSignPreEvent(SignBlockEntity blockEntity, String[] lines);
 
-    protected abstract void fireSignPostEvent(SignBlockEntity tileEntity, String[] lines);
+    protected abstract void fireSignPostEvent(SignBlockEntity blockEntity, String[] lines);
 
-    protected Object[] setValue(@Nullable SignBlockEntity tileEntity, String text) {
-        if (tileEntity == null) {
+    protected Object[] setValue(@Nullable SignBlockEntity blockEntity, String text) {
+        if (blockEntity == null) {
             return ResultWrapper.result(null, "no sign");
         }
         Player player = getSignPlayer();
@@ -68,19 +67,19 @@ public abstract class UpgradeSignBase extends li.cil.oc.api.prefab.ManagedEnviro
                 lines[i] = "";
             }
         }
-        if (!canChangeSign(player, tileEntity, lines)) {
+        if (!canChangeSign(player, blockEntity, lines)) {
             return ResultWrapper.result(null, "not allowed");
         }
-        var oldText = tileEntity.getFrontText();
+        var oldText = blockEntity.getFrontText();
         for (int i = 0; i < 4; i++) {
             oldText = oldText.setMessage(i, Component.literal(lines[i]));
         }
-        tileEntity.setText(oldText, true);
-        var pos = tileEntity.getBlockPos();
-        host().level().sendBlockUpdated(pos, tileEntity.getBlockState(), tileEntity.getBlockState(), 3);
-        fireSignPostEvent(tileEntity, lines);
+        blockEntity.setText(oldText, true);
+        var pos = blockEntity.getBlockPos();
+        host().level().sendBlockUpdated(pos, blockEntity.getBlockState(), blockEntity.getBlockState(), 3);
+        fireSignPostEvent(blockEntity, lines);
         StringBuilder sb = new StringBuilder();
-        var newText = tileEntity.getFrontText();
+        var newText = blockEntity.getFrontText();
         for (int i = 0; i < 4; i++) {
             if (i > 0) sb.append("\n");
             String line = newText.getMessage(i, false).getString();
@@ -89,15 +88,15 @@ public abstract class UpgradeSignBase extends li.cil.oc.api.prefab.ManagedEnviro
         return ResultWrapper.result(sb.toString());
     }
 
-    private boolean canChangeSign(Player player, SignBlockEntity tileEntity, String[] lines) {
-        var pos = tileEntity.getBlockPos();
+    private boolean canChangeSign(Player player, SignBlockEntity blockEntity, String[] lines) {
+        var pos = blockEntity.getBlockPos();
         if (!host().level().mayInteract(player, pos)) {
             return false;
         }
-        if (!checkSignBreak(player, pos, tileEntity.getBlockState())) {
+        if (!checkSignBreak(player, pos, blockEntity.getBlockState())) {
             return false;
         }
-        return fireSignPreEvent(tileEntity, lines);
+        return fireSignPreEvent(blockEntity, lines);
     }
 
     protected @Nullable SignBlockEntity findSign(Direction side) {

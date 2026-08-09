@@ -1,5 +1,6 @@
 package li.cil.oc.core.impl.server.command;
 
+import java.util.regex.Pattern;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.network.Packet;
 import li.cil.oc.core.impl.common.command.SimpleCommand;
@@ -7,8 +8,8 @@ import li.cil.oc.core.server.network.DebugNetwork;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 
-
 public class SendDebugMessageCommand extends SimpleCommand {
+    private static final Pattern VALID_ADDRESS = Pattern.compile("^[a-f0-9]{32}$");
     public static final SendDebugMessageCommand INSTANCE = new SendDebugMessageCommand();
 
     private SendDebugMessageCommand() {
@@ -18,11 +19,19 @@ public class SendDebugMessageCommand extends SimpleCommand {
 
     @Override
     protected int execute(CommandSourceStack source, String[] args) {
+        if (source.getEntity() != null && !(source.getEntity() instanceof net.minecraft.world.entity.player.Player)) {
+            source.sendFailure(Component.literal("This command can only be used by players."));
+            return 0;
+        }
         if (args.length == 0) {
             source.sendFailure(Component.literal("no destination address specified."));
             return 0;
         }
         String destination = args[0];
+        if (!VALID_ADDRESS.matcher(destination).matches()) {
+            source.sendFailure(Component.literal("invalid destination address."));
+            return 0;
+        }
         var endpoint = DebugNetwork.getEndpoint(destination);
         if (endpoint != null) {
             String[] rest = new String[args.length - 1];

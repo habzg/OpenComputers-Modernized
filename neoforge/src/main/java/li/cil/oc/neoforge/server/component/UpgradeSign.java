@@ -1,8 +1,8 @@
 package li.cil.oc.neoforge.server.component;
 
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.api.event.SignChangeEvent;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.server.component.UpgradeSignBase;
-import li.cil.oc.neoforge.event.SignChangeEventImpl;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
@@ -19,7 +19,7 @@ public abstract class UpgradeSign extends UpgradeSignBase {
         if (host() instanceof li.cil.oc.api.internal.Robot) {
             return ((li.cil.oc.api.internal.Robot) host()).player();
         }
-        return FakePlayerFactory.get((ServerLevel) host().level(), Settings.get().fakePlayerProfile);
+        return FakePlayerFactory.get((ServerLevel) host().level(), OCSettings.get().fakePlayerProfile);
     }
 
     @Override
@@ -30,14 +30,14 @@ public abstract class UpgradeSign extends UpgradeSignBase {
     }
 
     @Override
-    protected boolean fireSignPreEvent(@NotNull SignBlockEntity tileEntity, String @NotNull [] lines) {
-        SignChangeEventImpl.Pre event = new SignChangeEventImpl.Pre(tileEntity, lines);
-        li.cil.oc.api.event.OCEventBus.post(event);
+    protected boolean fireSignPreEvent(@NotNull SignBlockEntity blockEntity, String @NotNull [] lines) {
+        SignChangeEvent.Pre event = new SignChangeEvent.Pre(blockEntity, lines);
+        NeoForge.EVENT_BUS.post(event);
         return !event.isCanceled();
     }
 
     @Override
-    protected void fireSignPostEvent(@NotNull SignBlockEntity tileEntity, String @NotNull [] lines) {
-        li.cil.oc.api.event.OCEventBus.post(new SignChangeEventImpl.Post(tileEntity, lines));
+    protected void fireSignPostEvent(@NotNull SignBlockEntity blockEntity, String @NotNull [] lines) {
+        NeoForge.EVENT_BUS.post(new SignChangeEvent.Post(blockEntity, lines));
     }
 }

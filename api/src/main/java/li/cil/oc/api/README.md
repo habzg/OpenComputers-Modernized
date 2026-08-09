@@ -4,11 +4,11 @@ extensions for OpenComputers.
 Extending OpenComputers
 ========================
 
-Making a tile entity available as a component / peripheral
+Making a block entity available as a component / peripheral
 --------------------------------------------------
-If you simply wish to expose a couple of methods that can be called from a computer if your tile entity's block is '
+If you simply wish to expose a couple of methods that can be called from a computer if your block entity's block is '
 connected' to the computer, you can use the `SimpleComponent` interface. This interface serves as a marker for
-OpenComputers to know it has to inject code that converts your tile entity into a component using its class transformer.
+OpenComputers to know it has to inject code that converts your block entity into a component using its class transformer.
 Here is
 an example implementation:
 
@@ -28,7 +28,7 @@ public class MyBlockEntity extends BlockEntity
 }
 ```
 
-The `getComponentName` determines with which name the tile entity will be available to computers. The `Callback`
+The `getComponentName` determines with which name the block entity will be available to computers. The `Callback`
 annotation tells OpenComputers to make the annotated method available to the computer. See the documentation on the
 `Callback` annotation for more information, in particular how it can be used to manipulate the call behavior
 (synchronized to the main thread vs. in the thread driving the calling computer).
@@ -41,9 +41,9 @@ print(component.fancy_thing.greet("Steve")) -- prints "Hello, Steve!"
 
 More control
 ------------
-If you really need more control over how how your tile entity interacts with OpenComputer's internal network, you will
-have to implement the `Environment` interface on your tile entity. There's a basic implementation in the prefab package,
-named `TileEntityEnvironment`. Doing so will give you access to the `Node` that connects to the component network, and
+If you really need more control over how how your block entity interacts with OpenComputer's internal network, you will
+have to implement the `Environment` interface on your block entity. There's a basic implementation in the prefab package,
+named `BlockEntityEnvironment`. Doing so will give you access to the `Node` that connects to the component network, and
 you must take care of the construction of the node itself (using the factory method in `api.Network`). This allows you
 to make the node a `Connector` node, which will allow you to draw internal power from OpenComputers or feed energy into
 it. You will also be able to send messages over the component network, see the `send...` methods in the `Node`
@@ -51,9 +51,9 @@ interface. See the documentation on those interfaces to get a better idea on how
 
 Making a third-party block available as component / peripheral
 --------------------------------------------------------------
-Blocks from other mods, i.e. blocks where you have no control over the tile entity implementation, can be accessed using
+Blocks from other mods, i.e. blocks where you have no control over the block entity implementation, can be accessed using
 the Adapter block as long as there is a driver available that supports the block. If there are multiple drivers they are
-automatically merged. Please see the [integration][] package for examples, and consider contributing any block drivers
+automatically merged. Please see the [integration](https://github.com/habzg/OpenComputers-Modernized/tree/main/neoforge/src/main/java/li/cil/oc/neoforge/integration) package for examples, and consider contributing any block drivers
 you write. Thank you!
 
 Making items available as components
@@ -68,15 +68,15 @@ FileSystem API
 If you'd like to make some files/scripts you ship with your mod available to a computer, you can do so by wrapping those
 files using an OpenComputers file system. Use the factory methods in `api.FileSystem` to wrap the location your files
 are stored at in a file system, use the `asManagedEnvironment` methods to wrap it in a node that can be attached to the
-component network. For example, in an environment of a tile entity or created by an item driver you could do this in the
+component network. For example, in an environment of a block entity or created by an item driver you could do this in the
 `onConnect` method whenever a computer is connected (i.e. `node.host() instanceof Context`). Code-wise it may look
 something like this:
 
 ```java
-public class TileEntityWithFileSystem extends TileEntityEnvironment {
+public class BlockEntityWithFileSystem extends BlockEntityEnvironment {
     private final Node fileSystem;
 
-    public TileEntityWithFileSystem() {
+    public BlockEntityWithFileSystem() {
         node = Network.newNode(this, Visibility.Network).create();
         fileSystem = FileSystem.asManagedEnvironment(FileSystem.fromClass(getClass, "yourmodid/lua"), "my_files");
     }
@@ -106,5 +106,3 @@ public class TileEntityWithFileSystem extends TileEntityEnvironment {
     }
 }
 ```
-
-[integration]: https://github.com/MightyPirates/OpenComputers/tree/master-MC1.7.10/src/main/scala/li/cil/oc/integration

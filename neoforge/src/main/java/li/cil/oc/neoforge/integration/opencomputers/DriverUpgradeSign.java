@@ -7,6 +7,7 @@ import li.cil.oc.api.internal.Rotatable;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Slot;
+import li.cil.oc.core.impl.integration.opencomputers.Item;
 import li.cil.oc.neoforge.server.component.UpgradeSignInAdapter;
 import li.cil.oc.neoforge.server.component.UpgradeSignInRotatable;
 import net.minecraft.world.item.ItemStack;

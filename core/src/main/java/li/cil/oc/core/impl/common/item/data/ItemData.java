@@ -1,5 +1,7 @@
 package li.cil.oc.core.impl.common.item.data;
 
+import java.util.Optional;
+import java.util.stream.Stream;
 import li.cil.oc.api.Items;
 import li.cil.oc.api.Persistable;
 import li.cil.oc.core.impl.util.SideTracker;
@@ -12,10 +14,6 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import org.jetbrains.annotations.NotNull;
-
-
-import java.util.Optional;
-import java.util.stream.Stream;
 
 public abstract class ItemData implements Persistable {
     protected String itemName;

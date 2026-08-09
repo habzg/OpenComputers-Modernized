@@ -1,12 +1,9 @@
 package li.cil.oc.core.impl.util;
 
-import net.minecraft.core.Holder;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.item.DyeColor;
-import net.minecraft.world.item.ItemStack;
-
 import java.util.HashMap;
 import java.util.Map;
+import li.cil.oc.core.impl.IDyeColorProvider;
+import net.minecraft.world.item.ItemStack;
 
 public final class Color {
     public static final int Black = 0x444444;
@@ -55,19 +52,19 @@ public final class Color {
         byOreName.put("dyeWhite", White);
     }
 
+    private static IDyeColorProvider provider = li.cil.oc.core.impl.DyeColorProvider.INSTANCE;
+
+    public static void setProvider(IDyeColorProvider p) {
+        provider = p;
+    }
+
     public static int byMeta(int meta) {
         return byOreName.get(dyes[15 - meta]);
     }
 
     public static String findDye(ItemStack stack) {
         if (stack.isEmpty()) return null;
-        Holder<net.minecraft.world.item.Item> itemHolder = BuiltInRegistries.ITEM.wrapAsHolder(stack.getItem());
-        for (DyeColor dye : DyeColor.values()) {
-            if (itemHolder.is(dye.getTag())) {
-                return dyes[15 - dye.getId()];
-            }
-        }
-        return null;
+        return provider.findDye(stack);
     }
 
     public static boolean isDye(ItemStack stack) {

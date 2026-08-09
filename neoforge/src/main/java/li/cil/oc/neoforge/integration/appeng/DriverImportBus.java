@@ -8,8 +8,8 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.ManagedEnvironment;
-import li.cil.oc.api.prefab.DriverSidedTileEntity;
-import li.cil.oc.neoforge.integration.ManagedTileEntityEnvironment;
+import li.cil.oc.api.prefab.DriverSidedBlockEntity;
+import li.cil.oc.core.impl.integration.ManagedBlockEntityEnvironment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
@@ -17,15 +17,15 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 @SuppressWarnings("unused")
-public class DriverImportBus extends DriverSidedTileEntity {
+public class DriverImportBus extends DriverSidedBlockEntity {
     @Override
-    public Class<?> getTileEntityClass() {
+    public Class<?> getBlockEntityClass() {
         return IPartHost.class;
     }
 
     @Override
-    public boolean worksWith(Level world, int x, int y, int z, Direction side) {
-        BlockEntity tile = world.getBlockEntity(new BlockPos(x, y, z));
+    public boolean worksWith(Level world, BlockPos pos, Direction side) {
+        BlockEntity tile = world.getBlockEntity(pos);
         if (tile instanceof IPartHost host) {
             for (Direction dir : Direction.values()) {
                 if (host.getPart(dir) instanceof ImportBusPart) return true;
@@ -35,18 +35,18 @@ public class DriverImportBus extends DriverSidedTileEntity {
     }
 
     @Override
-    public ManagedEnvironment createEnvironment(Level world, int x, int y, int z, Direction side) {
-        return new Environment((IPartHost) world.getBlockEntity(new BlockPos(x, y, z)));
+    public ManagedEnvironment createEnvironment(Level world, BlockPos pos, Direction side) {
+        return new Environment((IPartHost) world.getBlockEntity(pos));
     }
 
-    public static final class Environment extends ManagedTileEntityEnvironment<IPartHost> implements NamedBlock, PartEnvironmentBase {
+    public static final class Environment extends ManagedBlockEntityEnvironment<IPartHost> implements NamedBlock, PartEnvironmentBase {
         public Environment(IPartHost host) {
             super(host, "me_importbus");
         }
 
         @Override
         public IPartHost partHost() {
-            return getTileEntity();
+            return getBlockEntity();
         }
 
         @Override
@@ -64,7 +64,7 @@ public class DriverImportBus extends DriverSidedTileEntity {
             return getPartConfig(context, args);
         }
 
-        @Callback(doc = "function(side:number[, slot:number][, database:address, entry:number]):boolean -- Configure the import bus pointing in the specified direction.")
+        @Callback(doc = "function(side:number[, slot:number][, database:address, entry:number]):boolean -- Configure the import bus pointing in the specified direction to import item stacks matching the specified descriptor.")
         public Object[] setImportConfiguration(Context context, Arguments args) {
             return setPartConfig(context, args);
         }

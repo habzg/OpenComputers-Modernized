@@ -1,7 +1,7 @@
 package li.cil.oc.neoforge.common.capability;
 
-import li.cil.oc.core.impl.common.tileentity.traits.PowerAcceptor;
-import li.cil.oc.neoforge.integration.util.Power;
+import li.cil.oc.core.impl.common.blockentity.traits.PowerAcceptor;
+import li.cil.oc.core.impl.integration.util.Power;
 import net.minecraft.core.Direction;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 

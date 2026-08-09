@@ -1,9 +1,8 @@
 package li.cil.oc.api;
 
+import java.util.concurrent.Callable;
 import li.cil.oc.api.detail.ItemInfo;
 import net.minecraft.world.item.ItemStack;
-
-import java.util.concurrent.Callable;
 
 /**
  * Access to item definitions for all blocks and items provided by
@@ -77,7 +76,7 @@ public final class Items {
     public static ItemStack registerFloppy(
             String name, int color, Callable<li.cil.oc.api.fs.FileSystem> factory, boolean doRecipeCycling) {
         if (API.items == null) throw new IllegalStateException(API.ERROR_NOT_INITIALIZED);
-        return API.items.registerFloppy(name, color, factory, doRecipeCycling);
+        return API.items.registerFloppy(name, net.minecraft.world.item.DyeColor.byId(color), factory, doRecipeCycling);
     }
 
     /**
@@ -101,7 +100,7 @@ public final class Items {
     public static ItemStack registerFloppy(
             String name, int color, Callable<li.cil.oc.api.fs.FileSystem> factory, boolean doRecipeCycling, String modId) {
         if (API.items == null) throw new IllegalStateException(API.ERROR_NOT_INITIALIZED);
-        return API.items.registerFloppy(name, color, factory, doRecipeCycling, modId);
+        return API.items.registerFloppy(name, net.minecraft.world.item.DyeColor.byId(color), factory, doRecipeCycling, modId);
     }
 
     /**

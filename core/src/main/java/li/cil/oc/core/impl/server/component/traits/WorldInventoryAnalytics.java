@@ -4,7 +4,7 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.prefab.ItemStackArrayValue;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.BlockPosition;
 import li.cil.oc.core.impl.util.DatabaseAccess;
 import li.cil.oc.core.impl.util.ExtendedArguments;
@@ -21,13 +21,13 @@ import net.minecraft.world.level.block.Block;
 import static li.cil.oc.core.util.ResultWrapper.result;
 
 public interface WorldInventoryAnalytics extends WorldAware, SideRestricted, NetworkAware {
-    @Callback(doc = "function(side:number):number -- Get the number of slots in the inventory on the specified side.")
+    @Callback(doc = "function(side:number):number -- Get the number of slots in the inventory on the specified side of the device.")
     default Object[] getInventorySize(Context context, Arguments args) {
         Direction facing = checkSideForAction(args, 0);
         return withInventory(facing, inventory -> result(inventory.getContainerSize()));
     }
 
-    @Callback(doc = "function(side:number, slot:number):number -- Get number of items in the specified slot.")
+    @Callback(doc = "function(side:number, slot:number):number -- Get number of items in the specified slot of the inventory on the specified side of the device.")
     default Object[] getSlotStackSize(Context context, Arguments args) {
         Direction facing = checkSideForAction(args, 0);
         return withInventory(facing, inventory -> {
@@ -36,7 +36,7 @@ public interface WorldInventoryAnalytics extends WorldAware, SideRestricted, Net
         });
     }
 
-    @Callback(doc = "function(side:number, slot:number):number -- Get the maximum number of items in the specified slot.")
+    @Callback(doc = "function(side:number, slot:number):number -- Get the maximum number of items in the specified slot of the inventory on the specified side of the device.")
     default Object[] getSlotMaxStackSize(Context context, Arguments args) {
         Direction facing = checkSideForAction(args, 0);
         return withInventory(facing, inventory -> {
@@ -45,7 +45,7 @@ public interface WorldInventoryAnalytics extends WorldAware, SideRestricted, Net
         });
     }
 
-    @Callback(doc = "function(side:number, slotA:number, slotB:number[, checkNBT:boolean=false]):boolean -- Get whether the items in the two specified slots are of the same type.")
+    @Callback(doc = "function(side:number, slotA:number, slotB:number[, checkNBT:boolean=false]):boolean -- Get whether the items in the two specified slots of the inventory on the specified side of the device are of the same type.")
     default Object[] compareStacks(Context context, Arguments args) {
         Direction facing = checkSideForAction(args, 0);
         return withInventory(facing, inventory -> {
@@ -55,7 +55,7 @@ public interface WorldInventoryAnalytics extends WorldAware, SideRestricted, Net
         });
     }
 
-    @Callback(doc = "function(side:number, slot:number, dbAddress:string, dbSlot:number[, checkNBT:boolean=false]):boolean -- Compare an item with one in the database.")
+    @Callback(doc = "function(side:number, slot:number, dbAddress:string, dbSlot:number[, checkNBT:boolean=false]):boolean -- Compare an item in the specified slot in the inventory on the specified side with one in the database with the specified address.")
     default Object[] compareStackToDatabase(Context context, Arguments args) {
         Direction facing = checkSideForAction(args, 0);
         return withInventory(facing, inventory -> {
@@ -70,15 +70,20 @@ public interface WorldInventoryAnalytics extends WorldAware, SideRestricted, Net
         });
     }
 
-    @Callback(doc = "function(side:number, slotA:number, slotB:number):boolean -- Get whether the items are equivalent (shared OreDictionary IDs).")
+    @Callback(doc = "function(side:number, slotA:number, slotB:number):boolean -- Get whether the items in the two specified slots of the inventory on the specified side of the device are equivalent (have shared item tags).")
     default Object[] areStacksEquivalent(Context context, Arguments args) {
         Direction facing = checkSideForAction(args, 0);
         return withInventory(facing, inventory -> {
             ItemStack stackA = inventory.getItem(ExtendedArguments.checkSlot(args, inventory, 1));
             ItemStack stackB = inventory.getItem(ExtendedArguments.checkSlot(args, inventory, 2));
-            boolean eq = stackA == stackB;
-            if (!eq) {
-                eq = stackA.getItem() == stackB.getItem();
+            boolean eq;
+            if (!stackA.isEmpty() && !stackB.isEmpty()) {
+                eq = stackA.is(stackB.getItem());
+                if (!eq) {
+                    eq = stackA.getTags().anyMatch(stackB::is);
+                }
+            } else {
+                eq = stackA.isEmpty() && stackB.isEmpty();
             }
             return result(eq);
         });
@@ -101,18 +106,18 @@ public interface WorldInventoryAnalytics extends WorldAware, SideRestricted, Net
         });
     }
 
-    @Callback(doc = "function(side:number, slot:number):table -- Get a description of the stack.")
+    @Callback(doc = "function(side:number, slot:number):table -- Get a description of the stack in the inventory on the specified side of the device.")
     default Object[] getStackInSlot(Context context, Arguments args) {
-        if (Settings.get().allowItemStackInspection) {
+        if (OCSettings.get().allowItemStackInspection) {
             Direction facing = checkSideForAction(args, 0);
             return withInventory(facing, inventory -> result(inventory.getItem(ExtendedArguments.checkSlot(args, inventory, 1))));
         }
         return result(null, "not enabled in config");
     }
 
-    @Callback(doc = "function(side:number):userdata -- Get a description of all stacks in the inventory.")
+    @Callback(doc = "function(side:number):userdata -- Get a description of all stacks in the inventory on the specified side of the device.")
     default Object[] getAllStacks(Context context, Arguments args) {
-        if (Settings.get().allowItemStackInspection) {
+        if (OCSettings.get().allowItemStackInspection) {
             Direction facing = checkSideForAction(args, 0);
             return withInventory(facing, inventory -> {
                 ItemStack[] stacks = new ItemStack[inventory.getContainerSize()];
@@ -124,9 +129,9 @@ public interface WorldInventoryAnalytics extends WorldAware, SideRestricted, Net
         return result(null, "not enabled in config");
     }
 
-    @Callback(doc = "function(side:number):string -- Get the name of the inventory on the specified side.")
+    @Callback(doc = "function(side:number):string -- Get the name of the inventory on the specified side of the device.")
     default Object[] getInventoryName(Context context, Arguments args) {
-        if (Settings.get().allowItemStackInspection) {
+        if (OCSettings.get().allowItemStackInspection) {
             Direction facing = checkSideForAction(args, 0);
             return withInventorySource(facing, is -> {
                 if (is instanceof InventoryUtils.BlockInventorySource) {
@@ -134,7 +139,7 @@ public interface WorldInventoryAnalytics extends WorldAware, SideRestricted, Net
                     var blockPos = new BlockPos(pos.x(), pos.y(), pos.z());
                     if (pos.level() != null && pos.level().hasChunk(blockPos.getX() >> 4, blockPos.getZ() >> 4)) {
                         Block block = pos.level().getBlockState(blockPos).getBlock();
-                        return result(block.getDescriptionId());
+                        return result(net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(block).toString());
                     }
                     return result(null, "Unknown");
                 } else if (is instanceof InventoryUtils.EntityInventorySource) {
@@ -146,7 +151,7 @@ public interface WorldInventoryAnalytics extends WorldAware, SideRestricted, Net
         return result(null, "not enabled in config");
     }
 
-    @Callback(doc = "function(side:number, slot:number, dbAddress:string, dbSlot:number):boolean -- Store an item stack description in the database.")
+    @Callback(doc = "function(side:number, slot:number, dbAddress:string, dbSlot:number):boolean -- Store an item stack description in the specified slot of the database with the specified address.")
     default Object[] store(Context context, Arguments args) {
         Direction facing = checkSideForAction(args, 0);
         String dbAddress = args.checkString(2);

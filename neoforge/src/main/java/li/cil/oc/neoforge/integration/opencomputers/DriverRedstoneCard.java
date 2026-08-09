@@ -6,8 +6,9 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Slot;
 import li.cil.oc.core.common.Tier;
-import li.cil.oc.core.impl.common.tileentity.traits.BundledRedstoneAware;
-import li.cil.oc.core.impl.common.tileentity.traits.RedstoneAware;
+import li.cil.oc.core.impl.common.blockentity.traits.BundledRedstoneAware;
+import li.cil.oc.core.impl.common.blockentity.traits.RedstoneAware;
+import li.cil.oc.core.impl.integration.opencomputers.Item;
 import li.cil.oc.core.impl.integration.util.BundledRedstone;
 import li.cil.oc.core.impl.integration.util.WirelessRedstone;
 import net.minecraft.world.item.ItemStack;
@@ -48,7 +49,7 @@ public final class DriverRedstoneCard extends Item implements HostAware {
     @Override
     public int tier(ItemStack stack) {
         var subItem = stack.getItem();
-        if (subItem instanceof li.cil.oc.neoforge.common.item.RedstoneCard card) {
+        if (subItem instanceof li.cil.oc.core.impl.common.item.RedstoneCard card) {
             return card.tier;
         }
         return Tier.One;

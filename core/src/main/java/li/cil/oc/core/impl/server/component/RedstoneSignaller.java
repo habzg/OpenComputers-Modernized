@@ -1,12 +1,15 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.HashSet;
+import java.util.Set;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
-import li.cil.oc.core.impl.common.tileentity.traits.RedstoneAware.RedstoneChangedEventArgs;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.core.impl.common.blockentity.traits.RedstoneAware.RedstoneChangedEventArgs;
 import li.cil.oc.core.util.ResultWrapper;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -15,11 +18,7 @@ import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import org.jetbrains.annotations.Nullable;
 
-
-import java.util.HashSet;
-import java.util.Set;
-
-public abstract class RedstoneSignaller extends li.cil.oc.api.prefab.ManagedEnvironment {
+public abstract class RedstoneSignaller extends AbstractManagedEnvironment {
     public final Node node = Network.newNode(this, Visibility.Network)
             .withComponent("redstone", Visibility.Neighbors)
             .create();

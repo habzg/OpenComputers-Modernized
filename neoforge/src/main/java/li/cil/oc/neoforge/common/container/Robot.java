@@ -2,44 +2,57 @@ package li.cil.oc.neoforge.common.container;
 
 import li.cil.oc.core.common.Slot;
 import li.cil.oc.core.common.Tier;
+import li.cil.oc.core.impl.common.container.DelegatingContainer;
+import li.cil.oc.core.impl.common.container.Player;
+import li.cil.oc.core.impl.common.container.RobotLookup;
+import li.cil.oc.core.impl.common.container.StaticComponentSlot;
 import li.cil.oc.neoforge.common.init.Menus;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.DataSlot;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 
 public class Robot extends Player {
-    public final li.cil.oc.neoforge.common.tileentity.Robot robot;
+    public final li.cil.oc.neoforge.common.blockentity.Robot robot;
+    public final String address;
+    private final Level level;
     public final boolean hasScreen;
     public final int deltaY;
     protected final int withScreenHeight = 256;
     protected final int noScreenHeight = 108;
     protected final int factor = 100;
 
-    public Robot(int containerId, Inventory playerInventory, li.cil.oc.neoforge.common.tileentity.Robot robot) {
-        super(Menus.ROBOT.get(), containerId, playerInventory, robot);
+    public Robot(int containerId, Inventory playerInventory, li.cil.oc.neoforge.common.blockentity.Robot robot) {
+        this(containerId, playerInventory, robot, robot.getLevel(), robot.computerAddress() != null ? robot.computerAddress() : "");
+    }
+
+    private Robot(int containerId, Inventory playerInventory, li.cil.oc.neoforge.common.blockentity.Robot robot, Level level, String address) {
+        super(Menus.ROBOT.get(), containerId, playerInventory, new DelegatingContainer(() -> resolve(robot, level, address)));
         this.robot = robot;
+        this.address = address;
+        this.level = level;
 
         addDataSlot(new DataSlot() {
             @Override
             public int get() {
-                return (int) (Robot.this.robot.globalBuffer / factor);
+                return (int) (Robot.this.current().globalBuffer / factor);
             }
 
             @Override
             public void set(int value) {
-                Robot.this.robot.globalBuffer = value * factor;
+                Robot.this.current().globalBuffer = value * factor;
             }
         });
         addDataSlot(new DataSlot() {
             @Override
             public int get() {
-                return (int) (Robot.this.robot.globalBufferSize / factor);
+                return (int) (Robot.this.current().globalBufferSize / factor);
             }
 
             @Override
             public void set(int value) {
-                Robot.this.robot.globalBufferSize = value * factor;
+                Robot.this.current().globalBufferSize = value * factor;
             }
         });
 
@@ -63,6 +76,23 @@ public class Robot extends Player {
         }
 
         addPlayerInventorySlots(6, 174 - deltaY);
+    }
+
+    public li.cil.oc.neoforge.common.blockentity.Robot current() {
+        return resolve(robot, level, address);
+    }
+
+    private static li.cil.oc.neoforge.common.blockentity.Robot resolve(li.cil.oc.neoforge.common.blockentity.Robot robot, Level level, String address) {
+        var resolved = RobotLookup.get(level, address);
+        if (resolved instanceof li.cil.oc.neoforge.common.blockentity.Robot lr) return lr;
+        if (level != null && level.isClientSide && net.neoforged.fml.loading.FMLLoader.getDist().isClient()) {
+            var clientLevel = net.minecraft.client.Minecraft.getInstance().level;
+            if (clientLevel != null && clientLevel != level) {
+                var r2 = RobotLookup.get(clientLevel, address);
+                if (r2 instanceof li.cil.oc.neoforge.common.blockentity.Robot lr) return lr;
+            }
+        }
+        return robot;
     }
 
     public class InventorySlot extends StaticComponentSlot {

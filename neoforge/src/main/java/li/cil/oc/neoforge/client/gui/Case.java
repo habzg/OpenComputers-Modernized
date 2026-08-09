@@ -1,6 +1,9 @@
 package li.cil.oc.neoforge.client.gui;
 
+import java.util.ArrayList;
+import java.util.List;
 import li.cil.oc.core.impl.client.Textures;
+import li.cil.oc.core.impl.client.gui.DynamicGuiContainer;
 import li.cil.oc.core.impl.client.gui.ImageButton;
 import li.cil.oc.neoforge.client.PacketSender;
 import li.cil.oc.neoforge.common.init.Menus;
@@ -10,22 +13,19 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class Case extends DynamicGuiContainer<li.cil.oc.neoforge.common.container.Case> {
-    public final li.cil.oc.core.impl.common.tileentity.Case computer;
+public class Case extends DynamicGuiContainer<li.cil.oc.core.impl.common.container.Case> {
+    public final li.cil.oc.core.impl.common.blockentity.Case computer;
     private ImageButton powerButton;
 
     @SuppressWarnings("unused")
-    public Case(Inventory playerInventory, li.cil.oc.core.impl.common.tileentity.Case computer) {
-        super(new li.cil.oc.neoforge.common.container.Case(Menus.CASE.get(), 0, playerInventory, computer));
+    public Case(Inventory playerInventory, li.cil.oc.core.impl.common.blockentity.Case computer) {
+        super(new li.cil.oc.core.impl.common.container.Case(Menus.CASE.get(), 0, playerInventory, computer));
         this.computer = computer;
     }
 
-    public Case(li.cil.oc.neoforge.common.container.Case container, Inventory inv, net.minecraft.network.chat.Component title) {
+    public Case(li.cil.oc.core.impl.common.container.Case container, Inventory inv, net.minecraft.network.chat.Component title) {
         super(container, inv, title);
-        this.computer = (li.cil.oc.core.impl.common.tileentity.Case) container.otherInventory;
+        this.computer = (li.cil.oc.core.impl.common.blockentity.Case) container.otherInventory;
     }
 
     @Override
@@ -51,8 +51,8 @@ public class Case extends DynamicGuiContainer<li.cil.oc.neoforge.common.containe
     @Override
     protected void drawSecondaryForegroundLayer(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         super.drawSecondaryForegroundLayer(guiGraphics, mouseX, mouseY);
-        guiGraphics.drawString(font, Component.translatable(computer.getInventoryName()).getString(), 8, 6, 0x404040);
-        if (powerButton.isHoveredOrFocused()) {
+        guiGraphics.drawString(font, Component.translatable(computer.getInventoryName()).getString(), 8, 6, 0x404040, false);
+        if (powerButton.isMouseOver(mouseX, mouseY)) {
             List<Component> tooltip = new ArrayList<>();
             for (String line : (computer.isRunning() ?
                     Component.translatable("gui.opencomputers.robot.turnoff").getString() : Component.translatable("gui.opencomputers.robot.turnon").getString()).split("\n")) {

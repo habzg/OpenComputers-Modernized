@@ -1,18 +1,17 @@
 package li.cil.oc.core.impl.common.template;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.ToIntFunction;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Slot;
 import li.cil.oc.core.common.Tier;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.ToIntFunction;
 
 public final class Template {
     private Template() {
@@ -153,7 +152,7 @@ public final class Template {
             }
         }
         if (caseTier >= Tier.One && cpuTier >= Tier.One) {
-            return Settings.deviceComplexityByTier[caseTier] - (Math.min(2, caseTier) - cpuTier) * 6;
+            return OCSettings.deviceComplexityByTier[caseTier] - (Math.min(2, caseTier) - cpuTier) * 6;
         }
         return 0;
     }

@@ -1,5 +1,8 @@
 package li.cil.oc.core.impl.common.component.traits;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import li.cil.oc.core.impl.client.renderer.TextBufferRenderCache;
+import li.cil.oc.core.impl.common.component.TextBufferBase;
 import li.cil.oc.core.impl.util.PackedColor;
 import li.cil.oc.core.util.ExtendedUnicodeHelper;
 
@@ -113,10 +116,6 @@ public interface TextBufferProxy extends li.cil.oc.api.internal.TextBuffer {
     }
 
     default void onBufferFill(int col, int row, int w, int h, int c) {
-    }
-
-    default void fill(int col, int row, int w, int h, char c) {
-        fill(col, row, w, h, (int) c);
     }
 
     default void fill(int col, int row, int w, int h, int c) {
@@ -233,5 +232,21 @@ public interface TextBufferProxy extends li.cil.oc.api.internal.TextBuffer {
         if (column < 0 || column >= getWidth() || row < 0 || row >= getHeight())
             throw new IndexOutOfBoundsException();
         return data().color[row][column];
+    }
+
+    @Override
+    @SuppressWarnings("unused")
+    default boolean renderText(PoseStack stack) {
+        if (this instanceof TextBufferBase base && base.hasLitContent()) {
+            boolean wasDirty = base.isBufferDirty();
+            if (wasDirty) {
+                for (int[] line : data().buffer) {
+                    TextBufferRenderCache.renderer.generateChars(line);
+                }
+                base.clearBufferDirty();
+            }
+            return wasDirty;
+        }
+        return false;
     }
 }

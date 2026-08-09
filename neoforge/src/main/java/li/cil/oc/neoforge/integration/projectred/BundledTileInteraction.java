@@ -1,6 +1,6 @@
 package li.cil.oc.neoforge.integration.projectred;
 
-import li.cil.oc.core.impl.common.tileentity.traits.BundledRedstoneAware;
+import li.cil.oc.core.impl.common.blockentity.traits.BundledRedstoneAware;
 import mrtjp.projectred.api.IBundledTileInteraction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;

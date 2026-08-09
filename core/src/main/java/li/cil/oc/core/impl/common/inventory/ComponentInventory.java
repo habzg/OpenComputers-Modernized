@@ -1,22 +1,21 @@
 package li.cil.oc.core.impl.common.inventory;
 
-import li.cil.oc.api.driver.Item;
+import java.util.ArrayList;
+import java.util.List;
+import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.util.Lifecycle;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.common.blockentity.traits.BlockEntity;
 import li.cil.oc.core.impl.util.ClientTickScheduler;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
-import java.util.ArrayList;
-import java.util.List;
 
 public interface ComponentInventory extends Inventory, Environment {
     Logger LOGGER = LoggerFactory.getLogger(ComponentInventory.class);
@@ -69,14 +68,14 @@ public interface ComponentInventory extends Inventory, Environment {
         for (int slot = 0; slot < ci.getContainerSize() && slot < comps.length; slot++) {
             ItemStack stack = ci.getItem(slot);
             if (!stack.isEmpty() && (comps[slot] == null) && ci.isComponentSlot(slot, stack)) {
-                Item driver = li.cil.oc.api.API.driver.driverFor(stack);
+                DriverItem driver = li.cil.oc.api.API.driver.driverFor(stack);
                 if (driver != null) {
                     ManagedEnvironment component = driver.createEnvironment(stack, ci.host());
                     if (component != null) {
                         applyLifecycleState(component, Lifecycle.LifecycleState.Constructing);
                         var level = ci.host().level();
                         HolderLookup.Provider provider = level != null ? level.registryAccess() : null;
-                        if (provider == null && ci.host() instanceof li.cil.oc.core.impl.common.tileentity.traits.TileEntity te) {
+                        if (provider == null && ci.host() instanceof BlockEntity te) {
                             provider = te.getEffectiveProvider();
                         }
                         if (provider != null) {
@@ -123,7 +122,7 @@ public interface ComponentInventory extends Inventory, Environment {
                     LOGGER.error("ComponentInventory components length {} does not accommodate inventory size {}", comps.length, ci.getContainerSize());
                     return;
                 } else if (comps[slot] != null) {
-                    Item driver = li.cil.oc.api.API.driver.driverFor(stack);
+                    DriverItem driver = li.cil.oc.api.API.driver.driverFor(stack);
                     if (driver != null) {
                         ci.save(comps[slot], driver, stack, provider);
                     }
@@ -211,7 +210,7 @@ public interface ComponentInventory extends Inventory, Environment {
     default void processItemAdded(int slot, ItemStack stack) {
         ManagedEnvironment[] comps = componentEnvironments();
         if (slot >= 0 && slot < comps.length && isComponentSlot(slot, stack)) {
-            Item driver = li.cil.oc.api.API.driver.driverFor(stack);
+            DriverItem driver = li.cil.oc.api.API.driver.driverFor(stack);
             if (driver != null) {
                 ManagedEnvironment component = driver.createEnvironment(stack, host());
                 if (component != null) {
@@ -252,7 +251,7 @@ public interface ComponentInventory extends Inventory, Environment {
                 updatingComponents().remove(component);
                 applyLifecycleState(component, Lifecycle.LifecycleState.Disposing);
                 if (component.node() != null) component.node().remove();
-                Item driver = li.cil.oc.api.API.driver.driverFor(stack);
+                DriverItem driver = li.cil.oc.api.API.driver.driverFor(stack);
                 if (driver != null) {
                     var level = host().level();
                     if (level != null && !level.isClientSide()) {
@@ -297,7 +296,7 @@ public interface ComponentInventory extends Inventory, Environment {
         ClientTickScheduler.schedule(this::applyInventoryChanges);
     }
 
-    default boolean isComponentSlot(int slot, ItemStack stack) {
+    default boolean isComponentSlot(int ignoredSlot, ItemStack ignoredStack) {
         return true;
     }
 
@@ -310,28 +309,17 @@ public interface ComponentInventory extends Inventory, Environment {
         }
     }
 
-    default CompoundTag dataTag(li.cil.oc.api.driver.Item driver, ItemStack stack) {
+    default CompoundTag dataTag(DriverItem driver, ItemStack stack) {
         if (driver != null) {
             try {
                 CompoundTag driverTag = driver.dataTag(stack);
                 if (driverTag != null) return driverTag;
             } catch (Throwable ignored) {}
         }
-        var customData = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
-        CompoundTag nbt;
-        if (customData != null && !customData.isEmpty()) {
-            nbt = customData.copyTag();
-        } else {
-            nbt = new CompoundTag();
-            stack.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.of(nbt));
-        }
-        if (!nbt.contains(Settings.namespace + "data")) {
-            nbt.put(Settings.namespace + "data", new CompoundTag());
-        }
-        return nbt.getCompound(Settings.namespace + "data");
+      return li.cil.oc.core.impl.integration.opencomputers.Item.getDataTag(stack);
     }
 
-    default void save(ManagedEnvironment component, li.cil.oc.api.driver.Item driver, ItemStack stack, HolderLookup.Provider provider) {
+    default void save(ManagedEnvironment component, DriverItem driver, ItemStack stack, HolderLookup.Provider provider) {
         try {
             var customData = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
             CompoundTag nbt;
@@ -340,13 +328,13 @@ public interface ComponentInventory extends Inventory, Environment {
             } else {
                 nbt = new CompoundTag();
             }
-            CompoundTag data = nbt.contains(Settings.namespace + "data") ?
-                    nbt.getCompound(Settings.namespace + "data") : new CompoundTag();
+            CompoundTag data = nbt.contains(OCSettings.namespace + "data") ?
+                    nbt.getCompound(OCSettings.namespace + "data") : new CompoundTag();
             for (String key : List.copyOf(data.getAllKeys())) {
                 data.remove(key);
             }
             component.save(data, provider);
-            nbt.put(Settings.namespace + "data", data);
+            nbt.put(OCSettings.namespace + "data", data);
             stack.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.of(nbt));
         } catch (Throwable e) {
             LOGGER.warn("An item component of type '{}' (provided by driver '{}') threw an error while saving.", component.getClass().getName(), driver.getClass().getName(), e);

@@ -1,5 +1,6 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.Map;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
@@ -13,7 +14,7 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.ToolDurabilityProviders;
 import li.cil.oc.core.impl.util.BlockPosition;
 import li.cil.oc.core.impl.util.ExtendedArguments;
@@ -22,9 +23,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
-
-
-import java.util.Map;
 
 public abstract class RobotBase extends AgentBase implements DeviceInfo {
     public final Node node;
@@ -61,7 +59,7 @@ public abstract class RobotBase extends AgentBase implements DeviceInfo {
     public RobotBase(String capacity) {
         this.node = Network.newNode(this, Visibility.Network)
                 .withComponent("robot")
-                .withConnector(Settings.get().bufferRobot)
+                .withConnector(OCSettings.get().bufferRobot)
                 .create();
         this.deviceInfo = Map.of(
                 DeviceAttribute.Class, DeviceClass.System,
@@ -71,7 +69,7 @@ public abstract class RobotBase extends AgentBase implements DeviceInfo {
                 DeviceAttribute.Capacity, capacity
         );
         this.romRobot = li.cil.oc.api.FileSystem.asManagedEnvironment(
-                li.cil.oc.api.FileSystem.fromClass(Settings.class, Settings.resourceDomain, "lua/component/robot"),
+                li.cil.oc.api.FileSystem.fromClass(OCSettings.class, OCSettings.resourceDomain, "lua/component/robot"),
                 "robot");
         setNode(this.node);
     }
@@ -92,12 +90,12 @@ public abstract class RobotBase extends AgentBase implements DeviceInfo {
         animateSwing(duration);
     }
 
-    @Callback(doc = "function():number -- Get the current color of the activity light.")
+    @Callback(doc = "function():number -- Get the current color of the activity light as an integer encoded RGB value (0xRRGGBB).")
     public Object[] getLightColor(Context context, Arguments args) {
         return ResultWrapper.result((double) getLightColor());
     }
 
-    @Callback(doc = "function(value:number):number -- Set the color of the activity light.")
+    @Callback(doc = "function(value:number):number -- Set the color of the activity light to the specified integer encoded RGB value (0xRRGGBB).")
     public Object[] setLightColor(Context context, Arguments args) {
         setLightColor(args.checkInteger(0));
         context.pause(0.1);
@@ -127,14 +125,14 @@ public abstract class RobotBase extends AgentBase implements DeviceInfo {
             sendParticleEffect(BlockPosition.apply(agent()), "crit", 8, 0.25, direction);
             return ResultWrapper.result(null, bc[1]);
         }
-        if (!((Connector) node).tryChangeBuffer(-Settings.get().robotMoveCost)) {
+        if (!((Connector) node).tryChangeBuffer(-OCSettings.get().robotMoveCost)) {
             return ResultWrapper.result(null, "not enough energy");
         }
         if (tryMove(direction)) {
-            context.pause(Settings.get().moveDelay);
+            context.pause(OCSettings.get().moveDelay);
             return ResultWrapper.result(true);
         }
-        ((Connector) node).changeBuffer(Settings.get().robotMoveCost);
+        ((Connector) node).changeBuffer(OCSettings.get().robotMoveCost);
         context.pause(0.4);
         sendParticleEffect(BlockPosition.apply(agent()), "crit", 8, 0.25, direction);
         return ResultWrapper.result(null, "impossible move");
@@ -143,11 +141,11 @@ public abstract class RobotBase extends AgentBase implements DeviceInfo {
     @Callback(doc = "function(clockwise:boolean):boolean -- Rotate in the specified direction.")
     public Object[] turn(Context context, Arguments args) {
         boolean clockwise = args.checkBoolean(0);
-        if (((Connector) node).tryChangeBuffer(-Settings.get().robotTurnCost)) {
+        if (((Connector) node).tryChangeBuffer(-OCSettings.get().robotTurnCost)) {
             if (clockwise) rotateProxy(Direction.UP);
             else rotateProxy(Direction.DOWN);
-            animateTurn(clockwise, Settings.get().turnDelay);
-            context.pause(Settings.get().turnDelay);
+            animateTurn(clockwise, OCSettings.get().turnDelay);
+            context.pause(OCSettings.get().turnDelay);
             return ResultWrapper.result(true);
         }
         return ResultWrapper.result(null, "not enough energy");

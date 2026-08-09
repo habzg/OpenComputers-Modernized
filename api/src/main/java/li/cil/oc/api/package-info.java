@@ -12,7 +12,7 @@
  * typical scenario for this will be adding a new object that user programs
  * should be able to interact with: a {@link li.cil.oc.api.network.Component}.
  * <br>
- * Note that for tile entities you implement yourself, you will not have to
+ * Note that for block entities you implement yourself, you will not have to
  * provide a driver, as long as you implement the necessary interface:
  * {@link li.cil.oc.api.network.Environment} and call {@link li.cil.oc.api.Network#joinOrCreateNetwork(net.minecraft.world.level.block.entity.BlockEntity)}
  * in the first <code>updateEntity()</code> call. For items that should be installed
@@ -28,7 +28,7 @@
  * <dd>
  * This API provides interfaces that allow interacting with the internal network
  * and creating nodes, components and power connectors for said network. If you
- * implement <code>Environment</code> in your tile entity or provide a
+ * implement <code>Environment</code> in your block entity or provide a
  * {@link li.cil.oc.api.network.ManagedEnvironment} via a driver you'll want to
  * create a node. This API provides factory methods for creating it.
  * </dd>

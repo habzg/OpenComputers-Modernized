@@ -1,9 +1,9 @@
 package li.cil.oc.neoforge.integration.top;
 
-import li.cil.oc.core.impl.common.tileentity.Case;
-import li.cil.oc.core.impl.common.tileentity.Microcontroller;
-import li.cil.oc.core.impl.common.tileentity.Rack;
-import li.cil.oc.neoforge.common.tileentity.RobotProxy;
+import li.cil.oc.core.impl.common.blockentity.Case;
+import li.cil.oc.core.impl.common.blockentity.Microcontroller;
+import li.cil.oc.core.impl.common.blockentity.Rack;
+import li.cil.oc.neoforge.common.blockentity.RobotProxy;
 import mcjty.theoneprobe.api.IProbeConfig;
 import mcjty.theoneprobe.api.IProbeConfig.ConfigMode;
 import mcjty.theoneprobe.api.IProbeConfigProvider;

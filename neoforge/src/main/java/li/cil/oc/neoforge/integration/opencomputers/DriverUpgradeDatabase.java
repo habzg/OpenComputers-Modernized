@@ -4,6 +4,8 @@ import li.cil.oc.api.driver.EnvironmentProvider;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Slot;
 import li.cil.oc.core.common.Tier;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.integration.opencomputers.Item;
 import li.cil.oc.neoforge.common.inventory.DatabaseInventory;
 import net.minecraft.world.item.ItemStack;
 
@@ -22,7 +24,7 @@ public final class DriverUpgradeDatabase extends Item implements li.cil.oc.api.d
         if (host.level() != null && host.level().isClientSide()) return null;
         var provider = host.level().registryAccess();
         return new li.cil.oc.core.impl.server.component.UpgradeDatabase(new DatabaseInventory() {
-            private final ItemStack[] items = new ItemStack[li.cil.oc.core.impl.Settings.get().databaseEntriesPerTier[tier()]];
+            private final ItemStack[] items = new ItemStack[OCSettings.get().databaseEntriesPerTier[tier()]];
             private final net.minecraft.core.HolderLookup.Provider lookupProvider = provider;
 
             {
@@ -64,7 +66,7 @@ public final class DriverUpgradeDatabase extends Item implements li.cil.oc.api.d
     @Override
     public int tier(ItemStack stack) {
         var subItem = stack.getItem();
-        if (subItem instanceof li.cil.oc.neoforge.common.item.UpgradeDatabase database) {
+        if (subItem instanceof li.cil.oc.core.impl.common.item.UpgradeDatabase database) {
             return database.tier();
         }
         return Tier.One;

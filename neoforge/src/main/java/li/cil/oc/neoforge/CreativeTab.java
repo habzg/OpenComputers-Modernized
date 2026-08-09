@@ -2,8 +2,8 @@ package li.cil.oc.neoforge;
 
 import li.cil.oc.api.API;
 import li.cil.oc.core.Constants;
+import li.cil.oc.core.impl.common.LootManager;
 import li.cil.oc.core.impl.integration.util.BundledRedstone;
-import li.cil.oc.neoforge.common.Loot;
 import li.cil.oc.neoforge.common.init.Items;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -171,26 +171,34 @@ public final class CreativeTab {
 
                         // Special items
                         try {
-                            output.accept(Items.createConfiguredDrone());
+                            var stack = Items.createConfiguredDrone();
+                            output.accept(stack);
+                            li.cil.oc.neoforge.integration.util.JEI.hide(stack);
                         } catch (Exception ignored) {
                         }
                         try {
-                            output.accept(Items.createConfiguredMicrocontroller());
+                            var stack = Items.createConfiguredMicrocontroller();
+                            output.accept(stack);
+                            li.cil.oc.neoforge.integration.util.JEI.hide(stack);
                         } catch (Exception ignored) {
                         }
                         try {
-                            output.accept(Items.createConfiguredRobot());
+                            var stack = Items.createConfiguredRobot();
+                            output.accept(stack);
+                            li.cil.oc.neoforge.integration.util.JEI.hide(stack);
                         } catch (Exception ignored) {
                         }
                         try {
-                            output.accept(Items.createConfiguredTablet());
+                            var stack = Items.createConfiguredTablet();
+                            output.accept(stack);
+                            li.cil.oc.neoforge.integration.util.JEI.hide(stack);
                         } catch (Exception ignored) {
                         }
                         try {
                             output.accept(Items.createChargedHoverBoots());
                         } catch (Exception ignored) {
                         }
-                        for (ItemStack stack : Loot.disksForClient) {
+                        for (ItemStack stack : LootManager.disksForClient) {
                             if (stack != null && !stack.isEmpty()) {
                                 output.accept(stack.copyWithCount(1));
                             }
@@ -200,8 +208,6 @@ public final class CreativeTab {
                                 output.accept(stack.copyWithCount(1));
                             }
                         }
-                        add(output, Constants.ItemName.RITEGUpgrade);
-                        add(output, Constants.ItemName.TpsCard);
                         add(output, Constants.ItemName.LuaBios);
                     })
                     .build());

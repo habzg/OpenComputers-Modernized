@@ -3,7 +3,8 @@ package li.cil.oc.neoforge.integration.opencomputers;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Slot;
 import li.cil.oc.core.common.Tier;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.integration.opencomputers.Item;
 import li.cil.oc.neoforge.OpenComputers;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -37,14 +38,14 @@ public class DriverCPU extends Item implements li.cil.oc.api.driver.item.Mutable
 
     public int cpuTier(ItemStack stack) {
         var subItem = stack.getItem();
-        if (subItem instanceof li.cil.oc.neoforge.common.item.CPU cpu) {
+        if (subItem instanceof li.cil.oc.core.impl.common.item.CPU cpu) {
             return cpu.cpuTier();
         }
         return Tier.One;
     }
 
     public int supportedComponents(ItemStack stack) {
-        return Settings.get().cpuComponentSupport[cpuTier(stack)];
+        return OCSettings.get().cpuComponentSupport[cpuTier(stack)];
     }
 
     public java.util.List<Class<? extends li.cil.oc.api.machine.Architecture>> allArchitectures() {
@@ -55,14 +56,14 @@ public class DriverCPU extends Item implements li.cil.oc.api.driver.item.Mutable
         CustomData cd = stack.get(DataComponents.CUSTOM_DATA);
         if (cd != null && !cd.isEmpty()) {
             CompoundTag tag = cd.copyTag();
-            String archClass = tag.getString(Settings.namespace + "archClass");
+            String archClass = tag.getString(OCSettings.namespace + "archClass");
             if (!archClass.isEmpty()) {
                 try {
                     return Class.forName(archClass).asSubclass(li.cil.oc.api.machine.Architecture.class);
                 } catch (ClassNotFoundException | ClassCastException t) {
                     OpenComputers.log().warn("Failed getting class for CPU architecture. Resetting CPU to use the default.", t);
-                    tag.remove(Settings.namespace + "archClass");
-                    tag.remove(Settings.namespace + "archName");
+                    tag.remove(OCSettings.namespace + "archClass");
+                    tag.remove(OCSettings.namespace + "archName");
                     stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
                 }
             }
@@ -80,7 +81,7 @@ public class DriverCPU extends Item implements li.cil.oc.api.driver.item.Mutable
 
     @Override
     public double getCallBudget(ItemStack stack) {
-        return Settings.get().callBudgets[Math.clamp(tier(stack), Tier.One, Tier.Three)];
+        return OCSettings.get().callBudgets[Math.clamp(tier(stack), Tier.One, Tier.Three)];
     }
 
     @Override
@@ -93,8 +94,8 @@ public class DriverCPU extends Item implements li.cil.oc.api.driver.item.Mutable
         } else {
             tag = cd.copyTag();
         }
-        tag.putString(Settings.namespace + "archClass", architecture.getName());
-        tag.putString(Settings.namespace + "archName", li.cil.oc.api.Machine.getArchitectureName(architecture));
+        tag.putString(OCSettings.namespace + "archClass", architecture.getName());
+        tag.putString(OCSettings.namespace + "archName", li.cil.oc.api.Machine.getArchitectureName(architecture));
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
     }
 }

@@ -10,7 +10,11 @@ var tagsDir = layout.buildDirectory.dir("generated/sources/tags/java/main")
 var generateTags = tasks.register("generateTags", Sync) {
     from "src/main/templates"
     into tagsDir
-    expand(mod_version: mod_version)
+    expand(
+        mod_version: mod_version,
+        mod_id: mod_id,
+        mod_name: mod_name
+    )
     filteringCharset = "UTF-8"
 }
 

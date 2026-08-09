@@ -1,16 +1,14 @@
 package li.cil.oc.core.impl.server.network;
 
 import com.google.common.base.Strings;
+import java.util.ArrayList;
+import java.util.List;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.Visibility;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
-import java.util.ArrayList;
-import java.util.List;
 
 public interface Node extends li.cil.oc.api.network.Node {
     Logger LOGGER = LoggerFactory.getLogger(Node.class);

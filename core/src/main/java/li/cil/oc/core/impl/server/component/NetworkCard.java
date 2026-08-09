@@ -1,5 +1,8 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.component.RackBusConnectable;
 import li.cil.oc.api.driver.DeviceInfo;
@@ -12,20 +15,17 @@ import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Tier;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.server.component.traits.WakeMessageAware;
 import li.cil.oc.core.util.ResultWrapper;
 import li.cil.oc.core.util.ServerNetwork;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-public class NetworkCard extends li.cil.oc.api.prefab.ManagedEnvironment implements RackBusConnectable, DeviceInfo, WakeMessageAware {
+public class NetworkCard extends AbstractManagedEnvironment implements RackBusConnectable, DeviceInfo, WakeMessageAware {
     public final EnvironmentHost host;
     protected final Visibility visibility;
     protected final Set<Integer> openPorts = new HashSet<>();
@@ -43,7 +43,7 @@ public class NetworkCard extends li.cil.oc.api.prefab.ManagedEnvironment impleme
 
     @Override
     public Map<String, String> getDeviceInfo() {
-        return Map.of(DeviceAttribute.Class, DeviceClass.Network, DeviceAttribute.Description, "Ethernet controller", DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor, DeviceAttribute.Product, "42i520 (MPN-01)", DeviceAttribute.Version, "1.0", DeviceAttribute.Capacity, String.valueOf(Settings.get().maxNetworkPacketSize), DeviceAttribute.Size, String.valueOf(maxOpenPorts()), DeviceAttribute.Width, String.valueOf(Settings.get().maxNetworkPacketParts));
+        return Map.of(DeviceAttribute.Class, DeviceClass.Network, DeviceAttribute.Description, "Ethernet controller", DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor, DeviceAttribute.Product, "42i520 (MPN-01)", DeviceAttribute.Version, "1.0", DeviceAttribute.Capacity, String.valueOf(OCSettings.get().maxNetworkPacketSize), DeviceAttribute.Size, String.valueOf(maxOpenPorts()), DeviceAttribute.Width, String.valueOf(OCSettings.get().maxNetworkPacketParts));
     }
 
     @Override
@@ -67,10 +67,10 @@ public class NetworkCard extends li.cil.oc.api.prefab.ManagedEnvironment impleme
     }
 
     protected int maxOpenPorts() {
-        return Settings.get().maxOpenPorts[Tier.One];
+        return OCSettings.get().maxOpenPorts[Tier.One];
     }
 
-    @Callback(doc = "function(port:number):boolean -- Opens the specified port.")
+    @Callback(doc = "function(port:number):boolean -- Opens the specified port. Returns true if the port was opened.")
     public Object[] open(Context context, Arguments args) {
         int port = checkPort(args.checkInteger(0));
         if (openPorts.contains(port)) return ResultWrapper.result(false);
@@ -79,7 +79,7 @@ public class NetworkCard extends li.cil.oc.api.prefab.ManagedEnvironment impleme
         return ResultWrapper.result(openPorts.add(port));
     }
 
-    @Callback(doc = "function([port:number]):boolean -- Closes the specified port.")
+    @Callback(doc = "function([port:number]):boolean -- Closes the specified port (default: all ports). Returns true if ports were closed.")
     public Object[] close(Context context, Arguments args) {
         if (args.count() == 0) {
             boolean closed = !openPorts.isEmpty();
@@ -130,9 +130,9 @@ public class NetworkCard extends li.cil.oc.api.prefab.ManagedEnvironment impleme
         return ResultWrapper.result(true);
     }
 
-    @Callback(direct = true, doc = "function():number -- Gets the maximum packet size.")
+    @Callback(direct = true, doc = "function():number -- Gets the maximum packet size (config setting).")
     public Object[] maxPacketSize(Context context, Arguments args) {
-        return ResultWrapper.result((double) Settings.get().maxNetworkPacketSize);
+        return ResultWrapper.result((double) OCSettings.get().maxNetworkPacketSize);
     }
 
     protected void doSend(Packet packet) {
@@ -166,6 +166,7 @@ public class NetworkCard extends li.cil.oc.api.prefab.ManagedEnvironment impleme
 
     @Override
     public boolean isPacketAccepted(Packet packet, double distance) {
+        if (!WakeMessageAware.super.isPacketAccepted(packet, distance)) return false;
         if (openPorts.contains(packet.port())) {
             networkActivity();
             return true;

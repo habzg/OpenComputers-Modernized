@@ -2,6 +2,7 @@ package li.cil.oc.neoforge.client.gui;
 
 import li.cil.oc.core.common.Tier;
 import li.cil.oc.core.impl.client.Textures;
+import li.cil.oc.core.impl.client.gui.DynamicGuiContainer;
 import li.cil.oc.neoforge.common.inventory.DatabaseInventory;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.entity.player.Inventory;
@@ -10,6 +11,7 @@ public class Database extends DynamicGuiContainer<li.cil.oc.neoforge.common.cont
     public final DatabaseInventory databaseInventory;
     private int lockedSlot = -1;
 
+    @SuppressWarnings("unused")
     public Database(Inventory playerInventory, DatabaseInventory databaseInventory) {
         super(new li.cil.oc.neoforge.common.container.Database(0, playerInventory, databaseInventory));
         this.databaseInventory = databaseInventory;
@@ -51,16 +53,16 @@ public class Database extends DynamicGuiContainer<li.cil.oc.neoforge.common.cont
     }
 
     @Override
-    protected boolean checkHotbarKeyPressed(int keyCode, int scanCode) {
+    protected boolean checkHotbarKeyPressed(int ignoredKeyCode, int ignoredScanCode) {
         return false;
     }
 
     @Override
-    protected void drawSecondaryForegroundLayer(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+    protected void drawSecondaryForegroundLayer(GuiGraphics ignoredGuiGraphics, int ignoredMouseX, int ignoredMouseY) {
     }
 
     @Override
-    protected void renderBg(GuiGraphics guiGraphics, float dt, int mouseX, int mouseY) {
+    protected void renderBg(GuiGraphics guiGraphics, float ignoredDt, int ignoredMouseX, int ignoredMouseY) {
         guiGraphics.blit(Textures.guiDatabase, leftPos, topPos, 0, 0, imageWidth, imageHeight, 256, 256);
         if (databaseInventory.tier() > Tier.One) {
             guiGraphics.blit(Textures.guiDatabase1, leftPos, topPos, 0, 0, imageWidth, imageHeight, 256, 256);

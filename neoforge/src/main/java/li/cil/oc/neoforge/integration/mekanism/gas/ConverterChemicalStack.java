@@ -1,10 +1,9 @@
 package li.cil.oc.neoforge.integration.mekanism.gas;
 
-import li.cil.oc.api.driver.Converter;
-import li.cil.oc.core.impl.Settings;
-import mekanism.api.chemical.ChemicalStack;
-
 import java.util.Map;
+import li.cil.oc.api.driver.Converter;
+import li.cil.oc.core.impl.OCSettings;
+import mekanism.api.chemical.ChemicalStack;
 
 @SuppressWarnings("unused")
 public final class ConverterChemicalStack implements Converter {
@@ -13,7 +12,7 @@ public final class ConverterChemicalStack implements Converter {
         if (value instanceof ChemicalStack stack) {
             var key = stack.getChemicalHolder().getKey();
             if (key != null) {
-                if (Settings.get().insertIdsInConverters) {
+                if (OCSettings.get().insertIdsInConverters) {
                     output.put("id", key.location().toString());
                 }
                 output.put("name", key.location().getPath());

@@ -1,18 +1,18 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.Map;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.BlockPosition;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 
-import java.util.Map;
-
-public class UpgradeSolarGenerator extends li.cil.oc.api.prefab.ManagedEnvironment implements DeviceInfo {
+public class UpgradeSolarGenerator extends AbstractManagedEnvironment implements DeviceInfo {
     public final EnvironmentHost host;
 
     public final li.cil.oc.api.network.Node node = Network.newNode(this, Visibility.Network)
@@ -51,7 +51,7 @@ public class UpgradeSolarGenerator extends li.cil.oc.api.prefab.ManagedEnvironme
             isSunShining = isSunVisible();
         }
         if (isSunShining && node != null) {
-            ((li.cil.oc.api.network.Connector) node).changeBuffer(Settings.get().solarGeneratorEfficiency);
+            ((li.cil.oc.api.network.Connector) node).changeBuffer(OCSettings.get().solarGeneratorEfficiency);
         }
     }
 

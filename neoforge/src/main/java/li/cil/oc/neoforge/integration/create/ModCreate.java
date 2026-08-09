@@ -1,6 +1,5 @@
 package li.cil.oc.neoforge.integration.create;
 
-import li.cil.oc.core.impl.integration.util.WirelessRedstone;
 import li.cil.oc.neoforge.integration.ModProxy;
 import li.cil.oc.neoforge.integration.Mods;
 
@@ -13,6 +12,7 @@ public final class ModCreate implements ModProxy {
 
     @Override
     public void initialize() {
-        WirelessRedstone.register(new WirelessRedstoneCreate());
+        li.cil.oc.core.impl.common.Registrar.registerWrenchTool("li.cil.oc.neoforge.integration.create.EventHandlerCreate.useWrench");
+        li.cil.oc.core.impl.common.Registrar.registerWrenchToolCheck("li.cil.oc.neoforge.integration.create.EventHandlerCreate.isWrench");
     }
 }

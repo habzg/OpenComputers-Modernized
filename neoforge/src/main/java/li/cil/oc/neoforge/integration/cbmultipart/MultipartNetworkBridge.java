@@ -17,10 +17,11 @@ public final class MultipartNetworkBridge {
         li.cil.oc.core.impl.server.network.Network.multipartNodeHandler = MultipartNetworkBridge::getNode;
         li.cil.oc.core.impl.server.network.Network.multipartColorHandler = MultipartNetworkBridge::getColor;
         li.cil.oc.core.impl.server.network.Network.multipartCanConnectHandler = MultipartNetworkBridge::canConnectFromSide;
+        li.cil.oc.neoforge.common.MultipartHooks.access = MultipartHooksImpl.INSTANCE;
     }
 
-    private static Node getNode(BlockEntity tileEntity) {
-        if (!(tileEntity instanceof TileMultipart tile)) return null;
+    private static Node getNode(BlockEntity blockEntity) {
+        if (!(blockEntity instanceof TileMultipart tile)) return null;
         for (MultiPart part : tile.getPartList()) {
             if (part instanceof li.cil.oc.api.network.Environment env) {
                 return env.node();
@@ -29,8 +30,8 @@ public final class MultipartNetworkBridge {
         return null;
     }
 
-    private static int getColor(BlockEntity tileEntity) {
-        if (!(tileEntity instanceof TileMultipart tile)) return Color.LightGray;
+    private static int getColor(BlockEntity blockEntity) {
+        if (!(blockEntity instanceof TileMultipart tile)) return Color.LightGray;
         for (MultiPart part : tile.getPartList()) {
             if (part instanceof CablePart cable) {
                 return cable.getColor();
@@ -39,8 +40,8 @@ public final class MultipartNetworkBridge {
         return Color.LightGray;
     }
 
-    public static boolean canConnectFromSide(BlockEntity tileEntity, Direction side) {
-        if (!(tileEntity instanceof TileMultipart tile)) return true;
+    public static boolean canConnectFromSide(BlockEntity blockEntity, Direction side) {
+        if (!(blockEntity instanceof TileMultipart tile)) return true;
         VoxelShape armShape = li.cil.oc.neoforge.common.block.Cable.armFor(side);
         var armPart = NormalOcclusionTest.of(armShape);
         for (MultiPart part : tile.getPartList()) {

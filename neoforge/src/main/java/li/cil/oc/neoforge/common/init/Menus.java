@@ -39,7 +39,8 @@ public final class Menus {
                     int x = buf.readInt();
                     int y = buf.readInt();
                     int z = buf.readInt();
-                    return (T) GuiHandler.getServerGuiElement(id, guiType, inv.player, inv.player.level(), x, y, z);
+                    String address = buf.readUtf();
+                    return (T) GuiHandler.getServerGuiElement(id, guiType, inv.player, inv.player.level(), x, y, z, address);
                 }));
     }
 }

@@ -1,6 +1,6 @@
 package li.cil.oc.core.impl.server.network;
 
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -30,7 +30,7 @@ public interface Connector extends li.cil.oc.api.network.Connector, Node {
 
     default double changeBuffer(double delta) {
         if (delta == 0) return 0;
-        if (Settings.get().ignorePower) return delta < 0 ? 0 : delta;
+        if (OCSettings.get().ignorePower) return delta < 0 ? 0 : delta;
         synchronized (this) {
             Distributor d = distributor();
             if (d != null) {
@@ -65,7 +65,7 @@ public interface Connector extends li.cil.oc.api.network.Connector, Node {
 
     default boolean tryChangeBuffer(double delta) {
         if (delta == 0) return true;
-        if (Settings.get().ignorePower) return delta < 0;
+        if (OCSettings.get().ignorePower) return delta < 0;
         synchronized (this) {
             Distributor d = distributor();
             if (d != null) {

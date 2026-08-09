@@ -1,7 +1,11 @@
 package li.cil.oc.core.impl.server.driver;
 
 import com.google.common.base.Strings;
-import li.cil.oc.api.driver.NamedBlock;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import li.cil.oc.api.driver.DriverBlock;import li.cil.oc.api.driver.NamedBlock;
 import li.cil.oc.api.network.ManagedEnvironment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -11,24 +15,18 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
+public class CompoundBlockDriver implements DriverBlock {
+    private final DriverBlock[] blocks;
 
-public class CompoundBlockDriver implements li.cil.oc.api.driver.SidedBlock {
-    private final li.cil.oc.api.driver.SidedBlock[] blocks;
-
-    public CompoundBlockDriver(li.cil.oc.api.driver.SidedBlock[] blocks) {
+    public CompoundBlockDriver(DriverBlock[] blocks) {
         this.blocks = blocks;
     }
 
     @Override
-    public ManagedEnvironment createEnvironment(Level world, int x, int y, int z, Direction side) {
-        var pos = new BlockPos(x, y, z);
+    public ManagedEnvironment createEnvironment(Level world, BlockPos pos, Direction side) {
         List<Object[]> list = new ArrayList<>();
-        for (li.cil.oc.api.driver.SidedBlock driver : blocks) {
-            ManagedEnvironment env = driver.createEnvironment(world, x, y, z, side);
+        for (DriverBlock driver : blocks) {
+            ManagedEnvironment env = driver.createEnvironment(world, pos, side);
             if (env != null) {
                 list.add(new Object[]{driver.getClass().getName(), env});
             }
@@ -44,9 +42,9 @@ public class CompoundBlockDriver implements li.cil.oc.api.driver.SidedBlock {
     }
 
     @Override
-    public boolean worksWith(Level world, int x, int y, int z, Direction side) {
-        for (li.cil.oc.api.driver.SidedBlock d : blocks) {
-            if (!d.worksWith(world, x, y, z, side)) return false;
+    public boolean worksWith(Level world, BlockPos pos, Direction side) {
+        for (DriverBlock d : blocks) {
+            if (!d.worksWith(world, pos, side)) return false;
         }
         return true;
     }

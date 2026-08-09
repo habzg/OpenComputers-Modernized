@@ -1,12 +1,11 @@
 package li.cil.oc.core.impl.integration.util;
 
-import li.cil.oc.core.impl.util.BlockPosition;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-
 import java.lang.reflect.Method;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import li.cil.oc.core.impl.util.BlockPosition;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 
 public final class Wrench {
     private static final Set<Method> usages = new LinkedHashSet<>();

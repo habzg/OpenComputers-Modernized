@@ -1,17 +1,16 @@
 package li.cil.oc.core.impl.server.fs;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import li.cil.oc.api.fs.Mode;
 import li.cil.oc.core.impl.util.FilePathUtil;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 
 public abstract class FileOutputStreamFileSystem extends OutputStreamFileSystem {
     private static final Logger LOGGER = LoggerFactory.getLogger(FileOutputStreamFileSystem.class);
@@ -62,7 +61,7 @@ public abstract class FileOutputStreamFileSystem extends OutputStreamFileSystem 
         if (mode == Mode.Append || mode == Mode.Write) modeStr = "rw";
         else throw new IllegalArgumentException();
         try {
-            return new FileHandle(new RandomAccessFile(new File(root(), path), modeStr), this, id, path, mode);
+            return new FileHandle(new RandomAccessFile(new File(root(), FilePathUtil.validatePath(path)), modeStr), this, id, path, mode);
         } catch (IOException e) {
             return null;
         }

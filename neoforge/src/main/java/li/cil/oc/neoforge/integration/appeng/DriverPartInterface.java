@@ -10,8 +10,8 @@ import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Node;
-import li.cil.oc.api.prefab.DriverSidedTileEntity;
-import li.cil.oc.neoforge.integration.ManagedTileEntityEnvironment;
+import li.cil.oc.api.prefab.DriverSidedBlockEntity;
+import li.cil.oc.core.impl.integration.ManagedBlockEntityEnvironment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
@@ -19,15 +19,15 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 @SuppressWarnings("unused")
-public class DriverPartInterface extends DriverSidedTileEntity {
+public class DriverPartInterface extends DriverSidedBlockEntity {
     @Override
-    public Class<?> getTileEntityClass() {
+    public Class<?> getBlockEntityClass() {
         return IPartHost.class;
     }
 
     @Override
-    public boolean worksWith(Level world, int x, int y, int z, Direction side) {
-        BlockEntity tile = world.getBlockEntity(new BlockPos(x, y, z));
+    public boolean worksWith(Level world, BlockPos pos, Direction side) {
+        BlockEntity tile = world.getBlockEntity(pos);
         if (tile instanceof IPartHost host) {
             for (Direction dir : Direction.values()) {
                 if (host.getPart(dir) instanceof InterfacePart) return true;
@@ -37,11 +37,11 @@ public class DriverPartInterface extends DriverSidedTileEntity {
     }
 
     @Override
-    public ManagedEnvironment createEnvironment(Level world, int x, int y, int z, Direction side) {
-        return new Environment((IPartHost) world.getBlockEntity(new BlockPos(x, y, z)), side);
+    public ManagedEnvironment createEnvironment(Level world, BlockPos pos, Direction side) {
+        return new Environment((IPartHost) world.getBlockEntity(pos), side);
     }
 
-    public static final class Environment extends ManagedTileEntityEnvironment<IPartHost>
+    public static final class Environment extends ManagedBlockEntityEnvironment<IPartHost>
             implements NamedBlock, NetworkControl<IActionHost>, PartEnvironmentBase {
         private final Direction aeSide;
 
@@ -52,7 +52,7 @@ public class DriverPartInterface extends DriverSidedTileEntity {
 
         @Override
         public IPartHost partHost() {
-            return getTileEntity();
+            return getBlockEntity();
         }
 
         @Override
@@ -67,7 +67,7 @@ public class DriverPartInterface extends DriverSidedTileEntity {
 
         @Override
         public IActionHost tile() {
-            var host = getTileEntity();
+            var host = getBlockEntity();
             var part = host.getPart(aeSide);
             if (part instanceof IActionHost actionHost) {
                 return actionHost;

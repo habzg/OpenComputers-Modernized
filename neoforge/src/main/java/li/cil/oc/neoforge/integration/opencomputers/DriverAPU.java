@@ -6,7 +6,7 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Slot;
 import li.cil.oc.core.common.Tier;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import net.minecraft.world.item.ItemStack;
 
 @SuppressWarnings("unused")
@@ -35,15 +35,15 @@ public final class DriverAPU extends DriverCPU implements HostAware {
 
     public int supportedComponents(ItemStack stack) {
         var subItem = stack.getItem();
-        if (subItem instanceof li.cil.oc.neoforge.common.item.APU apu) {
-            return Settings.get().cpuComponentSupport[apu.cpuTierForComponents()];
+        if (subItem instanceof li.cil.oc.core.impl.common.item.APU apu) {
+            return OCSettings.get().cpuComponentSupport[apu.cpuTierForComponents()];
         }
-        return Settings.get().cpuComponentSupport[1];
+        return OCSettings.get().cpuComponentSupport[1];
     }
 
     public int cpuTier(ItemStack stack) {
         var subItem = stack.getItem();
-        if (subItem instanceof li.cil.oc.neoforge.common.item.APU apu) {
+        if (subItem instanceof li.cil.oc.core.impl.common.item.APU apu) {
             return apu.cpuTier();
         }
         return Tier.One;
@@ -51,7 +51,7 @@ public final class DriverAPU extends DriverCPU implements HostAware {
 
     public int gpuTier(ItemStack stack) {
         var subItem = stack.getItem();
-        if (subItem instanceof li.cil.oc.neoforge.common.item.APU apu) {
+        if (subItem instanceof li.cil.oc.core.impl.common.item.APU apu) {
             return apu.gpuTier();
         }
         return Tier.One;

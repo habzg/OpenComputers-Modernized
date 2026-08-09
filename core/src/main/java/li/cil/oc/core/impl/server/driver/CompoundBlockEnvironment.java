@@ -1,6 +1,9 @@
 package li.cil.oc.core.impl.server.driver;
 
 import com.google.common.hash.Hashing;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 import li.cil.oc.api.network.Component;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
@@ -12,11 +15,6 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
 
 public class CompoundBlockEnvironment implements ManagedEnvironment, EnvironmentHost {
     private static final Logger LOGGER = LoggerFactory.getLogger(CompoundBlockEnvironment.class);

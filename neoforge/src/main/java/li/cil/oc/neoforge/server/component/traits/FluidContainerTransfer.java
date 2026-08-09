@@ -1,5 +1,7 @@
 package li.cil.oc.neoforge.server.component.traits;
 
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
@@ -13,11 +15,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-
-
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-
 import static li.cil.oc.core.util.ResultWrapper.result;
 
 public interface FluidContainerTransfer extends FluidContainerTransferBase {

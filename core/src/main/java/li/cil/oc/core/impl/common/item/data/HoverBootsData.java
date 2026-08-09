@@ -1,7 +1,7 @@
 package li.cil.oc.core.impl.common.item.data;
 
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 
@@ -19,11 +19,11 @@ public class HoverBootsData extends ItemData {
 
     @Override
     public void load(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider provider) {
-        charge = nbt.getDouble(Settings.namespace + "charge");
+        charge = nbt.getDouble(OCSettings.namespace + "charge");
     }
 
     @Override
     public void save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider provider) {
-        nbt.putDouble(Settings.namespace + "charge", charge);
+        nbt.putDouble(OCSettings.namespace + "charge", charge);
     }
 }

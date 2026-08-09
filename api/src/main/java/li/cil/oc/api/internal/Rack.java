@@ -7,7 +7,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.Container;
 
 /**
- * This interface is implemented by the rack tile entity.
+ * This interface is implemented by the rack block entity.
  * <br>
  * It particularly allows {@link RackMountable}s installed in the rack to flag
  * themselves as having changed, so their data gets resent to clients.
@@ -16,7 +16,7 @@ import net.minecraft.world.Container;
  * servers. That's what the {@link li.cil.oc.api.internal.Server}s are for,
  * which are mountables that can be placed in the rack.
  * <br>
- * Another purpose is to allow identifying tile entities as racks via the API,
+ * Another purpose is to allow identifying block entities as racks via the API,
  * i.e. without having to link against internal classes. This also means that
  * <em>you should not implement this</em>.
  */

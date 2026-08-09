@@ -1,13 +1,12 @@
 package li.cil.oc.core.impl.common;
 
+import java.util.Map;
+import java.util.WeakHashMap;
 import li.cil.oc.api.network.EnvironmentHost;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
-
-import java.util.Map;
-import java.util.WeakHashMap;
 
 public final class Sound {
     private static final Map<EnvironmentHost, Map<String, Long>> globalTimeouts = new WeakHashMap<>();
@@ -22,9 +21,9 @@ public final class Sound {
         if (hostTimeouts != null && hostTimeouts.getOrDefault(name, 0L) > now) {
             return;
         }
-        var location = ResourceLocation.parse(Settings.resourceDomain + ":" + name);
+        var location = ResourceLocation.parse(OCSettings.resourceDomain + ":" + name);
         var soundEvent = SoundEvent.createVariableRangeEvent(location);
-        host.level().playSound(null, host.xPosition(), host.yPosition(), host.zPosition(), soundEvent, SoundSource.BLOCKS, Settings.get().soundVolume, 1.0f);
+        host.level().playSound(null, host.xPosition(), host.yPosition(), host.zPosition(), soundEvent, SoundSource.BLOCKS, OCSettings.get().soundVolume, 1.0f);
         globalTimeouts.computeIfAbsent(host, k -> new java.util.HashMap<>()).put(name, now + COOLDOWN);
     }
 

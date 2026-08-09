@@ -1,5 +1,6 @@
 package li.cil.oc.neoforge.integration.appeng;
 
+import appeng.datagen.providers.tags.ConventionTags;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
@@ -20,6 +21,6 @@ public final class EventHandlerAE2 {
         if (stack.isEmpty()) {
             return false;
         }
-        return appeng.util.InteractionUtil.canWrenchRotate(stack);
+        return stack.is(ConventionTags.QUARTZ_WRENCH);
     }
 }

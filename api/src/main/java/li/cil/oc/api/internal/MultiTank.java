@@ -1,13 +1,11 @@
 package li.cil.oc.api.internal;
 
-import net.neoforged.neoforge.fluids.IFluidTank;
-
 /**
  * Implemented by objects with multiple internal tanks.
  * <br>
  * This is specifically for containers where the side does not matter when
- * accessing the internal tanks, only the index of the tank; unlike with the
- * {@link net.neoforged.neoforge.fluids.capability.IFluidHandler} interface.
+ * accessing the internal tanks, only the index of the tank; unlike with a
+ * fluid handler interface which also considers the side.
  */
 public interface MultiTank {
     /**
@@ -21,5 +19,5 @@ public interface MultiTank {
      * @param index the index of the tank to get.
      * @return the tank with the specified index.
      */
-    IFluidTank getFluidTank(int index);
+    Object getFluidTank(int index);
 }

@@ -4,8 +4,8 @@ import li.cil.oc.api.Network;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
-import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.impl.server.component.traits.InventoryAnalytics;
 import li.cil.oc.core.impl.server.component.traits.InventoryWorldControlMk2;
 import li.cil.oc.core.impl.server.component.traits.ItemInventoryControl;
@@ -19,81 +19,15 @@ import net.minecraft.world.Container;
 
 
 public class UpgradeInventoryController {
-    public static class Adapter extends li.cil.oc.api.prefab.ManagedEnvironment implements WorldInventoryAnalytics, UpgradeInventoryControllerBase.Common {
-        public final EnvironmentHost host;
-
-        @SuppressWarnings("unused")
-        public final li.cil.oc.api.network.Node node = Network.newNode(this, Visibility.Network)
-                .withComponent("inventory_controller", Visibility.Network)
-                .create();
-
-        public Adapter(EnvironmentHost host) {
-            this.host = host;
-        }
-
-        @Override
-        public BlockPosition position() {
-            return BlockPosition.apply(host);
-        }
-
-        @Override
-        public Direction checkSideForAction(Arguments args, int n) {
-            return ExtendedArguments.checkSideAny(args, n);
-        }
-    }
-
-    public static class Drone extends li.cil.oc.api.prefab.ManagedEnvironment implements InventoryAnalytics, InventoryWorldControlMk2, WorldInventoryAnalytics, ItemInventoryControl, UpgradeInventoryControllerBase.Common {
-        public final li.cil.oc.api.internal.Agent host;
+    public static class Robot extends AbstractManagedEnvironment implements InventoryAnalytics, InventoryWorldControlMk2, WorldInventoryAnalytics, ItemInventoryControl, UpgradeInventoryControllerBase.Common {
+        public final li.cil.oc.neoforge.common.blockentity.Robot host;
 
         @SuppressWarnings("unused")
         public final li.cil.oc.api.network.Node node = Network.newNode(this, Visibility.Network)
                 .withComponent("inventory_controller", Visibility.Neighbors)
                 .create();
 
-        public Drone(li.cil.oc.api.internal.Agent host) {
-            this.host = host;
-        }
-
-        @Override
-        public BlockPosition position() {
-            return BlockPosition.apply(host);
-        }
-
-        @Override
-        public Container inventory() {
-            return host.mainInventory();
-        }
-
-        @Override
-        public int selectedSlot() {
-            return host.selectedSlot();
-        }
-
-        @Override
-        public void selectedSlot_$eq(int value) {
-            host.setSelectedSlot(value);
-        }
-
-        @Override
-        public net.minecraft.world.entity.player.Player fakePlayer() {
-            return host.player();
-        }
-
-        @Override
-        public Direction checkSideForAction(Arguments args, int n) {
-            return ExtendedArguments.checkSideAny(args, n);
-        }
-    }
-
-    public static class Robot extends li.cil.oc.api.prefab.ManagedEnvironment implements InventoryAnalytics, InventoryWorldControlMk2, WorldInventoryAnalytics, ItemInventoryControl, UpgradeInventoryControllerBase.Common {
-        public final li.cil.oc.neoforge.common.tileentity.Robot host;
-
-        @SuppressWarnings("unused")
-        public final li.cil.oc.api.network.Node node = Network.newNode(this, Visibility.Network)
-                .withComponent("inventory_controller", Visibility.Neighbors)
-                .create();
-
-        public Robot(li.cil.oc.neoforge.common.tileentity.Robot host) {
+        public Robot(li.cil.oc.neoforge.common.blockentity.Robot host) {
             this.host = host;
         }
 

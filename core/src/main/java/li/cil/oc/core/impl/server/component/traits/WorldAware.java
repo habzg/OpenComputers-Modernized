@@ -1,5 +1,6 @@
 package li.cil.oc.core.impl.server.component.traits;
 
+import java.util.List;
 import li.cil.oc.core.impl.util.BlockPosition;
 import li.cil.oc.core.impl.util.Log;
 import net.minecraft.core.BlockPos;
@@ -11,8 +12,6 @@ import net.minecraft.world.entity.vehicle.Minecart;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
-
-import java.util.List;
 
 
 public interface WorldAware {
@@ -31,7 +30,7 @@ public interface WorldAware {
             return WorldAction.mayInteract(level(), blockPos, face);
         } catch (Throwable t) {
             Log.get().warn("Some event handler threw up while checking for permission to access a block.", t);
-            return true;
+            return false;
         }
     }
 

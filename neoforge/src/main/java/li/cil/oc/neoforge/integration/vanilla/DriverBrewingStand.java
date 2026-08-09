@@ -6,9 +6,9 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.ManagedEnvironment;
-import li.cil.oc.api.prefab.DriverSidedTileEntity;
+import li.cil.oc.api.prefab.DriverSidedBlockEntity;
+import li.cil.oc.core.impl.integration.ManagedBlockEntityEnvironment;
 import li.cil.oc.core.util.ResultWrapper;
-import li.cil.oc.neoforge.integration.ManagedTileEntityEnvironment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
@@ -17,18 +17,18 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 
 @SuppressWarnings("unused")
-public final class DriverBrewingStand extends DriverSidedTileEntity {
+public final class DriverBrewingStand extends DriverSidedBlockEntity {
     @Override
-    public Class<?> getTileEntityClass() {
+    public Class<?> getBlockEntityClass() {
         return BrewingStandBlockEntity.class;
     }
 
     @Override
-    public ManagedEnvironment createEnvironment(Level world, int x, int y, int z, Direction side) {
-        return new Environment((BrewingStandBlockEntity) world.getBlockEntity(new BlockPos(x, y, z)));
+    public ManagedEnvironment createEnvironment(Level world, BlockPos pos, Direction side) {
+        return new Environment((BrewingStandBlockEntity) world.getBlockEntity(pos));
     }
 
-    public static final class Environment extends ManagedTileEntityEnvironment<BrewingStandBlockEntity> implements NamedBlock {
+    public static final class Environment extends ManagedBlockEntityEnvironment<BrewingStandBlockEntity> implements NamedBlock {
         public Environment(BrewingStandBlockEntity BlockEntity) {
             super(BlockEntity, "brewing_stand");
         }
@@ -45,7 +45,7 @@ public final class DriverBrewingStand extends DriverSidedTileEntity {
 
         @Callback(doc = "function():number -- Get the number of ticks remaining of the current brewing operation.")
         public Object[] getBrewTime(Context context, Arguments args) {
-            return ResultWrapper.result(getTileEntity().brewTime);
+            return ResultWrapper.result(getBlockEntity().brewTime);
         }
     }
 

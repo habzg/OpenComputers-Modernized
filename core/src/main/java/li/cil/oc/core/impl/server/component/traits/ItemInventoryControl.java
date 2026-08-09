@@ -15,14 +15,14 @@ public interface ItemInventoryControl extends InventoryAware {
         return withItemInventory(ExtendedArguments.checkSlot(args, inventory(), 0), itemInventory -> ResultWrapper.result(itemInventory.getContainerSize()));
     }
 
-    @Callback(doc = "function(inventorySlot:number, slot:number[, count:number=64]):number -- Drops an item into the specified slot in the item inventory.")
+    @Callback(doc = "function(inventorySlot:number, slot:number[, count:number=64]):number -- Drops an item from the selected slot into the specified slot in the item inventory.")
     default Object[] dropIntoItemInventory(Context context, Arguments args) {
         return withItemInventory(ExtendedArguments.checkSlot(args, inventory(), 0), itemInventory -> {
             int slot = ExtendedArguments.checkSlot(args, itemInventory, 1);
             int count = ExtendedArguments.optItemCount(args, 2, 64);
-            return ResultWrapper.result(InventoryUtils.extractAnyFromInventory(
+            return ResultWrapper.result(InventoryUtils.extractFromInventorySlot(
                     stack -> InventoryUtils.insertIntoInventorySlot(stack, itemInventory, null, slot, count),
-                    inventory(), null, count));
+                    inventory(), null, selectedSlot(), count));
         });
     }
 

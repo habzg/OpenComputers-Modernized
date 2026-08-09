@@ -2,11 +2,10 @@ package li.cil.oc.core.impl.common;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import li.cil.oc.api.network.ManagedEnvironment;
-import net.minecraft.world.level.Level;
-
 import java.util.HashMap;
 import java.util.Map;
+import li.cil.oc.api.network.ManagedEnvironment;
+import net.minecraft.world.level.Level;
 
 public abstract class ComponentTracker {
     private static ComponentTracker serverTracker;
@@ -47,5 +46,13 @@ public abstract class ComponentTracker {
         Cache<String, ManagedEnvironment> cache = components(world);
         cache.invalidateAll();
         cache.cleanUp();
+    }
+
+    public synchronized void clearAll() {
+        for (var cache : worlds.values()) {
+            cache.invalidateAll();
+            cache.cleanUp();
+        }
+        worlds.clear();
     }
 }

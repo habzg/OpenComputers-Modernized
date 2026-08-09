@@ -1,11 +1,15 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.impl.util.InventoryUtils;
 import li.cil.oc.core.util.ResultWrapper;
@@ -13,17 +17,13 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.TransientCraftingContainer;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingInput;
-import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.RecipeType;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-public abstract class UpgradeCraftingBase extends li.cil.oc.api.prefab.ManagedEnvironment implements DeviceInfo {
+public abstract class UpgradeCraftingBase extends AbstractManagedEnvironment implements DeviceInfo {
     public final li.cil.oc.api.internal.Robot host;
 
     @SuppressWarnings("unused")
@@ -49,7 +49,8 @@ public abstract class UpgradeCraftingBase extends li.cil.oc.api.prefab.ManagedEn
 
     protected abstract void postItemCraftedEvent(Player player, ItemStack result, CraftingInventory inventory);
 
-    protected abstract void postPlayerDestroyItemEvent(Player player, ItemStack stack);
+    @SuppressWarnings("unused")
+    protected abstract void postPlayerDestroyItemEvent(Player ignoredPlayer, ItemStack ignoredStack);
 
     @Callback(doc = "function([count:number]):number -- Tries to craft the specified number of items in the top left area of the inventory.")
     public Object[] craft(Context context, Arguments args) {
@@ -85,8 +86,8 @@ public abstract class UpgradeCraftingBase extends li.cil.oc.api.prefab.ManagedEn
             if (recipeOpt.isEmpty()) {
                 return new Object[]{false, 0};
             }
-            CraftingRecipe originalRecipe = recipeOpt.get().value();
-            ItemStack originalCraft = originalRecipe.assemble(input, level.registryAccess());
+            var originalHolder = recipeOpt.get();
+            ItemStack originalCraft = originalHolder.value().assemble(input, level.registryAccess());
             if (originalCraft.isEmpty()) {
                 return new Object[]{false, 0};
             }
@@ -94,11 +95,9 @@ public abstract class UpgradeCraftingBase extends li.cil.oc.api.prefab.ManagedEn
                 CraftingInput currentInput = CraftingInput.of(getWidth(), getHeight(), getItems());
                 var currentRecipeOpt = level.getRecipeManager().getRecipeFor(RecipeType.CRAFTING, currentInput, level);
                 if (currentRecipeOpt.isEmpty()) break;
+                if (currentRecipeOpt.get() != originalHolder) break;
                 ItemStack result = currentRecipeOpt.get().value().assemble(currentInput, level.registryAccess());
                 if (result.isEmpty()) break;
-                if (!ItemStack.isSameItemSameComponents(originalCraft, result)) {
-                    break;
-                }
                 countCrafted += result.getCount();
                 postItemCraftedEvent(player, result, this);
                 List<ItemStack> surplus = new ArrayList<>();
@@ -106,16 +105,10 @@ public abstract class UpgradeCraftingBase extends li.cil.oc.api.prefab.ManagedEn
                     ItemStack stack = getItem(slot);
                     if (!stack.isEmpty()) {
                         removeItem(slot, 1);
-                        ItemStack container = stack.getCraftingRemainingItem();
+                        Item containerItem = stack.getItem().getCraftingRemainingItem();
+                        ItemStack container = containerItem != null ? containerItem.getDefaultInstance() : ItemStack.EMPTY;
                         if (!container.isEmpty()) {
-                            if (container.isDamageableItem() && container.getDamageValue() > container.getMaxDamage()) {
-                                postPlayerDestroyItemEvent(player, container);
-                            } else {
-                                if (container.hasCraftingRemainingItem()) {
-                                    getItem(slot);
-                                }
-                                surplus.add(container);
-                            }
+                            surplus.add(container);
                         }
                     }
                 }

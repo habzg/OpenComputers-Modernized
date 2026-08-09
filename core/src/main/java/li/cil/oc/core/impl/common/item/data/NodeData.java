@@ -1,7 +1,7 @@
 package li.cil.oc.core.impl.common.item.data;
 
 import li.cil.oc.api.network.Visibility;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 
@@ -21,7 +21,7 @@ public class NodeData extends ItemData {
 
     @Override
     public void load(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider provider) {
-        var nodeNbt = nbt.getCompound(Settings.namespace + "data").getCompound("node");
+        var nodeNbt = nbt.getCompound(OCSettings.namespace + "data").getCompound("node");
         if (nodeNbt.contains("address")) {
             address = nodeNbt.getString("address");
         }
@@ -35,10 +35,10 @@ public class NodeData extends ItemData {
 
     @Override
     public void save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider provider) {
-        if (!nbt.contains(Settings.namespace + "data")) {
-            nbt.put(Settings.namespace + "data", new CompoundTag());
+        if (!nbt.contains(OCSettings.namespace + "data")) {
+            nbt.put(OCSettings.namespace + "data", new CompoundTag());
         }
-        var dataNbt = nbt.getCompound(Settings.namespace + "data");
+        var dataNbt = nbt.getCompound(OCSettings.namespace + "data");
         if (!dataNbt.contains("node")) {
             dataNbt.put("node", new CompoundTag());
         }

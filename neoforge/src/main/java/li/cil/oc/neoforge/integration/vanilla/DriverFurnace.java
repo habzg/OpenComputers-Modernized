@@ -6,9 +6,9 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.ManagedEnvironment;
-import li.cil.oc.api.prefab.DriverSidedTileEntity;
+import li.cil.oc.api.prefab.DriverSidedBlockEntity;
+import li.cil.oc.core.impl.integration.ManagedBlockEntityEnvironment;
 import li.cil.oc.core.util.ResultWrapper;
-import li.cil.oc.neoforge.integration.ManagedTileEntityEnvironment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
@@ -18,18 +18,18 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.FurnaceBlockEntity;
 
 @SuppressWarnings("unused")
-public final class DriverFurnace extends DriverSidedTileEntity {
+public final class DriverFurnace extends DriverSidedBlockEntity {
     @Override
-    public Class<?> getTileEntityClass() {
+    public Class<?> getBlockEntityClass() {
         return FurnaceBlockEntity.class;
     }
 
     @Override
-    public ManagedEnvironment createEnvironment(Level world, int x, int y, int z, Direction side) {
-        return new Environment((FurnaceBlockEntity) world.getBlockEntity(new BlockPos(x, y, z)));
+    public ManagedEnvironment createEnvironment(Level world, BlockPos pos, Direction side) {
+        return new Environment((FurnaceBlockEntity) world.getBlockEntity(pos));
     }
 
-    public static final class Environment extends ManagedTileEntityEnvironment<FurnaceBlockEntity> implements NamedBlock {
+    public static final class Environment extends ManagedBlockEntityEnvironment<FurnaceBlockEntity> implements NamedBlock {
         public Environment(FurnaceBlockEntity BlockEntity) {
             super(BlockEntity, "furnace");
         }
@@ -46,27 +46,27 @@ public final class DriverFurnace extends DriverSidedTileEntity {
 
         @Callback(doc = "function():number -- The number of ticks that the furnace will keep burning from the last consumed fuel.")
         public Object[] getBurnTime(Context context, Arguments args) {
-            return ResultWrapper.result(getTileEntity().litTime);
+            return ResultWrapper.result(getBlockEntity().litTime);
         }
 
         @Callback(doc = "function():number -- The number of ticks that the current item has been cooking for.")
         public Object[] getCookTime(Context context, Arguments args) {
-            return ResultWrapper.result(getTileEntity().cookingProgress);
+            return ResultWrapper.result(getBlockEntity().cookingProgress);
         }
 
         @Callback(doc = "function():number -- The number of ticks that the current item needs to cook.")
         public Object[] getTotalCookTime(Context context, Arguments args) {
-            return ResultWrapper.result(getTileEntity().cookingTotalTime);
+            return ResultWrapper.result(getBlockEntity().cookingTotalTime);
         }
 
         @Callback(doc = "function():number -- The number of ticks that the currently burning fuel lasts in total.")
         public Object[] getCurrentItemBurnTime(Context context, Arguments args) {
-            return ResultWrapper.result(getTileEntity().litDuration);
+            return ResultWrapper.result(getBlockEntity().litDuration);
         }
 
         @Callback(doc = "function():boolean -- Get whether the furnace is currently active.")
         public Object[] isBurning(Context context, Arguments args) {
-            return ResultWrapper.result(getTileEntity().litTime > 0);
+            return ResultWrapper.result(getBlockEntity().litTime > 0);
         }
     }
 

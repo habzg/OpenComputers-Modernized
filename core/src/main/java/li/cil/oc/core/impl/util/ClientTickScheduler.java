@@ -1,10 +1,9 @@
 package li.cil.oc.core.impl.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class ClientTickScheduler {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientTickScheduler.class);

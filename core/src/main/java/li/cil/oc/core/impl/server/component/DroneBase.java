@@ -1,5 +1,6 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.Map;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
@@ -8,19 +9,17 @@ import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.InventoryUtils;
 import li.cil.oc.core.util.ResultWrapper;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.item.ItemEntity;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Map;
-
 public abstract class DroneBase extends AgentBase implements DeviceInfo {
     public final Node node = Network.newNode(this, Visibility.Network)
             .withComponent("drone")
-            .withConnector(Settings.get().bufferDrone)
+            .withConnector(OCSettings.get().bufferDrone)
             .create();
     private final Map<String, String> deviceInfo;
 
@@ -119,14 +118,14 @@ public abstract class DroneBase extends AgentBase implements DeviceInfo {
         return ResultWrapper.result(lightColorImpl());
     }
 
-    @Callback(doc = "function(value:number):number -- Set the color of the flap lights.")
+    @Callback(doc = "function(value:number):number -- Set the color of the flap lights to the specified integer encoded RGB value (0xRRGGBB).")
     public Object[] setLightColor(Context context, Arguments args) {
         setLightColorImpl(args.checkInteger(0));
         context.pause(0.1);
         return ResultWrapper.result(lightColorImpl());
     }
 
-    @Callback(doc = "function(dx:number, dy:number, dz:number) -- Change the target position.")
+    @Callback(doc = "function(dx:number, dy:number, dz:number) -- Change the target position by the specified offset.")
     @SuppressWarnings("SameReturnValue")
     public Object @Nullable [] move(Context context, Arguments args) {
         setTargetXImpl(targetXImpl() + (float) args.checkDouble(0));

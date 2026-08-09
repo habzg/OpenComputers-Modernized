@@ -1,10 +1,9 @@
 package li.cil.oc.core.impl.server.fs;
 
-import li.cil.oc.core.impl.util.FilePathUtil;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
+import li.cil.oc.core.impl.util.FilePathUtil;
 
 public abstract class FileInputStreamFileSystem extends InputStreamFileSystem {
     protected abstract File root();
@@ -79,7 +78,7 @@ public abstract class FileInputStreamFileSystem extends InputStreamFileSystem {
 
     @Override
     protected InputChannel openInputChannel(String path) {
-        return new FileChannel(new File(root(), path));
+        return new FileChannel(new File(root(), FilePathUtil.validatePath(path)));
     }
 
     public static class FileChannel implements InputChannel {

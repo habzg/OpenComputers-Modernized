@@ -1,20 +1,19 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.HashMap;
+import java.util.Map;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import net.minecraft.world.entity.player.Player;
 
-
-import java.util.HashMap;
-import java.util.Map;
-
-public class Keyboard extends li.cil.oc.api.prefab.ManagedEnvironment implements li.cil.oc.api.internal.Keyboard, DeviceInfo {
+public class Keyboard extends AbstractManagedEnvironment implements li.cil.oc.api.internal.Keyboard, DeviceInfo {
     public final EnvironmentHost host;
     public final Node node = Network.newNode(this, Visibility.Network)
             .withComponent("keyboard")
@@ -43,7 +42,7 @@ public class Keyboard extends li.cil.oc.api.prefab.ManagedEnvironment implements
         Map<Integer, Character> keys = pressedKeys.get(player);
         if (keys != null) {
             for (Map.Entry<Integer, Character> entry : keys.entrySet()) {
-                if (Settings.get().inputUsername) {
+                if (OCSettings.get().inputUsername) {
                     signal(player, "key_up", (int) entry.getValue(), entry.getKey(), player.getScoreboardName());
                 } else {
                     signal(player, "key_up", (int) entry.getValue(), entry.getKey());
@@ -70,7 +69,7 @@ public class Keyboard extends li.cil.oc.api.prefab.ManagedEnvironment implements
                     char ch = (Character) data[1];
                     int code = (Integer) data[2];
                     pressedKeys.computeIfAbsent(p, k -> new HashMap<>()).put(code, ch);
-                    if (Settings.get().inputUsername) {
+                    if (OCSettings.get().inputUsername) {
                         signal(p, "key_down", (int) ch, code, p.getScoreboardName());
                     } else {
                         signal(p, "key_down", (int) ch, code);
@@ -83,7 +82,7 @@ public class Keyboard extends li.cil.oc.api.prefab.ManagedEnvironment implements
                     if (keys.containsKey(code)) {
                         char ch = (Character) data[1];
                         keys.remove(code);
-                        if (Settings.get().inputUsername) {
+                        if (OCSettings.get().inputUsername) {
                             signal(p, "key_up", (int) ch, code, p.getScoreboardName());
                         } else {
                             signal(p, "key_up", (int) ch, code);
@@ -93,7 +92,7 @@ public class Keyboard extends li.cil.oc.api.prefab.ManagedEnvironment implements
             } else if ("keyboard.clipboard".equals(message.name()) && data[0] instanceof Player p && data[1] instanceof String value) {
                 if (isUsableByPlayer(p)) {
                     for (String line : value.split("(?<=\\n)")) {
-                        if (Settings.get().inputUsername) {
+                        if (OCSettings.get().inputUsername) {
                             signal(p, "clipboard", line, p.getScoreboardName());
                         } else {
                             signal(p, "clipboard", line);

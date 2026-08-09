@@ -1,6 +1,5 @@
 plugins {
     id 'net.neoforged.moddev'
-    id 'maven-publish'
     id 'idea'
 }
 
@@ -10,7 +9,7 @@ sourceSets.main.resources {
 }
 
 base {
-    archivesName = mod_id
+    archivesName = mod_id + "-neoforge"
 }
 
 neoForge {
@@ -26,20 +25,21 @@ neoForge {
     runs {
         client {
             client()
+            gameDirectory = project.file('runs/client')
+            programArguments.addAll '--username', 'Dev', '--uuid', '380df991-f603-344c-a090-369bad2a924a'
+            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+        }
+        client2 {
+            client()
+            gameDirectory = project.file('runs/client2')
+            programArguments.addAll '--username', 'Player', '--uuid', 'a01e3843-e521-3998-958a-f459800e4d11'
             systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
         }
         server {
             server()
+            gameDirectory = project.file('runs/server')
             programArgument '--nogui'
             systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
-        }
-        gameTestServer {
-            type = "gameTestServer"
-            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
-        }
-        data {
-            data()
-            programArguments.addAll '--mod', mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
         }
         configureEach {
             systemProperty 'forge.logging.markers', 'REGISTRIES'
@@ -68,28 +68,37 @@ dependencies {
 
     // OC repack libraries
     compileOnly("li.cil.repack:OC-JNLua:${jnlua_version}")
-    implementation("com.typesafe:config:${typesafe_config_version}")
-    implementation("li.cil.repack:OC-LuaJ:${luaj_version}")
+    implementation files(rootProject.tasks.named('relocateTypesafe'))
+    compileOnly("li.cil.repack:OC-LuaJ:${luaj_version}")
     implementation("li.cil.repack:OC-JNLua-Natives:${jnlua_natives_version}")
 
     // Integration - compile-time only (API jars)
     compileOnly("cc.tweaked:cc-tweaked-${minecraft_version}-forge-api:${cc_version}")
+    compileOnly("dev.ryanhcode.sable-companion:sable-companion-common-${minecraft_version}:${sable_companion_version}")
     compileOnly("mrtjp:ProjectRed:${minecraft_version}-${pr_version}:api")
-    compileOnly("mekanism:Mekanism:${minecraft_version}-${mekanism_version}:api")
+    compileOnly("net.commoble.morered:morered-${minecraft_version}:${morered_version}")
+    compileOnly("maven.modrinth:tis3d:MC1.21.1-neoforge-${tis3d_version}")
+    compileOnly("dev.architectury:architectury-neoforge:${architectury_version}")
     compileOnly("mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}")
-    compileOnly("mcp.mobius.waila:wthit-api:${wthit_version}")
+    compileOnly("me.shedaniel:RoughlyEnoughItems-api-neoforge:${rei_version}")
+    compileOnly("mcp.mobius.waila:wthit-api:neo-${wthit_version}")
     compileOnly("mcjty.theoneprobe:theoneprobe:${top_version}:api")
+    compileOnly("dev.emi:emi-neoforge:${emi_version}+${minecraft_version}:api")
 
     // Integration - runtime only
-    runtimeOnly("mcp.mobius.waila:wthit:${wthit_version}")
+    runtimeOnly("mcp.mobius.waila:wthit:neo-${wthit_version}")
     runtimeOnly("mcjty.theoneprobe:theoneprobe:${top_version}")
     runtimeOnly("mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}")
     runtimeOnly("cc.tweaked:cc-tweaked-${minecraft_version}-forge:${cc_version}")
-    runtimeOnly("mekanism:Mekanism:${minecraft_version}-${mekanism_version}")
     runtimeOnly("mrtjp:ProjectRed:${minecraft_version}-${pr_version}:core")
     runtimeOnly("mrtjp:ProjectRed:${minecraft_version}-${pr_version}:transmission")
     runtimeOnly("maven.modrinth:rftools-base:${rftools_base_version}")
+    runtimeOnly("net.commoble.morered:morered-${minecraft_version}:${morered_version}")
+    runtimeOnly("maven.modrinth:tis3d:MC1.21.1-neoforge-${tis3d_version}")
+    runtimeOnly("dev.architectury:architectury-neoforge:${architectury_version}")
+    runtimeOnly("maven.modrinth:markdownmanual:MC1.21.1-neoforge-${markdownmanual_version}")
     runtimeOnly("thedarkcolour:kotlinforforge-neoforge:${kotlinforforge_version}")
+    runtimeOnly("dev.emi:emi-neoforge:${emi_version}+${minecraft_version}")
 
     // Integration - compile + runtime (full jars)
     implementation("com.enderio:enderio:${enderio_version}")
@@ -101,8 +110,11 @@ dependencies {
     implementation("maven.modrinth:mcjtylib:${mcjtylib_version}")
     implementation("maven.modrinth:applied-mekanistics:${appmek_version}")
     implementation("org.appliedenergistics:appliedenergistics2:${ae2_version}")
-    implementation("maven.modrinth:railcraft-reborn:${railcraft_version}")
-    implementation("maven.modrinth:jade:${jade_version}")
+    implementation("maven.modrinth:jade:${jade_version}+neoforge")
+    implementation("me.shedaniel:RoughlyEnoughItems-neoforge:${rei_version}")
+    implementation("mekanism:Mekanism:${minecraft_version}-${mekanism_version}")
+    implementation("com.refinedmods.refinedstorage:refinedstorage-neoforge:${rs2_version}")
+    implementation("com.refinedmods.refinedstorage:refinedstorage-mekanism-integration:${rs2mekanism_version}")
 
     // Source set merging
     commonJava(project(path: ':core-api', configuration: 'commonJava'))
@@ -111,34 +123,43 @@ dependencies {
     commonResources(project(path: ':core', configuration: 'commonResources'))
     commonJava(project(path: ':api', configuration: 'commonJava'))
     commonResources(project(path: ':api', configuration: 'commonResources'))
+    commonJava(project(path: ':neoforge-api', configuration: 'commonJava'))
+    commonResources(project(path: ':neoforge-api', configuration: 'commonResources'))
 
-    additionalRuntimeClasspath("com.typesafe:config:${typesafe_config_version}")
-    additionalRuntimeClasspath("li.cil.repack:OC-LuaJ:${luaj_version}")
     additionalRuntimeClasspath("li.cil.repack:OC-JNLua-Natives:${jnlua_natives_version}")
 }
 
-// Merge OC-JNLua classes into the mod's build output so LuaState is in the same
-// classloader as the code calling System.load() (required for JNI resolution).
-def jnluaConfig = configurations.create('jnlua') {
+// Merge bundled libraries into the mod's build output so they are part of the
+// mod jar: OC-JNLua (LuaState in the same classloader as the code calling
+// System.load(), required for JNI resolution), OC-LuaJ, OC-JNLua-Natives and
+// com.typesafe:config (used by OCSettings). This mirrors the original 1.12.2
+// build, which embedded all of these into the mod jar.
+def embeddedConfig = configurations.create('embedded') {
     canBeResolved = true
     canBeConsumed = false
 }
 dependencies {
-    jnlua("li.cil.repack:OC-JNLua:${jnlua_version}")
+    embedded("li.cil.repack:OC-JNLua:${jnlua_version}")
+    embedded("li.cil.repack:OC-LuaJ:${luaj_version}")
+    embedded("li.cil.repack:OC-JNLua-Natives:${jnlua_natives_version}")
+    embedded files(rootProject.tasks.named('relocateTypesafe'))
 }
-def extractJNLua = tasks.register('extractJNLua', Copy) {
-    from({ jnluaConfig.collect { zipTree(it) } }) {
-        exclude 'META-INF/**'
+def embeddedDir = layout.buildDirectory.dir('embedded')
+def extractEmbedded = tasks.register('extractEmbedded', Copy) {
+    dependsOn(rootProject.tasks.named('relocateTypesafe'))
+    doFirst {
+        delete embeddedDir
     }
-    into layout.buildDirectory.dir('classes/java/main')
+    from({ embeddedConfig.collect { zipTree(it) } }) {
+        exclude 'META-INF/**'
+        exclude '.keep'
+    }
+    into embeddedDir
 }
+sourceSets.main.output.dir(['builtBy': extractEmbedded], embeddedDir)
 tasks.named('compileJava', JavaCompile) {
     dependsOn(configurations.commonJava)
     source(configurations.commonJava)
-    finalizedBy(extractJNLua)
-}
-tasks.named('classes') {
-    dependsOn(extractJNLua)
 }
 
 processResources {
@@ -170,16 +191,3 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
 }
 sourceSets.main.resources.srcDir generateModMetadata
 neoForge.ideSyncTask generateModMetadata
-
-publishing {
-    publications {
-        register('mavenJava', MavenPublication) {
-            from components.java
-        }
-    }
-    repositories {
-        maven {
-            url = "file://${project.projectDir}/repo"
-        }
-    }
-}

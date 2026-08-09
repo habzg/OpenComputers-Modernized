@@ -1,33 +1,29 @@
 package li.cil.oc.neoforge.common.item;
 
-import li.cil.oc.core.impl.common.tileentity.traits.Rotatable;
-import li.cil.oc.neoforge.common.item.traits.DelegateItem;
+import li.cil.oc.core.impl.common.blockentity.traits.Rotatable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.NotNull;
 
-public class Wrench extends DelegateItem implements li.cil.oc.api.internal.Wrench {
-
+public class Wrench extends li.cil.oc.core.impl.common.item.Wrench {
     public Wrench(Properties properties) {
-        super(properties.stacksTo(1));
+        super(properties);
     }
 
     @Override
-    public boolean doesSneakBypassUse(@NotNull ItemStack stack, LevelReader level, @NotNull BlockPos pos, @NotNull Player player) {
+    public boolean doesSneakBypassUse(@NotNull ItemStack stack, @NotNull LevelReader level, @NotNull BlockPos pos, @NotNull Player player) {
         return true;
     }
 
     @Override
-    public @NotNull InteractionResult onItemUseFirst(@NotNull ItemStack stack, @NotNull UseOnContext context) {
+    public @NotNull InteractionResult onItemUseFirst(@NotNull ItemStack ignoredStack, @NotNull UseOnContext context) {
         var world = context.getLevel();
         var pos = context.getClickedPos();
         var player = context.getPlayer();
@@ -48,7 +44,7 @@ public class Wrench extends DelegateItem implements li.cil.oc.api.internal.Wrenc
             if (newState != state) {
                 world.setBlock(pos, newState, 3);
                 world.blockUpdated(pos, state.getBlock());
-                player.swing(InteractionHand.MAIN_HAND);
+                player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
                 return !world.isClientSide ? InteractionResult.SUCCESS : InteractionResult.PASS;
             }
             BlockEntity te = world.getBlockEntity(pos);
@@ -59,23 +55,10 @@ public class Wrench extends DelegateItem implements li.cil.oc.api.internal.Wrenc
                         : currentFacing.getClockWise();
                 rotatable.facing(newFacing);
                 world.blockUpdated(pos, state.getBlock());
-                player.swing(InteractionHand.MAIN_HAND);
+                player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
                 return !world.isClientSide ? InteractionResult.SUCCESS : InteractionResult.PASS;
             }
         }
         return InteractionResult.PASS;
-    }
-
-    @Override
-    public @NotNull InteractionResult useOn(@NotNull UseOnContext context) {
-        return InteractionResult.PASS;
-    }
-
-    @Override
-    public boolean useWrenchOnBlock(Player player, Level world, int x, int y, int z, boolean simulate) {
-        if (!simulate) {
-            player.swing(InteractionHand.MAIN_HAND);
-        }
-        return true;
     }
 }

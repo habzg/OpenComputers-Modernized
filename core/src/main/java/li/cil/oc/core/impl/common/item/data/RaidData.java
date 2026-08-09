@@ -1,15 +1,14 @@
 package li.cil.oc.core.impl.common.item.data;
 
+import java.util.ArrayList;
+import java.util.List;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class RaidData extends ItemData {
     public final List<ItemStack> disks = new ArrayList<>();
@@ -27,14 +26,14 @@ public class RaidData extends ItemData {
 
     @Override
     public void load(CompoundTag nbt, HolderLookup.Provider provider) {
-        var diskList = nbt.getList(Settings.namespace + "disks", Tag.TAG_COMPOUND);
+        var diskList = nbt.getList(OCSettings.namespace + "disks", Tag.TAG_COMPOUND);
         disks.clear();
         for (int i = 0; i < diskList.size(); i++) {
             disks.add(ItemStack.parseOptional(provider, diskList.getCompound(i)));
         }
-        filesystem = nbt.getCompound(Settings.namespace + "filesystem");
-        if (nbt.contains(Settings.namespace + "label")) {
-            label = nbt.getString(Settings.namespace + "label");
+        filesystem = nbt.getCompound(OCSettings.namespace + "filesystem");
+        if (nbt.contains(OCSettings.namespace + "label")) {
+            label = nbt.getString(OCSettings.namespace + "label");
         }
     }
 
@@ -46,10 +45,10 @@ public class RaidData extends ItemData {
                 list.add(stack.save(provider, new CompoundTag()));
             }
         }
-        nbt.put(Settings.namespace + "disks", list);
-        nbt.put(Settings.namespace + "filesystem", filesystem);
+        nbt.put(OCSettings.namespace + "disks", list);
+        nbt.put(OCSettings.namespace + "filesystem", filesystem);
         if (label != null) {
-            nbt.putString(Settings.namespace + "label", label);
+            nbt.putString(OCSettings.namespace + "label", label);
         }
     }
 }

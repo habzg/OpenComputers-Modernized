@@ -15,6 +15,13 @@ import appeng.api.stacks.GenericStack;
 import appeng.api.stacks.KeyCounter;
 import appeng.api.storage.StorageHelper;
 import com.google.common.collect.ImmutableSet;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 import li.cil.oc.api.Persistable;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
@@ -35,14 +42,6 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-
 public interface NetworkControl<AETile extends IActionHost> extends Persistable, ManagedEnvironment {
     AETile tile();
 
@@ -57,12 +56,6 @@ public interface NetworkControl<AETile extends IActionHost> extends Persistable,
         var storage = AEUtil.getGridStorage(grid);
         var items = new KeyCounter();
         storage.getAvailableStacks(items);
-        var crafting = AEUtil.getGridCrafting(grid);
-        for (var key : crafting.getCraftables(k -> true)) {
-            if (items.get(key) <= 0) {
-                items.add(key, 0);
-            }
-        }
         return items;
     }
 
@@ -157,7 +150,7 @@ public interface NetworkControl<AETile extends IActionHost> extends Persistable,
         return ResultWrapper.result((Object) result.toArray());
     }
 
-    @Callback(doc = "function([filter:table, dbAddress:string, startSlot:number, count:number]):boolean -- Store items matching the specified filter in the database.")
+    @Callback(doc = "function([filter:table, dbAddress:string, startSlot:number, count:number]): bool -- Store items in the network matching the specified filter in the database with the specified address.")
     default Object[] store(Context context, Arguments args) {
         var filter = parseFilter(args);
         var database = args.optString(1, null);
@@ -247,21 +240,21 @@ public interface NetworkControl<AETile extends IActionHost> extends Persistable,
         return ResultWrapper.result(AEUtil.getGridEnergy(grid).getMaxStoredPower());
     }
 
-    @Callback(doc = "function():number -- Get the stored power in the network.")
+    @Callback(doc = "function():number -- Get the stored power in the network. ")
     default Object[] getStoredPower(Context context, Arguments args) {
         var grid = gridOf(tile());
         if (grid == null) return ResultWrapper.result(0.0);
         return ResultWrapper.result(AEUtil.getGridEnergy(grid).getStoredPower());
     }
 
-    @Callback(doc = "function():boolean -- True if the AE network is considered online.")
+    @Callback(doc = "function():boolean -- True if the AE network is considered online")
     default Object[] isNetworkPowered(Context context, Arguments args) {
         var grid = gridOf(tile());
         if (grid == null) return ResultWrapper.result(false);
         return ResultWrapper.result(AEUtil.getGridEnergy(grid).isNetworkPowered());
     }
 
-    @Callback(doc = "function():number -- Returns the energy demand on the AE network.")
+    @Callback(doc = "function():number -- Returns the energy demand on the AE network")
     default Object[] getEnergyDemand(Context context, Arguments args) {
         context.consumeCallBudget(1.5);
         var grid = gridOf(tile());
@@ -372,6 +365,10 @@ public interface NetworkControl<AETile extends IActionHost> extends Persistable,
         private long amount;
         private EphemeralDelayData delayData;
 
+        @SuppressWarnings("unused")
+        public Craftable() {
+        }
+
         public Craftable(IActionHost controller, AEItemKey stack, long amount) {
             this.controller = controller;
             this.stack = stack;
@@ -399,7 +396,7 @@ public interface NetworkControl<AETile extends IActionHost> extends Persistable,
         }
 
         @Callback(doc = "function():table -- Returns the item stack representation of the crafting result.")
-        public Object[] getItemStack(Context context, Arguments args) {
+        public Object[] getItemStack(Context ignoredContext, Arguments ignoredArgs) {
             if (stack != null) {
                 return ResultWrapper.result(stack.toStack(Math.clamp(amount, 1, Integer.MAX_VALUE)));
             }
@@ -407,7 +404,7 @@ public interface NetworkControl<AETile extends IActionHost> extends Persistable,
         }
 
         @Callback(doc = "function():number -- Returns the number of requests in progress.")
-        public Object[] requesting(Context context, Arguments args) {
+        public Object[] requesting(Context ignoredContext, Arguments ignoredArgs) {
             var actionableNode = getActionableNode();
             if (actionableNode == null) return ResultWrapper.result(null, "no ae grid");
             var grid = actionableNode.getGrid();
@@ -416,7 +413,7 @@ public interface NetworkControl<AETile extends IActionHost> extends Persistable,
         }
 
         @Callback(doc = "function([amount:int=1, prioritizePower:boolean=true, cpuName:string]):userdata -- Requests item to be crafted, returning an object that allows tracking the crafting status.")
-        public Object[] request(Context context, Arguments args) {
+        public Object[] request(Context ignoredContext, Arguments args) {
             if (delayData != null) {
                 return ResultWrapper.result(null, "waiting for ae network to load");
             }
@@ -604,6 +601,9 @@ public interface NetworkControl<AETile extends IActionHost> extends Persistable,
     }
 
     class CraftingStatus extends AbstractValue {
+        public CraftingStatus() {
+        }
+
         private boolean isComputing = true;
         private ICraftingLink link;
         private boolean failed = false;
@@ -627,17 +627,17 @@ public interface NetworkControl<AETile extends IActionHost> extends Persistable,
         }
 
         @Callback(doc = "function():boolean -- Get whether the crafting request has been canceled.")
-        public Object[] isCanceled(Context context, Arguments args) {
+        public Object[] isCanceled(Context ignoredContext, Arguments ignoredArgs) {
             return asCraft(craft -> ResultWrapper.result(craft.isCanceled()));
         }
 
         @Callback(doc = "function():boolean -- Get whether the crafting request is done.")
-        public Object[] isDone(Context context, Arguments args) {
+        public Object[] isDone(Context ignoredContext, Arguments ignoredArgs) {
             return asCraft(craft -> ResultWrapper.result(craft.isDone()));
         }
 
         @Callback(doc = "function():boolean -- Cancels the request. Returns false if the craft cannot be canceled or nil if the link is computing")
-        public Object[] cancel(Context context, Arguments args) {
+        public Object[] cancel(Context ignoredContext, Arguments ignoredArgs) {
             return asCraft(craft -> {
                 if (craft.isDone()) {
                     return ResultWrapper.result(false, "job already completed");

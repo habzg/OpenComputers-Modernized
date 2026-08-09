@@ -1,9 +1,8 @@
 package li.cil.oc.core.impl.client.renderer.markdown.segment;
 
+import java.util.Set;
 import li.cil.oc.core.impl.client.renderer.markdown.Document;
 import net.minecraft.client.gui.Font;
-
-import java.util.Set;
 
 public abstract class BasicTextSegment extends Segment {
     protected static final Set<Character> BREAKS = Set.of(' ', '.', ',', ':', ';', '!', '?', '_', '=', '-', '+', '*', '/', '\\');

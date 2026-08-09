@@ -1,19 +1,20 @@
 package li.cil.oc.neoforge.client.gui;
 
+import java.util.ArrayList;
+import java.util.List;
 import li.cil.oc.core.impl.client.Textures;
+import li.cil.oc.core.impl.client.gui.DynamicGuiContainer;
 import li.cil.oc.core.impl.client.gui.ImageButton;
 import li.cil.oc.neoforge.client.PacketSender;
+import li.cil.oc.neoforge.common.init.Menus;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class Rack extends DynamicGuiContainer<li.cil.oc.neoforge.common.container.Rack> {
-    public final li.cil.oc.core.impl.common.tileentity.Rack rack;
+public class Rack extends DynamicGuiContainer<li.cil.oc.core.impl.common.container.Rack> {
+    public final li.cil.oc.core.impl.common.blockentity.Rack rack;
 
     private static final int[] busMasterBlankUVs = {195, 14, 3, 5};
     private static final int[] busMasterPresentUVs = {194, 20, 5, 5};
@@ -77,15 +78,15 @@ public class Rack extends DynamicGuiContainer<li.cil.oc.neoforge.common.containe
     private final ImageButton[][][] wireButtons = new ImageButton[5][4][4];
 
     @SuppressWarnings("unused")
-    public Rack(Inventory playerInventory, li.cil.oc.core.impl.common.tileentity.Rack rack) {
-        super(new li.cil.oc.neoforge.common.container.Rack(0, playerInventory, rack, playerInventory.player));
+    public Rack(Inventory playerInventory, li.cil.oc.core.impl.common.blockentity.Rack rack) {
+        super(new li.cil.oc.core.impl.common.container.Rack(Menus.RACK.get(), 0, playerInventory, rack, playerInventory.player));
         this.rack = rack;
         imageHeight = 210;
     }
 
-    public Rack(li.cil.oc.neoforge.common.container.Rack container, Inventory inv, Component title) {
+    public Rack(li.cil.oc.core.impl.common.container.Rack container, Inventory inv, Component title) {
         super(container, inv, title);
-        this.rack = (li.cil.oc.core.impl.common.tileentity.Rack) container.otherInventory;
+        this.rack = (li.cil.oc.core.impl.common.blockentity.Rack) container.otherInventory;
         imageHeight = 210;
     }
 
@@ -167,7 +168,7 @@ public class Rack extends DynamicGuiContainer<li.cil.oc.neoforge.common.containe
     protected void drawSecondaryForegroundLayer(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         super.drawSecondaryForegroundLayer(guiGraphics, mouseX, mouseY);
 
-        guiGraphics.drawString(font, Component.translatable(rack.getInventoryName()).getString(), 8, 6, 0x404040);
+        guiGraphics.drawString(font, Component.translatable(rack.getInventoryName()).getString(), 8, 6, 0x404040, false);
 
         if (rack.isRelayEnabled) {
             int left = relayModeUVs[0];
@@ -268,7 +269,7 @@ public class Rack extends DynamicGuiContainer<li.cil.oc.neoforge.common.containe
         for (int bus = 0; bus < 5; bus++) {
             int x = 122;
             int y = 20 + bus * 11;
-            guiGraphics.drawString(font, sideName(busToSide[bus]).getString(), x, y, 0x404040);
+            guiGraphics.drawString(font, sideName(busToSide[bus]).getString(), x, y, 0x404040, false);
         }
 
         int relMouseX = mouseX - leftPos;

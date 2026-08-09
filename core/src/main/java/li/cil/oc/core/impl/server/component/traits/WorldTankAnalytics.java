@@ -3,7 +3,7 @@ package li.cil.oc.core.impl.server.component.traits;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.FluidUtils;
 import li.cil.oc.core.util.FluidHandler;
 import li.cil.oc.core.util.FluidStack;
@@ -13,7 +13,7 @@ import net.minecraft.core.Direction;
 import static li.cil.oc.core.util.ResultWrapper.result;
 
 public interface WorldTankAnalytics extends WorldAware, SideRestricted {
-    @Callback(doc = "function(side:number [, tank:number]):number -- Get the amount of fluid in the specified tank on the specified side.")
+    @Callback(doc = "function(side:number [, tank:number]):number -- Get the amount of fluid in the tank on the specified side.")
     default Object[] getTankLevel(Context context, Arguments args) {
         Direction facing = checkSideForAction(args, 0);
         var handler = FluidUtils.fluidHandlerAt(position().offset(facing));
@@ -31,7 +31,7 @@ public interface WorldTankAnalytics extends WorldAware, SideRestricted {
         return result(null, "no tank");
     }
 
-    @Callback(doc = "function(side:number [, tank:number]):number -- Get the capacity of the specified tank on the specified side.")
+    @Callback(doc = "function(side:number [, tank:number]):number -- Get the capacity of the tank on the specified side.")
     default Object[] getTankCapacity(Context context, Arguments args) {
         Direction facing = checkSideForAction(args, 0);
         var handler = FluidUtils.fluidHandlerAt(position().offset(facing));
@@ -47,9 +47,9 @@ public interface WorldTankAnalytics extends WorldAware, SideRestricted {
         return result(null, "no tank");
     }
 
-    @Callback(doc = "function(side:number [, tank:number]):table -- Get a description of the fluid in the specified tank on the specified side.")
+    @Callback(doc = "function(side:number [, tank:number]):table -- Get a description of the fluid in the tank on the specified side.")
     default Object[] getFluidInTank(Context context, Arguments args) {
-        if (Settings.get().allowItemStackInspection) {
+        if (OCSettings.get().allowItemStackInspection) {
             Direction facing = checkSideForAction(args, 0);
             var handler = FluidUtils.fluidHandlerAt(position().offset(facing));
             if (handler != null) {

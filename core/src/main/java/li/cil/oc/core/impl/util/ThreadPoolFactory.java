@@ -1,14 +1,13 @@
 package li.cil.oc.core.impl.util;
 
-import li.cil.oc.core.impl.Settings;
-import org.jetbrains.annotations.NotNull;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
+import li.cil.oc.core.impl.OCSettings;
+import org.jetbrains.annotations.NotNull;
 
 public final class ThreadPoolFactory {
 
@@ -16,7 +15,7 @@ public final class ThreadPoolFactory {
     public static final List<SafeThreadPool> safePools = new ArrayList<>();
 
     static {
-        int custom = Settings.get() != null ? Settings.get().threadPriority : -1;
+        int custom = OCSettings.get() != null ? OCSettings.get().threadPriority : -1;
         if (custom < 1) {
             priority = Thread.MIN_PRIORITY + (Thread.NORM_PRIORITY - Thread.MIN_PRIORITY) / 2;
         } else {

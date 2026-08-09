@@ -1,15 +1,16 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.List;
+import java.util.Map;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
-import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
 import li.cil.oc.core.impl.util.BlockPosition;
 import li.cil.oc.core.impl.util.ExtendedArguments;
 import li.cil.oc.core.util.ResultWrapper;
@@ -18,15 +19,13 @@ import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.piston.PistonStructureResolver;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.PushReaction;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-public abstract class UpgradePiston extends li.cil.oc.api.prefab.ManagedEnvironment implements DeviceInfo {
+public abstract class UpgradePiston extends AbstractManagedEnvironment implements DeviceInfo {
     public final EnvironmentHost host;
 
     public final li.cil.oc.api.network.Node node = Network.newNode(this, Visibility.Network)
@@ -51,7 +50,7 @@ public abstract class UpgradePiston extends li.cil.oc.api.prefab.ManagedEnvironm
 
     public abstract Direction pushDirection(Arguments args, int index);
 
-    public BlockPosition pushOrigin(Direction side) {
+    public BlockPosition pushOrigin(Direction ignoredSide) {
         return BlockPosition.apply(host);
     }
 
@@ -69,42 +68,36 @@ public abstract class UpgradePiston extends li.cil.oc.api.prefab.ManagedEnvironm
         Direction side = pushDirection(args, 0);
         BlockPosition hostPos = pushOrigin(side);
         var blockPos = new BlockPos(hostPos.x(), hostPos.y(), hostPos.z());
-        if (!((Connector) node).tryChangeBuffer(-Settings.get().pistonCost)) {
-            return ResultWrapper.result(false, "not enough energy");
-        }
-        if (pushBlocks(host.level(), blockPos, side)) {
+        if (movePiston(host.level(), blockPos, side, true)) {
             host.level().playSeededSound(null, host.xPosition(), host.yPosition(), host.zPosition(),
                     SoundEvents.PISTON_EXTEND, SoundSource.BLOCKS, 0.5f,
                     host.level().random.nextFloat() * 0.25f + 0.6f, host.level().random.nextLong());
-            context.pause(0.5);
+            context.pause(0.05);
             return ResultWrapper.result(true);
         }
         return ResultWrapper.result(false, "move failed");
     }
 
-    @Callback(doc = "function():boolean, string -- Sticky pistons only. Tries to pull the block on the specified side.")
-    public Object[] pull(Context context, Arguments args) {
-        return ResultWrapper.result(false, "piston is not sticky. does not have pull");
-    }
-
-    private static boolean pushBlocks(Level level, BlockPos startPos, Direction dir) {
-        List<BlockPos> toPush = new ArrayList<>();
-        BlockPos currentPos = startPos.relative(dir);
-        for (int i = 0; i < 12; i++) {
-            BlockState state = level.getBlockState(currentPos);
-            if (state.isAir()) break;
-            PushReaction reaction = state.getPistonPushReaction();
-            if (reaction == PushReaction.BLOCK || reaction == PushReaction.IGNORE) return false;
-            toPush.add(currentPos);
-            currentPos = currentPos.relative(dir);
+    static boolean movePiston(Level level, BlockPos pistonPos, Direction dir, boolean extending) {
+        PistonStructureResolver resolver = new PistonStructureResolver(level, pistonPos, dir, extending);
+        if (!resolver.resolve()) return false;
+        List<BlockPos> toPush = resolver.getToPush();
+        List<BlockPos> toDestroy = resolver.getToDestroy();
+        Direction moveDir = resolver.getPushDirection();
+        for (BlockPos pos : toDestroy) {
+            BlockState state = level.getBlockState(pos);
+            if (!state.isAir()) {
+                BlockEntity be = state.hasBlockEntity() ? level.getBlockEntity(pos) : null;
+                Block.dropResources(state, level, pos, be);
+                level.setBlock(pos, Blocks.AIR.defaultBlockState(), 18);
+            }
         }
-        if (toPush.isEmpty()) return false;
         for (int i = toPush.size() - 1; i >= 0; i--) {
-            BlockPos pushPos = toPush.get(i);
-            BlockState pushState = level.getBlockState(pushPos);
-            BlockPos targetPos = pushPos.relative(dir);
-            level.setBlock(targetPos, pushState, 2);
-            level.setBlock(pushPos, Blocks.AIR.defaultBlockState(), 2 | 1024);
+            BlockPos pos = toPush.get(i);
+            BlockState state = level.getBlockState(pos);
+            BlockPos target = pos.relative(moveDir);
+            level.setBlock(target, state, 2);
+            level.removeBlock(pos, false);
         }
         return true;
     }

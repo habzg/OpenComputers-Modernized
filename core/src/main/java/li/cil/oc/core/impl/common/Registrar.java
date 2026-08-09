@@ -1,6 +1,6 @@
 package li.cil.oc.core.impl.common;
 
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.item.data.PrintData;
 import li.cil.oc.core.impl.common.template.AssemblerTemplates;
 import li.cil.oc.core.impl.common.template.DisassemblerTemplates;
@@ -143,7 +143,7 @@ public final class Registrar {
     @SuppressWarnings("unused")
     public static void blacklistPeripheral(final Class<?> peripheral) {
         checkLocked();
-        Settings.get().peripheralBlacklist.add(peripheral.getName());
+        OCSettings.get().peripheralBlacklist.add(peripheral.getName());
     }
 
     public static void blacklistHost(final String ignoredName, final Class<?> host, final ItemStack stack) {

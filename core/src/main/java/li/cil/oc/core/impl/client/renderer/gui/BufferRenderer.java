@@ -1,27 +1,22 @@
 package li.cil.oc.core.impl.client.renderer.gui;
 
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.core.impl.client.Textures;
+import li.cil.oc.core.impl.client.renderer.IBufferRenderProvider;
 import li.cil.oc.core.impl.client.renderer.TextBufferRenderCache;
 import li.cil.oc.core.impl.client.renderer.font.DynamicFontRenderer;
 import li.cil.oc.core.impl.client.renderer.font.IFontRenderer;
 import li.cil.oc.core.impl.client.renderer.font.StaticFontRenderer;
 import li.cil.oc.core.impl.client.renderer.font.TextureFontRenderer;
 import li.cil.oc.core.impl.util.PackedColor;
-import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
-
-import java.util.function.Function;
 
 public final class BufferRenderer {
     public static final int margin = 7;
@@ -30,63 +25,11 @@ public final class BufferRenderer {
     private static int bgInnerWidth, bgInnerHeight;
     private static boolean bgForRobot;
 
-    private static RenderType borderRenderType;
+    private static IBufferRenderProvider provider = DefaultProvider.INSTANCE;
 
-    private static RenderType getBorderRenderType() {
-        if (borderRenderType == null) {
-            borderRenderType = RenderType.create(
-                    "oc_gui_border",
-                    DefaultVertexFormat.POSITION_TEX,
-                    VertexFormat.Mode.QUADS,
-                    256,
-                    false,
-                    false,
-                    RenderType.CompositeState.builder()
-                            .setShaderState(RenderStateShard.POSITION_TEX_SHADER)
-                            .setTextureState(new RenderStateShard.TextureStateShard(Textures.guiBorders, false, false))
-                            .setTransparencyState(RenderStateShard.NO_TRANSPARENCY)
-                            .setDepthTestState(RenderStateShard.NO_DEPTH_TEST)
-                            .setCullState(RenderStateShard.NO_CULL)
-                            .createCompositeState(false)
-            );
-        }
-        return borderRenderType;
+    public static void setProvider(IBufferRenderProvider p) {
+        provider = p;
     }
-
-    private static final RenderType GUI_BG_TYPE = RenderType.create(
-            "oc_gui_bg",
-            DefaultVertexFormat.POSITION_COLOR,
-            VertexFormat.Mode.QUADS,
-            256,
-            false,
-            false,
-            RenderType.CompositeState.builder()
-                    .setShaderState(RenderStateShard.POSITION_COLOR_SHADER)
-                    .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
-                    .setDepthTestState(RenderStateShard.NO_DEPTH_TEST)
-                    .setCullState(RenderStateShard.NO_CULL)
-                    .createCompositeState(false)
-    );
-
-    private static final Function<ResourceLocation, RenderType> GUI_TEXT_TYPE = Util.memoize(texture ->
-            RenderType.create(
-                    "oc_gui_text",
-                    DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP,
-                    VertexFormat.Mode.QUADS,
-                    786432,
-                    false,
-                    false,
-                    RenderType.CompositeState.builder()
-                            .setShaderState(RenderStateShard.POSITION_COLOR_TEX_LIGHTMAP_SHADER)
-                            .setTextureState(new RenderStateShard.TextureStateShard(texture, false, false))
-                            .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
-                            .setLightmapState(RenderStateShard.LIGHTMAP)
-                            .setDepthTestState(RenderStateShard.NO_DEPTH_TEST)
-                            .setCullState(RenderStateShard.NO_CULL)
-                            .setWriteMaskState(RenderStateShard.COLOR_WRITE)
-                            .createCompositeState(false)
-            )
-    );
 
     public static void init(TextureManager tm) {
         Textures.init(tm);
@@ -120,7 +63,7 @@ public final class BufferRenderer {
         final int innerHeight = bgInnerHeight;
         final boolean forRobot = bgForRobot;
 
-        VertexConsumer consumer = buffers.getBuffer(getBorderRenderType());
+        VertexConsumer consumer = buffers.getBuffer(provider.borderRenderType());
 
         int m = forRobot ? 2 : 7;
         double c0, c1, c2, c3;
@@ -182,7 +125,7 @@ public final class BufferRenderer {
         if (renderer instanceof DynamicFontRenderer dfr) {
             for (int i = 0; i < dfr.textureCount(); i++) {
                 ResourceLocation loc = dfr.getFontTextureLocation(i);
-                VertexConsumer consumer = buffers.getBuffer(GUI_TEXT_TYPE.apply(loc));
+                VertexConsumer consumer = buffers.getBuffer(provider.textRenderType(loc));
 
                 for (int y = 0; y < Math.min(viewportHeight, data.height); y++) {
                     final int[] line = data.buffer[y];
@@ -208,7 +151,7 @@ public final class BufferRenderer {
             }
         } else if (renderer instanceof StaticFontRenderer sfr) {
             ResourceLocation loc = sfr.getFontTextureLocation(0);
-            VertexConsumer consumer = buffers.getBuffer(GUI_TEXT_TYPE.apply(loc));
+            VertexConsumer consumer = buffers.getBuffer(provider.textRenderType(loc));
 
             for (int y = 0; y < Math.min(viewportHeight, data.height); y++) {
                 final int[] line = data.buffer[y];
@@ -240,7 +183,7 @@ public final class BufferRenderer {
                                                  Matrix4f localTransform,
                                                  int charWidth, int charHeight,
                                                  PackedColor.ColorFormat format, float alpha) {
-        VertexConsumer consumer = buffers.getBuffer(GUI_BG_TYPE);
+        VertexConsumer consumer = buffers.getBuffer(provider.backgroundRenderType());
 
         boolean hasBg = false;
         for (int y = 0; y < Math.min(viewportHeight, data.height); y++) {
@@ -313,4 +256,23 @@ public final class BufferRenderer {
         return null;
     }
 
+    private static final class DefaultProvider implements IBufferRenderProvider {
+        static final IBufferRenderProvider INSTANCE = new DefaultProvider();
+        private static final RenderType DEFAULT_BG = RenderType.gui();
+
+        @Override
+        public RenderType borderRenderType() {
+            return RenderType.gui();
+        }
+
+        @Override
+        public RenderType backgroundRenderType() {
+            return DEFAULT_BG;
+        }
+
+        @Override
+        public RenderType textRenderType(ResourceLocation texture) {
+            return RenderType.entityCutoutNoCull(texture);
+        }
+    }
 }

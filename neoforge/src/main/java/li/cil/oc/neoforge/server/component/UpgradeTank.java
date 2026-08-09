@@ -2,15 +2,11 @@ package li.cil.oc.neoforge.server.component;
 
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.core.impl.server.component.UpgradeTankBase;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.IFluidTank;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import li.cil.oc.core.util.FluidStack;
+import li.cil.oc.core.util.FluidTank;
 import org.jetbrains.annotations.NotNull;
 
-
-public class UpgradeTank extends UpgradeTankBase implements IFluidHandler, IFluidTank {
+public class UpgradeTank extends UpgradeTankBase implements FluidTank {
     private FluidStack fluid = FluidStack.EMPTY;
 
     public UpgradeTank(EnvironmentHost owner, int capacity) {
@@ -18,65 +14,54 @@ public class UpgradeTank extends UpgradeTankBase implements IFluidHandler, IFlui
     }
 
     @Override
-    protected void loadTankNbt(@NotNull CompoundTag nbt, HolderLookup.@NotNull Provider provider) {
-        fluid = FluidStack.parse(provider, nbt).orElse(FluidStack.EMPTY);
+    protected void loadTankNbt(@NotNull net.minecraft.nbt.CompoundTag nbt, net.minecraft.core.HolderLookup.@NotNull Provider provider) {
+        String fluidName = nbt.getString("id");
+        int amount = nbt.getInt("Amount");
+        fluid = !fluidName.isEmpty() ? new FluidStack(fluidName, amount) : FluidStack.EMPTY;
     }
 
     @Override
-    protected void saveTankNbt(@NotNull CompoundTag nbt, HolderLookup.@NotNull Provider provider) {
+    protected void saveTankNbt(@NotNull net.minecraft.nbt.CompoundTag nbt, net.minecraft.core.HolderLookup.@NotNull Provider provider) {
         if (!fluid.isEmpty()) {
-            fluid.save(provider, nbt);
+            nbt.putString("id", fluid.fluidName());
+            nbt.putInt("Amount", fluid.amount());
         }
     }
 
+    @Override
     public @NotNull FluidStack getFluid() {
         return fluid;
     }
 
+    @Override
     public int getFluidAmount() {
-        return fluid.getAmount();
+        return fluid.amount();
     }
 
+    @Override
     public int getCapacity() {
         return capacity;
     }
 
     @Override
-    public int getTanks() {
-        return 1;
+    public int getSpace() {
+        return capacity - fluid.amount();
     }
 
     @Override
-    public @NotNull FluidStack getFluidInTank(int tank) {
-        return fluid;
-    }
-
-    @Override
-    public int getTankCapacity(int tank) {
-        return capacity;
-    }
-
-    @Override
-    public boolean isFluidValid(int tank, @NotNull FluidStack stack) {
-        return true;
-    }
-
-    @Override
-    public boolean isFluidValid(@NotNull FluidStack stack) {
-        return true;
-    }
-
-    @Override
-    public int fill(FluidStack resource, IFluidHandler.@NotNull FluidAction action) {
-        if (resource.isEmpty() || !isFluidValid(0, resource)) {
+    public int fill(FluidStack resource, boolean simulate) {
+        if (resource.isEmpty()) {
             return 0;
         }
-        int amount = Math.min(resource.getAmount(), capacity - fluid.getAmount());
-        if (amount > 0 && action.execute()) {
+        if (!fluid.isEmpty() && !fluid.fluidName().equals(resource.fluidName())) {
+            return 0;
+        }
+        int amount = Math.min(resource.amount(), capacity - fluid.amount());
+        if (amount > 0 && !simulate) {
             if (fluid.isEmpty()) {
-                fluid = new FluidStack(resource.getFluid(), amount);
+                fluid = resource.copyWithAmount(amount);
             } else {
-                fluid.grow(amount);
+                fluid = fluid.copyWithAmount(fluid.amount() + amount);
             }
             node.sendToVisible("computer.signal", "tank_changed", tankIndex(), amount);
         }
@@ -84,22 +69,12 @@ public class UpgradeTank extends UpgradeTankBase implements IFluidHandler, IFlui
     }
 
     @Override
-    public @NotNull FluidStack drain(FluidStack resource, IFluidHandler.@NotNull FluidAction action) {
-        if (resource.isEmpty() || !resource.is(fluid.getFluid())) {
-            return FluidStack.EMPTY;
-        }
-        return drain(resource.getAmount(), action);
-    }
-
-    @Override
-    public @NotNull FluidStack drain(int maxDrain, IFluidHandler.@NotNull FluidAction action) {
-        int drained = Math.min(maxDrain, fluid.getAmount());
-        FluidStack result = new FluidStack(fluid.getFluid(), drained);
-        if (drained > 0 && action.execute()) {
-            fluid.shrink(drained);
-            if (fluid.isEmpty()) {
-                fluid = FluidStack.EMPTY;
-            }
+    public @NotNull FluidStack drain(int maxDrain, boolean simulate) {
+        int drained = Math.min(maxDrain, fluid.amount());
+        FluidStack result = fluid.copyWithAmount(drained);
+        if (drained > 0 && !simulate) {
+            int newAmount = fluid.amount() - drained;
+            fluid = newAmount > 0 ? fluid.copyWithAmount(newAmount) : FluidStack.EMPTY;
             node.sendToVisible("computer.signal", "tank_changed", tankIndex(), -drained);
         }
         return result;

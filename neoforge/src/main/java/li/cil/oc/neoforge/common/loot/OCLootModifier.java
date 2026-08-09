@@ -3,8 +3,8 @@ package li.cil.oc.neoforge.common.loot;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import li.cil.oc.core.impl.Settings;
-import li.cil.oc.neoforge.common.Loot;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.common.LootManager;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
@@ -20,8 +20,8 @@ public class OCLootModifier extends LootModifier {
 
     @Override
     protected @NotNull ObjectArrayList<ItemStack> doApply(@NotNull ObjectArrayList<ItemStack> generatedLoot, @NotNull LootContext context) {
-        if (!Loot.disksForSampling.isEmpty() && context.getRandom().nextInt(100) < Settings.get().lootProbability) {
-            var disk = Loot.disksForSampling.get(context.getRandom().nextInt(Loot.disksForSampling.size()));
+        if (!LootManager.disksForSampling.isEmpty() && context.getRandom().nextInt(100) < OCSettings.get().lootProbability) {
+            var disk = LootManager.disksForSampling.get(context.getRandom().nextInt(LootManager.disksForSampling.size()));
             generatedLoot.add(disk.copy());
         }
         return generatedLoot;

@@ -1,9 +1,9 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.HashMap;
+import java.util.Map;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
-import li.cil.oc.api.event.GeolyzerEvent;
-import li.cil.oc.api.event.OCEventFactory;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
@@ -11,8 +11,9 @@ import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.server.component.traits.WorldControl;
 import li.cil.oc.core.impl.util.BlockPosition;
 import li.cil.oc.core.impl.util.DatabaseAccess;
@@ -27,11 +28,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
-
-import java.util.HashMap;
-import java.util.Map;
-
-public abstract class GeolyzerBase extends li.cil.oc.api.prefab.ManagedEnvironment implements WorldControl, DeviceInfo {
+public abstract class GeolyzerBase extends AbstractManagedEnvironment implements WorldControl, DeviceInfo {
     public final EnvironmentHost host;
     public final Connector node = Network.newNode(this, Visibility.Network)
             .withComponent("geolyzer")
@@ -42,7 +39,7 @@ public abstract class GeolyzerBase extends li.cil.oc.api.prefab.ManagedEnvironme
 
     public GeolyzerBase(EnvironmentHost host) {
         this.host = host;
-        deviceInfo = Map.of(DeviceAttribute.Class, DeviceClass.Generic, DeviceAttribute.Description, "Geolyzer", DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor, DeviceAttribute.Product, "Terrain Analyzer MkII", DeviceAttribute.Capacity, String.valueOf(Settings.get().geolyzerRange));
+        deviceInfo = Map.of(DeviceAttribute.Class, DeviceClass.Generic, DeviceAttribute.Description, "Geolyzer", DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor, DeviceAttribute.Product, "Terrain Analyzer MkII", DeviceAttribute.Capacity, String.valueOf(OCSettings.get().geolyzerRange));
         setNode(this.node);
     }
 
@@ -63,15 +60,15 @@ public abstract class GeolyzerBase extends li.cil.oc.api.prefab.ManagedEnvironme
         return host.level().canSeeSky(new BlockPos(pos.x(), pos.y(), pos.z()));
     }
 
-    @Callback(doc = "function():boolean -- Returns whether there is a clear line of sight to the sky.")
+    @Callback(doc = "function():boolean -- Returns whether there is a clear line of sight to the sky directly above.")
     public Object[] canSeeSky(Context context, Arguments args) {
         return ResultWrapper.result(canSeeSky());
     }
 
     @Callback(doc = "function():boolean -- Return whether the sun is currently visible directly above.")
     public Object[] isSunVisible(Context context, Arguments args) {
-        BlockPosition pos = position().offset(Direction.UP);
-        BlockPos blockPos = new BlockPos(pos.x(), pos.y(), pos.z());
+        BlockPosition hostPos = BlockPosition.apply(host).offset(Direction.UP);
+        BlockPos blockPos = new BlockPos(hostPos.x(), hostPos.y(), hostPos.z());
         return ResultWrapper.result(
                 host.level().isDay() &&
                         canSeeSky() &&
@@ -80,7 +77,7 @@ public abstract class GeolyzerBase extends li.cil.oc.api.prefab.ManagedEnvironme
     }
 
     @SuppressWarnings("unchecked")
-    @Callback(doc = "function(x:number, z:number[, ...]):table -- Analyzes the density.")
+    @Callback(doc = "function(x:number, z:number[, y:number, w:number, d:number, h:number][, ignoreReplaceable:boolean|options:table]):table -- Analyzes the density of the column at the specified relative coordinates.")
     public Object[] scan(Context context, Arguments args) {
         int minX, minY, minZ, maxX, maxY, maxZ, optIndex;
         minX = args.checkInteger(0);
@@ -121,26 +118,28 @@ public abstract class GeolyzerBase extends li.cil.oc.api.prefab.ManagedEnvironme
             options = args.optTable(optIndex, new HashMap<>());
         }
 
-        if (Math.abs(minX) > Settings.get().geolyzerRange || Math.abs(maxX) > Settings.get().geolyzerRange ||
-                Math.abs(minY) > Settings.get().geolyzerRange || Math.abs(maxY) > Settings.get().geolyzerRange ||
-                Math.abs(minZ) > Settings.get().geolyzerRange || Math.abs(maxZ) > Settings.get().geolyzerRange) {
+        if (Math.abs(minX) > OCSettings.get().geolyzerRange || Math.abs(maxX) > OCSettings.get().geolyzerRange ||
+                Math.abs(minY) > OCSettings.get().geolyzerRange || Math.abs(maxY) > OCSettings.get().geolyzerRange ||
+                Math.abs(minZ) > OCSettings.get().geolyzerRange || Math.abs(maxZ) > OCSettings.get().geolyzerRange) {
             throw new IllegalArgumentException("location out of bounds");
         }
 
-        if (!node.tryChangeBuffer(-Settings.get().geolyzerScanCost))
+        if (!node.tryChangeBuffer(-OCSettings.get().geolyzerScanCost))
             return ResultWrapper.result(null, "not enough energy");
 
-        GeolyzerEvent.Scan event = OCEventFactory.get().createGeolyzerScanEvent(host, options, minX, minY, minZ, maxX, maxY, maxZ);
-        EventHandlerDelegate.get().post(event);
-        if (event.isCanceled())
+        var delegate = EventHandlerDelegate.get();
+        float[] data = delegate != null
+                ? delegate.postGeolyzerScan(host, options, minX, minY, minZ, maxX, maxY, maxZ)
+                : new float[64];
+        if (data == null)
             return ResultWrapper.result(null, "scan was canceled");
-        return ResultWrapper.result((Object) event.data());
+        return ResultWrapper.result((Object) data);
     }
 
     @SuppressWarnings("rawtypes")
-    @Callback(doc = "function(side:number[, options:table]):table -- Get information on a directly adjacent block.")
+    @Callback(doc = "function(side:number[,options:table]):table -- Get some information on a directly adjacent block.")
     public Object[] analyze(Context context, Arguments args) {
-        if (!Settings.get().allowItemStackInspection)
+        if (!OCSettings.get().allowItemStackInspection)
             return ResultWrapper.result(null, "not enabled in config");
 
         Direction side = ExtendedArguments.checkSideAny(args, 0);
@@ -148,24 +147,26 @@ public abstract class GeolyzerBase extends li.cil.oc.api.prefab.ManagedEnvironme
                 ((li.cil.oc.api.internal.Rotatable) host).toGlobal(side) : side;
         Map options = args.optTable(1, new HashMap<>());
 
-        if (!node.tryChangeBuffer(-Settings.get().geolyzerScanCost))
+        if (!node.tryChangeBuffer(-OCSettings.get().geolyzerScanCost))
             return ResultWrapper.result(null, "not enough energy");
 
         BlockPosition globalPos = position().offset(globalSide);
-        GeolyzerEvent.Analyze event = OCEventFactory.get().createGeolyzerAnalyzeEvent(host, options, globalPos.x(), globalPos.y(), globalPos.z());
-        EventHandlerDelegate.get().post(event);
-        if (event.isCanceled())
+        var delegate = EventHandlerDelegate.get();
+        Map<String, Object> data = delegate != null
+                ? delegate.postGeolyzerAnalyze(host, options, globalPos.x(), globalPos.y(), globalPos.z())
+                : new HashMap<>();
+        if (data == null)
             return ResultWrapper.result(null, "scan was canceled");
-        return ResultWrapper.result(event.data());
+        return ResultWrapper.result(data);
     }
 
-    @Callback(doc = "function(side:number, dbAddress:string, dbSlot:number):boolean -- Store block representation in database.")
+    @Callback(doc = "function(side:number, dbAddress:string, dbSlot:number):boolean -- Store an item stack representation of the block on the specified side in a database component.")
     public Object[] store(Context context, Arguments args) {
         Direction side = ExtendedArguments.checkSideAny(args, 0);
         Direction globalSide = host instanceof li.cil.oc.api.internal.Rotatable ?
                 ((li.cil.oc.api.internal.Rotatable) host).toGlobal(side) : side;
 
-        if (!node.tryChangeBuffer(-Settings.get().geolyzerScanCost))
+        if (!node.tryChangeBuffer(-OCSettings.get().geolyzerScanCost))
             return ResultWrapper.result(null, "not enough energy");
 
         BlockPosition blockPos = position().offset(globalSide);
@@ -174,15 +175,10 @@ public abstract class GeolyzerBase extends li.cil.oc.api.prefab.ManagedEnvironme
         Block block = blockState.getBlock();
         Item item = block.asItem();
 
-        ItemStack stack = new ItemStack(item, 1);
-        if (!blockState.getValues().isEmpty()) {
-            var props = net.minecraft.world.item.component.BlockItemStateProperties.EMPTY;
-            for (var prop : blockState.getBlock().getStateDefinition().getProperties()) {
-                props = props.with(prop, blockState);
-            }
-            stack.set(net.minecraft.core.component.DataComponents.BLOCK_STATE, props);
-        }
-        final ItemStack finalStack = stack;
+        if (item == net.minecraft.world.item.Items.AIR)
+            return ResultWrapper.result(null, "block has no registered item representation");
+
+        final ItemStack finalStack = new ItemStack(item, 1);
 
         return DatabaseAccess.withDatabase(node, args.checkString(1), database -> {
             int toSlot = ExtendedArguments.checkSlot(args, database.data(), 2);
@@ -199,11 +195,13 @@ public abstract class GeolyzerBase extends li.cil.oc.api.prefab.ManagedEnvironme
             if (machine.host() instanceof li.cil.oc.api.internal.Tablet && message.data().length >= 5) {
                 CompoundTag nbt = (CompoundTag) message.data()[0];
                 li.cil.oc.core.impl.util.BlockPosition blockPos = (li.cil.oc.core.impl.util.BlockPosition) message.data()[3];
-                if (node.tryChangeBuffer(-Settings.get().geolyzerScanCost)) {
-                    GeolyzerEvent.Analyze event = OCEventFactory.get().createGeolyzerAnalyzeEvent(host, new HashMap<>(), blockPos.x(), blockPos.y(), blockPos.z());
-                    EventHandlerDelegate.get().post(event);
-                    if (!event.isCanceled()) {
-                        for (Map.Entry<String, Object> e : event.data().entrySet()) {
+                if (node.tryChangeBuffer(-OCSettings.get().geolyzerScanCost)) {
+                    var delegate = EventHandlerDelegate.get();
+                    Map<String, Object> data = delegate != null
+                            ? delegate.postGeolyzerAnalyze(host, new HashMap<>(), blockPos.x(), blockPos.y(), blockPos.z())
+                            : null;
+                    if (data != null) {
+                        for (Map.Entry<String, Object> e : data.entrySet()) {
                             if (e.getValue() instanceof Number)
                                 nbt.putDouble(e.getKey(), ((Number) e.getValue()).doubleValue());
                             else if (e.getValue() instanceof String && !((String) e.getValue()).isEmpty())

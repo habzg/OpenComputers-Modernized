@@ -1,12 +1,11 @@
 package li.cil.oc.core.impl.util;
 
-import net.minecraft.nbt.CompoundTag;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import net.minecraft.nbt.CompoundTag;
 
 public final class NbtDataStream {
 

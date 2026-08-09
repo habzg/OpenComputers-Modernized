@@ -1,5 +1,7 @@
 package li.cil.oc.core.impl.server.component;
 
+import java.util.ArrayList;
+import java.util.Map;
 import li.cil.oc.api.Machine;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.MachineHost;
@@ -10,7 +12,7 @@ import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.inventory.ComponentInventory;
 import li.cil.oc.core.impl.common.item.TabletWrapper;
 import li.cil.oc.core.impl.util.RotationHelper;
@@ -21,9 +23,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.ArrayList;
-import java.util.Map;
 
 public abstract class TabletHostBase implements ComponentInventory, MachineHost, Environment, li.cil.oc.api.internal.Tablet, TabletWrapper, DeviceInfo {
     private final Map<String, String> deviceInfo;
@@ -230,7 +229,7 @@ public abstract class TabletHostBase implements ComponentInventory, MachineHost,
         }
         if (!level.isClientSide) {
             var m = machine();
-            if (isCreative() && level.getGameTime() % (long) Settings.get().tickFrequency == 0) {
+            if (isCreative() && level.getGameTime() % (long) OCSettings.get().tickFrequency == 0) {
                 if (m.node() instanceof Connector conn) {
                     conn.changeBuffer(Double.POSITIVE_INFINITY);
                 }

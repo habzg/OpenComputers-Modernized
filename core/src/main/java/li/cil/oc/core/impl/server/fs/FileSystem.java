@@ -1,11 +1,27 @@
 package li.cil.oc.core.impl.server.fs;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import li.cil.oc.api.detail.FileSystemEnvironmentFactory;
 import li.cil.oc.api.fs.Label;
 import li.cil.oc.api.fs.Mode;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.core.common.item.traits.FileSystemLike;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.integration.computercraft.ComputerCraftFileSystem;
+import li.cil.oc.core.impl.integration.computercraft.ComputerCraftWritableFileSystem;
 import li.cil.oc.core.impl.util.FilePathUtil;
 import li.cil.oc.core.impl.util.SafeThreadPool;
 import li.cil.oc.core.impl.util.ThreadPoolFactory;
@@ -19,39 +35,16 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
 public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
     private static final Logger LOGGER = LoggerFactory.getLogger(FileSystem.class);
     public static final FileSystem INSTANCE = new FileSystem();
     private static FileSystemEnvironmentFactory environmentFactory;
-    private static java.util.function.Function<Object, li.cil.oc.api.fs.FileSystem> computerCraftMountConverter;
 
     private FileSystem() {
     }
 
     public static void setEnvironmentFactory(FileSystemEnvironmentFactory factory) {
         environmentFactory = factory;
-    }
-
-    public static void setComputerCraftMountConverter(java.util.function.Function<Object, li.cil.oc.api.fs.FileSystem> converter) {
-        computerCraftMountConverter = converter;
     }
 
     public static void removeAddress(ItemStack fsStack) {
@@ -65,10 +58,10 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
                 data = new CompoundTag();
                 fsStack.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.of(data));
             }
-            if (!data.contains(Settings.namespace + "data")) {
-                data.put(Settings.namespace + "data", new CompoundTag());
+            if (!data.contains(OCSettings.namespace + "data")) {
+                data.put(OCSettings.namespace + "data", new CompoundTag());
             }
-            CompoundTag tagData = data.getCompound(Settings.namespace + "data");
+            CompoundTag tagData = data.getCompound(OCSettings.namespace + "data");
             if (tagData.contains("node")) {
                 CompoundTag nodeData = tagData.getCompound("node");
                 if (nodeData.contains("address")) {
@@ -83,8 +76,11 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
     }
 
     public li.cil.oc.api.fs.FileSystem fromComputerCraft(Object mount) {
-        if (computerCraftMountConverter != null) {
-            return computerCraftMountConverter.apply(mount);
+        if (mount instanceof dan200.computercraft.api.filesystem.WritableMount writable) {
+            return new ComputerCraftWritableFileSystem(writable);
+        }
+        if (mount instanceof dan200.computercraft.api.filesystem.Mount readOnly) {
+            return new ComputerCraftFileSystem(readOnly);
         }
         return null;
     }
@@ -135,38 +131,35 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
     @Override
     public li.cil.oc.api.fs.FileSystem fromClass(Class<?> clazz, String domain, String root) {
         String innerPath = "assets/" + domain + "/" + root.trim().replaceAll("/$", "") + "/";
-        String codeSource = clazz.getProtectionDomain().getCodeSource().getLocation().getPath();
-        boolean isArchive = codeSource.contains(".zip!") || codeSource.contains(".jar!");
 
-        if (isArchive) {
-            String codeUrlStr = codeSource.substring(0, codeSource.lastIndexOf('!'));
-            URL codeUrl;
-            try {
-                codeUrl = URI.create(codeUrlStr).toURL();
-            } catch (MalformedURLException | IllegalArgumentException e) {
-                try {
-                    codeUrl = URI.create("file:///" + codeUrlStr.replace("\\", "/")).toURL();
-                } catch (MalformedURLException | IllegalArgumentException e2) {
-                    LOGGER.warn("fromClass: cannot parse archive URL {}", codeUrlStr);
-                    return null;
-                }
-            }
-            File file;
-            try {
-                file = new File(codeUrl.toURI());
-            } catch (URISyntaxException e) {
-                file = new File(codeUrl.getPath());
-            }
-            return ZipFileInputStreamFileSystem.fromFile(file, innerPath);
+        String codeSource = null;
+        try {
+            codeSource = clazz.getProtectionDomain().getCodeSource() != null
+                    ? clazz.getProtectionDomain().getCodeSource().getLocation().getPath() : null;
+        } catch (Throwable ignored) {
+        }
+
+        File codeSourceFile = fileFromUrlString(codeSource);
+        if (codeSourceFile != null) {
+            li.cil.oc.api.fs.FileSystem fs = ZipFileInputStreamFileSystem.fromFile(codeSourceFile, innerPath);
+            if (fs != null) return fs;
         }
 
         java.net.URL resourceUrl = clazz.getClassLoader().getResource(innerPath);
-        if (resourceUrl != null && "file".equals(resourceUrl.getProtocol())) {
-            try {
-                File resourceDir = new File(resourceUrl.toURI());
-                if (resourceDir.isDirectory()) return new ReadOnlyFileSystem(resourceDir);
-            } catch (URISyntaxException e) {
-                LOGGER.warn("fromClass: URISyntaxException for {}", resourceUrl, e);
+        if (resourceUrl != null) {
+            if ("file".equals(resourceUrl.getProtocol())) {
+                try {
+                    File resourceDir = new File(resourceUrl.toURI());
+                    if (resourceDir.isDirectory()) return new ReadOnlyFileSystem(resourceDir);
+                } catch (URISyntaxException e) {
+                    LOGGER.warn("fromClass: URISyntaxException for {}", resourceUrl, e);
+                }
+            } else {
+                File jarFile = fileFromUrlString(resourceUrl.toString());
+                if (jarFile != null) {
+                    li.cil.oc.api.fs.FileSystem fs = ZipFileInputStreamFileSystem.fromFile(jarFile, innerPath);
+                    if (fs != null) return fs;
+                }
             }
         }
 
@@ -185,13 +178,44 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
         return null;
     }
 
+    private static File fileFromUrlString(String urlString) {
+        if (urlString == null) return null;
+        String s = urlString;
+        int bang = s.indexOf('!');
+        if (bang >= 0) {
+            s = s.substring(0, bang);
+        }
+        while (s.startsWith("jar:") || s.startsWith("zip:")) {
+            s = s.substring(4);
+        }
+        if (s.startsWith("union:")) {
+            s = s.substring(6);
+        }
+        if (s.startsWith("file:")) {
+            s = s.substring(5);
+        }
+        if (s.contains("%")) {
+            try {
+                s = java.net.URLDecoder.decode(s, java.nio.charset.StandardCharsets.UTF_8);
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+        int hash = s.indexOf('#');
+        if (hash >= 0) {
+            s = s.substring(0, hash);
+        }
+        if (s.isEmpty()) return null;
+        File file = new File(s);
+        return file.exists() && file.isFile() ? file : null;
+    }
+
     @Override
     public li.cil.oc.api.fs.FileSystem fromSaveDirectory(String root, long capacity, boolean buffered) {
         var server = li.cil.oc.core.impl.util.SideTracker.getCurrentServer();
         File baseDir = server != null ?
                 server.getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).toFile() :
                 new File(".");
-        File path = new File(baseDir, Settings.savePath + root);
+        File path = new File(baseDir, OCSettings.savePath + root);
         if (path.exists() && !path.isDirectory()) {
             if (!path.delete()) {
                 LOGGER.warn("Failed to delete path: {}", path);
@@ -235,7 +259,7 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
         @Override
         public void save(CompoundTag nbt, HolderLookup.Provider provider) {
             if (label != null) {
-                nbt.putString(Settings.namespace + "fs.label", label);
+                nbt.putString(OCSettings.namespace + "fs.label", label);
             }
         }
     }
@@ -309,7 +333,7 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
 
         @Override
         protected InputChannel openInputChannel(String path) {
-            return new li.cil.oc.core.impl.server.fs.FileInputStreamFileSystem.FileChannel(new File(root(), path));
+            return new li.cil.oc.core.impl.server.fs.FileInputStreamFileSystem.FileChannel(new File(root(), FilePathUtil.validatePath(path)));
         }
 
         @Override
@@ -351,7 +375,7 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
 
         @Override
         public boolean delete(String path) {
-            long freed = Settings.get().fileCost + size(path);
+            long freed = OCSettings.get().fileCost + size(path);
             if (super.delete(path)) {
                 used = Math.max(0, used - freed);
                 return true;
@@ -362,7 +386,7 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
         @Override
         public boolean rename(String from, String to) {
             if (exists(to)) {
-                long freed = Settings.get().fileCost + size(to);
+                long freed = OCSettings.get().fileCost + size(to);
                 if (super.rename(from, to)) {
                     used = Math.max(0, used - freed);
                     return true;
@@ -374,11 +398,11 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
 
         @Override
         public boolean makeDirectory(String path) {
-            if (capacity() - used < Settings.get().fileCost && !ignoreCapacity) {
+            if (capacity() - used < OCSettings.get().fileCost && !ignoreCapacity) {
                 throw new RuntimeException(new IOException("not enough space"));
             }
             if (super.makeDirectory(path)) {
-                used += Settings.get().fileCost;
+                used += OCSettings.get().fileCost;
                 return true;
             }
             return false;
@@ -396,7 +420,7 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
             if (exists(path)) {
                 delta = mode == Mode.Write ? -size(path) : 0;
             } else {
-                delta = Settings.get().fileCost;
+                delta = OCSettings.get().fileCost;
             }
             if (capacity() - used < delta && !ignoreCapacity) {
                 throw new RuntimeException(new IOException("not enough space"));
@@ -413,7 +437,7 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
         }
 
         private long computeSize(String path) {
-            long acc = Settings.get().fileCost + size(path);
+            long acc = OCSettings.get().fileCost + size(path);
             if (isDirectory(path)) {
                 String[] children = list(path);
                 for (String child : children) {
@@ -460,10 +484,13 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
 
             @Override
             public void write(byte[] b) {
-                if (owner.capacity() - owner.used < b.length && !owner.ignoreCapacity)
+                long oldLen = inner.length();
+                long newLen = Math.max(oldLen, inner.position() + b.length);
+                long delta = newLen - oldLen;
+                if (owner.capacity() - owner.used < delta && !owner.ignoreCapacity)
                     throw new RuntimeException(new IOException("not enough space"));
                 inner.write(b);
-                owner.used += b.length;
+                owner.used += delta;
             }
         }
     }
@@ -495,7 +522,7 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
 
         @Override
         public boolean delete(String path) {
-            long freed = Settings.get().fileCost + size(path);
+            long freed = OCSettings.get().fileCost + size(path);
             if (super.delete(path)) {
                 used = Math.max(0, used - freed);
                 return true;
@@ -506,7 +533,7 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
         @Override
         public boolean rename(String from, String to) {
             if (exists(to)) {
-                long freed = Settings.get().fileCost + size(to);
+                long freed = OCSettings.get().fileCost + size(to);
                 if (super.rename(from, to)) {
                     used = Math.max(0, used - freed);
                     return true;
@@ -518,11 +545,11 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
 
         @Override
         public boolean makeDirectory(String path) {
-            if (capacity() - used < Settings.get().fileCost && !ignoreCapacity) {
+            if (capacity() - used < OCSettings.get().fileCost && !ignoreCapacity) {
                 throw new RuntimeException(new IOException("not enough space"));
             }
             if (super.makeDirectory(path)) {
-                used += Settings.get().fileCost;
+                used += OCSettings.get().fileCost;
                 return true;
             }
             return false;
@@ -558,7 +585,7 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
             if (exists(path)) {
                 delta = mode == Mode.Write ? -size(path) : 0;
             } else {
-                delta = Settings.get().fileCost;
+                delta = OCSettings.get().fileCost;
             }
             if (capacity() - used < delta && !ignoreCapacity) {
                 throw new RuntimeException(new IOException("not enough space"));
@@ -575,7 +602,7 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
         }
 
         private long computeSize(String path) {
-            long acc = Settings.get().fileCost + size(path);
+            long acc = OCSettings.get().fileCost + size(path);
             if (isDirectory(path)) {
                 String[] children = list(path);
                 if (children != null) {
@@ -624,10 +651,13 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
 
             @Override
             public void write(byte[] b) {
-                if (owner.capacity() - owner.used < b.length && !owner.ignoreCapacity)
+                long oldLen = inner.length();
+                long newLen = Math.max(oldLen, inner.position() + b.length);
+                long delta = newLen - oldLen;
+                if (owner.capacity() - owner.used < delta && !owner.ignoreCapacity)
                     throw new RuntimeException(new IOException("not enough space"));
                 inner.write(b);
-                owner.used += b.length;
+                owner.used += delta;
             }
         }
     }
@@ -670,7 +700,7 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
 
         @Override
         public boolean delete(String path) {
-            long freed = Settings.get().fileCost + size(path);
+            long freed = OCSettings.get().fileCost + size(path);
             if (super.delete(path)) {
                 used = Math.max(0, used - freed);
                 deletions.put(path, System.currentTimeMillis());
@@ -685,7 +715,7 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
             boolean hadTarget = false;
             if (exists(to)) {
                 hadTarget = true;
-                freed = Settings.get().fileCost + size(to);
+                freed = OCSettings.get().fileCost + size(to);
             }
             if (super.rename(from, to)) {
                 if (hadTarget) {
@@ -699,11 +729,11 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
 
         @Override
         public boolean makeDirectory(String path) {
-            if (capacity() - used < Settings.get().fileCost && !ignoreCapacity) {
+            if (capacity() - used < OCSettings.get().fileCost && !ignoreCapacity) {
                 throw new RuntimeException(new IOException("not enough space"));
             }
             if (super.makeDirectory(path)) {
-                used += Settings.get().fileCost;
+                used += OCSettings.get().fileCost;
                 return true;
             }
             return false;
@@ -798,7 +828,7 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
             if (exists(path)) {
                 delta = mode == Mode.Write ? -size(path) : 0;
             } else {
-                delta = Settings.get().fileCost;
+                delta = OCSettings.get().fileCost;
             }
             if (capacity() - used < delta && !ignoreCapacity) {
                 throw new RuntimeException(new IOException("not enough space"));
@@ -892,7 +922,7 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
         }
 
         private long computeSize(String path) {
-            long acc = Settings.get().fileCost + size(path);
+            long acc = OCSettings.get().fileCost + size(path);
             if (isDirectory(path)) {
                 String[] children = list(path);
                 if (children != null) {
@@ -941,10 +971,13 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
 
             @Override
             public void write(byte[] b) {
-                if (owner.capacity() - owner.used < b.length && !owner.ignoreCapacity)
+                long oldLen = inner.length();
+                long newLen = Math.max(oldLen, inner.position() + b.length);
+                long delta = newLen - oldLen;
+                if (owner.capacity() - owner.used < delta && !owner.ignoreCapacity)
                     throw new RuntimeException(new IOException("not enough space"));
                 inner.write(b);
-                owner.used += b.length;
+                owner.used += delta;
             }
         }
     }

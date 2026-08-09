@@ -1,11 +1,12 @@
 package li.cil.oc.neoforge.client;
 
+import li.cil.oc.core.impl.common.LootManager;
 import li.cil.oc.core.impl.util.TabletCache;
 import li.cil.oc.neoforge.OpenComputers;
 import li.cil.oc.neoforge.client.renderer.PetRenderer;
 import li.cil.oc.neoforge.common.EventHandler;
-import li.cil.oc.neoforge.common.Loot;
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
@@ -43,8 +44,12 @@ public final class ClientEventHandler {
     public static void clientLoggedIn(ClientPlayerNetworkEvent.LoggingIn e) {
         PetRenderer.isInitialized = false;
         PetRenderer.hidden.clear();
-        Loot.disksForClient.clear();
-        Loot.disksForCyclingClient.clear();
+        LootManager.disksForClient.clear();
+        for (ItemStack[] entry : LootManager.globalDisks) {
+            LootManager.disksForClient.add(entry[0].copy());
+        }
+        LootManager.disksForCyclingClient.clear();
+        LootManager.pendingDiskSync = true;
 
         Sound.startLoop(null, "computer_running", 0f, 0);
         EventHandler.scheduleServer(() -> Sound.stopLoop(null));

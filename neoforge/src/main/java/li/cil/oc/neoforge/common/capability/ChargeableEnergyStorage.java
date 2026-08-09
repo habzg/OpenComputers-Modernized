@@ -1,7 +1,7 @@
 package li.cil.oc.neoforge.common.capability;
 
 import li.cil.oc.api.driver.item.Chargeable;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 
@@ -15,7 +15,7 @@ public final class ChargeableEnergyStorage implements IEnergyStorage {
     }
 
     private static double ratio() {
-        return Settings.get().ratioRedstoneFlux();
+        return OCSettings.get().ratioRedstoneFlux();
     }
 
     @Override

@@ -1,5 +1,10 @@
 package li.cil.oc.core.impl.server.network;
 
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.ManagedEnvironment;
@@ -14,12 +19,6 @@ import li.cil.oc.core.server.machine.CallbackWrapper;
 import li.cil.oc.core.server.machine.Callbacks;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 public interface Component extends li.cil.oc.api.network.Component, Node {
     String name();

@@ -1,5 +1,12 @@
 package li.cil.oc.core.impl.server.machine.luac;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.Map;
 import li.cil.oc.api.Persistable;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Value;
@@ -11,16 +18,10 @@ import net.minecraft.nbt.NbtIo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.Map;
-
 public class UserdataAPI extends NativeLuaAPI {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserdataAPI.class);
+
+    private static final int MAX_USERDATA_SIZE = 1024 * 1024;
 
     public UserdataAPI(NativeLuaArchitecture owner) {
         super(owner);
@@ -32,7 +33,8 @@ public class UserdataAPI extends NativeLuaAPI {
         ExtendedLuaState.pushScalaFunction(lua(), l -> {
             CompoundTag nbt = new CompoundTag();
             Persistable persistable = (Persistable) l.toJavaObjectRaw(1);
-            l.pushString(persistable.getClass().getName());
+            String className = persistable.getClass().getName();
+            l.pushString(className);
             persistable.save(nbt, owner.machine.host().level().registryAccess());
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             DataOutputStream dos = new DataOutputStream(baos);
@@ -52,9 +54,12 @@ public class UserdataAPI extends NativeLuaAPI {
                 Class<?> clazz = Class.forName(className);
                 Persistable persistable = (Persistable) clazz.getDeclaredConstructor().newInstance();
                 byte[] data = l.toByteArray(2);
+                if (data.length > MAX_USERDATA_SIZE) {
+                    throw new IOException("userdata data exceeds maximum size");
+                }
                 ByteArrayInputStream bais = new ByteArrayInputStream(data);
                 DataInputStream dis = new DataInputStream(bais);
-                CompoundTag nbt = NbtIo.read(dis);
+                CompoundTag nbt = NbtIo.read(dis, net.minecraft.nbt.NbtAccounter.create(0x200000L));
                 persistable.load(nbt, owner.machine.host().level().registryAccess());
                 l.pushJavaObjectRaw(persistable);
                 return 1;

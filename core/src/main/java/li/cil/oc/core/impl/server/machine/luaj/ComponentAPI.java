@@ -1,10 +1,9 @@
 package li.cil.oc.core.impl.server.machine.luaj;
 
+import java.util.Map;
 import li.cil.oc.api.network.Component;
 import li.cil.repack.org.luaj.vm2.LuaValue;
 import li.cil.repack.org.luaj.vm2.Varargs;
-
-import java.util.Map;
 
 
 public class ComponentAPI extends LuaJAPI {

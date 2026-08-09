@@ -1,6 +1,8 @@
 package li.cil.oc.core.impl.server.component;
 
 import com.google.common.base.Strings;
+import java.util.HashMap;
+import java.util.Map;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
@@ -13,8 +15,8 @@ import li.cil.oc.api.network.Packet;
 import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractValue;
-import li.cil.oc.api.prefab.ManagedEnvironment;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.BlockPosition;
 import li.cil.oc.core.impl.util.ExtendedArguments;
 import li.cil.oc.core.impl.util.ExtendedNBT;
@@ -42,11 +44,13 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.level.storage.ServerLevelData;
 import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.ScoreAccess;
@@ -54,11 +58,7 @@ import net.minecraft.world.scores.ScoreHolder;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 
-
-import java.util.HashMap;
-import java.util.Map;
-
-public abstract class DebugCardBase extends ManagedEnvironment implements DebugNetwork.DebugNode {
+public abstract class DebugCardBase extends AbstractManagedEnvironment implements DebugNetwork.DebugNode {
     public final Node node;
     public AccessContext access = null;
     private Node remoteNode = null;
@@ -85,7 +85,7 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
     }
 
     private static void checkAccess(AccessContext ctx) {
-        String msg = Settings.get().debugCardAccess.checkAccess(ctx);
+        String msg = OCSettings.get().debugCardAccess.checkAccess(ctx);
         if (msg != null) throw new RuntimeException(msg);
     }
 
@@ -117,16 +117,10 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
         return ResultWrapper.result(host().zPosition());
     }
 
-    @Callback(doc = "function([id:number]):userdata -- Get the world object for the specified dimension ID.")
+    @Callback(doc = "function():userdata -- Get the world object of the container.")
     public Object[] getWorld(Context context, Arguments args) {
         checkAccess();
         return ResultWrapper.result(new WorldValue(host().level()));
-    }
-
-    @Callback(doc = "function():table -- Get a list of all world IDs.")
-    public Object[] getWorlds(Context context, Arguments args) {
-        checkAccess();
-        return ResultWrapper.result((Object) new int[]{host().level().dimension().location().hashCode()});
     }
 
     @Callback(doc = "function(name:string):userdata -- Get the entity of a player.")
@@ -144,13 +138,13 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
         return platformGetPlayers(context);
     }
 
-    @Callback(doc = "function():userdata -- Get the scoreboard object for the world.")
+    @Callback(doc = "function():userdata -- Get the scoreboard object for the world")
     public Object[] getScoreboard(Context context, Arguments args) {
         checkAccess();
         return ResultWrapper.result(new ScoreboardValue(host().level()));
     }
 
-    @Callback(doc = "function(x:number, y:number, z:number[, worldId:number]):boolean, string, table -- returns contents at the location.")
+    @Callback(doc = "function(x: number, y: number, z: number):boolean, string, table -- returns contents at the location in the host world")
     public Object[] scanContentsAt(Context context, Arguments args) {
         checkAccess();
         int x = args.checkInteger(0);
@@ -178,6 +172,9 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
         int y = args.checkInteger(1);
         int z = args.checkInteger(2);
         Node other = findNode(x, y, z);
+        if (other == null) {
+            return ResultWrapper.result(null, "no node found at this position");
+        }
         if (remoteNode != null) node.disconnect(remoteNode);
         remoteNode = other;
         remoteNodePosition = new int[]{x, y, z};
@@ -201,7 +198,7 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
         return null;
     }
 
-    @Callback(doc = "function():userdata -- Test method for user-data.")
+    @Callback(doc = "function():userdata -- Test method for user-data and general value conversion.")
     public Object[] test(Context context, Arguments args) {
         checkAccess();
         Map<Object, Object> v1 = new HashMap<>();
@@ -214,7 +211,7 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
         return ResultWrapper.result(v2, new TestValue(), host().level());
     }
 
-    @Callback(doc = "function(player:string, text:string) -- Sends text to the specified player's clipboard.")
+    @Callback(doc = "function(player:string, text:string) -- Sends text to the specified player's clipboard if possible.")
     public Object[] sendToClipboard(Context context, Arguments args) {
         checkAccess();
         String playerName = args.checkString(0);
@@ -241,7 +238,17 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
 
     @Override
     public void receivePacket(Packet packet) {
-        node.sendToReachable("computer.signal", "debug_message", packet.source(), packet.port(), 0.0);
+        Object[] data = packet.data();
+        int dataLen = (data != null) ? data.length : 0;
+        Object[] signal = new Object[4 + dataLen];
+        signal[0] = "debug_message";
+        signal[1] = packet.source();
+        signal[2] = packet.port();
+        signal[3] = 0.0;
+        if (dataLen > 0) {
+            System.arraycopy(data, 0, signal, 4, dataLen);
+        }
+        node.sendToReachable("computer.signal", signal);
     }
 
     @Override
@@ -279,10 +286,10 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
     public void load(CompoundTag nbt, HolderLookup.Provider provider) {
         super.load(nbt, provider);
         access = AccessContext.load(nbt);
-        if (nbt.contains(Settings.namespace + "remoteX")) {
-            int rx = nbt.getInt(Settings.namespace + "remoteX");
-            int ry = nbt.getInt(Settings.namespace + "remoteY");
-            int rz = nbt.getInt(Settings.namespace + "remoteZ");
+        if (nbt.contains(OCSettings.namespace + "remoteX")) {
+            int rx = nbt.getInt(OCSettings.namespace + "remoteX");
+            int ry = nbt.getInt(OCSettings.namespace + "remoteY");
+            int rz = nbt.getInt(OCSettings.namespace + "remoteZ");
             remoteNodePosition = new int[]{rx, ry, rz};
         }
     }
@@ -292,9 +299,9 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
         super.save(nbt, provider);
         if (access != null) access.save(nbt);
         if (remoteNodePosition != null) {
-            nbt.putInt(Settings.namespace + "remoteX", remoteNodePosition[0]);
-            nbt.putInt(Settings.namespace + "remoteY", remoteNodePosition[1]);
-            nbt.putInt(Settings.namespace + "remoteZ", remoteNodePosition[2]);
+            nbt.putInt(OCSettings.namespace + "remoteX", remoteNodePosition[0]);
+            nbt.putInt(OCSettings.namespace + "remoteY", remoteNodePosition[1]);
+            nbt.putInt(OCSettings.namespace + "remoteZ", remoteNodePosition[2]);
         }
     }
 
@@ -365,12 +372,6 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
             this.world = world;
         }
 
-        @Callback(doc = "function():number -- Gets the numeric id of the current dimension.")
-        public Object[] getDimensionId(Context context, Arguments args) {
-            checkAccess();
-            return ResultWrapper.result((double) world.dimension().location().hashCode());
-        }
-
         @Callback(doc = "function():string -- Gets the name of the current dimension.")
         public Object[] getDimensionName(Context context, Arguments args) {
             checkAccess();
@@ -407,7 +408,7 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
         @Callback(doc = "function(value:boolean) -- Sets whether it is currently thundering.")
         public Object[] setThundering(Context context, Arguments args) {
             checkAccess();
-            ((ServerLevel) world).setWeatherParameters(0, 0, world.isRaining(), args.checkBoolean(0));
+            ((ServerLevelData) world.getLevelData()).setThundering(args.checkBoolean(0));
             return null;
         }
 
@@ -461,44 +462,36 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
             return null;
         }
 
-        @Callback(doc = "function(x:number, y:number, z:number):number -- Get the ID of the block.")
+        @Callback(doc = "function(x:number, y:number, z:number):number -- Get the ID of the block at the specified coordinates.")
         public Object[] getBlockId(Context context, Arguments args) {
             checkAccess();
             return ResultWrapper.result((double) Block.getId(world.getBlockState(new net.minecraft.core.BlockPos(args.checkInteger(0), args.checkInteger(1), args.checkInteger(2)))));
         }
 
-        @Callback(doc = "function(x:number, y:number, z:number):number -- Get the metadata of the block at the specified coordinates.")
-        public Object[] getMetadata(Context context, Arguments args) {
-            checkAccess();
-            args.checkInteger(0);
-            args.checkInteger(1);
-            args.checkInteger(2);
-            return ResultWrapper.result(0);
-        }
-
-        @Callback(doc = "function(x:number, y:number, z:number[, actualState:boolean=false]) - gets the block state for the block at the specified position, optionally getting additional display related data.")
+        @Callback(doc = "function(x:number, y:number, z:number) -- Gets the block state for the block at the specified position.")
         public Object[] getBlockState(Context context, Arguments args) {
             checkAccess();
             BlockPos pos = new net.minecraft.core.BlockPos(args.checkInteger(0), args.checkInteger(1), args.checkInteger(2));
-            args.optBoolean(3, false);
             BlockState state = world.getBlockState(pos);
             return ResultWrapper.result(state);
         }
 
-        @Callback(doc = "function(x:number, y:number, z:number):boolean -- Check whether the block is loaded.")
+        @Callback(doc = "function(x:number, y:number, z:number):number -- Check whether the block at the specified coordinates is loaded.")
         public Object[] isLoaded(Context context, Arguments args) {
             checkAccess();
             var isLoadedPos = new net.minecraft.core.BlockPos(args.checkInteger(0), args.checkInteger(1), args.checkInteger(2));
             return ResultWrapper.result(world.hasChunk(isLoadedPos.getX() >> 4, isLoadedPos.getZ() >> 4));
         }
 
-        @Callback(doc = "function(x:number, y:number, z:number):boolean -- Check whether the block has a tile entity.")
+        @Callback(doc = "function(x:number, y:number, z:number):boolean -- Check whether the block at the specified coordinates has a block entity.")
         public Object[] hasTileEntity(Context context, Arguments args) {
             checkAccess();
-            return ResultWrapper.result(world.getBlockEntity(new net.minecraft.core.BlockPos(args.checkInteger(0), args.checkInteger(1), args.checkInteger(2))) != null);
+            BlockPos blockPos = new net.minecraft.core.BlockPos(args.checkInteger(0), args.checkInteger(1), args.checkInteger(2));
+            BlockState state = world.getBlockState(blockPos);
+            return ResultWrapper.result(state.hasBlockEntity());
         }
 
-        @Callback(doc = "function(x:number, y:number, z:number):table -- Get the NBT of the block.")
+        @Callback(doc = "function(x:number, y:number, z:number):table -- Get the NBT of the block at the specified coordinates.")
         public Object[] getTileNBT(Context context, Arguments args) {
             checkAccess();
             int x = args.checkInteger(0), y = args.checkInteger(1), z = args.checkInteger(2);
@@ -511,7 +504,7 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
             return null;
         }
 
-        @Callback(doc = "function(x:number, y:number, z:number, nbt:table):boolean -- Set the NBT of the block.")
+        @Callback(doc = "function(x:number, y:number, z:number, nbt:table):boolean -- Set the NBT of the block at the specified coordinates.")
         public Object[] setTileNBT(Context context, Arguments args) {
             checkAccess();
             int x = args.checkInteger(0), y = args.checkInteger(1), z = args.checkInteger(2);
@@ -527,7 +520,7 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
                 }
                 return ResultWrapper.result(null, "invalid nbt");
             }
-            return ResultWrapper.result(null, "no tile entity");
+            return ResultWrapper.result(null, "no block entity");
         }
 
         @Callback(doc = "function(x:number, y:number, z:number):number -- Get the light opacity of the block at the specified coordinates.")
@@ -541,7 +534,7 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
         public Object[] getLightValue(Context context, Arguments args) {
             checkAccess();
             BlockPos pos = new net.minecraft.core.BlockPos(args.checkInteger(0), args.checkInteger(1), args.checkInteger(2));
-            return ResultWrapper.result((double) world.getRawBrightness(pos, 0));
+            return ResultWrapper.result((double) world.getBrightness(LightLayer.BLOCK, pos));
         }
 
         @Callback(doc = "function(x:number, y:number, z:number):number -- Get whether the block at the specified coordinates is directly under the sky.")
@@ -550,7 +543,7 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
             return ResultWrapper.result(world.canSeeSky(new net.minecraft.core.BlockPos(args.checkInteger(0), args.checkInteger(1), args.checkInteger(2))));
         }
 
-        @Callback(doc = "function(x:number, y:number, z:number, id:number or string, meta:number):number -- Set the block at the specified coordinates.")
+        @Callback(doc = "function(x:number, y:number, z:number, id:number or string):number -- Set the block at the specified coordinates.")
         public Object[] setBlock(Context context, Arguments args) {
             checkAccess();
             BlockState state;
@@ -560,12 +553,11 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
                 Block block = BuiltInRegistries.BLOCK.get(ResourceLocation.parse(args.checkString(3)));
                 state = block.defaultBlockState();
             }
-            args.checkInteger(4);
             return ResultWrapper.result(world.setBlock(new net.minecraft.core.BlockPos(args.checkInteger(0), args.checkInteger(1), args.checkInteger(2)), state, 3));
         }
 
         @SuppressWarnings("SameReturnValue")
-        @Callback(doc = "function(x1:number, y1:number, z1:number, x2:number, y2:number, z2:number, id:number or string, meta:number):number -- Set all blocks in the area defined by the two corner points.")
+        @Callback(doc = "function(x1:number, y1:number, z1:number, x2:number, y2:number, z2:number, id:number or string):number -- Set all blocks in the area defined by the two corner points.")
         public Object[] setBlocks(Context context, Arguments args) {
             checkAccess();
             int xMin = args.checkInteger(0), yMin = args.checkInteger(1), zMin = args.checkInteger(2);
@@ -577,7 +569,6 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
                 Block block = BuiltInRegistries.BLOCK.get(ResourceLocation.parse(args.checkString(6)));
                 state = block.defaultBlockState();
             }
-            args.checkInteger(7);
             int minX = Math.min(xMin, xMax), maxX = Math.max(xMin, xMax);
             int minY = Math.min(yMin, yMax), maxY = Math.max(yMin, yMax);
             int minZ = Math.min(zMin, zMax), maxZ = Math.max(zMin, zMax);
@@ -709,16 +700,18 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
             return withPlayer(p -> ResultWrapper.result(p.gameMode.getGameModeForPlayer().getName()));
         }
 
-        @Callback(doc = "function(gametype:string) -- Set the player's game type.")
+        @Callback(doc = "function(gametype:string) -- Set the player's game type (survival, creative, adventure).")
         public Object[] setGameType(Context context, Arguments args) {
             return withPlayer(p -> {
                 String gametype = args.checkString(0);
+                net.minecraft.world.level.GameType found = net.minecraft.world.level.GameType.SURVIVAL;
                 for (net.minecraft.world.level.GameType gt : net.minecraft.world.level.GameType.values()) {
                     if (gt.getName().equals(gametype)) {
-                        p.setGameMode(gt);
+                        found = gt;
                         break;
                     }
                 }
+                p.setGameMode(found);
                 return null;
             });
         }
@@ -754,17 +747,17 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
             });
         }
 
-        @Callback(doc = "function():number -- Get the player's level.")
+        @Callback(doc = "function():number -- Get the player's level")
         public Object[] getLevel(Context context, Arguments args) {
             return withPlayer(p -> ResultWrapper.result((double) p.experienceLevel));
         }
 
-        @Callback(doc = "function():number -- Get the player's total experience.")
+        @Callback(doc = "function():number -- Get the player's total experience")
         public Object[] getExperienceTotal(Context context, Arguments args) {
             return withPlayer(p -> ResultWrapper.result((double) p.totalExperience));
         }
 
-        @Callback(doc = "function(level:number) -- Add a level to the player's experience level.")
+        @Callback(doc = "function(level:number) -- Add a level to the player's experience level")
         public Object[] addExperienceLevel(Context context, Arguments args) {
             return withPlayer(p -> {
                 p.giveExperienceLevels(args.checkInteger(0));
@@ -772,7 +765,7 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
             });
         }
 
-        @Callback(doc = "function(level:number) -- Remove a level from the player's experience level.")
+        @Callback(doc = "function(level:number) -- Remove a level from the player's experience level")
         public Object[] removeExperienceLevel(Context context, Arguments args) {
             return withPlayer(p -> {
                 p.giveExperienceLevels(-args.checkInteger(0));
@@ -780,7 +773,7 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
             });
         }
 
-        @Callback(doc = "function() -- Clear the players inventory.")
+        @Callback(doc = "function() -- Clear the players inventory")
         public Object[] clearInventory(Context context, Arguments args) {
             return withPlayer(p -> {
                 p.getInventory().clearContent();
@@ -788,7 +781,7 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
             });
         }
 
-        @Callback(doc = "function(id:string, amount:number, meta:number[, nbt:string]):number -- Adds the item stack to the players inventory.")
+        @Callback(doc = "function(id:string, amount:number, meta:number[, nbt:string]):number -- Adds the item stack to the players inventory")
         public Object[] insertItem(Context context, Arguments args) {
             return withPlayer(p -> {
                 Item item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(args.checkString(0)));
@@ -797,7 +790,7 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
                 }
                 int amount = args.checkInteger(1);
                 int damage = args.checkInteger(2);
-                String tagJson = args.optString(3, "");
+                String tagJson = args.checkString(3);
                 CompoundTag tag = null;
                 if (!Strings.isNullOrEmpty(tagJson)) {
                     try {
@@ -809,8 +802,9 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
                 ItemStack stack = new ItemStack(item, amount);
                 if (damage > 0) stack.setDamageValue(damage);
                 if (tag != null) stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+                int before = stack.getCount();
                 InventoryUtils.addToPlayerInventory(stack, p);
-                return null;
+                return ResultWrapper.result(before - stack.getCount());
             });
         }
 
@@ -840,7 +834,7 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
         }
 
         @SuppressWarnings("SameReturnValue")
-        @Callback(doc = "function(team:string) - Add a team to the scoreboard.")
+        @Callback(doc = "function(team:string) - Add a team to the scoreboard")
         public Object[] addTeam(Context context, Arguments args) {
             checkAccess();
             String team = args.checkString(0);
@@ -849,7 +843,7 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
         }
 
         @SuppressWarnings("SameReturnValue")
-        @Callback(doc = "function(teamName: string) - Remove a team from the scoreboard.")
+        @Callback(doc = "function(teamName: string) - Remove a team from the scoreboard")
         public Object[] removeTeam(Context context, Arguments args) {
             checkAccess();
             String teamName = args.checkString(0);
@@ -860,7 +854,7 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
             return null;
         }
 
-        @Callback(doc = "function(player:string, team:string):boolean - Add a player to a team.")
+        @Callback(doc = "function(player:string, team:string):boolean - Add a player to a team")
         public Object[] addPlayerToTeam(Context context, Arguments args) {
             checkAccess();
             String player = args.checkString(0);
@@ -870,7 +864,7 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
             return ResultWrapper.result(scoreboard.addPlayerToTeam(player, playerTeam));
         }
 
-        @Callback(doc = "function(player:string):boolean - Remove a player from their team.")
+        @Callback(doc = "function(player:string):boolean - Remove a player from their team")
         public Object[] removePlayerFromTeams(Context context, Arguments args) {
             checkAccess();
             String player = args.checkString(0);
@@ -878,7 +872,7 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
         }
 
         @SuppressWarnings("SameReturnValue")
-        @Callback(doc = "function(player:string, team:string):boolean - Remove a player from a specific team.")
+        @Callback(doc = "function(player:string, team:string):boolean - Remove a player from a specific team")
         public Object[] removePlayerFromTeam(Context context, Arguments args) {
             checkAccess();
             String player = args.checkString(0);
@@ -891,7 +885,7 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
         }
 
         @SuppressWarnings("SameReturnValue")
-        @Callback(doc = "function(objectiveName:string, objectiveCriteria:string) - Create a new objective for the scoreboard.")
+        @Callback(doc = "function(objectiveName:string, objectiveCriteria:string) - Create a new objective for the scoreboard")
         public Object[] addObjective(Context context, Arguments args) {
             checkAccess();
             String objName = args.checkString(0);
@@ -902,7 +896,7 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
         }
 
         @SuppressWarnings("SameReturnValue")
-        @Callback(doc = "function(objectiveName:string) - Remove an objective from the scoreboard.")
+        @Callback(doc = "function(objectiveName:string) - Remove an objective from the scoreboard")
         public Object[] removeObjective(Context context, Arguments args) {
             checkAccess();
             String objName = args.checkString(0);
@@ -914,7 +908,7 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
         }
 
         @SuppressWarnings("SameReturnValue")
-        @Callback(doc = "function(playerName:string, objectiveName:string, score:int) - Sets the score of a player for a certain objective.")
+        @Callback(doc = "function(playerName:string, objectiveName:string, score:int) - Sets the score of a player for a certain objective")
         public Object[] setPlayerScore(Context context, Arguments args) {
             checkAccess();
             String name = args.checkString(0);
@@ -926,7 +920,7 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
             return null;
         }
 
-        @Callback(doc = "function(playerName:string, objectiveName:string):int - Gets the score of a player for a certain objective.")
+        @Callback(doc = "function(playerName:string, objectiveName:string):int - Gets the score of a player for a certain objective")
         public Object[] getPlayerScore(Context context, Arguments args) {
             checkAccess();
             String name = args.checkString(0);
@@ -937,7 +931,7 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
         }
 
         @SuppressWarnings("SameReturnValue")
-        @Callback(doc = "function(playerName:string, objectiveName:string, score:int) - Increases the score of a player for a certain objective.")
+        @Callback(doc = "function(playerName:string, objectiveName:string, score:int) - Increases the score of a player for a certain objective")
         public Object[] increasePlayerScore(Context context, Arguments args) {
             checkAccess();
             String name = args.checkString(0);
@@ -950,7 +944,7 @@ public abstract class DebugCardBase extends ManagedEnvironment implements DebugN
         }
 
         @SuppressWarnings("SameReturnValue")
-        @Callback(doc = "function(playerName:string, objectiveName:string, score:int) - Decrease the score of a player for a certain objective.")
+        @Callback(doc = "function(playerName:string, objectiveName:string, score:int) - Decrease the score of a player for a certain objective")
         public Object[] decreasePlayerScore(Context context, Arguments args) {
             checkAccess();
             String name = args.checkString(0);

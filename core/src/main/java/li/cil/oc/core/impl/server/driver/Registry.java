@@ -1,6 +1,19 @@
 package li.cil.oc.core.impl.server.driver;
 
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import li.cil.oc.api.driver.Converter;
+import li.cil.oc.api.driver.DriverBlock;
+import li.cil.oc.api.driver.DriverItem;
 import li.cil.oc.api.driver.EnvironmentProvider;
 import li.cil.oc.api.driver.InventoryProvider;
 import li.cil.oc.api.driver.item.HostAware;
@@ -15,24 +28,12 @@ import net.minecraft.world.level.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 public final class Registry implements li.cil.oc.api.detail.DriverAPI {
     private static final Logger LOGGER = LoggerFactory.getLogger(Registry.class);
     public static final Registry INSTANCE = new Registry();
 
-    private final List<li.cil.oc.api.driver.SidedBlock> blocks = new ArrayList<>();
-    private final List<li.cil.oc.api.driver.Item> items = new ArrayList<>();
+    private final List<DriverBlock> blocks = new ArrayList<>();
+    private final List<DriverItem> items = new ArrayList<>();
     private final List<Converter> converters = new ArrayList<>();
     private final List<EnvironmentProvider> environmentProviders = new ArrayList<>();
     private final List<InventoryProvider> inventoryProviders = new ArrayList<>();
@@ -47,7 +48,7 @@ public final class Registry implements li.cil.oc.api.detail.DriverAPI {
     }
 
     @Override
-    public void add(li.cil.oc.api.driver.SidedBlock driver) {
+    public void add(DriverBlock driver) {
         if (locked) throw new IllegalStateException("Please register all drivers in the init phase.");
         if (!blocks.contains(driver)) {
             LOGGER.debug("Registering block driver {}.", driver.getClass().getName());
@@ -56,7 +57,7 @@ public final class Registry implements li.cil.oc.api.detail.DriverAPI {
     }
 
     @Override
-    public void add(li.cil.oc.api.driver.Item driver) {
+    public void add(DriverItem driver) {
         if (locked) throw new IllegalStateException("Please register all drivers in the init phase.");
         if (!items.contains(driver)) {
             LOGGER.debug("Registering item driver {}.", driver.getClass().getName());
@@ -92,28 +93,28 @@ public final class Registry implements li.cil.oc.api.detail.DriverAPI {
     }
 
     @Override
-    public li.cil.oc.api.driver.SidedBlock driverFor(Level world, BlockPos pos, Direction side) {
-        List<li.cil.oc.api.driver.SidedBlock> sidedDrivers = new ArrayList<>();
-        for (li.cil.oc.api.driver.SidedBlock d : blocks) {
-            if (d.worksWith(world, pos.getX(), pos.getY(), pos.getZ(), side)) sidedDrivers.add(d);
+    public DriverBlock driverFor(Level world, BlockPos pos, Direction side) {
+        List<DriverBlock> sidedDrivers = new ArrayList<>();
+        for (DriverBlock d : blocks) {
+            if (d.worksWith(world, pos, side)) sidedDrivers.add(d);
         }
         if (!sidedDrivers.isEmpty()) {
-            return new CompoundBlockDriver(sidedDrivers.toArray(new li.cil.oc.api.driver.SidedBlock[0]));
+            return new CompoundBlockDriver(sidedDrivers.toArray(new DriverBlock[0]));
         }
         return null;
     }
 
     @Override
-    public li.cil.oc.api.driver.Item driverFor(ItemStack stack, Class<? extends EnvironmentHost> host) {
+    public DriverItem driverFor(ItemStack stack, Class<? extends EnvironmentHost> host) {
         if (stack == null) return null;
-        List<li.cil.oc.api.driver.Item> hostAware = new ArrayList<>();
-        for (li.cil.oc.api.driver.Item driver : items) {
+        List<DriverItem> hostAware = new ArrayList<>();
+        for (DriverItem driver : items) {
             if (driver instanceof HostAware && driver.worksWith(stack)) {
                 hostAware.add(driver);
             }
         }
         if (!hostAware.isEmpty()) {
-            for (li.cil.oc.api.driver.Item driver : hostAware) {
+            for (DriverItem driver : hostAware) {
                 if (((HostAware) driver).worksWith(stack, host)) return driver;
             }
             return null;
@@ -122,9 +123,9 @@ public final class Registry implements li.cil.oc.api.detail.DriverAPI {
     }
 
     @Override
-    public li.cil.oc.api.driver.Item driverFor(ItemStack stack) {
+    public DriverItem driverFor(ItemStack stack) {
         if (stack == null) return null;
-        for (li.cil.oc.api.driver.Item driver : items) {
+        for (DriverItem driver : items) {
             if (driver.worksWith(stack)) return driver;
         }
         return null;
@@ -151,12 +152,12 @@ public final class Registry implements li.cil.oc.api.detail.DriverAPI {
     }
 
     @Override
-    public List<li.cil.oc.api.driver.SidedBlock> blockDrivers() {
+    public List<DriverBlock> blockDrivers() {
         return Collections.unmodifiableList(blocks);
     }
 
     @Override
-    public List<li.cil.oc.api.driver.Item> itemDrivers() {
+    public List<DriverItem> itemDrivers() {
         return Collections.unmodifiableList(items);
     }
 

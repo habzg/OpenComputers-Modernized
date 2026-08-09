@@ -1,15 +1,13 @@
 package li.cil.oc.core.impl.common.inventory;
 
-import li.cil.oc.core.impl.Settings;
+import java.util.Locale;
+import li.cil.oc.core.impl.OCSettings;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
-
-
-import java.util.Locale;
 
 public interface Inventory extends SimpleInventory {
     ItemStack[] items();
@@ -67,7 +65,7 @@ public interface Inventory extends SimpleInventory {
 
     default void load(CompoundTag nbt, HolderLookup.Provider provider) {
         int count = 0;
-        ListTag tagList = nbt.getList(Settings.namespace + "items", Tag.TAG_COMPOUND);
+        ListTag tagList = nbt.getList(OCSettings.namespace + "items", Tag.TAG_COMPOUND);
         for (int i = 0; i < tagList.size(); i++) {
             CompoundTag tag = tagList.getCompound(i);
             if (tag.contains("slot")) {
@@ -95,7 +93,7 @@ public interface Inventory extends SimpleInventory {
                 list.add(slotNbt);
             }
         }
-        nbt.put(Settings.namespace + "items", list);
+        nbt.put(OCSettings.namespace + "items", list);
     }
 
     default void onItemAdded(int slot, ItemStack stack) {

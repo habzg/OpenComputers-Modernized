@@ -1,5 +1,6 @@
 package li.cil.oc.api.network;
 
+import net.minecraft.core.Direction;
 import net.minecraft.world.entity.player.Player;
 
 /**
@@ -11,7 +12,7 @@ import net.minecraft.world.entity.player.Player;
  */
 public interface Analyzable {
     /**
-     * Called when a player uses the analyzer tool on the tile entity's block.
+     * Called when a player uses the analyzer tool on the block entity's block.
      * <br>
      * This can be used to display additional block specific information in the
      * player's chat when the analyzer is used (or do whatever) and may also be
@@ -30,5 +31,5 @@ public interface Analyzable {
      * @return the nodes to display information for, usually an environment's
      * main node (i.e. <code>this.node()</code>).
      */
-    Node[] onAnalyze(Player player, int side, float hitX, float hitY, float hitZ);
+    Node[] onAnalyze(Player player, Direction side, float hitX, float hitY, float hitZ);
 }

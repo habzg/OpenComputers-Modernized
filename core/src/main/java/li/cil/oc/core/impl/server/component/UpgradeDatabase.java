@@ -2,6 +2,8 @@ package li.cil.oc.core.impl.server.component;
 
 import com.google.common.base.Strings;
 import com.google.common.hash.Hashing;
+import java.io.IOException;
+import java.util.Map;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
@@ -9,6 +11,7 @@ import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.impl.util.DatabaseAccess;
 import li.cil.oc.core.impl.util.ExtendedArguments;
@@ -26,10 +29,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
-import java.util.Map;
-
-public class UpgradeDatabase extends li.cil.oc.api.prefab.ManagedEnvironment implements li.cil.oc.api.internal.Database, DeviceInfo {
+public class UpgradeDatabase extends AbstractManagedEnvironment implements li.cil.oc.api.internal.Database, DeviceInfo {
     public final Container data;
 
     public final Node node = Network.newNode(this, Visibility.Network)
@@ -98,7 +98,7 @@ public class UpgradeDatabase extends li.cil.oc.api.prefab.ManagedEnvironment imp
         }
     }
 
-    @Callback(doc = "function(hash:string):number -- Get the index of an item stack with the specified hash.")
+    @Callback(doc = "function(hash:string):number -- Get the index of an item stack with the specified hash. Returns a negative value if no such stack was found.")
     public Object[] indexOf(Context context, Arguments args) {
         return ResultWrapper.result(indexOf(args.checkString(0), 1));
     }
@@ -144,7 +144,7 @@ public class UpgradeDatabase extends li.cil.oc.api.prefab.ManagedEnvironment imp
     }
 
     @SuppressWarnings("unused")
-    @Callback(doc = "function(slot:number, id:string, damage:number, nbt:string):boolean - Set an item into the specified database slot. NBT tag is expected in JSON format.")
+    @Callback(doc = "function(slot:number, id:string, damage:number, nbt:string):boolean -- Sets an item into the specified database slot. The NBT tag is expected in string (SNBT) format.")
     public Object[] set(Context context, Arguments args) {
         int slot = ExtendedArguments.checkSlot(args, data, 0);
         Item item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(args.checkString(1)));
@@ -159,6 +159,9 @@ public class UpgradeDatabase extends li.cil.oc.api.prefab.ManagedEnvironment imp
             }
         }
         ItemStack stack = new ItemStack(item, 1);
+        if (stack.isDamageableItem()) {
+            stack.setDamageValue(damage);
+        }
         if (tag != null) stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
         data.setItem(slot, stack);
         return ResultWrapper.result(true);

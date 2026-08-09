@@ -1,16 +1,14 @@
 package li.cil.oc.core.impl.client.renderer.markdown.segment;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import li.cil.oc.core.client.renderer.markdown.MarkupFormat;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.network.chat.Style;
-import net.minecraft.util.FormattedCharSequence;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
+import li.cil.oc.core.client.renderer.markdown.MarkupFormat;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Style;
+import net.minecraft.util.FormattedCharSequence;
 
 public class TextSegment extends BasicTextSegment {
     private final String _text;
@@ -27,9 +25,7 @@ public class TextSegment extends BasicTextSegment {
     }
 
     @Override
-    public InteractiveSegment render(int x, int y, int indent, int maxWidth, Font renderer, MultiBufferSource bufferSource, int mouseX, int mouseY) {
-        var pose = new PoseStack();
-
+    public InteractiveSegment render(int x, int y, int indent, int maxWidth, Font renderer, GuiGraphics graphics, int mouseX, int mouseY) {
         int currentX = x + indent;
         int currentY = y;
         String chars = _text;
@@ -54,7 +50,7 @@ public class TextSegment extends BasicTextSegment {
                     if (h != null) hovered = h;
                 }
 
-                renderText(pose, bufferSource, renderer, part, currentX, currentY, resolvedColor, resolvedStyle, resolveScale());
+                renderText(graphics, renderer, part, currentX, currentY, resolvedColor, resolvedStyle, resolveScale());
 
                 if (n < chars.length()) {
                     chars = chars.substring(n).stripLeading();
@@ -73,12 +69,13 @@ public class TextSegment extends BasicTextSegment {
         return hovered;
     }
 
-    protected void renderText(PoseStack pose, net.minecraft.client.renderer.MultiBufferSource source, Font renderer, String part, int x, int y, int color, Style style, float scale) {
+    protected void renderText(GuiGraphics graphics, Font renderer, String part, int x, int y, int color, Style style, float scale) {
+        var pose = graphics.pose();
         pose.pushPose();
         pose.translate(x, y, 0);
         pose.scale(scale, scale, scale);
         var seq = FormattedCharSequence.forward(part, style);
-        renderer.drawInBatch(seq, 0, 0, color, false, pose.last().pose(), source, Font.DisplayMode.SEE_THROUGH, 0, 0x00F000F0);
+        renderer.drawInBatch(seq, 0, 0, color, false, pose.last().pose(), graphics.bufferSource(), Font.DisplayMode.SEE_THROUGH, 0, 0x00F000F0);
         pose.popPose();
     }
 

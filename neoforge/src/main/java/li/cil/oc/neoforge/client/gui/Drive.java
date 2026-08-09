@@ -18,7 +18,7 @@ public class Drive extends Screen {
     private int guiLeft;
     private int guiTop;
     private final int xSize = 176;
-    private final int ySize = 120;
+    private final int ySize = 111;
 
     public Drive(Inventory playerInventory, java.util.function.Supplier<net.minecraft.world.item.ItemStack> driveStack) {
         super(Component.literal(""));
@@ -53,7 +53,7 @@ public class Drive extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float dt) {
-        guiGraphics.blit(Textures.guiDrive, guiLeft, guiTop, 0, 0, xSize, ySize, 256, 256);
+        guiGraphics.blit(Textures.guiDrive, guiLeft, guiTop, 0, 0, xSize, ySize, 176, 111);
         super.render(guiGraphics, mouseX, mouseY, dt);
         guiGraphics.drawWordWrap(font, Component.translatable("gui.opencomputers.drive.warning"), guiLeft + 11, guiTop + 37, xSize - 20, 0x404040);
         guiGraphics.drawWordWrap(font, Component.translatable("gui.opencomputers.drive.readonlylockwarning"), guiLeft + 61, guiTop + ySize - 48, xSize - 68, 0x404040);

@@ -4,40 +4,39 @@ import codechicken.enderstorage.api.Frequency;
 import codechicken.enderstorage.tile.TileEnderTank;
 import codechicken.enderstorage.tile.TileFrequencyOwner;
 import codechicken.lib.colour.EnumColour;
+import java.util.HashMap;
+import java.util.Map;
 import li.cil.oc.api.driver.NamedBlock;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.ManagedEnvironment;
-import li.cil.oc.api.prefab.DriverSidedTileEntity;
-import li.cil.oc.neoforge.integration.ManagedTileEntityEnvironment;
+import li.cil.oc.api.prefab.DriverSidedBlockEntity;
+import li.cil.oc.core.impl.integration.ManagedBlockEntityEnvironment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @SuppressWarnings("unused")
-public final class DriverFrequencyOwner extends DriverSidedTileEntity {
+public final class DriverFrequencyOwner extends DriverSidedBlockEntity {
     @Override
-    public Class<?> getTileEntityClass() {
+    public Class<?> getBlockEntityClass() {
         return TileFrequencyOwner.class;
     }
 
     @Override
-    public ManagedEnvironment createEnvironment(final Level world, final int x, final int y, final int z, final Direction side) {
-        return new Environment((TileFrequencyOwner) world.getBlockEntity(new BlockPos(x, y, z)));
+    public ManagedEnvironment createEnvironment(final Level world, final BlockPos pos, final Direction side) {
+        return new Environment((TileFrequencyOwner) world.getBlockEntity(pos));
     }
 
-    public static final class Environment extends ManagedTileEntityEnvironment<TileFrequencyOwner> implements NamedBlock {
-        public Environment(final TileFrequencyOwner tileEntity) {
-            super(tileEntity, tileEntity instanceof TileEnderTank ? "ender_tank" : "ender_chest");
+    public static final class Environment extends ManagedBlockEntityEnvironment<TileFrequencyOwner> implements NamedBlock {
+        public Environment(final TileFrequencyOwner blockEntity) {
+            super(blockEntity, blockEntity instanceof TileEnderTank ? "ender_tank" : "ender_chest");
         }
 
         @Override
         public String preferredName() {
-            return getTileEntity() instanceof TileEnderTank ? "ender_tank" : "ender_chest";
+            return getBlockEntity() instanceof TileEnderTank ? "ender_tank" : "ender_chest";
         }
 
         @Override
@@ -47,7 +46,7 @@ public final class DriverFrequencyOwner extends DriverSidedTileEntity {
 
         @Callback(doc = "function():table -- Get the currently set frequency. {left, middle, right}")
         public Object[] getFrequency(final Context context, final Arguments args) {
-            Frequency frequency = getTileEntity().getFrequency();
+            Frequency frequency = getBlockEntity().getFrequency();
             return new Object[]{new int[]{
                     frequency.left().ordinal(),
                     frequency.middle().ordinal(),
@@ -77,17 +76,16 @@ public final class DriverFrequencyOwner extends DriverSidedTileEntity {
                     throw new IllegalArgumentException("invalid frequency");
                 }
             }
-            getTileEntity().setFreq(new Frequency(
-                    EnumColour.fromWoolMeta(left),
-                    EnumColour.fromWoolMeta(middle),
-                    EnumColour.fromWoolMeta(right)
-            ));
+            getBlockEntity().setFreq(getBlockEntity().getFrequency()
+                    .withLeft(EnumColour.fromWoolMeta(left))
+                    .withMiddle(EnumColour.fromWoolMeta(middle))
+                    .withRight(EnumColour.fromWoolMeta(right)));
             return null;
         }
 
         @Callback(doc = "function():string -- Get the name of the owner, which is usually a player's name or 'global'.")
         public Object[] getOwner(final Context context, final Arguments args) {
-            Frequency frequency = getTileEntity().getFrequency();
+            Frequency frequency = getBlockEntity().getFrequency();
             if (frequency.ownerName().isPresent()) {
                 return new Object[]{frequency.ownerName().get().getString()};
             }
@@ -96,16 +94,16 @@ public final class DriverFrequencyOwner extends DriverSidedTileEntity {
 
         @Callback(doc = "function():table -- Get the currently set frequency as a table of color names.")
         public Object[] getFrequencyColors(final Context context, final Arguments args) {
-            Frequency frequency = getTileEntity().getFrequency();
+            Frequency frequency = getBlockEntity().getFrequency();
             return new Object[]{frequency.toArray()};
         }
 
         @Callback(doc = "function():table -- Get a table with the mapping of colors (as Minecraft names) to Frequency numbers. NB: Frequencies are zero based!")
         public Object[] getColors(final Context context, final Arguments args) {
             EnumColour[] colors = EnumColour.values();
-            Map<Integer, String> map = new HashMap<>();
+            Map<Integer, EnumColour> map = new HashMap<>();
             for (int i = 0; i < colors.length; i++) {
-                map.put(i, colors[i].getSerializedName());
+                map.put(i, colors[i]);
             }
             return new Object[]{map};
         }

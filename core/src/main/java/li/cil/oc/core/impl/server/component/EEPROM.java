@@ -1,6 +1,7 @@
 package li.cil.oc.core.impl.server.component;
 
 import com.google.common.hash.Hashing;
+import java.util.Map;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
@@ -9,17 +10,15 @@ import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.util.ResultWrapper;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import org.jetbrains.annotations.Nullable;
 
-
-import java.util.Map;
-
-public class EEPROM extends li.cil.oc.api.prefab.ManagedEnvironment implements DeviceInfo {
+public class EEPROM extends AbstractManagedEnvironment implements DeviceInfo {
     public final Node node = Network.newNode(this, Visibility.Neighbors)
             .withComponent("eeprom", Visibility.Neighbors)
             .withConnector()
@@ -31,7 +30,7 @@ public class EEPROM extends li.cil.oc.api.prefab.ManagedEnvironment implements D
     public String label = "EEPROM";
 
     public EEPROM() {
-        deviceInfo = Map.of(DeviceAttribute.Class, DeviceClass.Memory, DeviceAttribute.Description, "EEPROM", DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor, DeviceAttribute.Product, "FlashStick2k", DeviceAttribute.Capacity, String.valueOf(Settings.get().eepromSize), DeviceAttribute.Size, String.valueOf(Settings.get().eepromSize));
+        deviceInfo = Map.of(DeviceAttribute.Class, DeviceClass.Memory, DeviceAttribute.Description, "EEPROM", DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor, DeviceAttribute.Product, "FlashStick2k", DeviceAttribute.Capacity, String.valueOf(OCSettings.get().eepromSize), DeviceAttribute.Size, String.valueOf(OCSettings.get().eepromSize));
     }
 
     public String checksum() {
@@ -53,11 +52,11 @@ public class EEPROM extends li.cil.oc.api.prefab.ManagedEnvironment implements D
         if (readonly) {
             return ResultWrapper.result(null, "storage is readonly");
         }
-        if (!((Connector) node).tryChangeBuffer(-Settings.get().eepromWriteCost)) {
+        if (!((Connector) node).tryChangeBuffer(-OCSettings.get().eepromWriteCost)) {
             return ResultWrapper.result(null, "not enough energy");
         }
         byte[] newData = args.optByteArray(0, new byte[0]);
-        if (newData.length > Settings.get().eepromSize)
+        if (newData.length > OCSettings.get().eepromSize)
             throw new IllegalArgumentException("not enough space");
         codeData = newData;
         context.pause(2);
@@ -82,7 +81,7 @@ public class EEPROM extends li.cil.oc.api.prefab.ManagedEnvironment implements D
 
     @Callback(direct = true, doc = "function():number -- Get the storage capacity of this EEPROM.")
     public Object[] getSize(Context context, Arguments args) {
-        return ResultWrapper.result((double) Settings.get().eepromSize);
+        return ResultWrapper.result((double) OCSettings.get().eepromSize);
     }
 
     @Callback(direct = true, doc = "function():string -- Get the checksum of the data on this EEPROM.")
@@ -90,7 +89,7 @@ public class EEPROM extends li.cil.oc.api.prefab.ManagedEnvironment implements D
         return ResultWrapper.result(checksum());
     }
 
-    @Callback(direct = true, doc = "function(checksum:string):boolean -- Make this EEPROM readonly if it isn't already.")
+    @Callback(direct = true, doc = "function(checksum:string):boolean -- Make this EEPROM readonly if it isn't already. This process cannot be reversed!")
     public Object[] makeReadonly(Context context, Arguments args) {
         if (args.checkString(0).equals(checksum())) {
             readonly = true;
@@ -101,7 +100,7 @@ public class EEPROM extends li.cil.oc.api.prefab.ManagedEnvironment implements D
 
     @Callback(direct = true, doc = "function():number -- Get the storage capacity of this EEPROM.")
     public Object[] getDataSize(Context context, Arguments args) {
-        return ResultWrapper.result((double) Settings.get().eepromDataSize);
+        return ResultWrapper.result((double) OCSettings.get().eepromDataSize);
     }
 
     @Callback(direct = true, doc = "function():string -- Get the currently stored byte array.")
@@ -111,11 +110,11 @@ public class EEPROM extends li.cil.oc.api.prefab.ManagedEnvironment implements D
 
     @Callback(doc = "function(data:string) -- Overwrite the currently stored byte array.")
     public Object @Nullable [] setData(Context context, Arguments args) {
-        if (!((Connector) node).tryChangeBuffer(-Settings.get().eepromWriteCost)) {
+        if (!((Connector) node).tryChangeBuffer(-OCSettings.get().eepromWriteCost)) {
             return ResultWrapper.result(null, "not enough energy");
         }
         byte[] newData = args.optByteArray(0, new byte[0]);
-        if (newData.length > Settings.get().eepromDataSize)
+        if (newData.length > OCSettings.get().eepromDataSize)
             throw new IllegalArgumentException("not enough space");
         volatileData = newData;
         context.pause(1);
@@ -125,20 +124,20 @@ public class EEPROM extends li.cil.oc.api.prefab.ManagedEnvironment implements D
     @Override
     public void load(CompoundTag nbt, HolderLookup.Provider provider) {
         super.load(nbt, provider);
-        codeData = nbt.getByteArray(Settings.namespace + "eeprom");
-        if (nbt.contains(Settings.namespace + "label")) {
-            label = nbt.getString(Settings.namespace + "label");
+        codeData = nbt.getByteArray(OCSettings.namespace + "eeprom");
+        if (nbt.contains(OCSettings.namespace + "label")) {
+            label = nbt.getString(OCSettings.namespace + "label");
         }
-        readonly = nbt.getBoolean(Settings.namespace + "readonly");
-        volatileData = nbt.getByteArray(Settings.namespace + "userdata");
+        readonly = nbt.getBoolean(OCSettings.namespace + "readonly");
+        volatileData = nbt.getByteArray(OCSettings.namespace + "userdata");
     }
 
     @Override
     public void save(CompoundTag nbt, HolderLookup.Provider provider) {
         super.save(nbt, provider);
-        nbt.putByteArray(Settings.namespace + "eeprom", codeData);
-        nbt.putString(Settings.namespace + "label", label);
-        nbt.putBoolean(Settings.namespace + "readonly", readonly);
-        nbt.putByteArray(Settings.namespace + "userdata", volatileData);
+        nbt.putByteArray(OCSettings.namespace + "eeprom", codeData);
+        nbt.putString(OCSettings.namespace + "label", label);
+        nbt.putBoolean(OCSettings.namespace + "readonly", readonly);
+        nbt.putByteArray(OCSettings.namespace + "userdata", volatileData);
     }
 }

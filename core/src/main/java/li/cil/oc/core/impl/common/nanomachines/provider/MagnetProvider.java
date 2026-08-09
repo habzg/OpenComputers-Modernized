@@ -1,14 +1,13 @@
 package li.cil.oc.core.impl.common.nanomachines.provider;
 
+import java.util.Collections;
 import li.cil.oc.api.nanomachines.Behavior;
 import li.cil.oc.api.prefab.AbstractBehavior;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-
-import java.util.Collections;
 
 public class MagnetProvider extends ScalaProvider {
     public MagnetProvider() {
@@ -39,7 +38,7 @@ public class MagnetProvider extends ScalaProvider {
         public void update() {
             var world = player.level();
             if (!world.isClientSide) {
-                double actualRange = Settings.get().nanomachineMagnetRange * li.cil.oc.api.Nanomachines.getController(player).getInputCount(this);
+                double actualRange = OCSettings.get().nanomachineMagnetRange * li.cil.oc.api.Nanomachines.getController(player).getInputCount(this);
                 var items = world.getEntitiesOfClass(ItemEntity.class, player.getBoundingBox().inflate(actualRange));
                 for (var item : items) {
                     if (!item.hasPickUpDelay()) {

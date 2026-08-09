@@ -6,11 +6,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * This interface can be used to easily convert tile entities to components,
+ * This interface can be used to easily convert block entities to components,
  * without having to implement {@link li.cil.oc.api.network.Environment}
  * themselves. The simple implementation will provide no access to OC's internal
  * component network, since you won't have access to the node representing the
- * tile entity. Use this only for simple cases, where you want to expose a
+ * block entity. Use this only for simple cases, where you want to expose a
  * couple of methods to the programs running computers.
  * <br>
  * <br>
@@ -93,7 +93,7 @@ public interface SimpleComponent {
      * Use this to skip logic injection for the class this is implemented by.
      * <br>
      * For example, if you have a class transformer that injects logic from a
-     * template class into your actual tile entities, OC's class transformer
+     * template class into your actual block entities, OC's class transformer
      * would complain when it finds the interface on the template class. That
      * warning can be suppressed by using this annotation on the template.
      */

@@ -5,8 +5,9 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Slot;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.item.data.TabletData;
+import li.cil.oc.core.impl.integration.opencomputers.Item;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
@@ -61,8 +62,8 @@ public final class DriverTablet extends Item {
             CustomData cd = stack.get(DataComponents.CUSTOM_DATA);
             if (cd != null && !cd.isEmpty()) {
                 CompoundTag rootTag = cd.copyTag();
-                if (rootTag.contains(Settings.namespace + "items")) {
-                    net.minecraft.nbt.ListTag baseTag = rootTag.getList(Settings.namespace + "items", Tag.TAG_COMPOUND);
+                if (rootTag.contains(OCSettings.namespace + "items")) {
+                    net.minecraft.nbt.ListTag baseTag = rootTag.getList(OCSettings.namespace + "items", Tag.TAG_COMPOUND);
                     for (int i = 0; i < baseTag.size(); i++) {
                         CompoundTag entryTag = baseTag.getCompound(i);
                         if (entryTag.getByte("slot") == (byte) slot) {
@@ -74,10 +75,10 @@ public final class DriverTablet extends Item {
                                 itemTag.put("tag", new CompoundTag());
                             }
                             CompoundTag stackTag = itemTag.getCompound("tag");
-                            if (!stackTag.contains(Settings.namespace + "data")) {
-                                stackTag.put(Settings.namespace + "data", new CompoundTag());
+                            if (!stackTag.contains(OCSettings.namespace + "data")) {
+                                stackTag.put(OCSettings.namespace + "data", new CompoundTag());
                             }
-                            return stackTag.getCompound(Settings.namespace + "data");
+                            return stackTag.getCompound(OCSettings.namespace + "data");
                         }
                     }
                 }

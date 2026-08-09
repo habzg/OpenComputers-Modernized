@@ -1,18 +1,16 @@
 package li.cil.oc.neoforge.client.renderer;
 
-import codechicken.multipart.api.part.MultiPart;
-import codechicken.multipart.block.TileMultipart;
-import codechicken.multipart.util.PartRayTraceResult;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import java.util.Random;
 import li.cil.oc.api.detail.ItemInfo;
 import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.core.Constants;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.client.Textures;
-import li.cil.oc.core.impl.common.tileentity.Cable;
-import li.cil.oc.core.impl.common.tileentity.Print;
+import li.cil.oc.core.impl.common.blockentity.Cable;
+import li.cil.oc.core.impl.common.blockentity.Print;
 import li.cil.oc.core.impl.util.ExtendedAABB;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.RenderType;
@@ -23,8 +21,6 @@ import net.minecraft.world.phys.HitResult;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.RenderHighlightEvent;
-
-import java.util.Random;
 
 public final class HighlightRenderer {
     private static final Random random = new Random();
@@ -68,7 +64,7 @@ public final class HighlightRenderer {
                 pose.translate(blockPos.getX() - camPos.x, blockPos.getY() - camPos.y, blockPos.getZ() - camPos.z);
                 pose.scale(1.002f, 1.002f, 1.002f);
 
-                if (Settings.get().hologramFlickerFrequency > 0 && random.nextDouble() < Settings.get().hologramFlickerFrequency) {
+                if (OCSettings.get().hologramFlickerFrequency > 0 && random.nextDouble() < OCSettings.get().hologramFlickerFrequency) {
                     double sx = 1 - Math.abs(sideHit.getStepX());
                     double sy = 1 - Math.abs(sideHit.getStepY());
                     double sz = 1 - Math.abs(sideHit.getStepZ());
@@ -162,10 +158,7 @@ public final class HighlightRenderer {
         if (hitInfo.getType() == HitResult.Type.BLOCK) {
             var te = level.getBlockEntity(blockPos);
             boolean isCable = te instanceof Cable;
-            boolean isMultipartCable = false;
-            if (!isCable && te instanceof TileMultipart tileMP && hitInfo instanceof PartRayTraceResult partHit) {
-                isMultipartCable = partHit.part instanceof li.cil.oc.neoforge.integration.cbmultipart.CablePart;
-            }
+            boolean isMultipartCable = !isCable && li.cil.oc.neoforge.common.MultipartHooks.isCableHit(te, hitInfo);
             if (isCable || isMultipartCable) {
                 var pose = e.getPoseStack();
                 var camera = e.getCamera();
@@ -200,21 +193,12 @@ public final class HighlightRenderer {
         for (Direction side : Direction.values()) {
             var neighborPos = pos.relative(side);
             var neighbor = level.getBlockEntity(neighborPos);
-            if (neighbor != null && !(neighbor instanceof li.cil.oc.neoforge.common.tileentity.RobotProxy)) {
-                boolean hasNode = false;
+            if (neighbor != null && !(neighbor instanceof li.cil.oc.neoforge.common.blockentity.RobotProxy)) {
+                boolean hasNode;
                 switch (neighbor) {
                     case SidedEnvironment sided -> hasNode = sided.canConnect(side.getOpposite());
                     case li.cil.oc.api.network.Environment environment -> hasNode = true;
-                    case TileMultipart tileMP -> {
-                        for (MultiPart part : tileMP.getPartList()) {
-                            if (part instanceof li.cil.oc.api.network.Environment) {
-                                hasNode = true;
-                                break;
-                            }
-                        }
-                    }
-                    default -> {
-                    }
+                    default -> hasNode = li.cil.oc.neoforge.common.MultipartHooks.hasOCPart(neighbor);
                 }
                 if (hasNode) {
                     mask |= (1 << side.get3DDataValue());

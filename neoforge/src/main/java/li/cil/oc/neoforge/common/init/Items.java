@@ -1,109 +1,5 @@
 package li.cil.oc.neoforge.common.init;
 
-import li.cil.oc.api.API;
-import li.cil.oc.api.detail.ItemAPI;
-import li.cil.oc.api.detail.ItemInfo;
-import li.cil.oc.api.fs.FileSystem;
-import li.cil.oc.core.Constants;
-import li.cil.oc.core.common.Tier;
-import li.cil.oc.core.impl.Settings;
-import li.cil.oc.core.impl.common.item.HoverBoots;
-import li.cil.oc.core.impl.common.item.data.DroneData;
-import li.cil.oc.core.impl.common.item.data.HoverBootsData;
-import li.cil.oc.core.impl.common.item.data.MicrocontrollerData;
-import li.cil.oc.core.impl.common.item.data.RobotData;
-import li.cil.oc.core.impl.common.item.data.TabletData;
-import li.cil.oc.core.impl.server.machine.luac.LuaStateFactory;
-import li.cil.oc.neoforge.OpenComputers;
-import li.cil.oc.neoforge.common.Loot;
-import li.cil.oc.neoforge.common.block.SimpleBlock;
-import li.cil.oc.neoforge.common.item.ALU;
-import li.cil.oc.neoforge.common.item.APU;
-import li.cil.oc.neoforge.common.item.Acid;
-import li.cil.oc.neoforge.common.item.Analyzer;
-import li.cil.oc.neoforge.common.item.ArrowKeys;
-import li.cil.oc.neoforge.common.item.ButtonGroup;
-import li.cil.oc.neoforge.common.item.CPU;
-import li.cil.oc.neoforge.common.item.CardBase;
-import li.cil.oc.neoforge.common.item.Chamelium;
-import li.cil.oc.neoforge.common.item.CircuitBoard;
-import li.cil.oc.neoforge.common.item.ComponentBus;
-import li.cil.oc.neoforge.common.item.ControlUnit;
-import li.cil.oc.neoforge.common.item.CuttingWire;
-import li.cil.oc.neoforge.common.item.DataCard;
-import li.cil.oc.neoforge.common.item.DebugCard;
-import li.cil.oc.neoforge.common.item.Debugger;
-import li.cil.oc.neoforge.common.item.DiamondChip;
-import li.cil.oc.neoforge.common.item.Disk;
-import li.cil.oc.neoforge.common.item.DiskDriveMountable;
-import li.cil.oc.neoforge.common.item.Drone;
-import li.cil.oc.neoforge.common.item.DroneCase;
-import li.cil.oc.neoforge.common.item.EEPROM;
-import li.cil.oc.neoforge.common.item.FloppyDisk;
-import li.cil.oc.neoforge.common.item.GraphicsCard;
-import li.cil.oc.neoforge.common.item.HardDiskDrive;
-import li.cil.oc.neoforge.common.item.InkCartridge;
-import li.cil.oc.neoforge.common.item.InkCartridgeEmpty;
-import li.cil.oc.neoforge.common.item.InternetCard;
-import li.cil.oc.neoforge.common.item.Interweb;
-import li.cil.oc.neoforge.common.item.LinkedCard;
-import li.cil.oc.neoforge.common.item.Manual;
-import li.cil.oc.neoforge.common.item.Memory;
-import li.cil.oc.neoforge.common.item.Microchip;
-import li.cil.oc.neoforge.common.item.MicrocontrollerCase;
-import li.cil.oc.neoforge.common.item.Nanomachines;
-import li.cil.oc.neoforge.common.item.NetworkCard;
-import li.cil.oc.neoforge.common.item.NumPad;
-import li.cil.oc.neoforge.common.item.Present;
-import li.cil.oc.neoforge.common.item.PrintedCircuitBoard;
-import li.cil.oc.neoforge.common.item.RawCircuitBoard;
-import li.cil.oc.neoforge.common.item.RedstoneCard;
-import li.cil.oc.neoforge.common.item.Server;
-import li.cil.oc.neoforge.common.item.Tablet;
-import li.cil.oc.neoforge.common.item.TabletCase;
-import li.cil.oc.neoforge.common.item.Terminal;
-import li.cil.oc.neoforge.common.item.TerminalServer;
-import li.cil.oc.neoforge.common.item.TexturePicker;
-import li.cil.oc.neoforge.common.item.TpsCard;
-import li.cil.oc.neoforge.common.item.Transistor;
-import li.cil.oc.neoforge.common.item.UpgradeAngel;
-import li.cil.oc.neoforge.common.item.UpgradeBattery;
-import li.cil.oc.neoforge.common.item.UpgradeChunkloader;
-import li.cil.oc.neoforge.common.item.UpgradeContainerCard;
-import li.cil.oc.neoforge.common.item.UpgradeContainerUpgrade;
-import li.cil.oc.neoforge.common.item.UpgradeCrafting;
-import li.cil.oc.neoforge.common.item.UpgradeDatabase;
-import li.cil.oc.neoforge.common.item.UpgradeExperience;
-import li.cil.oc.neoforge.common.item.UpgradeGenerator;
-import li.cil.oc.neoforge.common.item.UpgradeHover;
-import li.cil.oc.neoforge.common.item.UpgradeInventory;
-import li.cil.oc.neoforge.common.item.UpgradeInventoryController;
-import li.cil.oc.neoforge.common.item.UpgradeLeash;
-import li.cil.oc.neoforge.common.item.UpgradeMF;
-import li.cil.oc.neoforge.common.item.UpgradeNavigation;
-import li.cil.oc.neoforge.common.item.UpgradePiston;
-import li.cil.oc.neoforge.common.item.UpgradeRITEG;
-import li.cil.oc.neoforge.common.item.UpgradeSign;
-import li.cil.oc.neoforge.common.item.UpgradeSolarGenerator;
-import li.cil.oc.neoforge.common.item.UpgradeStickyPiston;
-import li.cil.oc.neoforge.common.item.UpgradeTank;
-import li.cil.oc.neoforge.common.item.UpgradeTankController;
-import li.cil.oc.neoforge.common.item.UpgradeTractorBeam;
-import li.cil.oc.neoforge.common.item.UpgradeTrading;
-import li.cil.oc.neoforge.common.item.WirelessNetworkCard;
-import li.cil.oc.neoforge.common.item.Wrench;
-import li.cil.oc.neoforge.util.Tooltip;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
-import net.minecraft.world.level.block.Block;
-import net.neoforged.neoforge.registries.DeferredHolder;
-import net.neoforged.neoforge.registries.DeferredRegister;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -111,6 +7,101 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import li.cil.oc.api.API;
+import li.cil.oc.api.detail.ItemAPI;
+import li.cil.oc.api.detail.ItemInfo;
+import li.cil.oc.api.fs.FileSystem;
+import li.cil.oc.core.Constants;
+import li.cil.oc.core.common.Tier;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.common.block.SimpleBlock;
+import li.cil.oc.core.impl.common.item.ALU;
+import li.cil.oc.core.impl.common.item.APU;
+import li.cil.oc.core.impl.common.item.Acid;
+import li.cil.oc.core.impl.common.item.Analyzer;
+import li.cil.oc.core.impl.common.item.ArrowKeys;
+import li.cil.oc.core.impl.common.item.ButtonGroup;
+import li.cil.oc.core.impl.common.item.CPU;
+import li.cil.oc.core.impl.common.item.CardBase;
+import li.cil.oc.core.impl.common.item.Chamelium;
+import li.cil.oc.core.impl.common.item.CircuitBoard;
+import li.cil.oc.core.impl.common.item.ComponentBus;
+import li.cil.oc.core.impl.common.item.ControlUnit;
+import li.cil.oc.core.impl.common.item.CuttingWire;
+import li.cil.oc.core.impl.common.item.DataCard;
+import li.cil.oc.core.impl.common.item.DebugCard;
+import li.cil.oc.core.impl.common.item.Debugger;
+import li.cil.oc.core.impl.common.item.DiamondChip;
+import li.cil.oc.core.impl.common.item.Disk;
+import li.cil.oc.core.impl.common.item.Drone;
+import li.cil.oc.core.impl.common.item.DroneCase;
+import li.cil.oc.core.impl.common.item.GraphicsCard;
+import li.cil.oc.core.impl.common.item.HardDiskDrive;
+import li.cil.oc.core.impl.common.item.InkCartridgeEmpty;
+import li.cil.oc.core.impl.common.item.InternetCard;
+import li.cil.oc.core.impl.common.item.Interweb;
+import li.cil.oc.core.impl.common.item.LinkedCard;
+import li.cil.oc.core.impl.common.item.Manual;
+import li.cil.oc.core.impl.common.item.Memory;
+import li.cil.oc.core.impl.common.item.Microchip;
+import li.cil.oc.core.impl.common.item.MicrocontrollerCase;
+import li.cil.oc.core.impl.common.item.Nanomachines;
+import li.cil.oc.core.impl.common.item.NetworkCard;
+import li.cil.oc.core.impl.common.item.NumPad;
+import li.cil.oc.core.impl.common.item.Present;
+import li.cil.oc.core.impl.common.item.PrintedCircuitBoard;
+import li.cil.oc.core.impl.common.item.RawCircuitBoard;
+import li.cil.oc.core.impl.common.item.RedstoneCard;
+import li.cil.oc.core.impl.common.item.Server;
+import li.cil.oc.core.impl.common.item.TabletCase;
+import li.cil.oc.core.impl.common.item.Terminal;
+import li.cil.oc.core.impl.common.item.TerminalServer;
+import li.cil.oc.core.impl.common.item.TexturePicker;
+import li.cil.oc.core.impl.common.item.Transistor;
+import li.cil.oc.core.impl.common.item.UpgradeAngel;
+import li.cil.oc.core.impl.common.item.UpgradeBattery;
+import li.cil.oc.core.impl.common.item.UpgradeChunkloader;
+import li.cil.oc.core.impl.common.item.UpgradeContainerCard;
+import li.cil.oc.core.impl.common.item.UpgradeContainerUpgrade;
+import li.cil.oc.core.impl.common.item.UpgradeCrafting;
+import li.cil.oc.core.impl.common.item.UpgradeDatabase;
+import li.cil.oc.core.impl.common.item.UpgradeExperience;
+import li.cil.oc.core.impl.common.item.UpgradeGenerator;
+import li.cil.oc.core.impl.common.item.UpgradeHover;
+import li.cil.oc.core.impl.common.item.UpgradeInventory;
+import li.cil.oc.core.impl.common.item.UpgradeInventoryController;
+import li.cil.oc.core.impl.common.item.UpgradeLeash;
+import li.cil.oc.core.impl.common.item.UpgradeNavigation;
+import li.cil.oc.core.impl.common.item.UpgradePiston;
+import li.cil.oc.core.impl.common.item.UpgradeSign;
+import li.cil.oc.core.impl.common.item.UpgradeSolarGenerator;
+import li.cil.oc.core.impl.common.item.UpgradeStickyPiston;
+import li.cil.oc.core.impl.common.item.UpgradeTank;
+import li.cil.oc.core.impl.common.item.UpgradeTankController;
+import li.cil.oc.core.impl.common.item.UpgradeTractorBeam;
+import li.cil.oc.core.impl.common.item.UpgradeTrading;
+import li.cil.oc.core.impl.common.item.WirelessNetworkCard;
+import li.cil.oc.core.impl.common.item.data.DroneData;
+import li.cil.oc.core.impl.common.item.data.HoverBootsData;
+import li.cil.oc.core.impl.common.item.data.MicrocontrollerData;
+import li.cil.oc.core.impl.common.item.data.RobotData;
+import li.cil.oc.core.impl.common.item.data.TabletData;
+import li.cil.oc.core.impl.server.machine.luac.LuaStateFactory;
+import li.cil.oc.core.impl.util.Tooltip;
+import li.cil.oc.neoforge.OpenComputers;
+import li.cil.oc.neoforge.common.Loot;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Rarity;
+import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.level.block.Block;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
 
 public final class Items implements ItemAPI {
     private static final Item.Properties P = new Item.Properties();
@@ -131,14 +122,30 @@ public final class Items implements ItemAPI {
 
     private static <B extends Block> DeferredHolder<Item, BlockItem> registerBlockItem(
             String name, DeferredHolder<Block, B> block) {
-        return ITEMS.register(name.toLowerCase(Locale.ROOT), () -> new li.cil.oc.neoforge.common.block.Item(block.get()));
+        return ITEMS.register(name.toLowerCase(Locale.ROOT), () -> new li.cil.oc.core.impl.common.block.Item(block.get()));
+    }
+
+    private static Item.Properties r(int tier) {
+        return new Item.Properties().rarity(li.cil.oc.core.impl.util.Rarity.byTier(tier));
+    }
+
+    private static Item.Properties r1(int tier) {
+        return new Item.Properties().stacksTo(1).rarity(li.cil.oc.core.impl.util.Rarity.byTier(tier));
+    }
+
+    private static Item.Properties r2(int tier) {
+        return new Item.Properties().rarity(li.cil.oc.core.impl.util.Rarity.byTier(tier / 2));
+    }
+
+    private static Item.Properties rr(Rarity rarity) {
+        return new Item.Properties().rarity(rarity);
     }
 
     @SuppressWarnings("unused")
     public static final DeferredHolder<Item, BlockItem> ADAPTER = registerBlockItem(Constants.BlockName.Adapter, Blocks.ADAPTER);
     @SuppressWarnings("unused")
     public static final DeferredHolder<Item, BlockItem> ASSEMBLER = registerBlockItem(Constants.BlockName.Assembler, Blocks.ASSEMBLER);
-    public static final DeferredHolder<Item, BlockItem> CABLE = ITEMS.register(Constants.BlockName.Cable.toLowerCase(Locale.ROOT), () -> new li.cil.oc.neoforge.common.block.CableItem(Blocks.CABLE.get()));
+    public static final DeferredHolder<Item, BlockItem> CABLE = ITEMS.register(Constants.BlockName.Cable.toLowerCase(Locale.ROOT), () -> new li.cil.oc.core.impl.common.block.CableItem(Blocks.CABLE.get()));
     @SuppressWarnings("unused")
     public static final DeferredHolder<Item, BlockItem> CAPACITOR = registerBlockItem(Constants.BlockName.Capacitor, Blocks.CAPACITOR);
     @SuppressWarnings("unused")
@@ -189,7 +196,7 @@ public final class Items implements ItemAPI {
     public static final DeferredHolder<Item, BlockItem> BEACON_BASE_PRINT = registerBlockItem(Constants.BlockName.BeaconBasePrint, Blocks.BEACON_BASE_PRINT);
     @SuppressWarnings("unused")
     public static final DeferredHolder<Item, BlockItem> PRINTER = registerBlockItem("printer", Blocks.PRINTER);
-    public static final DeferredHolder<Item, BlockItem> CHAMELIUM_BLOCK = ITEMS.register("chameliumblock", () -> new li.cil.oc.neoforge.common.block.ChameliumBlockItem(Blocks.CHAMELIUM_BLOCK.get()));
+    public static final DeferredHolder<Item, BlockItem> CHAMELIUM_BLOCK = ITEMS.register("chameliumblock", () -> new li.cil.oc.core.impl.common.block.ChameliumBlockItem(Blocks.CHAMELIUM_BLOCK.get()));
     @SuppressWarnings("unused")
     public static final DeferredHolder<Item, BlockItem> WAYPOINT = registerBlockItem(Constants.BlockName.Waypoint, Blocks.WAYPOINT);
     @SuppressWarnings("unused")
@@ -213,158 +220,156 @@ public final class Items implements ItemAPI {
     public static final DeferredHolder<Item, DiamondChip> DIAMOND_CHIP = reg("chipdiamond", () -> new DiamondChip(P));
     public static final DeferredHolder<Item, Disk> DISK = reg("disk", () -> new Disk(P));
     public static final DeferredHolder<Item, Interweb> INTERWEB = reg("interweb", () -> new Interweb(P));
-    public static final DeferredHolder<Item, Microchip> MICROCHIP_T1 = reg("chip1", () -> new Microchip(P, Tier.One));
-    public static final DeferredHolder<Item, Microchip> MICROCHIP_T2 = reg("chip2", () -> new Microchip(P, Tier.Two));
-    public static final DeferredHolder<Item, Microchip> MICROCHIP_T3 = reg("chip3", () -> new Microchip(P, Tier.Three));
+    public static final DeferredHolder<Item, Microchip> MICROCHIP_T1 = reg("chip1", () -> new Microchip(r(Tier.One), Tier.One));
+    public static final DeferredHolder<Item, Microchip> MICROCHIP_T2 = reg("chip2", () -> new Microchip(r(Tier.Two), Tier.Two));
+    public static final DeferredHolder<Item, Microchip> MICROCHIP_T3 = reg("chip3", () -> new Microchip(r(Tier.Three), Tier.Three));
     public static final DeferredHolder<Item, NumPad> NUM_PAD = reg("numpad", () -> new NumPad(P));
     public static final DeferredHolder<Item, PrintedCircuitBoard> PRINTED_CIRCUIT_BOARD = reg("printedcircuitboard", () -> new PrintedCircuitBoard(P));
     public static final DeferredHolder<Item, RawCircuitBoard> RAW_CIRCUIT_BOARD = reg("rawcircuitboard", () -> new RawCircuitBoard(P));
     public static final DeferredHolder<Item, Transistor> TRANSISTOR = reg("transistor", () -> new Transistor(P));
 
 
-    public static final DeferredHolder<Item, Memory> RAM_T1 = reg("ram1", () -> new Memory(P, Tier.One));
-    public static final DeferredHolder<Item, Memory> RAM_T2 = reg("ram2", () -> new Memory(P, Tier.Two));
-    public static final DeferredHolder<Item, Memory> RAM_T3 = reg("ram3", () -> new Memory(P, Tier.Three));
-    public static final DeferredHolder<Item, Memory> RAM_T4 = reg("ram4", () -> new Memory(P, Tier.Four));
-    public static final DeferredHolder<Item, Memory> RAM_T5 = reg("ram5", () -> new Memory(P, Tier.Five));
-    public static final DeferredHolder<Item, Memory> RAM_T6 = reg("ram6", () -> new Memory(P, Tier.Six));
+    public static final DeferredHolder<Item, Memory> RAM_T1 = reg("ram1", () -> new Memory(r2(Tier.One), Tier.One));
+    public static final DeferredHolder<Item, Memory> RAM_T2 = reg("ram2", () -> new Memory(r2(Tier.Two), Tier.Two));
+    public static final DeferredHolder<Item, Memory> RAM_T3 = reg("ram3", () -> new Memory(r2(Tier.Three), Tier.Three));
+    public static final DeferredHolder<Item, Memory> RAM_T4 = reg("ram4", () -> new Memory(r2(Tier.Four), Tier.Four));
+    public static final DeferredHolder<Item, Memory> RAM_T5 = reg("ram5", () -> new Memory(r2(Tier.Five), Tier.Five));
+    public static final DeferredHolder<Item, Memory> RAM_T6 = reg("ram6", () -> new Memory(r2(Tier.Six), Tier.Six));
 
     
-    public static final DeferredHolder<Item, HardDiskDrive> HDD_T1 = reg("hdd1", () -> new HardDiskDrive(P, Tier.One));
-    public static final DeferredHolder<Item, HardDiskDrive> HDD_T2 = reg("hdd2", () -> new HardDiskDrive(P, Tier.Two));
-    public static final DeferredHolder<Item, HardDiskDrive> HDD_T3 = reg("hdd3", () -> new HardDiskDrive(P, Tier.Three));
+    public static final DeferredHolder<Item, HardDiskDrive> HDD_T1 = reg("hdd1", () -> new HardDiskDrive(r(Tier.One), Tier.One));
+    public static final DeferredHolder<Item, HardDiskDrive> HDD_T2 = reg("hdd2", () -> new HardDiskDrive(r(Tier.Two), Tier.Two));
+    public static final DeferredHolder<Item, HardDiskDrive> HDD_T3 = reg("hdd3", () -> new HardDiskDrive(r(Tier.Three), Tier.Three));
 
     
-    public static final DeferredHolder<Item, CPU> CPU_T1 = reg("cpu1", () -> new CPU(P, Tier.One));
-    public static final DeferredHolder<Item, CPU> CPU_T2 = reg("cpu2", () -> new CPU(P, Tier.Two));
-    public static final DeferredHolder<Item, CPU> CPU_T3 = reg("cpu3", () -> new CPU(P, Tier.Three));
+    public static final DeferredHolder<Item, CPU> CPU_T1 = reg("cpu1", () -> new CPU(r(Tier.One), Tier.One));
+    public static final DeferredHolder<Item, CPU> CPU_T2 = reg("cpu2", () -> new CPU(r(Tier.Two), Tier.Two));
+    public static final DeferredHolder<Item, CPU> CPU_T3 = reg("cpu3", () -> new CPU(r(Tier.Three), Tier.Three));
 
     
-    public static final DeferredHolder<Item, GraphicsCard> GRAPHICS_CARD_T1 = reg("graphicscard1", () -> new GraphicsCard(P, Tier.One));
-    public static final DeferredHolder<Item, GraphicsCard> GRAPHICS_CARD_T2 = reg("graphicscard2", () -> new GraphicsCard(P, Tier.Two));
-    public static final DeferredHolder<Item, GraphicsCard> GRAPHICS_CARD_T3 = reg("graphicscard3", () -> new GraphicsCard(P, Tier.Three));
+    public static final DeferredHolder<Item, GraphicsCard> GRAPHICS_CARD_T1 = reg("graphicscard1", () -> new GraphicsCard(r(Tier.One), Tier.One));
+    public static final DeferredHolder<Item, GraphicsCard> GRAPHICS_CARD_T2 = reg("graphicscard2", () -> new GraphicsCard(r(Tier.Two), Tier.Two));
+    public static final DeferredHolder<Item, GraphicsCard> GRAPHICS_CARD_T3 = reg("graphicscard3", () -> new GraphicsCard(r(Tier.Three), Tier.Three));
 
     
-    public static final DeferredHolder<Item, APU> APU_T1 = reg("apu1", () -> new APU(P, Tier.One));
-    public static final DeferredHolder<Item, APU> APU_T2 = reg("apu2", () -> new APU(P, Tier.Two));
-    public static final DeferredHolder<Item, APU> APU_CREATIVE = reg("apucreative", () -> new APU(P, Tier.Three));
+    public static final DeferredHolder<Item, APU> APU_T1 = reg("apu1", () -> new APU(r(Tier.One), Tier.One));
+    public static final DeferredHolder<Item, APU> APU_T2 = reg("apu2", () -> new APU(r(Tier.Two), Tier.Two));
+    public static final DeferredHolder<Item, APU> APU_CREATIVE = reg("apucreative", () -> new APU(rr(Rarity.EPIC), Tier.Three));
 
     
-    public static final DeferredHolder<Item, ComponentBus> COMPONENT_BUS_T1 = reg("componentbus1", () -> new ComponentBus(P, Tier.One));
-    public static final DeferredHolder<Item, ComponentBus> COMPONENT_BUS_T2 = reg("componentbus2", () -> new ComponentBus(P, Tier.Two));
-    public static final DeferredHolder<Item, ComponentBus> COMPONENT_BUS_T3 = reg("componentbus3", () -> new ComponentBus(P, Tier.Three));
-    public static final DeferredHolder<Item, ComponentBus> COMPONENT_BUS_CREATIVE = reg("componentbuscreative", () -> new ComponentBus(P, Tier.Four));
+    public static final DeferredHolder<Item, ComponentBus> COMPONENT_BUS_T1 = reg("componentbus1", () -> new ComponentBus(r(Tier.One), Tier.One));
+    public static final DeferredHolder<Item, ComponentBus> COMPONENT_BUS_T2 = reg("componentbus2", () -> new ComponentBus(r(Tier.Two), Tier.Two));
+    public static final DeferredHolder<Item, ComponentBus> COMPONENT_BUS_T3 = reg("componentbus3", () -> new ComponentBus(r(Tier.Three), Tier.Three));
+    public static final DeferredHolder<Item, ComponentBus> COMPONENT_BUS_CREATIVE = reg("componentbuscreative", () -> new ComponentBus(r(Tier.Four), Tier.Four));
 
     
     public static final DeferredHolder<Item, NetworkCard> NETWORK_CARD = reg("lancard", () -> new NetworkCard(P));
-    public static final DeferredHolder<Item, WirelessNetworkCard> WIRELESS_CARD_T1 = reg("wlancard1", () -> new WirelessNetworkCard(P, Tier.One));
-    public static final DeferredHolder<Item, WirelessNetworkCard> WIRELESS_CARD_T2 = reg("wlancard2", () -> new WirelessNetworkCard(P, Tier.Two));
+    public static final DeferredHolder<Item, WirelessNetworkCard> WIRELESS_CARD_T1 = reg("wlancard1", () -> new WirelessNetworkCard(r(Tier.One), Tier.One));
+    public static final DeferredHolder<Item, WirelessNetworkCard> WIRELESS_CARD_T2 = reg("wlancard2", () -> new WirelessNetworkCard(r(Tier.Two), Tier.Two));
 
     
-    public static final DeferredHolder<Item, RedstoneCard> REDSTONE_CARD_T1 = reg("redstonecard1", () -> new RedstoneCard(P, Tier.One));
-    public static final DeferredHolder<Item, RedstoneCard> REDSTONE_CARD_T2 = reg("redstonecard2", () -> new RedstoneCard(P, Tier.Two));
+    public static final DeferredHolder<Item, RedstoneCard> REDSTONE_CARD_T1 = reg("redstonecard1", () -> new RedstoneCard(r(Tier.One), Tier.One));
+    public static final DeferredHolder<Item, RedstoneCard> REDSTONE_CARD_T2 = reg("redstonecard2", () -> new RedstoneCard(r(Tier.Two), Tier.Two));
 
     
-    public static final DeferredHolder<Item, DataCard> DATA_CARD_T1 = reg("datacard1", () -> new DataCard(P, Tier.One));
-    public static final DeferredHolder<Item, DataCard> DATA_CARD_T2 = reg("datacard2", () -> new DataCard(P, Tier.Two));
-    public static final DeferredHolder<Item, DataCard> DATA_CARD_T3 = reg("datacard3", () -> new DataCard(P, Tier.Three));
+    public static final DeferredHolder<Item, DataCard> DATA_CARD_T1 = reg("datacard1", () -> new DataCard(r(Tier.One), Tier.One));
+    public static final DeferredHolder<Item, DataCard> DATA_CARD_T2 = reg("datacard2", () -> new DataCard(r(Tier.Two), Tier.Two));
+    public static final DeferredHolder<Item, DataCard> DATA_CARD_T3 = reg("datacard3", () -> new DataCard(r(Tier.Three), Tier.Three));
 
     
     public static final DeferredHolder<Item, Analyzer> ANALYZER = reg("analyzer", () -> new Analyzer(P));
     public static final DeferredHolder<Item, DebugCard> DEBUG_CARD = reg("debugcard", () -> new DebugCard(P));
     public static final DeferredHolder<Item, Debugger> DEBUGGER = reg("debugger", () -> new Debugger(P));
-    public static final DeferredHolder<Item, InternetCard> INTERNET_CARD = reg("internetcard", () -> new InternetCard(P));
-    public static final DeferredHolder<Item, LinkedCard> LINKED_CARD = reg("linkedcard", () -> new LinkedCard(P));
+    public static final DeferredHolder<Item, InternetCard> INTERNET_CARD = reg("internetcard", () -> new InternetCard(rr(Rarity.UNCOMMON)));
+    public static final DeferredHolder<Item, LinkedCard> LINKED_CARD = reg("linkedcard", () -> new LinkedCard(rr(Rarity.RARE)));
     public static final DeferredHolder<Item, Manual> MANUAL = reg("manual", () -> new Manual(P));
-    public static final DeferredHolder<Item, Nanomachines> NANOMACHINES = reg("nanomachines", () -> new Nanomachines(P));
+    public static final DeferredHolder<Item, Nanomachines> NANOMACHINES = reg("nanomachines", () -> new Nanomachines(rr(Rarity.UNCOMMON)));
     public static final DeferredHolder<Item, TexturePicker> TEXTURE_PICKER = reg("texturepicker", () -> new TexturePicker(P));
-    public static final DeferredHolder<Item, TpsCard> TPS_CARD = reg("tpscard", () -> new TpsCard(P));
-    public static final DeferredHolder<Item, Wrench> WRENCH = reg("wrench", () -> new Wrench(P));
+    public static final DeferredHolder<Item, li.cil.oc.neoforge.common.item.Wrench> WRENCH = reg("wrench", () -> new li.cil.oc.neoforge.common.item.Wrench(P));
 
     
-    public static final DeferredHolder<Item, FloppyDisk> FLOPPY = reg("floppy", () -> new FloppyDisk(P));
+    public static final DeferredHolder<Item, li.cil.oc.neoforge.common.item.FloppyDisk> FLOPPY = reg("floppy", () -> new li.cil.oc.neoforge.common.item.FloppyDisk(P));
     public static final DeferredHolder<Item, Terminal> TERMINAL = reg("terminal", () -> new Terminal(P));
     public static final DeferredHolder<Item, TerminalServer> TERMINAL_SERVER = reg("terminalserver", () -> new TerminalServer(P));
-    public static final DeferredHolder<Item, DiskDriveMountable> DISK_DRIVE_MOUNTABLE = reg("diskdrivemountable", () -> new DiskDriveMountable(P));
+    public static final DeferredHolder<Item, li.cil.oc.neoforge.common.item.DiskDriveMountable> DISK_DRIVE_MOUNTABLE = reg("diskdrivemountable", () -> new li.cil.oc.neoforge.common.item.DiskDriveMountable(P1));
 
     
     public static final DeferredHolder<Item, InkCartridgeEmpty> INK_CARTRIDGE_EMPTY = reg("inkcartridgeempty", () -> new InkCartridgeEmpty(P1));
-    public static final DeferredHolder<Item, InkCartridge> INK_CARTRIDGE = reg("inkcartridge", () -> new InkCartridge(P));
+    public static final DeferredHolder<Item, li.cil.oc.core.impl.common.item.InkCartridge> INK_CARTRIDGE = reg("inkcartridge", () -> new li.cil.oc.core.impl.common.item.InkCartridge(new Item.Properties().craftRemainder(INK_CARTRIDGE_EMPTY.get())));
 
     
-    public static final DeferredHolder<Item, Server> SERVER_T1 = reg("server1", () -> new Server(P1, Tier.One));
-    public static final DeferredHolder<Item, Server> SERVER_T2 = reg("server2", () -> new Server(P1, Tier.Two));
-    public static final DeferredHolder<Item, Server> SERVER_T3 = reg("server3", () -> new Server(P1, Tier.Three));
-    public static final DeferredHolder<Item, Server> SERVER_CREATIVE = reg("servercreative", () -> new Server(P1, Tier.Four));
+    public static final DeferredHolder<Item, Server> SERVER_T1 = reg("server1", () -> new Server(r1(Tier.One), Tier.One));
+    public static final DeferredHolder<Item, Server> SERVER_T2 = reg("server2", () -> new Server(r1(Tier.Two), Tier.Two));
+    public static final DeferredHolder<Item, Server> SERVER_T3 = reg("server3", () -> new Server(r1(Tier.Three), Tier.Three));
+    public static final DeferredHolder<Item, Server> SERVER_CREATIVE = reg("servercreative", () -> new Server(r1(Tier.Four), Tier.Four));
 
     
-    public static final DeferredHolder<Item, Tablet> TABLET = reg("tablet", () -> new Tablet(P1));
-    public static final DeferredHolder<Item, TabletCase> TABLET_CASE_T1 = reg("tabletcase1", () -> new TabletCase(P, Tier.One));
-    public static final DeferredHolder<Item, TabletCase> TABLET_CASE_T2 = reg("tabletcase2", () -> new TabletCase(P, Tier.Two));
-    public static final DeferredHolder<Item, TabletCase> TABLET_CASE_CREATIVE = reg("tabletcasecreative", () -> new TabletCase(P, Tier.Four));
+    public static final DeferredHolder<Item, li.cil.oc.neoforge.common.item.Tablet> TABLET = reg("tablet", () -> new li.cil.oc.neoforge.common.item.Tablet(P1));
+    public static final DeferredHolder<Item, TabletCase> TABLET_CASE_T1 = reg("tabletcase1", () -> new TabletCase(r(Tier.One), Tier.One));
+    public static final DeferredHolder<Item, TabletCase> TABLET_CASE_T2 = reg("tabletcase2", () -> new TabletCase(r(Tier.Two), Tier.Two));
+    public static final DeferredHolder<Item, TabletCase> TABLET_CASE_CREATIVE = reg("tabletcasecreative", () -> new TabletCase(r(Tier.Four), Tier.Four));
 
     
-    public static final DeferredHolder<Item, MicrocontrollerCase> MC_CASE_T1 = reg("microcontrollercase1", () -> new MicrocontrollerCase(P, Tier.One));
-    public static final DeferredHolder<Item, MicrocontrollerCase> MC_CASE_T2 = reg("microcontrollercase2", () -> new MicrocontrollerCase(P, Tier.Two));
-    public static final DeferredHolder<Item, MicrocontrollerCase> MC_CASE_CREATIVE = reg("microcontrollercasecreative", () -> new MicrocontrollerCase(P, Tier.Four));
-    public static final DeferredHolder<Item, DroneCase> DRONE_CASE_T1 = reg("dronecase1", () -> new DroneCase(P, Tier.One));
-    public static final DeferredHolder<Item, DroneCase> DRONE_CASE_T2 = reg("dronecase2", () -> new DroneCase(P, Tier.Two));
-    public static final DeferredHolder<Item, DroneCase> DRONE_CASE_CREATIVE = reg("dronecasecreative", () -> new DroneCase(P, Tier.Four));
+    public static final DeferredHolder<Item, MicrocontrollerCase> MC_CASE_T1 = reg("microcontrollercase1", () -> new MicrocontrollerCase(r(Tier.One), Tier.One));
+    public static final DeferredHolder<Item, MicrocontrollerCase> MC_CASE_T2 = reg("microcontrollercase2", () -> new MicrocontrollerCase(r(Tier.Two), Tier.Two));
+    public static final DeferredHolder<Item, MicrocontrollerCase> MC_CASE_CREATIVE = reg("microcontrollercasecreative", () -> new MicrocontrollerCase(r(Tier.Four), Tier.Four));
+    public static final DeferredHolder<Item, DroneCase> DRONE_CASE_T1 = reg("dronecase1", () -> new DroneCase(r(Tier.One), Tier.One));
+    public static final DeferredHolder<Item, DroneCase> DRONE_CASE_T2 = reg("dronecase2", () -> new DroneCase(r(Tier.Two), Tier.Two));
+    public static final DeferredHolder<Item, DroneCase> DRONE_CASE_CREATIVE = reg("dronecasecreative", () -> new DroneCase(r(Tier.Four), Tier.Four));
     public static final DeferredHolder<Item, Drone> DRONE = reg("drone", () -> new Drone(P));
 
     
     public static final DeferredHolder<Item, Present> PRESENT = reg("present", () -> new Present(P));
 
     
-    public static final DeferredHolder<Item, UpgradeAngel> UPGRADE_ANGEL = reg("angelupgrade", () -> new UpgradeAngel(P));
-    public static final DeferredHolder<Item, UpgradeCrafting> UPGRADE_CRAFTING = reg("craftingupgrade", () -> new UpgradeCrafting(P));
-    public static final DeferredHolder<Item, UpgradeGenerator> UPGRADE_GENERATOR = reg("generatorupgrade", () -> new UpgradeGenerator(P));
-    public static final DeferredHolder<Item, UpgradeSolarGenerator> UPGRADE_SOLAR = reg("solargeneratorupgrade", () -> new UpgradeSolarGenerator(P));
+    public static final DeferredHolder<Item, UpgradeAngel> UPGRADE_ANGEL = reg("angelupgrade", () -> new UpgradeAngel(rr(Rarity.UNCOMMON)));
+    public static final DeferredHolder<Item, UpgradeCrafting> UPGRADE_CRAFTING = reg("craftingupgrade", () -> new UpgradeCrafting(rr(Rarity.UNCOMMON)));
+    public static final DeferredHolder<Item, UpgradeGenerator> UPGRADE_GENERATOR = reg("generatorupgrade", () -> new UpgradeGenerator(rr(Rarity.UNCOMMON)));
+    public static final DeferredHolder<Item, UpgradeSolarGenerator> UPGRADE_SOLAR = reg("solargeneratorupgrade", () -> new UpgradeSolarGenerator(rr(Rarity.UNCOMMON)));
     public static final DeferredHolder<Item, UpgradeSign> UPGRADE_SIGN = reg("signupgrade", () -> new UpgradeSign(P));
-    public static final DeferredHolder<Item, UpgradeNavigation> UPGRADE_NAV = reg("navigationupgrade", () -> new UpgradeNavigation(P));
+    public static final DeferredHolder<Item, UpgradeNavigation> UPGRADE_NAV = reg("navigationupgrade", () -> new UpgradeNavigation(rr(Rarity.UNCOMMON)));
 
     
-    public static final DeferredHolder<Item, UpgradeBattery> BATTERY_UPGRADE_T1 = reg("batteryupgrade1", () -> new UpgradeBattery(P, Tier.One));
-    public static final DeferredHolder<Item, UpgradeBattery> BATTERY_UPGRADE_T2 = reg("batteryupgrade2", () -> new UpgradeBattery(P, Tier.Two));
-    public static final DeferredHolder<Item, UpgradeBattery> BATTERY_UPGRADE_T3 = reg("batteryupgrade3", () -> new UpgradeBattery(P, Tier.Three));
+    public static final DeferredHolder<Item, UpgradeBattery> BATTERY_UPGRADE_T1 = reg("batteryupgrade1", () -> new UpgradeBattery(r(Tier.One), Tier.One));
+    public static final DeferredHolder<Item, UpgradeBattery> BATTERY_UPGRADE_T2 = reg("batteryupgrade2", () -> new UpgradeBattery(r(Tier.Two), Tier.Two));
+    public static final DeferredHolder<Item, UpgradeBattery> BATTERY_UPGRADE_T3 = reg("batteryupgrade3", () -> new UpgradeBattery(r(Tier.Three), Tier.Three));
 
     
-    public static final DeferredHolder<Item, UpgradeHover> HOVER_UPGRADE_T1 = reg("hoverupgrade1", () -> new UpgradeHover(P, Tier.One));
-    public static final DeferredHolder<Item, UpgradeHover> HOVER_UPGRADE_T2 = reg("hoverupgrade2", () -> new UpgradeHover(P, Tier.Two));
+    public static final DeferredHolder<Item, UpgradeHover> HOVER_UPGRADE_T1 = reg("hoverupgrade1", () -> new UpgradeHover(r(Tier.One), Tier.One));
+    public static final DeferredHolder<Item, UpgradeHover> HOVER_UPGRADE_T2 = reg("hoverupgrade2", () -> new UpgradeHover(r(Tier.Two), Tier.Two));
 
     
-    public static final DeferredHolder<Item, UpgradeContainerUpgrade> UPGRADE_CONTAINER_T1 = reg("upgradecontainer1", () -> new UpgradeContainerUpgrade(P, Tier.One));
-    public static final DeferredHolder<Item, UpgradeContainerUpgrade> UPGRADE_CONTAINER_T2 = reg("upgradecontainer2", () -> new UpgradeContainerUpgrade(P, Tier.Two));
-    public static final DeferredHolder<Item, UpgradeContainerUpgrade> UPGRADE_CONTAINER_T3 = reg("upgradecontainer3", () -> new UpgradeContainerUpgrade(P, Tier.Three));
-    public static final DeferredHolder<Item, UpgradeContainerCard> CARD_CONTAINER_T1 = reg("cardcontainer1", () -> new UpgradeContainerCard(P, Tier.One));
-    public static final DeferredHolder<Item, UpgradeContainerCard> CARD_CONTAINER_T2 = reg("cardcontainer2", () -> new UpgradeContainerCard(P, Tier.Two));
-    public static final DeferredHolder<Item, UpgradeContainerCard> CARD_CONTAINER_T3 = reg("cardcontainer3", () -> new UpgradeContainerCard(P, Tier.Three));
+    public static final DeferredHolder<Item, UpgradeContainerUpgrade> UPGRADE_CONTAINER_T1 = reg("upgradecontainer1", () -> new UpgradeContainerUpgrade(r(Tier.One), Tier.One));
+    public static final DeferredHolder<Item, UpgradeContainerUpgrade> UPGRADE_CONTAINER_T2 = reg("upgradecontainer2", () -> new UpgradeContainerUpgrade(r(Tier.Two), Tier.Two));
+    public static final DeferredHolder<Item, UpgradeContainerUpgrade> UPGRADE_CONTAINER_T3 = reg("upgradecontainer3", () -> new UpgradeContainerUpgrade(r(Tier.Three), Tier.Three));
+    public static final DeferredHolder<Item, UpgradeContainerCard> CARD_CONTAINER_T1 = reg("cardcontainer1", () -> new UpgradeContainerCard(r(Tier.One), Tier.One));
+    public static final DeferredHolder<Item, UpgradeContainerCard> CARD_CONTAINER_T2 = reg("cardcontainer2", () -> new UpgradeContainerCard(r(Tier.Two), Tier.Two));
+    public static final DeferredHolder<Item, UpgradeContainerCard> CARD_CONTAINER_T3 = reg("cardcontainer3", () -> new UpgradeContainerCard(r(Tier.Three), Tier.Three));
 
     
-    public static final DeferredHolder<Item, UpgradeDatabase> DATABASE_UPGRADE_T1 = reg("databaseupgrade1", () -> new UpgradeDatabase(P, Tier.One));
-    public static final DeferredHolder<Item, UpgradeDatabase> DATABASE_UPGRADE_T2 = reg("databaseupgrade2", () -> new UpgradeDatabase(P, Tier.Two));
-    public static final DeferredHolder<Item, UpgradeDatabase> DATABASE_UPGRADE_T3 = reg("databaseupgrade3", () -> new UpgradeDatabase(P, Tier.Three));
+    public static final DeferredHolder<Item, UpgradeDatabase> DATABASE_UPGRADE_T1 = reg("databaseupgrade1", () -> new UpgradeDatabase(r(Tier.One), Tier.One));
+    public static final DeferredHolder<Item, UpgradeDatabase> DATABASE_UPGRADE_T2 = reg("databaseupgrade2", () -> new UpgradeDatabase(r(Tier.Two), Tier.Two));
+    public static final DeferredHolder<Item, UpgradeDatabase> DATABASE_UPGRADE_T3 = reg("databaseupgrade3", () -> new UpgradeDatabase(r(Tier.Three), Tier.Three));
 
     
-    public static final DeferredHolder<Item, UpgradeChunkloader> UPGRADE_CHUNKLOADER = reg("chunkloaderupgrade", () -> new UpgradeChunkloader(P));
-    public static final DeferredHolder<Item, UpgradeExperience> UPGRADE_EXPERIENCE = reg("experienceupgrade", () -> new UpgradeExperience(P));
+    public static final DeferredHolder<Item, UpgradeChunkloader> UPGRADE_CHUNKLOADER = reg("chunkloaderupgrade", () -> new UpgradeChunkloader(rr(Rarity.RARE)));
+    public static final DeferredHolder<Item, UpgradeExperience> UPGRADE_EXPERIENCE = reg("experienceupgrade", () -> new UpgradeExperience(rr(Rarity.RARE)));
     public static final DeferredHolder<Item, UpgradeInventory> UPGRADE_INVENTORY = reg("inventoryupgrade", () -> new UpgradeInventory(P));
-    public static final DeferredHolder<Item, UpgradeInventoryController> UPGRADE_INVENTORY_CTRL = reg("inventorycontrollerupgrade", () -> new UpgradeInventoryController(P));
+    public static final DeferredHolder<Item, UpgradeInventoryController> UPGRADE_INVENTORY_CTRL = reg("inventorycontrollerupgrade", () -> new UpgradeInventoryController(rr(Rarity.UNCOMMON)));
     public static final DeferredHolder<Item, UpgradeLeash> UPGRADE_LEASH = reg("leashupgrade", () -> new UpgradeLeash(P));
-    public static final DeferredHolder<Item, UpgradeMF> UPGRADE_MF = reg("mfu", () -> new UpgradeMF(P));
+    public static final DeferredHolder<Item, li.cil.oc.neoforge.common.item.UpgradeMF> UPGRADE_MF = reg("mfu", () -> new li.cil.oc.neoforge.common.item.UpgradeMF(rr(Rarity.RARE)));
     public static final DeferredHolder<Item, UpgradePiston> UPGRADE_PISTON = reg("pistonupgrade", () -> new UpgradePiston(P));
     public static final DeferredHolder<Item, UpgradePiston> UPGRADE_STICKY_PISTON = reg("stickypistonupgrade", () -> new UpgradeStickyPiston(P));
-    public static final DeferredHolder<Item, UpgradeRITEG> UPGRADE_RITEG = reg("upgraderiteg", () -> new UpgradeRITEG(P));
     public static final DeferredHolder<Item, UpgradeTank> UPGRADE_TANK = reg("tankupgrade", () -> new UpgradeTank(P));
-    public static final DeferredHolder<Item, UpgradeTankController> UPGRADE_TANK_CTRL = reg("tankcontrollerupgrade", () -> new UpgradeTankController(P));
-    public static final DeferredHolder<Item, UpgradeTractorBeam> UPGRADE_TRACTOR = reg("tractorbeamupgrade", () -> new UpgradeTractorBeam(P));
-    public static final DeferredHolder<Item, UpgradeTrading> UPGRADE_TRADING = reg("tradingupgrade", () -> new UpgradeTrading(P));
+    public static final DeferredHolder<Item, UpgradeTankController> UPGRADE_TANK_CTRL = reg("tankcontrollerupgrade", () -> new UpgradeTankController(rr(Rarity.UNCOMMON)));
+    public static final DeferredHolder<Item, UpgradeTractorBeam> UPGRADE_TRACTOR = reg("tractorbeamupgrade", () -> new UpgradeTractorBeam(rr(Rarity.RARE)));
+    public static final DeferredHolder<Item, UpgradeTrading> UPGRADE_TRADING = reg("tradingupgrade", () -> new UpgradeTrading(rr(Rarity.UNCOMMON)));
 
     
-    public static final DeferredHolder<Item, EEPROM> EEPROM_ITEM = reg("eeprom", EEPROM::new);
-    public static final DeferredHolder<Item, HoverBoots> HOVER_BOOTS = reg("hoverboots", () -> new HoverBoots(P) {
+    public static final DeferredHolder<Item, li.cil.oc.neoforge.common.item.EEPROM> EEPROM_ITEM = reg("eeprom", li.cil.oc.neoforge.common.item.EEPROM::new);
+    public static final DeferredHolder<Item, li.cil.oc.neoforge.common.item.HoverBoots> HOVER_BOOTS = reg("hoverboots", () -> new li.cil.oc.neoforge.common.item.HoverBoots(new Item.Properties().rarity(net.minecraft.world.item.Rarity.UNCOMMON)) {
         @Override
-        protected java.util.List<net.minecraft.network.chat.Component> getExtendedTooltip(net.minecraft.world.item.ItemStack stack) {
+        public java.util.List<net.minecraft.network.chat.Component> getExtendedTooltip(net.minecraft.world.item.ItemStack ignoredStack) {
             return Tooltip.get("hoverboots");
         }
     });
@@ -421,6 +426,7 @@ public final class Items implements ItemAPI {
                 return id;
             }
 
+            @SuppressWarnings("SameReturnValue")
             @Override
             public Block block() {
                 return null;
@@ -455,7 +461,7 @@ public final class Items implements ItemAPI {
         DroneData data = new DroneData();
         data.name = "Crecopter";
         data.tier = Tier.Four;
-        data.storedEnergy = (int) Settings.get().bufferDrone;
+        data.storedEnergy = (int) OCSettings.get().bufferDrone;
         data.components = Arrays.asList(
                 safeGetStack(Constants.ItemName.InventoryUpgrade),
                 safeGetStack(Constants.ItemName.InventoryUpgrade),
@@ -475,7 +481,7 @@ public final class Items implements ItemAPI {
     public static ItemStack createConfiguredMicrocontroller() {
         MicrocontrollerData data = new MicrocontrollerData();
         data.tier = Tier.Four;
-        data.storedEnergy = (int) Settings.get().bufferMicrocontroller;
+        data.storedEnergy = (int) OCSettings.get().bufferMicrocontroller;
         data.components = Arrays.asList(
                 safeGetStack(Constants.ItemName.SignUpgrade),
                 safeGetStack(Constants.ItemName.PistonUpgrade),
@@ -492,7 +498,7 @@ public final class Items implements ItemAPI {
         RobotData data = new RobotData();
         data.name = "Creatix";
         data.tier = Tier.Four;
-        data.robotEnergy = (int) Settings.get().bufferRobot;
+        data.robotEnergy = (int) OCSettings.get().bufferRobot;
         data.totalEnergy = data.robotEnergy;
         data.components = Arrays.asList(
                 safeGetStack(Constants.BlockName.ScreenTier1), safeGetStack(Constants.BlockName.Keyboard),
@@ -520,7 +526,7 @@ public final class Items implements ItemAPI {
     public static ItemStack createConfiguredTablet() {
         TabletData data = new TabletData();
         data.tier = Tier.Four;
-        data.energy = Settings.get().bufferTablet;
+        data.energy = OCSettings.get().bufferTablet;
         data.maxEnergy = data.energy;
         List<ItemStack> items = new ArrayList<>(32);
         items.add(safeGetStack(Constants.BlockName.ScreenTier1));
@@ -547,7 +553,7 @@ public final class Items implements ItemAPI {
 
     public static ItemStack createChargedHoverBoots() {
         HoverBootsData data = new HoverBootsData();
-        data.charge = Settings.get().bufferHoverBoots;
+        data.charge = OCSettings.get().bufferHoverBoots;
         return data.createItemStack();
     }
 
@@ -619,7 +625,6 @@ public final class Items implements ItemAPI {
         regItem(MANUAL, Constants.ItemName.Manual);
         regItem(NANOMACHINES, Constants.ItemName.Nanomachines);
         regItem(TEXTURE_PICKER, Constants.ItemName.TexturePicker);
-        regItem(TPS_CARD, Constants.ItemName.TpsCard);
         regItem(WRENCH, Constants.ItemName.Wrench);
 
         regItem(FLOPPY, Constants.ItemName.Floppy);
@@ -678,7 +683,6 @@ public final class Items implements ItemAPI {
         regItem(UPGRADE_MF, Constants.ItemName.MFU);
         regItem(UPGRADE_PISTON, Constants.ItemName.PistonUpgrade);
         regItem(UPGRADE_STICKY_PISTON, Constants.ItemName.StickyPistonUpgrade);
-        regItem(UPGRADE_RITEG, Constants.ItemName.RITEGUpgrade);
         regItem(UPGRADE_TANK, Constants.ItemName.TankUpgrade);
         regItem(UPGRADE_TANK_CTRL, Constants.ItemName.TankControllerUpgrade);
         regItem(UPGRADE_TRACTOR, Constants.ItemName.TractorBeamUpgrade);
@@ -688,7 +692,7 @@ public final class Items implements ItemAPI {
         regItem(EEPROM_ITEM, Constants.ItemName.EEPROM);
 
         ItemStack luaBios = null;
-        try (var stream = OpenComputers.class.getResourceAsStream(Settings.scriptPath + "bios.lua")) {
+        try (var stream = OpenComputers.class.getResourceAsStream(OCSettings.scriptPath + "bios.lua")) {
             if (stream != null) {
                 var code = new byte[4 * 1024];
                 var count = stream.read(code);
@@ -716,6 +720,7 @@ public final class Items implements ItemAPI {
                 return itemName;
             }
 
+            @SuppressWarnings("SameReturnValue")
             @Override
             public Block block() {
                 return null;
@@ -735,15 +740,15 @@ public final class Items implements ItemAPI {
     }
 
     @Override
-    public ItemStack registerFloppy(String name, int color, Callable<FileSystem> factory, boolean doRecipeCycling) {
-        ItemStack stack = Loot.registerLootDisk(name, color, factory, doRecipeCycling);
+    public ItemStack registerFloppy(String name, DyeColor color, Callable<FileSystem> factory, boolean doRecipeCycling) {
+        ItemStack stack = Loot.registerLootDisk(name, color.getId(), factory, doRecipeCycling);
         registeredItems.add(stack);
         return stack.copy();
     }
 
     @Override
-    public ItemStack registerFloppy(String name, int color, Callable<FileSystem> factory, boolean doRecipeCycling, String modId) {
-        ItemStack stack = Loot.registerLootDisk(name, color, factory, doRecipeCycling, modId);
+    public ItemStack registerFloppy(String name, DyeColor color, Callable<FileSystem> factory, boolean doRecipeCycling, String modId) {
+        ItemStack stack = Loot.registerLootDisk(name, color.getId(), factory, doRecipeCycling, modId);
         registeredItems.add(stack);
         return stack.copy();
     }
@@ -751,21 +756,21 @@ public final class Items implements ItemAPI {
     @Override
     public ItemStack registerEEPROM(String name, byte[] code, byte[] data, boolean readonly) {
         CompoundTag nbt = new CompoundTag();
-        if (name != null) nbt.putString(Settings.namespace + "label", name.substring(0, Math.min(name.length(), 24)));
+        if (name != null) nbt.putString(OCSettings.namespace + "label", name.substring(0, Math.min(name.length(), 24)));
         if (code != null) {
-            byte[] trimmedCode = new byte[Math.min(code.length, Settings.get().eepromSize)];
+            byte[] trimmedCode = new byte[Math.min(code.length, OCSettings.get().eepromSize)];
             System.arraycopy(code, 0, trimmedCode, 0, trimmedCode.length);
-            nbt.putByteArray(Settings.namespace + "eeprom", trimmedCode);
+            nbt.putByteArray(OCSettings.namespace + "eeprom", trimmedCode);
         }
         if (data != null) {
-            byte[] trimmedData = new byte[Math.min(data.length, Settings.get().eepromDataSize)];
+            byte[] trimmedData = new byte[Math.min(data.length, OCSettings.get().eepromDataSize)];
             System.arraycopy(data, 0, trimmedData, 0, trimmedData.length);
-            nbt.putByteArray(Settings.namespace + "userdata", trimmedData);
+            nbt.putByteArray(OCSettings.namespace + "userdata", trimmedData);
         }
-        nbt.putBoolean(Settings.namespace + "readonly", readonly);
+        nbt.putBoolean(OCSettings.namespace + "readonly", readonly);
 
         CompoundTag stackNbt = new CompoundTag();
-        stackNbt.put(Settings.namespace + "data", nbt);
+        stackNbt.put(OCSettings.namespace + "data", nbt);
 
         ItemStack stack = get(Constants.ItemName.EEPROM).createItemStack(1);
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(stackNbt));

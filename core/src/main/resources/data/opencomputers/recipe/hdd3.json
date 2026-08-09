@@ -1,0 +1,29 @@
+{
+  "type": "opencomputers:shaped",
+  "pattern": [
+    "ABC",
+    "DBE",
+    "ABC"
+  ],
+  "key": {
+    "A": {
+      "item": "opencomputers:chip3"
+    },
+    "B": {
+      "item": "opencomputers:disk"
+    },
+    "C": {
+      "tag": "c:gems/diamond"
+    },
+    "D": {
+      "item": "opencomputers:printedcircuitboard"
+    },
+    "E": {
+      "tag": "opencomputers:crafting_piston"
+    }
+  },
+  "result": {
+    "id": "opencomputers:hdd3",
+    "count": 1
+  }
+}

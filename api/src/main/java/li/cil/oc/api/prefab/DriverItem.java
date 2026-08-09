@@ -22,7 +22,7 @@ import net.minecraft.world.item.component.CustomData;
  */
 
 @SuppressWarnings("unused")
-public abstract class DriverItem implements li.cil.oc.api.driver.Item {
+public abstract class DriverItem implements li.cil.oc.api.driver.DriverItem {
     protected final ItemStack[] items;
 
     protected DriverItem(final ItemStack... items) {

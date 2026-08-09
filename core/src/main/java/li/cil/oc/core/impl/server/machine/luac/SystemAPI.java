@@ -1,6 +1,6 @@
 package li.cil.oc.core.impl.server.machine.luac;
 
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.ExtendedLuaState;
 
 public class SystemAPI extends NativeLuaAPI {
@@ -51,19 +51,19 @@ public class SystemAPI extends NativeLuaAPI {
         lua().newTable();
 
         ExtendedLuaState.pushScalaFunction(lua(), l -> {
-            l.pushBoolean(Settings.get().allowBytecode);
+            l.pushBoolean(OCSettings.get().allowBytecode);
             return 1;
         });
         lua().setField(-2, "allowBytecode");
 
         ExtendedLuaState.pushScalaFunction(lua(), l -> {
-            l.pushBoolean(Settings.get().allowGC);
+            l.pushBoolean(OCSettings.get().allowGC);
             return 1;
         });
         lua().setField(-2, "allowGC");
 
         ExtendedLuaState.pushScalaFunction(lua(), l -> {
-            l.pushNumber(Settings.get().timeout);
+            l.pushNumber(OCSettings.get().timeout);
             return 1;
         });
         lua().setField(-2, "timeout");

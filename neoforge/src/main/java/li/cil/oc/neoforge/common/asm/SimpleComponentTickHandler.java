@@ -1,5 +1,6 @@
 package li.cil.oc.neoforge.common.asm;
 
+import java.util.ArrayList;
 import li.cil.oc.api.Network;
 import li.cil.oc.core.impl.util.SideTracker;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -7,8 +8,6 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
 
 public final class SimpleComponentTickHandler {
     public static final ArrayList<Runnable> pending = new java.util.ArrayList<>();
@@ -18,10 +17,10 @@ public final class SimpleComponentTickHandler {
     private SimpleComponentTickHandler() {
     }
 
-    public static void schedule(final BlockEntity tileEntity) {
+    public static void schedule(final BlockEntity blockEntity) {
         if (SideTracker.isServer()) {
             synchronized (pending) {
-                pending.add(() -> Network.joinOrCreateNetwork(tileEntity));
+                pending.add(() -> Network.joinOrCreateNetwork(blockEntity));
             }
         }
     }

@@ -1,8 +1,13 @@
 package li.cil.oc.core.impl.common;
 
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.core.common.PacketType;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.Log;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
@@ -14,12 +19,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 
 public abstract class PacketBuilderBase<T extends OutputStream> extends DataOutputStream {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger("OpenComputers-PacketBuilder");
@@ -52,11 +51,11 @@ public abstract class PacketBuilderBase<T extends OutputStream> extends DataOutp
         try { super.close(); } catch (IOException e) { throw new RuntimeException(e); }
     }
 
-    public static void logPacket(PacketType packetType, int payloadSize, BlockEntity tileEntity) {
+    public static void logPacket(PacketType packetType, int payloadSize, BlockEntity blockEntity) {
         if (isProfilingEnabled) {
-            if (tileEntity != null) {
+            if (blockEntity != null) {
                 log.info("Sending: {} @ {} bytes from ({}, {}, {}).", packetType, payloadSize,
-                        tileEntity.getBlockPos().getX(), tileEntity.getBlockPos().getY(), tileEntity.getBlockPos().getZ());
+                        blockEntity.getBlockPos().getX(), blockEntity.getBlockPos().getY(), blockEntity.getBlockPos().getZ());
             } else {
                 log.info("Sending: {} @ {} bytes.", packetType, payloadSize);
             }
@@ -69,10 +68,6 @@ public abstract class PacketBuilderBase<T extends OutputStream> extends DataOutp
         return data;
     }
 
-    public void writeTileEntity(BlockEntity t) {
-        writeBlockEntity(t);
-    }
-
     public void writeBlockEntity(BlockEntity t) {
         try {
             var level = t.getLevel();
@@ -81,7 +76,7 @@ public abstract class PacketBuilderBase<T extends OutputStream> extends DataOutp
             writeInt(t.getBlockPos().getY());
             writeInt(t.getBlockPos().getZ());
             if (isProfilingEnabled) {
-                tileEntity = t;
+                blockEntity = t;
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -158,7 +153,7 @@ public abstract class PacketBuilderBase<T extends OutputStream> extends DataOutp
         }
     }
 
-    public BlockEntity tileEntity;
+    public BlockEntity blockEntity;
 
     @SuppressWarnings("unused")
     protected abstract byte[] getPayloadBytes() ;
@@ -170,8 +165,8 @@ public abstract class PacketBuilderBase<T extends OutputStream> extends DataOutp
     }
 
     public void sendToPlayersNearHost(EnvironmentHost host, Double range) {
-        if (host instanceof BlockEntity t) {
-            sendToPlayersNearTileEntity(t, range);
+        if (host instanceof net.minecraft.world.level.block.entity.BlockEntity te) {
+            sendToPlayersNearBlockEntity(te, range);
         } else {
             sendToNearbyPlayers(host.level(), host.xPosition(), host.yPosition(), host.zPosition(), range);
         }
@@ -182,17 +177,36 @@ public abstract class PacketBuilderBase<T extends OutputStream> extends DataOutp
     @SuppressWarnings("unused")
     public abstract void sendToServer() ;
 
-    public void sendToPlayersNearTileEntity(BlockEntity t) {
-        sendToPlayersNearTileEntity(t, null);
+    private static DistanceHelper distanceHelper;
+
+    public static void setDistanceHelper(DistanceHelper helper) {
+        distanceHelper = helper;
     }
 
-    public void sendToPlayersNearTileEntity(BlockEntity t, Double range) {
+    private static double distanceSquaredTo(Level level, double x, double y, double z, Player player) {
+        final var helper = distanceHelper;
+        if (helper != null) {
+            return helper.distanceSquared(level, x, y, z, player);
+        }
+        return player.distanceToSqr(x, y, z);
+    }
+
+    @FunctionalInterface
+    public interface DistanceHelper {
+        double distanceSquared(Level level, double x, double y, double z, Player player);
+    }
+
+    public void sendToPlayersNearBlockEntity(BlockEntity t) {
+        sendToPlayersNearBlockEntity(t, null);
+    }
+
+    public void sendToPlayersNearBlockEntity(BlockEntity t, Double range) {
         if (t.getLevel() instanceof ServerLevel serverLevel) {
             int chunkX = t.getBlockPos().getX() >> 4;
             int chunkZ = t.getBlockPos().getZ() >> 4;
             var server = serverLevel.getServer();
             double maxRange = range != null ? range : (server.getPlayerList().getViewDistance() + 1) * 16.0;
-            double maxPacketRangeConfig = Settings.get().maxNetworkClientPacketDistance;
+            double maxPacketRangeConfig = OCSettings.get().maxNetworkClientPacketDistance;
             if (maxPacketRangeConfig > 0.0D) {
                 maxRange = Math.min(maxRange, maxPacketRangeConfig);
             }
@@ -203,7 +217,7 @@ public abstract class PacketBuilderBase<T extends OutputStream> extends DataOutp
             for (var player : serverLevel.players()) {
                 if (player instanceof ServerPlayer sp) {
                     if (serverLevel.getChunkSource().hasChunk(chunkX, chunkZ)) {
-                        if (sp.distanceToSqr(cx, cy, cz) <= maxRangeSq) {
+                        if (distanceSquaredTo(serverLevel, cx, cy, cz, sp) <= maxRangeSq) {
                             sendToPlayer(sp);
                         }
                     }
@@ -216,14 +230,14 @@ public abstract class PacketBuilderBase<T extends OutputStream> extends DataOutp
         if (world instanceof ServerLevel serverLevel) {
             var server = serverLevel.getServer();
             double maxRange = range != null ? range : (server.getPlayerList().getViewDistance() + 1) * 16.0;
-            double maxPacketRangeConfig = Settings.get().maxNetworkClientPacketDistance;
+            double maxPacketRangeConfig = OCSettings.get().maxNetworkClientPacketDistance;
             if (maxPacketRangeConfig > 0.0D) {
                 maxRange = Math.min(maxRange, maxPacketRangeConfig);
             }
             double maxRangeSq = maxRange * maxRange;
             for (var player : serverLevel.players()) {
                 if (player instanceof ServerPlayer sp) {
-                    if (sp.distanceToSqr(x, y, z) <= maxRangeSq) {
+                    if (distanceSquaredTo(world, x, y, z, sp) <= maxRangeSq) {
                         sendToPlayer(sp);
                     }
                 }

@@ -8,7 +8,7 @@ import li.cil.oc.api.network.Node;
  * <br>
  * This replaces the ASM-based class transformation previously used to inject
  * {@link li.cil.oc.api.network.Environment} methods into SimpleComponent-annotated
- * tile entities. Instead, the capability is attached via
+ * block entities. Instead, the capability is attached via
  * <code>AttachCapabilitiesEvent</code> and its node is discovered by OC's network
  * code during {@link li.cil.oc.api.Network#joinOrCreateNetwork}.
  */

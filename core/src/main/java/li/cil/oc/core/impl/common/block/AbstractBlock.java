@@ -1,9 +1,10 @@
 package li.cil.oc.core.impl.common.block;
 
+import java.util.List;
 import li.cil.oc.core.common.block.traits.StateAware;
-import li.cil.oc.core.impl.common.tileentity.traits.Colored;
-import li.cil.oc.core.impl.common.tileentity.traits.Inventory;
-import li.cil.oc.core.impl.common.tileentity.traits.Rotatable;
+import li.cil.oc.core.impl.common.blockentity.traits.Colored;
+import li.cil.oc.core.impl.common.blockentity.traits.Inventory;
+import li.cil.oc.core.impl.common.blockentity.traits.Rotatable;
 import li.cil.oc.core.impl.util.Color;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -23,20 +24,27 @@ import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.NotNull;
 
-
-import java.util.List;
-
 public abstract class AbstractBlock extends Block implements EntityBlock {
+    public static final IntegerProperty LIGHT_LEVEL = IntegerProperty.create("oc_light_level", 0, 15);
+
     public AbstractBlock() {
-        super(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(2f, 5f).sound(SoundType.METAL));
+        super(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(2f, 5f).sound(SoundType.METAL).lightLevel(state -> state.hasProperty(LIGHT_LEVEL) ? state.getValue(LIGHT_LEVEL) : 0));
+        registerDefaultState(defaultBlockState().setValue(LIGHT_LEVEL, 0));
     }
 
     public AbstractBlock(BlockBehaviour.Properties properties) {
         super(properties);
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(LIGHT_LEVEL);
     }
 
     public ItemStack createItemStack(int amount) {
@@ -83,7 +91,7 @@ public abstract class AbstractBlock extends Block implements EntityBlock {
         tooltipTail(metadata, stack, player, tooltip, advanced);
     }
 
-    protected void tooltipHead(int ignoredMetadata, ItemStack stack, Player ignoredPlayer, List<Component> tooltip, boolean ignoredAdvanced) {
+    protected void tooltipHead(int ignoredMetadata, ItemStack ignoredStack, Player ignoredPlayer, List<Component> ignoredTooltip, boolean ignoredAdvanced) {
     }
 
     protected void tooltipBody(int ignoredMetadata, ItemStack stack, Player ignoredPlayer, List<Component> tooltip, boolean ignoredAdvanced) {
@@ -103,16 +111,6 @@ public abstract class AbstractBlock extends Block implements EntityBlock {
     @Override
     public boolean hasAnalogOutputSignal(@NotNull BlockState state) {
         return this instanceof StateAware;
-    }
-
-    @Override
-    public int getLightEmission(@NotNull BlockState state, BlockGetter world, @NotNull BlockPos pos) {
-        if (world.getBlockEntity(pos) instanceof li.cil.oc.api.util.StateAware stateful) {
-            var s = stateful.getCurrentState();
-            if (s != null && s.contains(li.cil.oc.api.util.StateAware.State.IsWorking)) return 15;
-            else if (s != null && s.contains(li.cil.oc.api.util.StateAware.State.CanWork)) return 10;
-        }
-        return super.getLightEmission(state, world, pos);
     }
 
     @Override
@@ -187,11 +185,6 @@ public abstract class AbstractBlock extends Block implements EntityBlock {
     @Override
     public void setPlacedBy(@NotNull Level world, @NotNull BlockPos pos, @NotNull BlockState state, LivingEntity placer, @NotNull ItemStack stack) {
         super.setPlacedBy(world, pos, state, placer, stack);
-    }
-
-    @Override
-    public boolean onDestroyedByPlayer(@NotNull BlockState state, @NotNull Level world, @NotNull BlockPos pos, @NotNull Player player, boolean willHarvest, @NotNull net.minecraft.world.level.material.FluidState fluid) {
-        return super.onDestroyedByPlayer(state, world, pos, player, willHarvest, fluid);
     }
 
     @Override

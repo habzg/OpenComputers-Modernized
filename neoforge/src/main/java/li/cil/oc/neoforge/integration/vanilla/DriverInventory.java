@@ -4,13 +4,15 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.ManagedEnvironment;
-import li.cil.oc.api.prefab.DriverSidedTileEntity;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.api.prefab.DriverSidedBlockEntity;
+import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.integration.ManagedBlockEntityEnvironment;
 import li.cil.oc.core.impl.util.BlockPosition;
-import li.cil.oc.neoforge.integration.ManagedTileEntityEnvironment;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
+import net.minecraft.world.Nameable;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -18,27 +20,32 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
 
 @SuppressWarnings("unused")
-public final class DriverInventory extends DriverSidedTileEntity {
+public final class DriverInventory extends DriverSidedBlockEntity {
     @Override
-    public Class<?> getTileEntityClass() {
+    public boolean isGeneric() {
+        return true;
+    }
+
+    @Override
+    public Class<?> getBlockEntityClass() {
         return Container.class;
     }
 
     @Override
     public ManagedEnvironment createEnvironment(
-            final Level level, final int x, final int y, final int z, final Direction side) {
-        BlockEntity blockEntity = level.getBlockEntity(new net.minecraft.core.BlockPos(x, y, z));
+            final Level level, final BlockPos pos, final Direction side) {
+        BlockEntity blockEntity = level.getBlockEntity(pos);
         return new Environment((Container) blockEntity, level);
     }
 
-    public static final class Environment extends ManagedTileEntityEnvironment<Container> {
+    public static final class Environment extends ManagedBlockEntityEnvironment<Container> {
         private final Player fakePlayer;
         private final BlockPosition position;
 
         public Environment(final Container container, final Level world) {
             super(container, "inventory");
             fakePlayer =
-                    FakePlayerFactory.get((ServerLevel) world, Settings.get().fakePlayerProfile);
+                    FakePlayerFactory.get((ServerLevel) world, OCSettings.get().fakePlayerProfile);
             var blockPos = ((BlockEntity) container).getBlockPos();
             position = BlockPosition.apply(blockPos.getX(), blockPos.getY(), blockPos.getZ(), world);
         }
@@ -46,20 +53,23 @@ public final class DriverInventory extends DriverSidedTileEntity {
         @Callback(doc = "function():string -- Get the name of this inventory.")
         public Object[] getInventoryName(final Context context, final Arguments args) {
             if (notPermitted()) return new Object[]{null, "permission denied"};
-            return new Object[]{getTileEntity()};
+            if (getBlockEntity() instanceof Nameable nameable) {
+                return new Object[]{nameable.getDisplayName().getString()};
+            }
+            return new Object[]{null};
         }
 
         @Callback(doc = "function():number -- Get the number of slots in this inventory.")
         public Object[] getInventorySize(final Context context, final Arguments args) {
             if (notPermitted()) return new Object[]{null, "permission denied"};
-            return new Object[]{getTileEntity().getContainerSize()};
+            return new Object[]{getBlockEntity().getContainerSize()};
         }
 
         @Callback(doc = "function(slot:number):number -- Get the stack size of the item stack in the specified slot.")
         public Object[] getSlotStackSize(final Context context, final Arguments args) {
             if (notPermitted()) return new Object[]{null, "permission denied"};
             final int slot = checkSlot(args, 0);
-            final ItemStack stack = getTileEntity().getItem(slot);
+            final ItemStack stack = getBlockEntity().getItem(slot);
             return new Object[]{stack.getCount()};
         }
 
@@ -69,8 +79,12 @@ public final class DriverInventory extends DriverSidedTileEntity {
         public Object[] getSlotMaxStackSize(final Context context, final Arguments args) {
             if (notPermitted()) return new Object[]{null, "permission denied"};
             final int slot = checkSlot(args, 0);
-            final ItemStack stack = getTileEntity().getItem(slot);
-            return new Object[]{Math.min(getTileEntity().getMaxStackSize(), stack.getMaxStackSize())};
+            final ItemStack stack = getBlockEntity().getItem(slot);
+            if (!stack.isEmpty()) {
+                return new Object[]{Math.min(getBlockEntity().getMaxStackSize(), stack.getMaxStackSize())};
+            } else {
+                return new Object[]{getBlockEntity().getMaxStackSize()};
+            }
         }
 
         @Callback(
@@ -83,9 +97,15 @@ public final class DriverInventory extends DriverSidedTileEntity {
             if (slotA == slotB) {
                 return new Object[]{true};
             }
-            final ItemStack stackA = getTileEntity().getItem(slotA);
-            final ItemStack stackB = getTileEntity().getItem(slotB);
-            return new Object[]{itemEquals(stackA, stackB)};
+            final ItemStack stackA = getBlockEntity().getItem(slotA);
+            final ItemStack stackB = getBlockEntity().getItem(slotB);
+            if (stackA.isEmpty() && stackB.isEmpty()) {
+                return new Object[]{true};
+            } else if (!stackA.isEmpty() && !stackB.isEmpty()) {
+                return new Object[]{itemEquals(stackA, stackB)};
+            } else {
+                return new Object[]{false};
+            }
         }
 
         @Callback(
@@ -98,28 +118,39 @@ public final class DriverInventory extends DriverSidedTileEntity {
             final int count = Math.clamp(
                     args.count() > 2 && args.checkAny(2) != null ? args.checkInteger(2) : 64,
                     0,
-                    getTileEntity().getMaxStackSize());
+                    getBlockEntity().getMaxStackSize());
             if (slotA == slotB || count == 0) {
                 return new Object[]{true};
             }
-            final ItemStack stackA = getTileEntity().getItem(slotA);
-            final ItemStack stackB = getTileEntity().getItem(slotB);
-            if (itemEquals(stackA, stackB)) {
+            final ItemStack stackA = getBlockEntity().getItem(slotA);
+            final ItemStack stackB = getBlockEntity().getItem(slotB);
+            if (stackA.isEmpty()) {
+                return new Object[]{false};
+            } else if (stackB.isEmpty()) {
+                final ItemStack moved = stackA.copyWithCount(Math.min(count, stackA.getCount()));
+                stackA.shrink(moved.getCount());
+                getBlockEntity().setItem(slotB, moved);
+                if (stackA.isEmpty()) {
+                    getBlockEntity().setItem(slotA, ItemStack.EMPTY);
+                }
+                getBlockEntity().setChanged();
+                return new Object[]{true};
+            } else if (itemEquals(stackA, stackB)) {
                 final int space =
-                        Math.min(getTileEntity().getMaxStackSize(), stackB.getMaxStackSize()) - stackB.getCount();
+                        Math.min(getBlockEntity().getMaxStackSize(), stackB.getMaxStackSize()) - stackB.getCount();
                 final int amount = Math.min(count, Math.min(space, stackA.getCount()));
                 if (amount > 0) {
                     stackA.shrink(amount);
                     stackB.grow(amount);
-                    if (stackA.getCount() == 0) {
-                        getTileEntity().setItem(slotA, ItemStack.EMPTY);
+                    if (stackA.isEmpty()) {
+                        getBlockEntity().setItem(slotA, ItemStack.EMPTY);
                     }
-                    getTileEntity().setChanged();
+                    getBlockEntity().setChanged();
                     return new Object[]{true};
                 }
             } else if (count >= stackA.getCount()) {
-                getTileEntity().setItem(slotB, stackA);
-                getTileEntity().setItem(slotA, stackB);
+                getBlockEntity().setItem(slotB, stackA);
+                getBlockEntity().setItem(slotA, stackB);
                 return new Object[]{true};
             }
             return new Object[]{false};
@@ -127,9 +158,9 @@ public final class DriverInventory extends DriverSidedTileEntity {
 
         @Callback(doc = "function(slot:number):table -- Get a description of the item stack in the specified slot.")
         public Object[] getStackInSlot(final Context context, final Arguments args) {
-            if (Settings.get().allowItemStackInspection) {
+            if (OCSettings.get().allowItemStackInspection) {
                 if (notPermitted()) return new Object[]{null, "permission denied"};
-                return new Object[]{getTileEntity().getItem(checkSlot(args, 0))};
+                return new Object[]{getBlockEntity().getItem(checkSlot(args, 0))};
             } else {
                 return new Object[]{null, "not enabled in config"};
             }
@@ -137,11 +168,11 @@ public final class DriverInventory extends DriverSidedTileEntity {
 
         @Callback(doc = "function():table -- Get a list of descriptions for all item stacks in this inventory.")
         public Object[] getAllStacks(final Context context, final Arguments args) {
-            if (Settings.get().allowItemStackInspection) {
+            if (OCSettings.get().allowItemStackInspection) {
                 if (notPermitted()) return new Object[]{null, "permission denied"};
-                ItemStack[] allStacks = new ItemStack[getTileEntity().getContainerSize()];
-                for (int i = 0; i < getTileEntity().getContainerSize(); i++) {
-                    allStacks[i] = getTileEntity().getItem(i);
+                ItemStack[] allStacks = new ItemStack[getBlockEntity().getContainerSize()];
+                for (int i = 0; i < getBlockEntity().getContainerSize(); i++) {
+                    allStacks[i] = getBlockEntity().getItem(i);
                 }
                 return new Object[]{allStacks};
             } else {
@@ -151,20 +182,21 @@ public final class DriverInventory extends DriverSidedTileEntity {
 
         private int checkSlot(final Arguments args, final int number) {
             final int slot = args.checkInteger(number) - 1;
-            if (slot < 0 || slot >= getTileEntity().getContainerSize()) {
+            if (slot < 0 || slot >= getBlockEntity().getContainerSize()) {
                 throw new IllegalArgumentException("slot index out of bounds");
             }
             return slot;
         }
 
         private boolean itemEquals(final ItemStack stackA, final ItemStack stackB) {
-            return ItemStack.isSameItem(stackA, stackB);
+            return ItemStack.isSameItemSameComponents(stackA, stackB);
         }
 
         private boolean notPermitted() {
             synchronized (fakePlayer) {
                 fakePlayer.setPos(position.x() + 0.5, position.y() + 0.5, position.z() + 0.5);
-                return !getTileEntity().stillValid(fakePlayer);
+                return !li.cil.oc.core.impl.server.component.traits.WorldAction.mayInteract(fakePlayer.level(), position, Direction.DOWN)
+                        || !getBlockEntity().stillValid(fakePlayer);
             }
         }
     }

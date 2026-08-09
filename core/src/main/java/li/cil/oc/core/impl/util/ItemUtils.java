@@ -1,18 +1,17 @@
 package li.cil.oc.core.impl.util;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Tier;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 
 
 public final class ItemUtils {
@@ -83,7 +82,7 @@ public final class ItemUtils {
     }
 
     private static boolean isInputBlacklisted(ItemStack stack) {
-        var blacklist = Settings.get().disassemblerInputBlacklist;
+        var blacklist = OCSettings.get().disassemblerInputBlacklist;
         Item item = stack.getItem();
         if (item instanceof BlockItem blockItem) {
             return blacklist.contains(BuiltInRegistries.BLOCK.getKey(blockItem.getBlock()).toString());

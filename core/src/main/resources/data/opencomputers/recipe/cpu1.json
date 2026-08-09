@@ -1,0 +1,29 @@
+{
+  "type": "opencomputers:shaped",
+  "pattern": [
+    "ABA",
+    "CDC",
+    "AEA"
+  ],
+  "key": {
+    "A": {
+      "tag": "c:nuggets/iron"
+    },
+    "B": {
+      "item": "minecraft:redstone"
+    },
+    "C": {
+      "item": "opencomputers:chip1"
+    },
+    "D": {
+      "item": "opencomputers:cu"
+    },
+    "E": {
+      "item": "opencomputers:alu"
+    }
+  },
+  "result": {
+    "id": "opencomputers:cpu1",
+    "count": 1
+  }
+}

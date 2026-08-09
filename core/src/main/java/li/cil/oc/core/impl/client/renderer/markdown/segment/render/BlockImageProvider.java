@@ -1,11 +1,10 @@
 package li.cil.oc.core.impl.client.renderer.markdown.segment.render;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import li.cil.oc.api.manual.ImageProvider;
 import li.cil.oc.api.manual.ImageRenderer;
 import li.cil.oc.api.manual.InteractiveImageRenderer;
 import li.cil.oc.core.impl.client.Textures;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -45,8 +44,8 @@ public class BlockImageProvider implements ImageProvider {
             }
 
             @Override
-            public void render(PoseStack poseStack, MultiBufferSource bufferSource, int mouseX, int mouseY) {
-                new TextureImageRenderer(Textures.guiManualMissingItem).render(poseStack, bufferSource, mouseX, mouseY);
+            public void render(GuiGraphics graphics, int mouseX, int mouseY) {
+                new TextureImageRenderer(Textures.guiManualMissingItem).render(graphics, mouseX, mouseY);
             }
         };
     }

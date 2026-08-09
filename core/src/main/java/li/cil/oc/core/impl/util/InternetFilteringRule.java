@@ -1,15 +1,14 @@
 package li.cil.oc.core.impl.util;
 
 import com.google.common.net.InetAddresses;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class InternetFilteringRule {
     private static final Logger LOGGER = LoggerFactory.getLogger(InternetFilteringRule.class);

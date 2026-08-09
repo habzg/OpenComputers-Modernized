@@ -1,11 +1,9 @@
 package li.cil.oc.core.server.network;
 
-import li.cil.oc.api.network.Packet;
-
-
 import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
+import li.cil.oc.api.network.Packet;
 
 public final class DebugNetwork {
     private static final Map<DebugNode, Boolean> cards = Collections.synchronizedMap(new WeakHashMap<>());

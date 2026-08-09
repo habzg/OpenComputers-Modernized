@@ -1,6 +1,8 @@
 package li.cil.oc.neoforge.common.asm.template;
 
 import com.google.common.base.Strings;
+import java.util.HashMap;
+import java.util.Map;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.Node;
@@ -12,14 +14,11 @@ import li.cil.oc.neoforge.common.asm.SimpleComponentTickHandler;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-
-import java.util.HashMap;
-import java.util.Map;
-
 @SuppressWarnings("SuspiciousMethodCalls")
 public final class StaticSimpleEnvironment {
     private static final Map<BlockEntity, Node> nodes = new HashMap<>();
 
+    @SuppressWarnings("unused")
     private StaticSimpleEnvironment() {
     }
 

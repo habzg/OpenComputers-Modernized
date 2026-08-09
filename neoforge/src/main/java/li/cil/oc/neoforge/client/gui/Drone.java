@@ -1,6 +1,15 @@
 package li.cil.oc.neoforge.client.gui;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import java.util.ArrayList;
+import java.util.List;
 import li.cil.oc.core.impl.client.Textures;
+import li.cil.oc.core.impl.client.gui.DynamicGuiContainer;
 import li.cil.oc.core.impl.client.gui.ImageButton;
 import li.cil.oc.core.impl.client.gui.widget.ProgressBar;
 import li.cil.oc.core.impl.client.renderer.TextBufferRenderCache;
@@ -8,18 +17,16 @@ import li.cil.oc.core.impl.client.renderer.font.TextBufferRenderData;
 import li.cil.oc.core.impl.util.PackedColor;
 import li.cil.oc.core.impl.util.TextBuffer;
 import li.cil.oc.neoforge.client.PacketSender;
-import li.cil.oc.neoforge.client.renderer.tileentity.ScreenBufferTextRenderer;
+import li.cil.oc.neoforge.client.renderer.blockentity.ScreenBufferTextRenderer;
+import li.cil.oc.neoforge.common.init.Menus;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-public class Drone extends DynamicGuiContainer<li.cil.oc.neoforge.common.container.Drone> implements li.cil.oc.core.impl.client.gui.traits.DisplayBuffer {
+public class Drone extends DynamicGuiContainer<li.cil.oc.core.impl.common.container.Drone> implements li.cil.oc.core.impl.client.gui.traits.DisplayBuffer {
     public final li.cil.oc.core.impl.common.entity.Drone drone;
     private final TextBuffer buffer = new TextBuffer(20, 2, new PackedColor.SingleBitFormat(0x33FF33));
     private final TextBufferRenderData bufferRenderer = new TextBufferRenderData() {
@@ -50,14 +57,14 @@ public class Drone extends DynamicGuiContainer<li.cil.oc.neoforge.common.contain
 
     @SuppressWarnings("unused")
     public Drone(Inventory playerInventory, li.cil.oc.core.impl.common.entity.Drone drone) {
-        super(new li.cil.oc.neoforge.common.container.Drone(0, playerInventory, drone));
+        super(new li.cil.oc.core.impl.common.container.Drone(Menus.DRONE.get(), 0, playerInventory, drone));
         this.drone = drone;
         imageWidth = 176;
         imageHeight = 148;
         power = addWidget(new ProgressBar(28, 48));
     }
 
-    public Drone(li.cil.oc.neoforge.common.container.Drone container, Inventory inv, net.minecraft.network.chat.Component title) {
+    public Drone(li.cil.oc.core.impl.common.container.Drone container, Inventory inv, net.minecraft.network.chat.Component title) {
         super(container, inv, title);
         this.drone = container.drone;
         imageWidth = 176;
@@ -121,7 +128,7 @@ public class Drone extends DynamicGuiContainer<li.cil.oc.neoforge.common.contain
     }
 
     @Override
-    public double changeSize(double w, double h, boolean recompile) {
+    public double changeSize(double ignoredW, double ignoredH, boolean ignoredRecompile) {
         return 2.0;
     }
 
@@ -130,27 +137,37 @@ public class Drone extends DynamicGuiContainer<li.cil.oc.neoforge.common.contain
         drawBufferLayer(guiGraphics);
         renderBufferText(guiGraphics);
         if (isHovering(power.x, power.y, power.width(), power.height(), mouseX, mouseY)) {
-            List<String> tooltip = new ArrayList<>();
+            List<Component> tooltip = new ArrayList<>();
             String format = Component.translatable("gui.opencomputers.robot.power").getString() + ": %d%% (%d/%d)";
-            tooltip.add(String.format(format,
+            tooltip.add(Component.literal(String.format(format,
                     drone.globalBuffer() * 100 / Math.max(drone.globalBufferSize(), 1),
                     drone.globalBuffer(),
-                    drone.globalBufferSize()));
-            renderTooltip(guiGraphics, tooltip, mouseX - leftPos, mouseY - topPos, font);
+                    drone.globalBufferSize())));
+            guiGraphics.renderTooltip(font, tooltip, java.util.Optional.empty(), mouseX - leftPos, mouseY - topPos);
         }
-        if (powerButton.isHoveredOrFocused()) {
-            List<String> tooltip = new ArrayList<>(Arrays.asList(
-                    (drone.isRunning() ? Component.translatable("gui.opencomputers.robot.turnoff").getString() : Component.translatable("gui.opencomputers.robot.turnon").getString()).split("\n")));
-            renderTooltip(guiGraphics, tooltip, mouseX - leftPos, mouseY - topPos, font);
+        if (powerButton.isMouseOver(mouseX, mouseY)) {
+            List<Component> tooltip = new ArrayList<>();
+            for (String line : (drone.isRunning() ? Component.translatable("gui.opencomputers.robot.turnoff").getString() : Component.translatable("gui.opencomputers.robot.turnon").getString()).split("\n")) {
+                tooltip.add(Component.literal(line));
+            }
+            guiGraphics.renderTooltip(font, tooltip, java.util.Optional.empty(), mouseX - leftPos, mouseY - topPos);
         }
     }
 
     @Override
-    protected void renderBg(GuiGraphics guiGraphics, float dt, int mouseX, int mouseY) {
+    protected void renderBg(GuiGraphics guiGraphics, float ignoredDt, int ignoredMouseX, int ignoredMouseY) {
         guiGraphics.blit(Textures.guiDrone, leftPos, topPos, 0, 0, imageWidth, imageHeight, 256, 256);
         power.level = (double) drone.globalBuffer() / Math.max(drone.globalBufferSize(), 1.0);
         drawWidgets(guiGraphics);
-        if (drone.mainInventory.getContainerSize() > 0) drawSelection(guiGraphics);
+    }
+
+    @Override
+    protected void renderLabels(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        if (drone.mainInventory.getContainerSize() > 0) {
+            guiGraphics.flush();
+            drawSelection(guiGraphics);
+        }
+        super.renderLabels(guiGraphics, mouseX, mouseY);
     }
 
     private void drawSelection(GuiGraphics guiGraphics) {
@@ -158,11 +175,24 @@ public class Drone extends DynamicGuiContainer<li.cil.oc.neoforge.common.contain
         int cols = Math.min(4, drone.mainInventory.getContainerSize());
         if (slot >= 0 && slot < drone.mainInventory.getContainerSize()) {
             double now = System.currentTimeMillis() / 1000.0;
-            double selectionStepV = 1 / 17.0;
-            int offsetV = (int) ((now - (int) now) * 17) * (int) (selectionStepV * 256);
-            int x = leftPos + 98 - 1 + (slot % cols) * 18;
-            int y = topPos + 8 - 1 + (slot / cols) * 18;
-            guiGraphics.blit(Textures.guiRobotSelection, x, y, (int) blitOffset, 0.0f, (float) offsetV, 20, 17, 256, 256);
+            float selectionStepV = 1.0f / 17.0f;
+            float v0 = (int) ((now - (int) now) * 17) * selectionStepV;
+            int x = 96 + (slot % cols) * 18;
+            int y = 6 + (slot / cols) * 18;
+            float v1 = v0 + 20f / 340f;
+            RenderSystem.disableDepthTest();
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+            RenderSystem.setShaderTexture(0, Textures.guiRobotSelection);
+            RenderSystem.setShader(GameRenderer::getPositionTexShader);
+            Matrix4f matrix = guiGraphics.pose().last().pose();
+            BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+            buffer.addVertex(matrix, x, y, 0).setUv(0f, v0);
+            buffer.addVertex(matrix, x, y + 20, 0).setUv(0f, v1);
+            buffer.addVertex(matrix, x + 20, y + 20, 0).setUv(1f, v1);
+            buffer.addVertex(matrix, x + 20, y, 0).setUv(1f, v0);
+            BufferUploader.drawWithShader(buffer.buildOrThrow());
+            RenderSystem.enableDepthTest();
         }
     }
 }

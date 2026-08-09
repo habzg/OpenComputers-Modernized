@@ -1,11 +1,13 @@
 package li.cil.oc.core.impl.server.machine.luaj;
 
 import com.google.common.base.Strings;
+import java.io.IOException;
+import java.util.Objects;
 import li.cil.oc.api.driver.item.Memory;
 import li.cil.oc.api.machine.Architecture;
 import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.LimitReachedException;
-import li.cil.oc.core.impl.Settings;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.repack.org.luaj.vm2.Globals;
 import li.cil.repack.org.luaj.vm2.LuaError;
 import li.cil.repack.org.luaj.vm2.LuaFunction;
@@ -18,9 +20,6 @@ import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.Objects;
-
 @Architecture.Name("LuaJ")
 public class LuaJLuaArchitecture implements Architecture {
     private static final Logger LOGGER = LoggerFactory.getLogger(LuaJLuaArchitecture.class);
@@ -32,6 +31,7 @@ public class LuaJLuaArchitecture implements Architecture {
     private LuaFunction synchronizedCall = null;
     private LuaValue synchronizedResult = null;
     private boolean doneWithInitRun = false;
+    private int memoryCheckCounter = 0;
 
     public LuaJLuaArchitecture(li.cil.oc.api.machine.Machine machine) {
         this.machine = machine;
@@ -59,7 +59,7 @@ public class LuaJLuaArchitecture implements Architecture {
                 return LuaValue.TRUE;
             }
         } catch (Throwable e) {
-            if (Settings.get().logLuaCallbackErrors && !(e instanceof LimitReachedException)) {
+            if (OCSettings.get().logLuaCallbackErrors && !(e instanceof LimitReachedException)) {
                 LOGGER.warn("Exception in Lua callback.", e);
             }
             if (e instanceof LimitReachedException) {
@@ -135,7 +135,7 @@ public class LuaJLuaArchitecture implements Architecture {
                 acc += ((Memory) driver).amount(stack) * 1024;
             }
         }
-        return Math.clamp((int) acc, 0, Settings.get().maxTotalRam);
+        return Math.clamp((int) acc, 0, OCSettings.get().maxTotalRam);
     }
 
     @Override
@@ -147,6 +147,12 @@ public class LuaJLuaArchitecture implements Architecture {
     @Override
     public ExecutionResult runThreaded(boolean isSynchronizedReturn) {
         try {
+            if (memory > 0 && ++memoryCheckCounter % 100 == 0) {
+                long usedMem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+                if (usedMem > memory) {
+                    throw new RuntimeException("Computer exceeded memory limit");
+                }
+            }
             Varargs results;
             if (isSynchronizedReturn) {
                 results = thread.resume(synchronizedResult);
@@ -234,7 +240,11 @@ public class LuaJLuaArchitecture implements Architecture {
 
         recomputeMemory(machine.host().internalComponents());
 
-        LuaValue kernel = lua.load(LuaJLuaArchitecture.class.getResourceAsStream(Settings.scriptPath + "machine.lua"), "=machine", "t", lua);
+        if (OCSettings.get().limitMemory) {
+            LOGGER.warn("LuaJ does not support per-state memory limits; memory allocation is bounded only by JVM heap.");
+        }
+
+        LuaValue kernel = lua.load(LuaJLuaArchitecture.class.getResourceAsStream(OCSettings.scriptPath + "machine.lua"), "=machine", "t", lua);
         thread = new LuaThread(lua, kernel);
 
         return true;

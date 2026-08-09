@@ -29,6 +29,10 @@ public class SpawnComputerCommand extends SimpleCommand {
 
     @Override
     protected int execute(CommandSourceStack source, String[] args) {
+        if (source.getEntity() != null && !(source.getEntity() instanceof Player)) {
+            source.sendFailure(Component.literal("Can only be used by players."));
+            return 0;
+        }
         if (source.getEntity() instanceof Player player) {
             Level world = player.level();
             Vec3 origin = new Vec3(player.getX(), player.getY() + player.getEyeHeight(), player.getZ());
@@ -47,19 +51,19 @@ public class SpawnComputerCommand extends SimpleCommand {
                 world.setBlock(casePos, li.cil.oc.api.Items.get(Constants.BlockName.CaseCreative).block().defaultBlockState()
                         .setValue(BlockStateProperties.HORIZONTAL_FACING, facing), 3);
                 var caseTe = world.getBlockEntity(casePos);
-                if (caseTe instanceof li.cil.oc.core.impl.common.tileentity.traits.Rotatable r) {
+                if (caseTe instanceof li.cil.oc.core.impl.common.blockentity.traits.Rotatable r) {
                     r.facing(facing);
                 }
                 world.setBlock(screenPos, li.cil.oc.api.Items.get(Constants.BlockName.ScreenTier2).block().defaultBlockState()
                         .setValue(BlockStateProperties.FACING, facing), 3);
                 var screenTe = world.getBlockEntity(screenPos);
-                if (screenTe instanceof li.cil.oc.core.impl.common.tileentity.traits.Rotatable r) {
+                if (screenTe instanceof li.cil.oc.core.impl.common.blockentity.traits.Rotatable r) {
                     r.facing(facing);
                 }
                 world.setBlock(keyboardPos, li.cil.oc.api.Items.get(Constants.BlockName.Keyboard).block().defaultBlockState()
                         .setValue(BlockStateProperties.FACING, Direction.UP), 3);
                 var keyboardTe = world.getBlockEntity(keyboardPos);
-                if (keyboardTe instanceof li.cil.oc.core.impl.common.tileentity.traits.Rotatable r) {
+                if (keyboardTe instanceof li.cil.oc.core.impl.common.blockentity.traits.Rotatable r) {
                     r.facing(Direction.UP);
                 }
                 li.cil.oc.api.Network.joinOrCreateNetwork(world.getBlockEntity(casePos));

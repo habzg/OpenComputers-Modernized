@@ -1,7 +1,10 @@
 package li.cil.oc.neoforge.model;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import li.cil.oc.core.impl.Settings;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
+import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.item.data.PrintData;
 import li.cil.oc.core.impl.util.ExtendedAABB;
 import net.minecraft.client.Minecraft;
@@ -31,10 +34,6 @@ import net.neoforged.neoforge.client.model.data.ModelData;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
-
 public class PrintModel implements IDynamicBakedModel {
     private static final Vec3[][] UNIT_CUBE = {
             {new Vec3(0, 0, 1), new Vec3(0, 0, 0), new Vec3(1, 0, 0), new Vec3(1, 0, 1)}, // DOWN
@@ -63,7 +62,7 @@ public class PrintModel implements IDynamicBakedModel {
 
     @Override
     public @NotNull ModelData getModelData(@NotNull BlockAndTintGetter level, @NotNull BlockPos pos, @NotNull BlockState state, @NotNull ModelData modelData) {
-        if (level.getBlockEntity(pos) instanceof li.cil.oc.neoforge.common.tileentity.PrintNeoForge print) {
+        if (level.getBlockEntity(pos) instanceof li.cil.oc.neoforge.common.blockentity.PrintNeoForge print) {
             return print.getModelData();
         }
         return modelData;
@@ -71,11 +70,11 @@ public class PrintModel implements IDynamicBakedModel {
 
     @Override
     public @NotNull List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, @NotNull RandomSource rand, @NotNull ModelData extraData, @Nullable RenderType renderType) {
-        PrintData data = extraData.get(li.cil.oc.neoforge.common.tileentity.PrintNeoForge.PRINT_DATA);
+        PrintData data = extraData.get(li.cil.oc.neoforge.common.blockentity.PrintNeoForge.PRINT_DATA);
         if (data != null && !(data.stateOff.isEmpty() && data.stateOn.isEmpty())) {
-            Direction facing = extraData.get(li.cil.oc.neoforge.common.tileentity.PrintNeoForge.FACING);
+            Direction facing = extraData.get(li.cil.oc.neoforge.common.blockentity.PrintNeoForge.FACING);
             if (facing == null) facing = Direction.NORTH;
-            Boolean st = extraData.get(li.cil.oc.neoforge.common.tileentity.PrintNeoForge.STATE);
+            Boolean st = extraData.get(li.cil.oc.neoforge.common.blockentity.PrintNeoForge.STATE);
             boolean activeState = st != null && st;
             return bakeQuads(data, activeState, facing);
         }
@@ -164,7 +163,7 @@ public class PrintModel implements IDynamicBakedModel {
         TextureAtlasSprite missing = getter.apply(ResourceLocation.withDefaultNamespace("missingno"));
         TextureAtlasSprite result = tryResolve(getter, missing, texture);
         if (result != null) return result;
-        result = tryResolve(getter, missing, Settings.resourceDomain + ":block/" + texture);
+        result = tryResolve(getter, missing, OCSettings.resourceDomain + ":block/" + texture);
         if (result != null) return result;
         result = tryResolve(getter, missing, "minecraft:block/" + texture);
         if (result != null) return result;
@@ -242,7 +241,7 @@ public class PrintModel implements IDynamicBakedModel {
 
         @Override
         public @NotNull TextureAtlasSprite getParticleIcon(@NotNull ModelData data) {
-            return resolveTexture(Settings.resourceDomain + ":block/white");
+            return resolveTexture(OCSettings.resourceDomain + ":block/white");
         }
 
         @Override
@@ -312,7 +311,7 @@ public class PrintModel implements IDynamicBakedModel {
 
     @Override
     public @NotNull TextureAtlasSprite getParticleIcon(@NotNull ModelData data) {
-        PrintData printData = data.get(li.cil.oc.neoforge.common.tileentity.PrintNeoForge.PRINT_DATA);
+        PrintData printData = data.get(li.cil.oc.neoforge.common.blockentity.PrintNeoForge.PRINT_DATA);
         if (printData != null) {
             var shape = printData.stateOff.stream().findFirst().orElse(null);
             if (shape != null && shape.texture() != null) {
