@@ -1,6 +1,7 @@
 # OpenComputers: Modernized
 
 ![A showcase of various blocks from the mod](.github/banner.png)
+[![Modrinth Downloads](https://img.shields.io/modrinth/dt/5ohMkyqo?logo=modrinth)](https://modrinth.com/project/5ohMkyqo) [![CurseForge Downloads](https://img.shields.io/curseforge/dt/1646866?logo=curseforge)](https://www.curseforge.com/minecraft/mc-mods/opencomputers-modernized) [![MIT License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 OpenComputers: Modernized (OC:M) is a fork of the original 1.12.2 OpenComputers mod for modern versions of Minecraft, such as 1.21.1 (with more versions to be supported in the future!).
 

@@ -407,41 +407,49 @@ For providing a peripheral and reading their floppy disks:
 For other mod integrations (in alphabetical order):
 - Applied Energistics 2, license: LGPL-3.0. [4]
 - Applied Mekanistics, license: LGPL-3.0. [5]
-- CBMultipart, license: LGPL-2.1. [6]
-- CodeChickenLib, license: LGPL-2.1. [7]
-- Create, license: MIT. [8]
-- EMI, license: MIT. [9]
-- EnderIO, license: The Unlicense. [10]
-- EnderStorage, license: MIT. [11]
-- Jade, license: CC BY-NC-SA 4.0. [12]
-- Just Enough Items, license: MIT. [13]
-- McJtyLib, license: MIT. [14]
-- Mekanism, license: MIT. [15]
-- RFTools Utility, license: MIT. [16]
-- Roughly Enough Items, license: MIT. [17]
-- Sable (sable-companion), license: MIT. [18]
-- The One Probe, license: MIT. [19]
-- TIS-3D, license: MIT. [20]
-- WTHIT, license: CC BY-NC-SA 4.0. [21]
+- Architectury, license: LGPL-3.0. [6]
+- CBMultipart, license: LGPL-2.1. [7]
+- CodeChickenLib, license: LGPL-2.1. [8]
+- Create, license: MIT. [9]
+- EMI, license: MIT. [10]
+- EnderIO, license: The Unlicense. [11]
+- EnderStorage, license: MIT. [12]
+- Jade, license: CC BY-NC-SA 4.0. [13]
+- Just Enough Items, license: MIT. [14]
+- McJtyLib, license: MIT. [15]
+- Mekanism, license: MIT. [16]
+- RFTools Utility, license: MIT. [17]
+- Refined Storage, license: MIT. [18]
+- Refined Storage Mekanism Integration, license: MIT. [19]
+- Roughly Enough Items, license: MIT. [20]
+- Sable (sable-companion), license: MIT. [21]
+- Team Reborn Energy, license: MIT. [22]
+- The One Probe, license: MIT. [23]
+- TIS-3D, license: MIT. [24]
+- WTHIT, license: CC BY-NC-SA 4.0. [25]
 
 [1] https://github.com/MrTJP/ProjectRed/blob/1.21.1/LICENSE.md
 [2] https://github.com/Commoble/morered/blob/main/LICENSE.md
 [3] https://github.com/cc-tweaked/CC-Tweaked/tree/mc-1.21.x/LICENSES
 [4] https://github.com/AppliedEnergistics/Applied-Energistics-2/blob/neoforge-v19.2.17/LICENSE
 [5] https://github.com/AppliedEnergistics/Applied-Mekanistics/blob/dev-1.21.1/LICENSE
-[6] https://github.com/TheCBProject/CBMultipart/blob/master/LICENSE.txt
-[7] https://github.com/TheCBProject/CodeChickenLib/blob/master/LICENSE
-[8] https://github.com/Creators-of-Create/Create/blob/mc1.21.1/dev/LICENSE.md
-[9] https://github.com/emilyploszaj/emi/blob/master/LICENSE
-[10] https://github.com/enderio/EnderIO/blob/master/LICENSE.txt
-[11] https://github.com/TheCBProject/EnderStorage/blob/master/LICENSE.txt
-[12] https://github.com/Snownee/Jade/blob/1.21/LICENSE.md
-[13] https://github.com/mezz/JustEnoughItems/blob/1.21.1/LICENSE.txt
-[14] https://github.com/McJtyMods/McJtyLib/blob/1.21_neo/LICENSE
-[15] https://github.com/mekanism/Mekanism/blob/1.21.x/LICENSE
-[16] https://github.com/McJtyMods/RFToolsUtility/blob/1.21_neo/LICENSE
-[17] https://github.com/shedaniel/RoughlyEnoughItems/blob/16.x-1.21/LICENSE
-[18] https://github.com/ryanhcode/sable-companion/blob/main/LICENSE
-[19] https://github.com/McJtyMods/TheOneProbe/blob/1.21_neo/LICENCE
-[20] https://github.com/MightyPirates/TIS-3D/blob/1.21.1/LICENSE
-[21] https://github.com/badasintended/wthit/blob/dev/master/LICENSE.md
+[6] https://github.com/architectury/architectury-api/blob/1.21/LICENSE.md
+[7] https://github.com/TheCBProject/CBMultipart/blob/master/LICENSE.txt
+[8] https://github.com/TheCBProject/CodeChickenLib/blob/master/LICENSE
+[9] https://github.com/Creators-of-Create/Create/blob/mc1.21.1/dev/LICENSE.md
+[10] https://github.com/emilyploszaj/emi/blob/master/LICENSE
+[11] https://github.com/enderio/EnderIO/blob/master/LICENSE.txt
+[12] https://github.com/TheCBProject/EnderStorage/blob/master/LICENSE.txt
+[13] https://github.com/Snownee/Jade/blob/1.21/LICENSE.md
+[14] https://github.com/mezz/JustEnoughItems/blob/1.21.1/LICENSE.txt
+[15] https://github.com/McJtyMods/McJtyLib/blob/1.21_neo/LICENSE
+[16] https://github.com/mekanism/Mekanism/blob/1.21.x/LICENSE
+[17] https://github.com/McJtyMods/RFToolsUtility/blob/1.21_neo/LICENSE
+[18] https://github.com/refinedmods/refinedstorage2/blob/develop/LICENSE.md
+[19] https://github.com/refinedmods/refinedstorage-mekanism-integration/blob/develop/LICENSE.md
+[20] https://github.com/shedaniel/RoughlyEnoughItems/blob/16.x-1.21/LICENSE
+[21] https://github.com/ryanhcode/sable-companion/blob/main/LICENSE
+[22] https://github.com/TechReborn/Energy/blob/master/LICENSE
+[23] https://github.com/McJtyMods/TheOneProbe/blob/1.21_neo/LICENCE
+[24] https://github.com/MightyPirates/TIS-3D/blob/1.21.1/LICENSE
+[25] https://github.com/badasintended/wthit/blob/dev/master/LICENSE.md
