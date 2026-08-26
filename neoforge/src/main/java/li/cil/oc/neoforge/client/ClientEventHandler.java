@@ -50,8 +50,5 @@ public final class ClientEventHandler {
         }
         LootManager.disksForCyclingClient.clear();
         LootManager.pendingDiskSync = true;
-
-        Sound.startLoop(null, "computer_running", 0f, 0);
-        EventHandler.scheduleServer(() -> Sound.stopLoop(null));
     }
 }

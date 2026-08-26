@@ -48,9 +48,6 @@ public final class ClientEventHandler {
             }
             LootManager.disksForCyclingClient.clear();
             LootManager.pendingDiskSync = true;
-
-            Sound.startLoop(null, "computer_running", 0f, 0);
-            li.cil.oc.fabric.common.EventHandler.scheduleServer(() -> Sound.stopLoop(null));
         });
 
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {

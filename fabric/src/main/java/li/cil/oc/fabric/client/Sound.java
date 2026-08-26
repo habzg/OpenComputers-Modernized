@@ -37,7 +37,7 @@ public final class Sound {
                 tickCount++;
                 if (tickCount % 10 == 0) {
                     synchronized (sources) {
-                        sources.entrySet().removeIf(entry -> entry.getKey().isRemoved());
+                        sources.entrySet().removeIf(entry -> entry.getKey() == null || entry.getKey().isRemoved());
                         updateVolume();
                         processQueue();
                     }
@@ -117,6 +117,7 @@ public final class Sound {
     }
 
     public static void startLoop(BlockEntity blockEntity, String name, float volume, long delay) {
+        if (blockEntity == null) return;
         if (OCSettings.get().soundVolume > 0 && Minecraft.getInstance().level != null) {
             synchronized (commandQueue) {
                 commandQueue.offer(new StartCommand(System.currentTimeMillis() + delay, blockEntity, name, volume));
@@ -125,6 +126,7 @@ public final class Sound {
     }
 
     public static void stopLoop(BlockEntity blockEntity) {
+        if (blockEntity == null) return;
         if (OCSettings.get().soundVolume > 0 && Minecraft.getInstance().level != null) {
             synchronized (commandQueue) {
                 commandQueue.offer(new StopCommand(blockEntity));
@@ -133,6 +135,7 @@ public final class Sound {
     }
 
     public static void updatePosition(BlockEntity blockEntity) {
+        if (blockEntity == null) return;
         if (OCSettings.get().soundVolume > 0 && Minecraft.getInstance().level != null) {
             synchronized (commandQueue) {
                 commandQueue.offer(new UpdatePositionCommand(blockEntity));
