@@ -258,9 +258,12 @@ public class Microcontroller extends BlockEntity implements PowerAcceptor, Hub, 
 
     @Override
     public double tryChangeBuffer(Direction side, double amount, boolean doReceive) {
+        if (isClient() || OCSettings.get().ignorePower) return 0;
         var c = connector(side);
         if (c != null) {
-            if (c.tryChangeBuffer(amount)) return amount;
+            double cappedAmount = Math.clamp(amount, 0, Math.min(energyThroughput(), globalDemand(side)));
+            if (doReceive) return cappedAmount - c.changeBuffer(cappedAmount);
+            return cappedAmount;
         }
         return 0;
     }
@@ -280,7 +283,7 @@ public class Microcontroller extends BlockEntity implements PowerAcceptor, Hub, 
     @Override
     public double globalDemand(Direction side) {
         var c = connector(side);
-        return c != null ? c.globalBufferSize() - c.globalBuffer() : 0.0;
+        return c != null ? Math.clamp(c.globalBufferSize() - c.globalBuffer(), 0, energyThroughput()) : 0.0;
     }
 
     @Override
@@ -724,8 +727,15 @@ public class Microcontroller extends BlockEntity implements PowerAcceptor, Hub, 
     @Override
     public void dispose() {
         super.dispose();
+        if (isServer()) {
+            for (var componentNode : componentNodes) {
+                if (componentNode != null) componentNode.remove();
+            }
+            if (snooperNode != null) snooperNode.remove();
+        }
         Machine m = machine();
         if (m != null) {
+            if (isServer() && m.node() != null) m.node().remove();
             EventHandlerDelegate.get().scheduleServer(m::stop);
         }
     }

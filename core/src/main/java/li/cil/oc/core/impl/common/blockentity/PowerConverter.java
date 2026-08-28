@@ -125,8 +125,13 @@ public class PowerConverter extends BlockEntity implements PowerAcceptor, Enviro
 
     @Override
     public double tryChangeBuffer(Direction side, double amount, boolean doReceive) {
+        if (isClient() || OCSettings.get().ignorePower) return 0;
         var c = connector(side);
-        if (c != null && c.tryChangeBuffer(amount)) return amount;
+        if (c != null) {
+            double cappedAmount = Math.clamp(amount, 0, Math.min(energyThroughput(), globalDemand(side)));
+            if (doReceive) return cappedAmount - c.changeBuffer(cappedAmount);
+            return cappedAmount;
+        }
         return 0;
     }
 
@@ -145,7 +150,7 @@ public class PowerConverter extends BlockEntity implements PowerAcceptor, Enviro
     @Override
     public double globalDemand(Direction side) {
         var c = connector(side);
-        return c != null ? c.globalBufferSize() - c.globalBuffer() : 0.0;
+        return c != null ? Math.clamp(c.globalBufferSize() - c.globalBuffer(), 0, energyThroughput()) : 0.0;
     }
 
     @Override

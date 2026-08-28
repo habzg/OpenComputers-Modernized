@@ -183,9 +183,12 @@ public class Relay extends HubBlockEntity implements ComponentInventory, PowerAc
     }
 
     public double tryChangeBuffer(Direction side, double amount, boolean doReceive) {
+        if (isClient() || OCSettings.get().ignorePower) return 0;
         var c = connector(side);
         if (c != null) {
-            if (c.tryChangeBuffer(amount)) return amount;
+            double cappedAmount = Math.clamp(amount, 0, Math.min(energyThroughput(), globalDemand(side)));
+            if (doReceive) return cappedAmount - c.changeBuffer(cappedAmount);
+            return cappedAmount;
         }
         return 0;
     }

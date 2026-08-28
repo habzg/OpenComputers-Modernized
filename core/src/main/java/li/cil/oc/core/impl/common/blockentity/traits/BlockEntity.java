@@ -1,10 +1,13 @@
 package li.cil.oc.core.impl.common.blockentity.traits;
 
+import li.cil.oc.api.network.Environment;
+import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.blockentity.traits.power.AppliedEnergistics2;
 import li.cil.oc.core.impl.util.BlockPosition;
 import li.cil.oc.core.impl.util.EventHandlerDelegate;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
@@ -68,6 +71,18 @@ public abstract class BlockEntity extends net.minecraft.world.level.block.entity
     public void dispose() {
         if (this instanceof AppliedEnergistics2 ae2) {
             ae2.ae2Invalidate();
+        }
+        if (isServer()) {
+            if (this instanceof SidedEnvironment sidedEnvironment) {
+                for (var side : Direction.values()) {
+                    var sideNode = sidedEnvironment.sidedNode(side);
+                    if (sideNode != null) sideNode.remove();
+                }
+            }
+            if (this instanceof Environment environment) {
+                var envNode = environment.node();
+                if (envNode != null) envNode.remove();
+            }
         }
     }
 

@@ -111,9 +111,11 @@ public class Disassembler extends BlockEntity implements li.cil.oc.api.network.E
 
     @Override
     public double tryChangeBuffer(Direction side, double amount, boolean doReceive) {
-        if (node instanceof li.cil.oc.api.network.Connector c) {
-            if (c.tryChangeBuffer(amount)) return amount;
-            else return 0;
+        if (isClient() || OCSettings.get().ignorePower) return 0;
+        if (hasConnector(side) && node instanceof li.cil.oc.api.network.Connector c) {
+            double cappedAmount = Math.clamp(amount, 0, Math.min(energyThroughput(), globalDemand(side)));
+            if (doReceive) return cappedAmount - c.changeBuffer(cappedAmount);
+            return cappedAmount;
         }
         return 0;
     }
