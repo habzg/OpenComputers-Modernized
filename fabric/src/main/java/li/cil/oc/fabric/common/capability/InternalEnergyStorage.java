@@ -33,11 +33,14 @@ public final class InternalEnergyStorage implements EnergyStorage {
     @Override
     public long insert(long maxAmount, TransactionContext transaction) {
         double ocAmount = Power.fromRF((int) Math.min(maxAmount, Integer.MAX_VALUE));
-        double received = tile.tryChangeBuffer(side, ocAmount, true);
+        double received = tile.tryChangeBuffer(side, ocAmount, false);
         if (received > 0) {
+            if (transaction == null) {
+                return Power.toRF(tile.tryChangeBuffer(side, received, true));
+            }
             transaction.addCloseCallback((t, result) -> {
-                if (result == TransactionContext.Result.ABORTED) {
-                    tile.tryChangeBuffer(side, -received, true);
+                if (result == TransactionContext.Result.COMMITTED) {
+                    tile.tryChangeBuffer(side, received, true);
                 }
             });
         }
