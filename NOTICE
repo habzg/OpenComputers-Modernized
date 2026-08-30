@@ -429,18 +429,18 @@ For other mod integrations (in alphabetical order):
 - WTHIT, license: CC BY-NC-SA 4.0. [25]
 
 [1] https://github.com/MrTJP/ProjectRed/blob/1.21.1/LICENSE.md
-[2] https://github.com/Commoble/morered/blob/main/LICENSE.md
+[2] https://github.com/Commoble/morered/blob/1.21.1/LICENSE.md
 [3] https://github.com/cc-tweaked/CC-Tweaked/tree/mc-1.21.x/LICENSES
-[4] https://github.com/AppliedEnergistics/Applied-Energistics-2/blob/neoforge-v19.2.17/LICENSE
-[5] https://github.com/AppliedEnergistics/Applied-Mekanistics/blob/dev-1.21.1/LICENSE
+[4] https://github.com/AppliedEnergistics/Applied-Energistics-2/blob/1.21.1/LICENSE
+[5] https://github.com/AppliedEnergistics/Applied-Mekanistics/blob/dev/1.21.1/LICENSE
 [6] https://github.com/architectury/architectury-api/blob/1.21/LICENSE.md
-[7] https://github.com/TheCBProject/CBMultipart/blob/master/LICENSE.txt
-[8] https://github.com/TheCBProject/CodeChickenLib/blob/master/LICENSE
+[7] https://github.com/TheCBProject/CBMultipart/blob/1.21.1/LICENSE.txt
+[8] https://github.com/TheCBProject/CodeChickenLib/blob/1.21.1/LICENSE
 [9] https://github.com/Creators-of-Create/Create/blob/mc1.21.1/dev/LICENSE.md
-[10] https://github.com/emilyploszaj/emi/blob/master/LICENSE
-[11] https://github.com/enderio/EnderIO/blob/master/LICENSE.txt
-[12] https://github.com/TheCBProject/EnderStorage/blob/master/LICENSE.txt
-[13] https://github.com/Snownee/Jade/blob/1.21/LICENSE.md
+[10] https://github.com/emilyploszaj/emi/blob/1.21/LICENSE
+[11] https://github.com/Team-EnderIO/EnderIO/blob/1.21.1/LICENSE.txt
+[12] https://github.com/TheCBProject/EnderStorage/blob/1.21.1/LICENSE.txt
+[13] https://github.com/Snownee/Jade/blob/1.21-neoforge/LICENSE.md
 [14] https://github.com/mezz/JustEnoughItems/blob/1.21.1/LICENSE.txt
 [15] https://github.com/McJtyMods/McJtyLib/blob/1.21_neo/LICENSE
 [16] https://github.com/mekanism/Mekanism/blob/1.21.x/LICENSE
@@ -452,4 +452,4 @@ For other mod integrations (in alphabetical order):
 [22] https://github.com/TechReborn/Energy/blob/master/LICENSE
 [23] https://github.com/McJtyMods/TheOneProbe/blob/1.21_neo/LICENCE
 [24] https://github.com/MightyPirates/TIS-3D/blob/1.21.1/LICENSE
-[25] https://github.com/badasintended/wthit/blob/dev/master/LICENSE.md
+[25] https://github.com/badasintended/wthit/blob/dev/1.21.1/LICENSE.md
