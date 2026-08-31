@@ -24,19 +24,12 @@ tasks.named('compileJava') {
 }
 
 configurations {
-    commonJava {
-        canBeResolved = false
-        canBeConsumed = true
-    }
     commonResources {
         canBeResolved = false
         canBeConsumed = true
     }
 }
 
-sourceSets.main.java.srcDirs.each { dir ->
-    artifacts.add('commonJava', dir)
-}
 artifacts {
     commonResources sourceSets.main.resources.sourceDirectories.singleFile
 }

@@ -54,6 +54,7 @@ dependencies {
     compileOnly(project(':api'))
     compileOnly(project(':core-api'))
     compileOnly(project(':core'))
+    compileOnly(project(':fabric-api'))
 
     compileOnly("li.cil.repack:OC-JNLua:${jnlua_version}")
     compileOnly("dev.ryanhcode.sable-companion:sable-companion-common-${minecraft_version}:${sable_companion_version}")
@@ -108,19 +109,17 @@ def extractEmbedded = tasks.register('extractEmbedded', Copy) {
     into embeddedDir
 }
 sourceSets.main.output.dir(['builtBy': extractEmbedded], embeddedDir)
-sourceSets.main.java.srcDirs += "${rootProject.projectDir}/core/src/main/java"
-sourceSets.main.java.srcDirs += "${rootProject.projectDir}/api/src/main/java"
-sourceSets.main.java.srcDirs += "${rootProject.projectDir}/core-api/src/main/java"
-sourceSets.main.java.srcDirs += "${rootProject.projectDir}/fabric-api/src/main/java"
-sourceSets.main.java.srcDirs += file("${rootProject.projectDir}/core-api/build/generated/sources/tags/java/main")
 
-tasks.named('compileJava', JavaCompile) {
-    dependsOn(':core-api:generateTags')
-    dependsOn(':api:compileJava')
-    dependsOn(':core-api:compileJava')
-    dependsOn(':core:compileJava')
-    dependsOn(':fabric-api:compileJava')
+def sharedClassesDir = layout.buildDirectory.dir('sharedClasses')
+def mergeSharedClasses = tasks.register('mergeSharedClasses', Copy) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    into sharedClassesDir
+    from(project(':api').sourceSets.main.output.classesDirs)
+    from(project(':core-api').sourceSets.main.output.classesDirs)
+    from(project(':core').sourceSets.main.output.classesDirs)
+    from(project(':fabric-api').sourceSets.main.output.classesDirs)
 }
+sourceSets.main.output.dir(['builtBy': mergeSharedClasses], sharedClassesDir)
 
 processResources {
     dependsOn(configurations.commonResources)

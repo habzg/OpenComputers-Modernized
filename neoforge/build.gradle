@@ -56,7 +56,6 @@ neoForge {
 
 configurations {
     runtimeClasspath.extendsFrom localRuntime
-    commonJava { canBeResolved = true; canBeConsumed = false }
     commonResources { canBeResolved = true; canBeConsumed = false }
 }
 
@@ -65,6 +64,7 @@ dependencies {
     compileOnly(project(':api'))
     compileOnly(project(':core-api'))
     compileOnly(project(':core'))
+    compileOnly(project(':neoforge-api'))
 
     // OC repack libraries
     compileOnly("li.cil.repack:OC-JNLua:${jnlua_version}")
@@ -116,14 +116,9 @@ dependencies {
     implementation("com.refinedmods.refinedstorage:refinedstorage-neoforge:${rs2_version}")
     implementation("com.refinedmods.refinedstorage:refinedstorage-mekanism-integration:${rs2mekanism_version}")
 
-    // Source set merging
-    commonJava(project(path: ':core-api', configuration: 'commonJava'))
     commonResources(project(path: ':core-api', configuration: 'commonResources'))
-    commonJava(project(path: ':core', configuration: 'commonJava'))
     commonResources(project(path: ':core', configuration: 'commonResources'))
-    commonJava(project(path: ':api', configuration: 'commonJava'))
     commonResources(project(path: ':api', configuration: 'commonResources'))
-    commonJava(project(path: ':neoforge-api', configuration: 'commonJava'))
     commonResources(project(path: ':neoforge-api', configuration: 'commonResources'))
 
     additionalRuntimeClasspath("li.cil.repack:OC-JNLua-Natives:${jnlua_natives_version}")
@@ -157,10 +152,16 @@ def extractEmbedded = tasks.register('extractEmbedded', Copy) {
     into embeddedDir
 }
 sourceSets.main.output.dir(['builtBy': extractEmbedded], embeddedDir)
-tasks.named('compileJava', JavaCompile) {
-    dependsOn(configurations.commonJava)
-    source(configurations.commonJava)
+def sharedClassesDir = layout.buildDirectory.dir('sharedClasses')
+def mergeSharedClasses = tasks.register('mergeSharedClasses', Copy) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    into sharedClassesDir
+    from(project(':api').sourceSets.main.output.classesDirs)
+    from(project(':core-api').sourceSets.main.output.classesDirs)
+    from(project(':core').sourceSets.main.output.classesDirs)
+    from(project(':neoforge-api').sourceSets.main.output.classesDirs)
 }
+sourceSets.main.output.dir(['builtBy': mergeSharedClasses], sharedClassesDir)
 
 processResources {
     dependsOn(configurations.commonResources)
