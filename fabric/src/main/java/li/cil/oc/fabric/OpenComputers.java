@@ -63,7 +63,6 @@ import li.cil.oc.fabric.client.ClientPacketSenderDelegate;
 import li.cil.oc.fabric.common.GuiHandler;
 import li.cil.oc.fabric.common.Loot;
 import li.cil.oc.fabric.common.capability.OCBlockCapabilities;
-import li.cil.oc.fabric.common.capability.SimpleComponentCapability;
 import li.cil.oc.fabric.common.event.AngelUpgradeHandler;
 import li.cil.oc.fabric.common.event.ChunkloaderUpgradeHandler;
 import li.cil.oc.fabric.common.event.ExperienceUpgradeHandler;
@@ -355,16 +354,6 @@ public final class OpenComputers implements ModInitializer {
                 (level, pos, state, blockEntity, side) -> {
                     if (blockEntity instanceof li.cil.oc.core.util.FluidHandler handler) {
                         return new li.cil.oc.fabric.util.FluidHandlerStorage(handler);
-                    }
-                    return null;
-                },
-                Blocks.ALL_BLOCKS
-        );
-
-        OCBlockCapabilities.SIMPLE_COMPONENT_PROVIDER.registerForBlocks(
-                (level, pos, state, blockEntity, side) -> {
-                    if (blockEntity instanceof li.cil.oc.api.network.SimpleComponent sc) {
-                        return new SimpleComponentCapability(blockEntity, sc);
                     }
                     return null;
                 },

@@ -8,20 +8,13 @@ import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.SimpleComponent;
 import li.cil.oc.api.network.Visibility;
-import li.cil.oc.core.impl.common.asm.template.SimpleComponentImpl;
 import li.cil.oc.core.impl.util.SideTracker;
-import li.cil.oc.fabric.common.EventHandler;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 public final class StaticSimpleEnvironment {
     private static final Map<BlockEntity, Node> nodes = new HashMap<>();
 
     private StaticSimpleEnvironment() {
-    }
-
-    public static Node node(final SimpleComponentImpl self) {
-        return node((BlockEntity) self, self);
     }
 
     public static Node node(final BlockEntity blockEntity, final SimpleComponent simpleComponent) {
@@ -42,52 +35,6 @@ public final class StaticSimpleEnvironment {
                             .create());
         }
         return nodes.get(blockEntity);
-    }
-
-    @SuppressWarnings("unused")
-    public static void validate(final SimpleComponentImpl self) {
-        self.validate_OpenComputers();
-        EventHandler.scheduleServer((BlockEntity) self);
-    }
-
-    @SuppressWarnings("unused")
-    public static void invalidate(final SimpleComponentImpl self) {
-        self.invalidate_OpenComputers();
-        final Node node = node(self);
-        if (node != null) {
-            node.remove();
-            nodes.remove((BlockEntity) self);
-        }
-    }
-
-    @SuppressWarnings("unused")
-    public static void onChunkUnload(final SimpleComponentImpl self) {
-        self.onChunkUnload_OpenComputers();
-        final Node node = node(self);
-        if (node != null) {
-            node.remove();
-            nodes.remove((BlockEntity) self);
-        }
-    }
-
-    @SuppressWarnings("unused")
-    public static void readFromNBT(final SimpleComponentImpl self, CompoundTag nbt) {
-        self.readFromNBT_OpenComputers(nbt);
-        final Node node = node(self);
-        if (node != null) {
-            node.load(nbt.getCompound("oc:node"), null);
-        }
-    }
-
-    @SuppressWarnings("unused")
-    public static void writeToNBT(final SimpleComponentImpl self, CompoundTag nbt) {
-        self.writeToNBT_OpenComputers(nbt);
-        final Node node = node(self);
-        if (node != null) {
-            final CompoundTag nodeNbt = new CompoundTag();
-            node.save(nodeNbt, null);
-            nbt.put("oc:node", nodeNbt);
-        }
     }
 
     @SuppressWarnings("unused")

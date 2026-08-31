@@ -28,6 +28,7 @@ import li.cil.oc.neoforge.common.init.Recipes;
 import li.cil.oc.neoforge.common.init.BlockEntities;
 import li.cil.oc.neoforge.integration.Mods;
 import net.minecraft.commands.Commands;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.MenuProvider;
@@ -252,12 +253,13 @@ public final class OpenComputers {
                 li.cil.oc.neoforge.integration.computercraft.PeripheralProvider.registerCapabilities(event);
             }
 
-            final net.minecraft.world.level.block.Block[] allBlocks =
+            final net.minecraft.world.level.block.Block[] ourBlocks =
                     Blocks.BLOCKS.getEntries().stream()
                             .map(DeferredHolder::get)
                             .toArray(net.minecraft.world.level.block.Block[]::new);
-            li.cil.oc.neoforge.common.capability.OCBlockCapabilities.register(event, allBlocks);
+            li.cil.oc.neoforge.common.capability.OCBlockCapabilities.register(event, ourBlocks);
 
+          final net.minecraft.world.level.block.Block[] allBlocks = BuiltInRegistries.BLOCK.stream().toArray(net.minecraft.world.level.block.Block[]::new);
             event.registerBlock(li.cil.oc.neoforge.common.capability.OCBlockCapabilities.SIMPLE_COMPONENT_PROVIDER,
                     (level, pos, state, blockEntity, side) -> {
                         if (blockEntity instanceof li.cil.oc.api.network.SimpleComponent sc) {
@@ -295,8 +297,7 @@ public final class OpenComputers {
             if (Mods.MoreRed.isModAvailable()) {
                 li.cil.oc.neoforge.integration.morered.ModMoreRed.registerCapabilities(event);
             }
-
-            });
+        });
     }
 
     public static Logger log() {

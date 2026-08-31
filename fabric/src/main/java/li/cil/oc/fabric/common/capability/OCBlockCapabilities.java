@@ -53,6 +53,14 @@ public final class OCBlockCapabilities {
                 (level, pos, state, blockEntity, side) ->
                         blockEntity instanceof Colored colored ? colored : null,
                 blocks);
+
+        SIMPLE_COMPONENT_PROVIDER.registerFallback(
+          (level, pos, state, blockEntity, side) -> {
+            if (blockEntity instanceof li.cil.oc.api.network.SimpleComponent sc) {
+              return new SimpleComponentCapability(blockEntity, sc);
+            }
+            return null;
+          });
     }
 
     private record SidedComponentEnvironment(Environment environment, SidedComponent sidedComponent) implements SidedEnvironment {

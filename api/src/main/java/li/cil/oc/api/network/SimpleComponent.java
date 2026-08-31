@@ -1,10 +1,5 @@
 package li.cil.oc.api.network;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
 /**
  * This interface can be used to easily convert block entities to components,
  * without having to implement {@link li.cil.oc.api.network.Environment}
@@ -88,18 +83,4 @@ public interface SimpleComponent {
      * @return the component's name.
      */
     String getComponentName();
-
-    /**
-     * Use this to skip logic injection for the class this is implemented by.
-     * <br>
-     * For example, if you have a class transformer that injects logic from a
-     * template class into your actual block entities, OC's class transformer
-     * would complain when it finds the interface on the template class. That
-     * warning can be suppressed by using this annotation on the template.
-     */
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target(ElementType.TYPE)
-    @SuppressWarnings("unused")
-    @interface SkipInjection {
-    }
 }
