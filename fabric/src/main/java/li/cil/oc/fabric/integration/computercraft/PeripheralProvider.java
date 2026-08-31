@@ -6,21 +6,21 @@ import li.cil.oc.core.impl.integration.computercraft.RelayPeripheral;
 import li.cil.oc.fabric.common.init.BlockEntities;
 
 public final class PeripheralProvider {
-    private PeripheralProvider() {
-    }
+  private PeripheralProvider() {
+  }
 
-    public static void register() {
-        try {
-            PeripheralLookup.get().registerForBlockEntities(
-                    (blockEntity, side) -> {
-                        if (blockEntity instanceof Relay relay) {
-                            return new RelayPeripheral(relay);
-                        }
-                        return null;
-                    },
-                    BlockEntities.RELAY
-            );
-        } catch (Exception | NoClassDefFoundError ignored) {
-        }
+  public static void register() {
+    try {
+      PeripheralLookup.get().registerForBlockEntities(
+        (blockEntity, side) -> {
+          if (blockEntity instanceof Relay relay) {
+            return new RelayPeripheral(relay);
+          }
+          return null;
+        },
+        BlockEntities.RELAY
+      );
+    } catch (Exception | NoClassDefFoundError ignored) {
     }
+  }
 }

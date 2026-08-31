@@ -10,13 +10,13 @@ import net.minecraft.world.entity.player.Player;
  */
 @SuppressWarnings("unused")
 public class RobotAnalyzeEvent extends RobotEvent {
-    /**
-     * The player that used the analyzer.
-     */
-    public final Player player;
+  /**
+   * The player that used the analyzer.
+   */
+  public final Player player;
 
-    public RobotAnalyzeEvent(Agent agent, Player player) {
-        super(agent);
-        this.player = player;
-    }
+  public RobotAnalyzeEvent(Agent agent, Player player) {
+    super(agent);
+    this.player = player;
+  }
 }

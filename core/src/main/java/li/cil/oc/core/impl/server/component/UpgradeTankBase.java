@@ -13,66 +13,66 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 
 public abstract class UpgradeTankBase extends AbstractManagedEnvironment implements DeviceInfo {
-    public final EnvironmentHost owner;
-    public final int capacity;
+  public final EnvironmentHost owner;
+  public final int capacity;
 
-    public final Node node = Network.newNode(this, Visibility.None).create();
-    private final Map<String, String> deviceInfo;
+  public final Node node = Network.newNode(this, Visibility.None).create();
+  private final Map<String, String> deviceInfo;
 
-    public UpgradeTankBase(EnvironmentHost owner, int capacity) {
-        this.owner = owner;
-        this.capacity = capacity;
-        deviceInfo = new java.util.HashMap<>();
-        deviceInfo.put(DeviceAttribute.Class, DeviceClass.Generic);
-        deviceInfo.put(DeviceAttribute.Description, "Tank upgrade");
-        deviceInfo.put(DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor);
-        deviceInfo.put(DeviceAttribute.Product, "Superblubb V10");
-        deviceInfo.put(DeviceAttribute.Capacity, String.valueOf(capacity));
+  public UpgradeTankBase(EnvironmentHost owner, int capacity) {
+    this.owner = owner;
+    this.capacity = capacity;
+    deviceInfo = new java.util.HashMap<>();
+    deviceInfo.put(DeviceAttribute.Class, DeviceClass.Generic);
+    deviceInfo.put(DeviceAttribute.Description, "Tank upgrade");
+    deviceInfo.put(DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor);
+    deviceInfo.put(DeviceAttribute.Product, "Superblubb V10");
+    deviceInfo.put(DeviceAttribute.Capacity, String.valueOf(capacity));
+  }
+
+  @Override
+  public Map<String, String> getDeviceInfo() {
+    return deviceInfo;
+  }
+
+  protected abstract void loadTankNbt(CompoundTag nbt, HolderLookup.Provider ignoredProvider);
+
+  protected abstract void saveTankNbt(CompoundTag nbt, HolderLookup.Provider ignoredProvider);
+
+  @Override
+  public void load(CompoundTag nbt, HolderLookup.Provider provider) {
+    super.load(nbt, provider);
+    if (nbt.contains("fluid")) {
+      loadTankNbt(nbt.getCompound("fluid"), provider);
+    } else if (nbt.contains("FluidName")) {
+      CompoundTag translated = new CompoundTag();
+      translated.putString("id", nbt.getString("FluidName"));
+      if (nbt.contains("Amount")) {
+        translated.putInt("Amount", nbt.getInt("Amount"));
+      }
+      loadTankNbt(translated, provider);
     }
+  }
 
-    @Override
-    public Map<String, String> getDeviceInfo() {
-        return deviceInfo;
+  @Override
+  public void save(CompoundTag nbt, HolderLookup.Provider provider) {
+    super.save(nbt, provider);
+    CompoundTag fluidTag = new CompoundTag();
+    saveTankNbt(fluidTag, provider);
+    if (!fluidTag.isEmpty()) {
+      nbt.put("fluid", fluidTag);
     }
+  }
 
-    protected abstract void loadTankNbt(CompoundTag nbt, HolderLookup.Provider ignoredProvider);
-
-    protected abstract void saveTankNbt(CompoundTag nbt, HolderLookup.Provider ignoredProvider);
-
-    @Override
-    public void load(CompoundTag nbt, HolderLookup.Provider provider) {
-        super.load(nbt, provider);
-        if (nbt.contains("fluid")) {
-            loadTankNbt(nbt.getCompound("fluid"), provider);
-        } else if (nbt.contains("FluidName")) {
-            CompoundTag translated = new CompoundTag();
-            translated.putString("id", nbt.getString("FluidName"));
-            if (nbt.contains("Amount")) {
-                translated.putInt("Amount", nbt.getInt("Amount"));
-            }
-            loadTankNbt(translated, provider);
+  protected int tankIndex() {
+    if (owner instanceof li.cil.oc.api.internal.Agent agent && agent.tank() != null) {
+      int count = agent.tank().tankCount();
+      for (int i = 0; i < count; i++) {
+        if (agent.tank().getFluidTank(i) == this) {
+          return i + 1;
         }
+      }
     }
-
-    @Override
-    public void save(CompoundTag nbt, HolderLookup.Provider provider) {
-        super.save(nbt, provider);
-        CompoundTag fluidTag = new CompoundTag();
-        saveTankNbt(fluidTag, provider);
-        if (!fluidTag.isEmpty()) {
-            nbt.put("fluid", fluidTag);
-        }
-    }
-
-    protected int tankIndex() {
-        if (owner instanceof li.cil.oc.api.internal.Agent agent && agent.tank() != null) {
-            int count = agent.tank().tankCount();
-            for (int i = 0; i < count; i++) {
-                if (agent.tank().getFluidTank(i) == this) {
-                    return i + 1;
-                }
-            }
-        }
-        return 1;
-    }
+    return 1;
+  }
 }

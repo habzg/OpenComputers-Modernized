@@ -16,15 +16,15 @@ import net.minecraft.world.item.ItemStack;
  * a value of <code>1.0</code> will be used, i.e. the "default" speed modifier.
  */
 public interface CallBudget {
-    /**
-     * The budget for direct calls provided by the specified li.cil.oc.common.component.
-     * <br>
-     * For reference, the default budgets for OpenComputers' processors are
-     * 0.5, 1.0 and 1.5 for tier one, two and three, respectively. This means
-     * you can consider it a multiplier for the machine's operation speed.
-     *
-     * @param stack the stack representing the part to get the call budget for.
-     * @return the budget for direct calls per tick provided.
-     */
-    double getCallBudget(ItemStack stack);
+  /**
+   * The budget for direct calls provided by the specified li.cil.oc.common.component.
+   * <br>
+   * For reference, the default budgets for OpenComputers' processors are
+   * 0.5, 1.0 and 1.5 for tier one, two and three, respectively. This means
+   * you can consider it a multiplier for the machine's operation speed.
+   *
+   * @param stack the stack representing the part to get the call budget for.
+   * @return the budget for direct calls per tick provided.
+   */
+  double getCallBudget(ItemStack stack);
 }

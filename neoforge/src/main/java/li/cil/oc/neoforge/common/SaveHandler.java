@@ -8,24 +8,24 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
 
 public final class SaveHandler {
-    private SaveHandler() {
-    }
+  private SaveHandler() {
+  }
 
-    @SubscribeEvent(priority = EventPriority.HIGHEST)
-    @SuppressWarnings("unused")
-    public static void onWorldLoad(LevelEvent.Load e) {
-        if (e.getLevel() instanceof ServerLevel serverLevel) {
-            StateSaveManager.setSaveRoot(serverLevel.getServer().getWorldPath(LevelResource.ROOT).toFile());
-        }
-        StateSaveManager.touchStateFiles();
+  @SubscribeEvent(priority = EventPriority.HIGHEST)
+  @SuppressWarnings("unused")
+  public static void onWorldLoad(LevelEvent.Load e) {
+    if (e.getLevel() instanceof ServerLevel serverLevel) {
+      StateSaveManager.setSaveRoot(serverLevel.getServer().getWorldPath(LevelResource.ROOT).toFile());
     }
+    StateSaveManager.touchStateFiles();
+  }
 
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    @SuppressWarnings("unused")
-    public static void onWorldSave(LevelEvent.Save e) {
-        StateSaveManager.stateSaveHandler.withPool(pool -> {
-            pool.submit(StateSaveManager::cleanSaveData);
-            return null;
-        });
-    }
+  @SubscribeEvent(priority = EventPriority.LOWEST)
+  @SuppressWarnings("unused")
+  public static void onWorldSave(LevelEvent.Save e) {
+    StateSaveManager.stateSaveHandler.withPool(pool -> {
+      pool.submit(StateSaveManager::cleanSaveData);
+      return null;
+    });
+  }
 }

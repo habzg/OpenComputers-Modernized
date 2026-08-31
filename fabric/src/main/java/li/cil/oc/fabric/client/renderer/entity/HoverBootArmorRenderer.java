@@ -11,17 +11,17 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 
 public class HoverBootArmorRenderer implements ArmorRenderer {
-    public static final HoverBootArmorRenderer INSTANCE = new HoverBootArmorRenderer();
+  public static final HoverBootArmorRenderer INSTANCE = new HoverBootArmorRenderer();
 
-    private HoverBootArmorRenderer() {
-    }
+  private HoverBootArmorRenderer() {
+  }
 
-    @Override
-    public void render(PoseStack matrices, MultiBufferSource vertexConsumers, ItemStack stack, LivingEntity entity, EquipmentSlot slot, int light, HumanoidModel<LivingEntity> contextModel) {
-        HoverBootRenderer.INSTANCE.leftLeg.copyFrom(contextModel.leftLeg);
-        HoverBootRenderer.INSTANCE.rightLeg.copyFrom(contextModel.rightLeg);
-        HoverBootRenderer.INSTANCE.lightColor = ItemColorizer.hasColor(stack) ? ItemColorizer.getColor(stack) : 0x66DD55;
-        ArmorRenderer.renderPart(matrices, vertexConsumers, light, stack, HoverBootRenderer.INSTANCE,
-                HoverBootLayer.TEXTURE);
-    }
+  @Override
+  public void render(PoseStack matrices, MultiBufferSource vertexConsumers, ItemStack stack, LivingEntity entity, EquipmentSlot slot, int light, HumanoidModel<LivingEntity> contextModel) {
+    HoverBootRenderer.INSTANCE.leftLeg.copyFrom(contextModel.leftLeg);
+    HoverBootRenderer.INSTANCE.rightLeg.copyFrom(contextModel.rightLeg);
+    HoverBootRenderer.INSTANCE.lightColor = ItemColorizer.hasColor(stack) ? ItemColorizer.getColor(stack) : 0x66DD55;
+    ArmorRenderer.renderPart(matrices, vertexConsumers, light, stack, HoverBootRenderer.INSTANCE,
+      HoverBootLayer.TEXTURE);
+  }
 }

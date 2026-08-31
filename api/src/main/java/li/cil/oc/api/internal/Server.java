@@ -22,15 +22,15 @@ import li.cil.oc.api.network.EnvironmentHost;
  * also means that <em>you should not implement this</em>.
  */
 public interface Server extends EnvironmentHost, MachineHost, Tiered, RackMountable {
-    /**
-     * The server rack this server is in.
-     */
-    @SuppressWarnings("unused")
-    Rack rack();
+  /**
+   * The server rack this server is in.
+   */
+  @SuppressWarnings("unused")
+  Rack rack();
 
-    /**
-     * The slot of the server rack this server is in.
-     */
-    @SuppressWarnings("unused")
-    int slot();
+  /**
+   * The slot of the server rack this server is in.
+   */
+  @SuppressWarnings("unused")
+  int slot();
 }

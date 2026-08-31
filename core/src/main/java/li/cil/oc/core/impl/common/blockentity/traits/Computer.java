@@ -7,77 +7,77 @@ import li.cil.oc.api.network.Node;
 
 
 public interface Computer extends Environment, ComponentInventory, Rotatable, BundledRedstoneAware, Analyzable, MachineHost, li.cil.oc.api.util.StateAware {
-    li.cil.oc.api.machine.Machine machine();
+  li.cil.oc.api.machine.Machine machine();
 
-    Node node();
+  Node node();
 
-    @SuppressWarnings("unused")
-    boolean isRunning();
+  @SuppressWarnings("unused")
+  boolean isRunning();
 
-    void setRunning(boolean value);
+  void setRunning(boolean value);
 
-    @SuppressWarnings("unused")
-    boolean hasErrored();
+  @SuppressWarnings("unused")
+  boolean hasErrored();
 
-    void hasErrored(boolean value);
+  void hasErrored(boolean value);
 
-    @SuppressWarnings("unused")
-    boolean canInteract(String player);
+  @SuppressWarnings("unused")
+  boolean canInteract(String player);
 
-    void setUsers(Iterable<String> list);
+  void setUsers(Iterable<String> list);
 
-    @SuppressWarnings("unused")
-    boolean hasRedstoneCard();
+  @SuppressWarnings("unused")
+  boolean hasRedstoneCard();
 
-    @SuppressWarnings("unused")
-    Object[] getInterfaces(int side);
+  @SuppressWarnings("unused")
+  Object[] getInterfaces(int side);
 
-    @SuppressWarnings("unused")
-    java.util.Set<String> users();
+  @SuppressWarnings("unused")
+  java.util.Set<String> users();
 
-    @SuppressWarnings("unused")
-    int getSizeInventory();
+  @SuppressWarnings("unused")
+  int getSizeInventory();
 
-    @SuppressWarnings("unused")
-    net.minecraft.world.item.ItemStack getStackInSlot(int slot);
+  @SuppressWarnings("unused")
+  net.minecraft.world.item.ItemStack getStackInSlot(int slot);
 
-    boolean isComponentSlot(int slot, net.minecraft.world.item.ItemStack stack);
+  boolean isComponentSlot(int slot, net.minecraft.world.item.ItemStack stack);
 
-    void onMachineConnect(Node node);
+  void onMachineConnect(Node node);
 
-    void onMachineDisconnect(Node node);
+  void onMachineDisconnect(Node node);
 
-    java.lang.Iterable<net.minecraft.world.item.ItemStack> internalComponents();
+  java.lang.Iterable<net.minecraft.world.item.ItemStack> internalComponents();
 
-    @SuppressWarnings("unused")
-    Iterable<ManagedEnvironment> installedComponents();
+  @SuppressWarnings("unused")
+  Iterable<ManagedEnvironment> installedComponents();
 
-    void readFromNBTForServer(net.minecraft.nbt.CompoundTag nbt) ;
+  void readFromNBTForServer(net.minecraft.nbt.CompoundTag nbt);
 
-    void writeToNBTForServer(net.minecraft.nbt.CompoundTag nbt);
+  void writeToNBTForServer(net.minecraft.nbt.CompoundTag nbt);
 
-    void readFromNBTForClient(net.minecraft.nbt.CompoundTag nbt);
+  void readFromNBTForClient(net.minecraft.nbt.CompoundTag nbt);
 
-    void writeToNBTForClient(net.minecraft.nbt.CompoundTag nbt);
+  void writeToNBTForClient(net.minecraft.nbt.CompoundTag nbt);
 
-    void updateEntity();
+  void updateEntity();
 
-    void dispose();
+  void dispose();
 
-    @SuppressWarnings("unused")
-    void markDirty();
+  @SuppressWarnings("unused")
+  void markDirty();
 
-    boolean isUseableByPlayer(net.minecraft.world.entity.player.Player player);
+  boolean isUseableByPlayer(net.minecraft.world.entity.player.Player player);
 
-    Node[] onAnalyze(net.minecraft.world.entity.player.Player player, net.minecraft.core.Direction side, float hitX, float hitY, float hitZ);
+  Node[] onAnalyze(net.minecraft.world.entity.player.Player player, net.minecraft.core.Direction side, float hitX, float hitY, float hitZ);
 
-    void onRotationChanged();
+  void onRotationChanged();
 
-    void checkRedstoneInputChanged();
+  void checkRedstoneInputChanged();
 
-    java.util.EnumSet<li.cil.oc.api.util.StateAware.State> getCurrentState();
+  java.util.EnumSet<li.cil.oc.api.util.StateAware.State> getCurrentState();
 
-    default String runSound() {
-        return "computer_running";
-    }
+  default String runSound() {
+    return "computer_running";
+  }
 }

@@ -13,38 +13,38 @@ import net.minecraft.client.gui.GuiGraphics;
  * Built-in image renderers are <code>item</code>, <code>block</code> and <code>oredict</code>.
  */
 public interface ImageRenderer {
-    /**
-     * The width of the area this renderer uses.
-     * <br>
-     * This is used to offset the rendering state properly before calling
-     * {@link #render(GuiGraphics, int, int)}, to correctly align the image horizontally.
-     *
-     * @return the width of the rendered image.
-     */
-    int getWidth();
+  /**
+   * The width of the area this renderer uses.
+   * <br>
+   * This is used to offset the rendering state properly before calling
+   * {@link #render(GuiGraphics, int, int)}, to correctly align the image horizontally.
+   *
+   * @return the width of the rendered image.
+   */
+  int getWidth();
 
-    /**
-     * The height of the area this renderer uses.
-     * <br>
-     * This is used to offset the rendering state properly before calling
-     * {@link #render(GuiGraphics, int, int)}, as well as to know where to resume rendering
-     * other content below the image.
-     *
-     * @return the height of the rendered image.
-     */
-    int getHeight();
+  /**
+   * The height of the area this renderer uses.
+   * <br>
+   * This is used to offset the rendering state properly before calling
+   * {@link #render(GuiGraphics, int, int)}, as well as to know where to resume rendering
+   * other content below the image.
+   *
+   * @return the height of the rendered image.
+   */
+  int getHeight();
 
-    /**
-     * Render the image, with specified maximum width.
-     * <br>
-     * This should render the image as is, the rendering state will be set up
-     * such that you can start drawing at (0,0,*), and render up to
-     * (getWidth,getHeight,*), i.e. translation and scaling are taken care
-     * of for you.
-     *
-     * @param graphics the render transformation for this image
-     * @param mouseX   the X position of the mouse relative to the element.
-     * @param mouseY   the Y position of the mouse relative to the element.
-     */
-    void render(GuiGraphics graphics, int mouseX, int mouseY);
+  /**
+   * Render the image, with specified maximum width.
+   * <br>
+   * This should render the image as is, the rendering state will be set up
+   * such that you can start drawing at (0,0,*), and render up to
+   * (getWidth,getHeight,*), i.e. translation and scaling are taken care
+   * of for you.
+   *
+   * @param graphics the render transformation for this image
+   * @param mouseX   the X position of the mouse relative to the element.
+   * @param mouseY   the Y position of the mouse relative to the element.
+   */
+  void render(GuiGraphics graphics, int mouseX, int mouseY);
 }

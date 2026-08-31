@@ -6,12 +6,12 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 
 public class Transposer extends SimpleBlock {
-    public Transposer() {
-        super();
-    }
+  public Transposer() {
+    super();
+  }
 
-    @Override
-    public BlockEntity newBlockEntity(@NotNull BlockPos pos, @NotNull BlockState state) {
-        return new li.cil.oc.neoforge.common.blockentity.Transposer(pos, state);
-    }
+  @Override
+  public BlockEntity newBlockEntity(@NotNull BlockPos pos, @NotNull BlockState state) {
+    return new li.cil.oc.neoforge.common.blockentity.Transposer(pos, state);
+  }
 }

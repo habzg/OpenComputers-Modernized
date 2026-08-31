@@ -12,31 +12,31 @@ import java.util.EnumSet;
  * in them, for example (only active mountables will be used).
  */
 public interface StateAware {
-    /**
-     * Get the current work state (usually a <code>BlockEntity</code>.
-     * <br>
-     * An empty set indicates that no work can be performed.
-     *
-     * @return the current state.
-     */
-    EnumSet<State> getCurrentState();
+  /**
+   * Get the current work state (usually a <code>BlockEntity</code>.
+   * <br>
+   * An empty set indicates that no work can be performed.
+   *
+   * @return the current state.
+   */
+  EnumSet<State> getCurrentState();
+
+  /**
+   * Possible work states.
+   */
+  enum State {
+    None,
 
     /**
-     * Possible work states.
+     * Indicates that some work can be performed / energy can be consumed,
+     * but that the current state is being idle.
      */
-    enum State {
-        None,
+    CanWork,
 
-        /**
-         * Indicates that some work can be performed / energy can be consumed,
-         * but that the current state is being idle.
-         */
-        CanWork,
-
-        /**
-         * Indicates that some work is currently being performed / some energy
-         * is currently being consumed.
-         */
-        IsWorking
-    }
+    /**
+     * Indicates that some work is currently being performed / some energy
+     * is currently being consumed.
+     */
+    IsWorking
+  }
 }

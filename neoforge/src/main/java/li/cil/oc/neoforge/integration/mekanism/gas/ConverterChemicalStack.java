@@ -7,18 +7,18 @@ import mekanism.api.chemical.ChemicalStack;
 
 @SuppressWarnings("unused")
 public final class ConverterChemicalStack implements Converter {
-    @Override
-    public void convert(Object value, Map<Object, Object> output) {
-        if (value instanceof ChemicalStack stack) {
-            var key = stack.getChemicalHolder().getKey();
-            if (key != null) {
-                if (OCSettings.get().insertIdsInConverters) {
-                    output.put("id", key.location().toString());
-                }
-                output.put("name", key.location().getPath());
-                output.put("label", stack.getChemical().getTextComponent().getString());
-            }
-            output.put("amount", stack.getAmount());
+  @Override
+  public void convert(Object value, Map<Object, Object> output) {
+    if (value instanceof ChemicalStack stack) {
+      var key = stack.getChemicalHolder().getKey();
+      if (key != null) {
+        if (OCSettings.get().insertIdsInConverters) {
+          output.put("id", key.location().toString());
         }
+        output.put("name", key.location().getPath());
+        output.put("label", stack.getChemical().getTextComponent().getString());
+      }
+      output.put("amount", stack.getAmount());
     }
+  }
 }

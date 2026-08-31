@@ -5,7 +5,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 
 public class FakeEndstone extends SimpleBlock {
-    public FakeEndstone() {
-        super(BlockBehaviour.Properties.of().mapColor(MapColor.STONE).strength(3f, 15f).sound(SoundType.STONE));
-    }
+  public FakeEndstone() {
+    super(BlockBehaviour.Properties.of().mapColor(MapColor.STONE).strength(3f, 15f).sound(SoundType.STONE));
+  }
 }

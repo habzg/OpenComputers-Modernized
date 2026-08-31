@@ -18,61 +18,61 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 
 public class Adapter extends SimpleBlock implements GUI {
-    public static BlockEntityType<?> TYPE;
+  public static BlockEntityType<?> TYPE;
 
-    public Adapter(BlockEntityType<?> blockType) {
-        super();
-        TYPE = blockType;
+  public Adapter(BlockEntityType<?> blockType) {
+    super();
+    TYPE = blockType;
+  }
+
+  public Adapter() {
+    super();
+  }
+
+  @Override
+  public int guiType() {
+    return GuiType.Adapter;
+  }
+
+  @Override
+  public BlockEntity newBlockEntity(@NotNull BlockPos pos, @NotNull BlockState state) {
+    return new li.cil.oc.core.impl.common.blockentity.Adapter(pos, state);
+  }
+
+  @Override
+  public <T extends BlockEntity> BlockEntityTicker<T> getTicker(@NotNull Level level, @NotNull BlockState state, @NotNull BlockEntityType<T> type) {
+    if (level.isClientSide()) return null;
+    return type == TYPE ? (lvl, pos, st, te) -> {
+      try {
+        ((li.cil.oc.core.impl.common.blockentity.Adapter) te).updateEntity();
+      } catch (Exception e) {
+        Log.get().warn("Error in adapter tick", e);
+      }
+    } : null;
+  }
+
+  @Override
+  public void neighborChanged(@NotNull BlockState state, Level world, @NotNull BlockPos pos, @NotNull Block block, @NotNull BlockPos fromPos, boolean isMoving) {
+    BlockEntity te = world.getBlockEntity(pos);
+    if (te instanceof li.cil.oc.core.impl.common.blockentity.Adapter adapter) {
+      adapter.neighborChanged();
     }
+  }
 
-    public Adapter() {
-        super();
-    }
-
-    @Override
-    public int guiType() {
-        return GuiType.Adapter;
-    }
-
-    @Override
-    public BlockEntity newBlockEntity(@NotNull BlockPos pos, @NotNull BlockState state) {
-        return new li.cil.oc.core.impl.common.blockentity.Adapter(pos, state);
-    }
-
-    @Override
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(@NotNull Level level, @NotNull BlockState state, @NotNull BlockEntityType<T> type) {
-        if (level.isClientSide()) return null;
-        return type == TYPE ? (lvl, pos, st, te) -> {
-            try {
-                ((li.cil.oc.core.impl.common.blockentity.Adapter) te).updateEntity();
-            } catch (Exception e) {
-                Log.get().warn("Error in adapter tick", e);
-            }
-        } : null;
-    }
-
-    @Override
-    public void neighborChanged(@NotNull BlockState state, Level world, @NotNull BlockPos pos, @NotNull Block block, @NotNull BlockPos fromPos, boolean isMoving) {
-        BlockEntity te = world.getBlockEntity(pos);
-        if (te instanceof li.cil.oc.core.impl.common.blockentity.Adapter adapter) {
-            adapter.neighborChanged();
+  @Override
+  public boolean onBlockActivated(Level world, BlockPos pos, Player player, Direction side, float hitX, float hitY, float hitZ, InteractionHand hand) {
+    if (Wrench.holdsApplicableWrench(player, BlockPosition.apply(pos.getX(), pos.getY(), pos.getZ(), world))) {
+      Direction sideToToggle = player.isShiftKeyDown() ? side.getOpposite() : side;
+      BlockEntity te = world.getBlockEntity(pos);
+      if (te instanceof li.cil.oc.core.impl.common.blockentity.Adapter adapter) {
+        if (!world.isClientSide) {
+          boolean oldValue = adapter.openSides()[sideToToggle.ordinal()];
+          adapter.setSideOpen(sideToToggle, !oldValue);
         }
+        return true;
+      }
+      return false;
     }
-
-    @Override
-    public boolean onBlockActivated(Level world, BlockPos pos, Player player, Direction side, float hitX, float hitY, float hitZ, InteractionHand hand) {
-        if (Wrench.holdsApplicableWrench(player, BlockPosition.apply(pos.getX(), pos.getY(), pos.getZ(), world))) {
-            Direction sideToToggle = player.isShiftKeyDown() ? side.getOpposite() : side;
-            BlockEntity te = world.getBlockEntity(pos);
-            if (te instanceof li.cil.oc.core.impl.common.blockentity.Adapter adapter) {
-                if (!world.isClientSide) {
-                    boolean oldValue = adapter.openSides()[sideToToggle.ordinal()];
-                    adapter.setSideOpen(sideToToggle, !oldValue);
-                }
-                return true;
-            }
-            return false;
-        }
-        return super.onBlockActivated(world, pos, player, side, hitX, hitY, hitZ, hand);
-    }
+    return super.onBlockActivated(world, pos, player, side, hitX, hitY, hitZ, hand);
+  }
 }

@@ -14,46 +14,46 @@ import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
 
 public class MicrocontrollerRenderer implements BlockEntityRenderer<Microcontroller> {
-    @SuppressWarnings("unused")
-    public MicrocontrollerRenderer(BlockEntityRendererProvider.Context ignoredContext) {
+  @SuppressWarnings("unused")
+  public MicrocontrollerRenderer(BlockEntityRendererProvider.Context ignoredContext) {
+  }
+
+  @Override
+  public void render(@NotNull Microcontroller mcu, float partialTick, @NotNull PoseStack poseStack, @NotNull MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
+    poseStack.pushPose();
+    poseStack.translate(0.5, 0.5, 0.5);
+
+    Direction yaw = mcu.facing();
+    switch (yaw) {
+      case WEST -> poseStack.mulPose(new Quaternionf().rotateY((float) Math.toRadians(-90)));
+      case NORTH -> poseStack.mulPose(new Quaternionf().rotateY((float) Math.toRadians(180)));
+      case EAST -> poseStack.mulPose(new Quaternionf().rotateY((float) Math.toRadians(90)));
+      case SOUTH -> {
+      }
     }
 
-    @Override
-    public void render(@NotNull Microcontroller mcu, float partialTick, @NotNull PoseStack poseStack, @NotNull MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
-        poseStack.pushPose();
-        poseStack.translate(0.5, 0.5, 0.5);
+    poseStack.translate(-0.5, 0.5, 0.505);
+    poseStack.scale(1, -1, 1);
 
-        Direction yaw = mcu.facing();
-        switch (yaw) {
-            case WEST -> poseStack.mulPose(new Quaternionf().rotateY((float) Math.toRadians(-90)));
-            case NORTH -> poseStack.mulPose(new Quaternionf().rotateY((float) Math.toRadians(180)));
-            case EAST -> poseStack.mulPose(new Quaternionf().rotateY((float) Math.toRadians(90)));
-            case SOUTH -> {
-            }
-        }
+    int fullBright = 0xF000F0;
 
-        poseStack.translate(-0.5, 0.5, 0.505);
-        poseStack.scale(1, -1, 1);
+    renderOverlay(poseStack, bufferSource, Textures.blockMicrocontrollerFrontLight, fullBright, packedOverlay);
 
-        int fullBright = 0xF000F0;
-
-        renderOverlay(poseStack, bufferSource, Textures.blockMicrocontrollerFrontLight, fullBright, packedOverlay);
-
-        if (mcu.isRunning()) {
-            renderOverlay(poseStack, bufferSource, Textures.blockMicrocontrollerFrontOn, fullBright, packedOverlay);
-        } else if (mcu.hasErrored() && RenderUtil.shouldShowErrorLight(mcu.hashCode())) {
-            renderOverlay(poseStack, bufferSource, Textures.blockMicrocontrollerFrontError, fullBright, packedOverlay);
-        }
-
-        poseStack.popPose();
+    if (mcu.isRunning()) {
+      renderOverlay(poseStack, bufferSource, Textures.blockMicrocontrollerFrontOn, fullBright, packedOverlay);
+    } else if (mcu.hasErrored() && RenderUtil.shouldShowErrorLight(mcu.hashCode())) {
+      renderOverlay(poseStack, bufferSource, Textures.blockMicrocontrollerFrontError, fullBright, packedOverlay);
     }
 
-    private void renderOverlay(PoseStack poseStack, MultiBufferSource bufferSource, net.minecraft.resources.ResourceLocation texture, int packedLight, int packedOverlay) {
-        VertexConsumer consumer = bufferSource.getBuffer(RenderType.entityTranslucent(texture));
-        var matrix = poseStack.last().pose();
-        consumer.addVertex(matrix, 0, 1, 0.005f).setColor(255, 255, 255, 255).setUv(0, 1).setOverlay(packedOverlay).setLight(packedLight).setNormal(0, 1, 0);
-        consumer.addVertex(matrix, 1, 1, 0.005f).setColor(255, 255, 255, 255).setUv(1, 1).setOverlay(packedOverlay).setLight(packedLight).setNormal(0, 1, 0);
-        consumer.addVertex(matrix, 1, 0, 0.005f).setColor(255, 255, 255, 255).setUv(1, 0).setOverlay(packedOverlay).setLight(packedLight).setNormal(0, 1, 0);
-        consumer.addVertex(matrix, 0, 0, 0.005f).setColor(255, 255, 255, 255).setUv(0, 0).setOverlay(packedOverlay).setLight(packedLight).setNormal(0, 1, 0);
-    }
+    poseStack.popPose();
+  }
+
+  private void renderOverlay(PoseStack poseStack, MultiBufferSource bufferSource, net.minecraft.resources.ResourceLocation texture, int packedLight, int packedOverlay) {
+    VertexConsumer consumer = bufferSource.getBuffer(RenderType.entityTranslucent(texture));
+    var matrix = poseStack.last().pose();
+    consumer.addVertex(matrix, 0, 1, 0.005f).setColor(255, 255, 255, 255).setUv(0, 1).setOverlay(packedOverlay).setLight(packedLight).setNormal(0, 1, 0);
+    consumer.addVertex(matrix, 1, 1, 0.005f).setColor(255, 255, 255, 255).setUv(1, 1).setOverlay(packedOverlay).setLight(packedLight).setNormal(0, 1, 0);
+    consumer.addVertex(matrix, 1, 0, 0.005f).setColor(255, 255, 255, 255).setUv(1, 0).setOverlay(packedOverlay).setLight(packedLight).setNormal(0, 1, 0);
+    consumer.addVertex(matrix, 0, 0, 0.005f).setColor(255, 255, 255, 255).setUv(0, 0).setOverlay(packedOverlay).setLight(packedLight).setNormal(0, 1, 0);
+  }
 }

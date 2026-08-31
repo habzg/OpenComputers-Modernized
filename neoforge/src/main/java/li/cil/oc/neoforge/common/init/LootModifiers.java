@@ -9,13 +9,13 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
 public final class LootModifiers {
-    public static final DeferredRegister<MapCodec<? extends IGlobalLootModifier>> GLM_CODECS =
-            DeferredRegister.create(NeoForgeRegistries.Keys.GLOBAL_LOOT_MODIFIER_SERIALIZERS, OpenComputers.ID);
+  public static final DeferredRegister<MapCodec<? extends IGlobalLootModifier>> GLM_CODECS =
+    DeferredRegister.create(NeoForgeRegistries.Keys.GLOBAL_LOOT_MODIFIER_SERIALIZERS, OpenComputers.ID);
 
-    @SuppressWarnings("unused")
-    public static final DeferredHolder<MapCodec<? extends IGlobalLootModifier>, MapCodec<OCLootModifier>> OC_LOOT =
-            GLM_CODECS.register("oc_loot", () -> OCLootModifier.CODEC);
+  @SuppressWarnings("unused")
+  public static final DeferredHolder<MapCodec<? extends IGlobalLootModifier>, MapCodec<OCLootModifier>> OC_LOOT =
+    GLM_CODECS.register("oc_loot", () -> OCLootModifier.CODEC);
 
-    private LootModifiers() {
-    }
+  private LootModifiers() {
+  }
 }

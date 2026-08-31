@@ -7,37 +7,37 @@ import li.cil.oc.core.impl.common.ReflectionUtil;
 import net.minecraft.world.item.ItemStack;
 
 public final class ItemCharge {
-    private static final Set<Charger> chargers = new LinkedHashSet<>();
+  private static final Set<Charger> chargers = new LinkedHashSet<>();
 
-    private ItemCharge() {
-    }
+  private ItemCharge() {
+  }
 
-    public static void add(Method canCharge, Method charge) {
-        chargers.add(new Charger(canCharge, charge));
-    }
+  public static void add(Method canCharge, Method charge) {
+    chargers.add(new Charger(canCharge, charge));
+  }
 
-    public static boolean canCharge(ItemStack stack) {
-        if (stack != null && !stack.isEmpty()) {
-            for (Charger charger : chargers) {
-                if ((Boolean) ReflectionUtil.tryInvokeStatic(charger.canCharge, false, stack)) {
-                    return true;
-                }
-            }
+  public static boolean canCharge(ItemStack stack) {
+    if (stack != null && !stack.isEmpty()) {
+      for (Charger charger : chargers) {
+        if ((Boolean) ReflectionUtil.tryInvokeStatic(charger.canCharge, false, stack)) {
+          return true;
         }
-        return false;
+      }
     }
+    return false;
+  }
 
-    public static double charge(ItemStack stack, double amount) {
-        if (stack != null && !stack.isEmpty()) {
-            for (Charger charger : chargers) {
-                if ((Boolean) ReflectionUtil.tryInvokeStatic(charger.canCharge, false, stack)) {
-                    return (Double) ReflectionUtil.tryInvokeStatic(charger.charge, 0.0, stack, amount, false);
-                }
-            }
+  public static double charge(ItemStack stack, double amount) {
+    if (stack != null && !stack.isEmpty()) {
+      for (Charger charger : chargers) {
+        if ((Boolean) ReflectionUtil.tryInvokeStatic(charger.canCharge, false, stack)) {
+          return (Double) ReflectionUtil.tryInvokeStatic(charger.charge, 0.0, stack, amount, false);
         }
-        return amount;
+      }
     }
+    return amount;
+  }
 
-    private record Charger(Method canCharge, Method charge) {
-    }
+  private record Charger(Method canCharge, Method charge) {
+  }
 }

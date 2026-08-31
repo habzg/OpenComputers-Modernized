@@ -21,45 +21,45 @@ import net.minecraft.world.Container;
  * <em>you should not implement this</em>.
  */
 public interface Rack extends SidedEnvironment, EnvironmentHost, Rotatable, Container {
-    /**
-     * Determine the index of the specified mountable.
-     *
-     * @param mountable the mountable in this rack to get the index of.
-     * @return the index in the rack, or <code>-1</code> if it's not in the rack.
-     */
-    @SuppressWarnings("unused")
-    int indexOfMountable(RackMountable mountable);
+  /**
+   * Determine the index of the specified mountable.
+   *
+   * @param mountable the mountable in this rack to get the index of.
+   * @return the index in the rack, or <code>-1</code> if it's not in the rack.
+   */
+  @SuppressWarnings("unused")
+  int indexOfMountable(RackMountable mountable);
 
-    /**
-     * The mountable in the specified slot.
-     * <br>
-     * This can be <code>null</code>, for example when there is no mountable installed
-     * in that slot.
-     *
-     * @param slot the slot in which to get the mountable.
-     * @return the mountable currently hosted in the specified slot.
-     */
-    RackMountable getMountable(int slot);
+  /**
+   * The mountable in the specified slot.
+   * <br>
+   * This can be <code>null</code>, for example when there is no mountable installed
+   * in that slot.
+   *
+   * @param slot the slot in which to get the mountable.
+   * @return the mountable currently hosted in the specified slot.
+   */
+  RackMountable getMountable(int slot);
 
-    /**
-     * Get the last data state provided by the mountable in the specified slot.
-     * <br>
-     * This is also available on the client. This may be <code>null</code>.
-     *
-     * @param slot the slot of the mountable to get the data for.
-     * @return the data of the mountable in that slot, or <code>null</code>.
-     */
-    CompoundTag getMountableData(int slot);
+  /**
+   * Get the last data state provided by the mountable in the specified slot.
+   * <br>
+   * This is also available on the client. This may be <code>null</code>.
+   *
+   * @param slot the slot of the mountable to get the data for.
+   * @return the data of the mountable in that slot, or <code>null</code>.
+   */
+  CompoundTag getMountableData(int slot);
 
-    /**
-     * Mark the mountable in the specified slot as changed.
-     * <br>
-     * This will cause the mountable's {@link RackMountable#getData()} method
-     * to be called in the next tick and the updated data to be sent to the
-     * clients, where it can be used for state based rendering of the mountable
-     * for example.
-     *
-     * @param slot the slot of the mountable to queue for updating.
-     */
-    void markChanged(int slot);
+  /**
+   * Mark the mountable in the specified slot as changed.
+   * <br>
+   * This will cause the mountable's {@link RackMountable#getData()} method
+   * to be called in the next tick and the updated data to be sent to the
+   * clients, where it can be used for state based rendering of the mountable
+   * for example.
+   *
+   * @param slot the slot of the mountable to queue for updating.
+   */
+  void markChanged(int slot);
 }

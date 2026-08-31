@@ -21,71 +21,71 @@ import net.neoforged.neoforge.energy.IEnergyStorage;
 
 @SuppressWarnings("unused")
 public final class DriverEnergyStorage extends DriverSidedBlockEntity {
-    @Override
-    public boolean isGeneric() {
-        return true;
+  @Override
+  public boolean isGeneric() {
+    return true;
+  }
+
+  @Override
+  public Class<?> getBlockEntityClass() {
+    return BlockEntity.class;
+  }
+
+  @Override
+  public boolean worksWith(final Level world, final BlockPos pos, final Direction side) {
+    return world.getCapability(Capabilities.EnergyStorage.BLOCK, pos, side) != null;
+  }
+
+  @Override
+  public ManagedEnvironment createEnvironment(final Level world, final BlockPos pos, final Direction side) {
+    var storage = world.getCapability(Capabilities.EnergyStorage.BLOCK, pos, side);
+    if (storage == null) return null;
+    return new Environment(storage);
+  }
+
+  public static final class Environment extends AbstractManagedEnvironment implements NamedBlock {
+    private final IEnergyStorage storage;
+
+    public Environment(final IEnergyStorage storage) {
+      this.storage = storage;
+      setNode(Network.newNode(this, Visibility.Network).withComponent("energy_device").create());
     }
 
     @Override
-    public Class<?> getBlockEntityClass() {
-        return BlockEntity.class;
+    public String preferredName() {
+      return "energy_device";
     }
 
     @Override
-    public boolean worksWith(final Level world, final BlockPos pos, final Direction side) {
-        return world.getCapability(Capabilities.EnergyStorage.BLOCK, pos, side) != null;
+    public int priority() {
+      return 0;
     }
 
+    @Callback(doc = "function():number -- Returns the amount of stored energy on the connected side.")
+    public Object[] getEnergyStored(final Context context, final Arguments args) {
+      return ResultWrapper.result(storage.getEnergyStored());
+    }
+
+    @Callback(doc = "function():number -- Returns the maximum amount of stored energy on the connected side.")
+    public Object[] getMaxEnergyStored(final Context context, final Arguments args) {
+      return ResultWrapper.result(storage.getMaxEnergyStored());
+    }
+
+    @Callback(doc = "function():boolean -- Returns whether this component can have energy extracted from the connected side.")
+    public Object[] canExtract(final Context context, final Arguments args) {
+      return ResultWrapper.result(storage.canExtract());
+    }
+
+    @Callback(doc = "function():boolean -- Returns whether this component can receive energy on the connected side.")
+    public Object[] canReceive(final Context context, final Arguments args) {
+      return ResultWrapper.result(storage.canReceive());
+    }
+  }
+
+  public static final class Provider implements EnvironmentProvider {
     @Override
-    public ManagedEnvironment createEnvironment(final Level world, final BlockPos pos, final Direction side) {
-        var storage = world.getCapability(Capabilities.EnergyStorage.BLOCK, pos, side);
-        if (storage == null) return null;
-        return new Environment(storage);
+    public Class<?> getEnvironment(final ItemStack stack) {
+      return null;
     }
-
-    public static final class Environment extends AbstractManagedEnvironment implements NamedBlock {
-        private final IEnergyStorage storage;
-
-        public Environment(final IEnergyStorage storage) {
-            this.storage = storage;
-            setNode(Network.newNode(this, Visibility.Network).withComponent("energy_device").create());
-        }
-
-        @Override
-        public String preferredName() {
-            return "energy_device";
-        }
-
-        @Override
-        public int priority() {
-            return 0;
-        }
-
-        @Callback(doc = "function():number -- Returns the amount of stored energy on the connected side.")
-        public Object[] getEnergyStored(final Context context, final Arguments args) {
-            return ResultWrapper.result(storage.getEnergyStored());
-        }
-
-        @Callback(doc = "function():number -- Returns the maximum amount of stored energy on the connected side.")
-        public Object[] getMaxEnergyStored(final Context context, final Arguments args) {
-            return ResultWrapper.result(storage.getMaxEnergyStored());
-        }
-
-        @Callback(doc = "function():boolean -- Returns whether this component can have energy extracted from the connected side.")
-        public Object[] canExtract(final Context context, final Arguments args) {
-            return ResultWrapper.result(storage.canExtract());
-        }
-
-        @Callback(doc = "function():boolean -- Returns whether this component can receive energy on the connected side.")
-        public Object[] canReceive(final Context context, final Arguments args) {
-            return ResultWrapper.result(storage.canReceive());
-        }
-    }
-
-    public static final class Provider implements EnvironmentProvider {
-        @Override
-        public Class<?> getEnvironment(final ItemStack stack) {
-            return null;
-        }
-    }
+  }
 }

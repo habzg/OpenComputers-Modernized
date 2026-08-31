@@ -5,7 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class CaseTile extends Case {
-    public CaseTile(BlockPos pos, BlockState state, int tier) {
-        super(pos, state, tier);
-    }
+  public CaseTile(BlockPos pos, BlockState state, int tier) {
+    super(pos, state, tier);
+  }
 }

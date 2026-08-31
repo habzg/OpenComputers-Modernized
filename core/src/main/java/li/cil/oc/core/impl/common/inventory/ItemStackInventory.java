@@ -9,57 +9,57 @@ import net.minecraft.world.item.component.CustomData;
 
 
 public interface ItemStackInventory extends Inventory {
-    ItemStack container();
+  ItemStack container();
 
-    @Override
-    default ItemStack[] items() {
-        return ((ItemStackInventoryAccessor) this).getItemsArray();
-    }
+  @Override
+  default ItemStack[] items() {
+    return ((ItemStackInventoryAccessor) this).getItemsArray();
+  }
 
-    default void reinitialize(HolderLookup.Provider provider) {
-        ItemStack[] items = items();
-        for (int i = 0; i < items.length; i++) {
-            updateItems(i, null);
-        }
-        ItemStack c = container();
-        if (c != null && !c.isEmpty()) {
-            load(dataTag(c), provider);
-        }
+  default void reinitialize(HolderLookup.Provider provider) {
+    ItemStack[] items = items();
+    for (int i = 0; i < items.length; i++) {
+      updateItems(i, null);
     }
+    ItemStack c = container();
+    if (c != null && !c.isEmpty()) {
+      load(dataTag(c), provider);
+    }
+  }
 
-    default void setChanged(HolderLookup.Provider provider) {
-        ItemStack c = container();
-        if (c != null && !c.isEmpty()) {
-            CompoundTag nbt;
-            var customData = c.get(DataComponents.CUSTOM_DATA);
-            if (customData == null || customData.isEmpty()) {
-                nbt = new CompoundTag();
-            } else {
-                nbt = customData.copyTag();
-            }
-            CompoundTag data = nbt.contains(OCSettings.namespace + "data") ? nbt.getCompound(OCSettings.namespace + "data") : new CompoundTag();
-            save(data, provider);
-            nbt.put(OCSettings.namespace + "data", data);
-            c.set(DataComponents.CUSTOM_DATA, CustomData.of(nbt));
-        }
+  default void setChanged(HolderLookup.Provider provider) {
+    ItemStack c = container();
+    if (c != null && !c.isEmpty()) {
+      CompoundTag nbt;
+      var customData = c.get(DataComponents.CUSTOM_DATA);
+      if (customData == null || customData.isEmpty()) {
+        nbt = new CompoundTag();
+      } else {
+        nbt = customData.copyTag();
+      }
+      CompoundTag data = nbt.contains(OCSettings.namespace + "data") ? nbt.getCompound(OCSettings.namespace + "data") : new CompoundTag();
+      save(data, provider);
+      nbt.put(OCSettings.namespace + "data", data);
+      c.set(DataComponents.CUSTOM_DATA, CustomData.of(nbt));
     }
+  }
 
-    private static CompoundTag dataTag(ItemStack stack) {
-        CompoundTag nbt;
-        var customData = stack.get(DataComponents.CUSTOM_DATA);
-        if (customData == null || customData.isEmpty()) {
-            nbt = new CompoundTag();
-            stack.set(DataComponents.CUSTOM_DATA, CustomData.of(nbt));
-        } else {
-            nbt = customData.copyTag();
-        }
-        if (!nbt.contains(OCSettings.namespace + "data")) {
-            nbt.put(OCSettings.namespace + "data", new CompoundTag());
-        }
-        return nbt.getCompound(OCSettings.namespace + "data");
+  private static CompoundTag dataTag(ItemStack stack) {
+    CompoundTag nbt;
+    var customData = stack.get(DataComponents.CUSTOM_DATA);
+    if (customData == null || customData.isEmpty()) {
+      nbt = new CompoundTag();
+      stack.set(DataComponents.CUSTOM_DATA, CustomData.of(nbt));
+    } else {
+      nbt = customData.copyTag();
     }
+    if (!nbt.contains(OCSettings.namespace + "data")) {
+      nbt.put(OCSettings.namespace + "data", new CompoundTag());
+    }
+    return nbt.getCompound(OCSettings.namespace + "data");
+  }
 
-    interface ItemStackInventoryAccessor {
-        ItemStack[] getItemsArray();
-    }
+  interface ItemStackInventoryAccessor {
+    ItemStack[] getItemsArray();
+  }
 }

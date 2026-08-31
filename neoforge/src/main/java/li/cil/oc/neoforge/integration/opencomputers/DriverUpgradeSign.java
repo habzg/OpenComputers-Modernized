@@ -14,36 +14,36 @@ import net.minecraft.world.item.ItemStack;
 
 @SuppressWarnings("unused")
 public final class DriverUpgradeSign extends Item implements HostAware {
+  @Override
+  public boolean worksWith(ItemStack stack) {
+    return isOneOf(stack, li.cil.oc.api.Items.get(Constants.ItemName.SignUpgrade));
+  }
+
+  @Override
+  public li.cil.oc.api.network.ManagedEnvironment createEnvironment(ItemStack stack, EnvironmentHost host) {
+    if (host.level() != null && host.level().isClientSide()) return null;
+    if (host instanceof Rotatable) {
+      return new UpgradeSignInRotatable(host);
+    } else if (host instanceof Adapter) {
+      return new UpgradeSignInAdapter(host);
+    }
+    return null;
+  }
+
+  @Override
+  public String slot(ItemStack stack) {
+    return Slot.Upgrade;
+  }
+
+  private static final DriverUpgradeSign INSTANCE = new DriverUpgradeSign();
+
+  public static final class Provider implements EnvironmentProvider {
     @Override
-    public boolean worksWith(ItemStack stack) {
-        return isOneOf(stack, li.cil.oc.api.Items.get(Constants.ItemName.SignUpgrade));
+    public Class<?> getEnvironment(ItemStack stack) {
+      if (INSTANCE.worksWith(stack)) {
+        return li.cil.oc.neoforge.server.component.UpgradeSign.class;
+      }
+      return null;
     }
-
-    @Override
-    public li.cil.oc.api.network.ManagedEnvironment createEnvironment(ItemStack stack, EnvironmentHost host) {
-        if (host.level() != null && host.level().isClientSide()) return null;
-        if (host instanceof Rotatable) {
-            return new UpgradeSignInRotatable(host);
-        } else if (host instanceof Adapter) {
-            return new UpgradeSignInAdapter(host);
-        }
-        return null;
-    }
-
-    @Override
-    public String slot(ItemStack stack) {
-        return Slot.Upgrade;
-    }
-
-    private static final DriverUpgradeSign INSTANCE = new DriverUpgradeSign();
-
-    public static final class Provider implements EnvironmentProvider {
-        @Override
-        public Class<?> getEnvironment(ItemStack stack) {
-            if (INSTANCE.worksWith(stack)) {
-                return li.cil.oc.neoforge.server.component.UpgradeSign.class;
-            }
-            return null;
-        }
-    }
+  }
 }

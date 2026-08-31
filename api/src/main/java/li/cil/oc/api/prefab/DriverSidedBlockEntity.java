@@ -11,17 +11,17 @@ import net.minecraft.world.level.block.entity.BlockEntity;
  * and calling <code>super.worksWith</code> in addition to the side check.
  */
 public abstract class DriverSidedBlockEntity implements DriverBlock {
-    public abstract Class<?> getBlockEntityClass();
+  public abstract Class<?> getBlockEntityClass();
 
-    @Override
-    public boolean worksWith(final Level world, final BlockPos pos, final Direction side) {
-        final Class<?> filter = getBlockEntityClass();
-        if (filter == null) {
-            // This can happen if filter classes are deduced by reflection and
-            // the class in question is not present.
-            return false;
-        }
-        final BlockEntity be = world.getBlockEntity(pos);
-        return be != null && filter.isAssignableFrom(be.getClass());
+  @Override
+  public boolean worksWith(final Level world, final BlockPos pos, final Direction side) {
+    final Class<?> filter = getBlockEntityClass();
+    if (filter == null) {
+      // This can happen if filter classes are deduced by reflection and
+      // the class in question is not present.
+      return false;
     }
+    final BlockEntity be = world.getBlockEntity(pos);
+    return be != null && filter.isAssignableFrom(be.getClass());
+  }
 }

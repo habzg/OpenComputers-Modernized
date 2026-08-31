@@ -5,12 +5,12 @@ import li.cil.oc.fabric.integration.Mods;
 
 @SuppressWarnings("unused")
 public final class ModJade implements ModProxy {
-    @Override
-    public Mods.ModBase getMod() {
-        return Mods.Jade;
-    }
+  @Override
+  public Mods.ModBase getMod() {
+    return Mods.Jade;
+  }
 
-    @Override
-    public void initialize() {
-    }
+  @Override
+  public void initialize() {
+  }
 }

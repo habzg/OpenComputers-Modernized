@@ -19,40 +19,40 @@ import net.minecraft.nbt.Tag;
 
 @SuppressWarnings("unused")
 public final class ConverterNBT implements Converter {
-    private static Object convert(Tag nbt) {
-        return switch (nbt) {
-            case ByteTag tag -> tag.getAsByte();
-            case ShortTag tag -> tag.getAsShort();
-            case IntTag tag -> tag.getAsInt();
-            case LongTag tag -> tag.getAsLong();
-            case FloatTag tag -> tag.getAsFloat();
-            case DoubleTag tag -> tag.getAsDouble();
-            case ByteArrayTag tag -> tag.getAsByteArray();
-            case StringTag tag -> tag.getAsString();
-            case ListTag tag -> {
-                var copy = tag.copy();
-                var list = new ArrayList<>();
-                while (!copy.isEmpty()) {
-                    list.add(convert(copy.removeFirst()));
-                }
-                yield list.toArray();
-            }
-            case CompoundTag tag -> {
-                var map = new HashMap<>();
-                for (String key : tag.getAllKeys()) {
-                    map.put(key, convert(tag.get(key)));
-                }
-                yield map;
-            }
-            case IntArrayTag tag -> tag.getAsIntArray();
-            case null, default -> null;
-        };
-    }
-
-    @Override
-    public void convert(Object value, Map<Object, Object> output) {
-        if (value instanceof CompoundTag nbt) {
-            output.put("oc:flatten", convert(nbt));
+  private static Object convert(Tag nbt) {
+    return switch (nbt) {
+      case ByteTag tag -> tag.getAsByte();
+      case ShortTag tag -> tag.getAsShort();
+      case IntTag tag -> tag.getAsInt();
+      case LongTag tag -> tag.getAsLong();
+      case FloatTag tag -> tag.getAsFloat();
+      case DoubleTag tag -> tag.getAsDouble();
+      case ByteArrayTag tag -> tag.getAsByteArray();
+      case StringTag tag -> tag.getAsString();
+      case ListTag tag -> {
+        var copy = tag.copy();
+        var list = new ArrayList<>();
+        while (!copy.isEmpty()) {
+          list.add(convert(copy.removeFirst()));
         }
+        yield list.toArray();
+      }
+      case CompoundTag tag -> {
+        var map = new HashMap<>();
+        for (String key : tag.getAllKeys()) {
+          map.put(key, convert(tag.get(key)));
+        }
+        yield map;
+      }
+      case IntArrayTag tag -> tag.getAsIntArray();
+      case null, default -> null;
+    };
+  }
+
+  @Override
+  public void convert(Object value, Map<Object, Object> output) {
+    if (value instanceof CompoundTag nbt) {
+      output.put("oc:flatten", convert(nbt));
     }
+  }
 }

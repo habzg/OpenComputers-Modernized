@@ -7,13 +7,13 @@ import net.minecraft.world.level.LevelReader;
 import org.jetbrains.annotations.NotNull;
 
 public class AbstractItem extends li.cil.oc.core.impl.common.item.AbstractItem {
-    public AbstractItem(Properties properties) {
-        super(properties);
-    }
+  public AbstractItem(Properties properties) {
+    super(properties);
+  }
 
-    @Override
-    public boolean doesSneakBypassUse(@NotNull ItemStack stack, LevelReader level, @NotNull BlockPos pos, @NotNull Player player) {
-        if (level.getBlockEntity(pos) instanceof li.cil.oc.core.impl.common.blockentity.DiskDrive) return true;
-        return super.doesSneakBypassUse(stack, level, pos, player);
-    }
+  @Override
+  public boolean doesSneakBypassUse(@NotNull ItemStack stack, LevelReader level, @NotNull BlockPos pos, @NotNull Player player) {
+    if (level.getBlockEntity(pos) instanceof li.cil.oc.core.impl.common.blockentity.DiskDrive) return true;
+    return super.doesSneakBypassUse(stack, level, pos, player);
+  }
 }

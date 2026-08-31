@@ -4,5 +4,5 @@ import net.minecraft.world.entity.player.Player;
 
 @FunctionalInterface
 public interface DroneMenuDelegate {
-    void openMenu(Player player, Object drone);
+  void openMenu(Player player, Object drone);
 }

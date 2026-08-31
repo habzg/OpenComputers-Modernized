@@ -9,17 +9,17 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 public final class Entities {
-    public static final DeferredRegister<EntityType<?>> ENTITY_TYPES =
-            DeferredRegister.create(Registries.ENTITY_TYPE, OpenComputers.ID);
+  public static final DeferredRegister<EntityType<?>> ENTITY_TYPES =
+    DeferredRegister.create(Registries.ENTITY_TYPE, OpenComputers.ID);
 
-    private Entities() {
-    }
+  private Entities() {
+  }
 
-    public static final DeferredHolder<EntityType<?>, EntityType<Drone>> DRONE =
-            ENTITY_TYPES.register("drone",
-                    () -> EntityType.Builder.of(Drone::new, MobCategory.MISC)
-                            .sized(12 / 16f, 6 / 16f)
-                            .clientTrackingRange(80)
-                            .updateInterval(1)
-                            .build("drone"));
+  public static final DeferredHolder<EntityType<?>, EntityType<Drone>> DRONE =
+    ENTITY_TYPES.register("drone",
+      () -> EntityType.Builder.of(Drone::new, MobCategory.MISC)
+        .sized(12 / 16f, 6 / 16f)
+        .clientTrackingRange(80)
+        .updateInterval(1)
+        .build("drone"));
 }

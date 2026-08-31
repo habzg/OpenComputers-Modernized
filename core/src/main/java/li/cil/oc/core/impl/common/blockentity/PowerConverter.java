@@ -8,9 +8,9 @@ import li.cil.oc.api.network.Visibility;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.blockentity.traits.NotAnalyzable;
 import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.common.blockentity.traits.BlockEntity;
 import li.cil.oc.core.impl.common.blockentity.traits.Environment;
 import li.cil.oc.core.impl.common.blockentity.traits.PowerAcceptor;
-import li.cil.oc.core.impl.common.blockentity.traits.BlockEntity;
 import li.cil.oc.core.impl.util.EventHandlerDelegate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -20,146 +20,146 @@ import net.minecraft.world.level.block.state.BlockState;
 
 public class PowerConverter extends BlockEntity implements PowerAcceptor, Environment, NotAnalyzable, DeviceInfo {
 
-    public static BlockEntityType<PowerConverter> TYPE;
-    public final Node node = li.cil.oc.api.Network.newNode(this, Visibility.None)
-            .withConnector(OCSettings.get().bufferConverter)
-            .create();
-    private final Map<String, String> deviceInfo = Map.of(
-            DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Power,
-            DeviceInfo.DeviceAttribute.Description, "Power converter",
-            DeviceInfo.DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor,
-            DeviceInfo.DeviceAttribute.Product, "Transgizer-PX5",
-            DeviceInfo.DeviceAttribute.Capacity, String.valueOf(energyThroughput())
-    );
+  public static BlockEntityType<PowerConverter> TYPE;
+  public final Node node = li.cil.oc.api.Network.newNode(this, Visibility.None)
+    .withConnector(OCSettings.get().bufferConverter)
+    .create();
+  private final Map<String, String> deviceInfo = Map.of(
+    DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Power,
+    DeviceInfo.DeviceAttribute.Description, "Power converter",
+    DeviceInfo.DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor,
+    DeviceInfo.DeviceAttribute.Product, "Transgizer-PX5",
+    DeviceInfo.DeviceAttribute.Capacity, String.valueOf(energyThroughput())
+  );
 
-    public PowerConverter(BlockPos pos, BlockState state) {
-        super(TYPE, pos, state);
-    }
+  public PowerConverter(BlockPos pos, BlockState state) {
+    super(TYPE, pos, state);
+  }
 
-    @Override
-    public void initialize() {
-        super.initialize();
-        if (isServer() && getLevel() != null) {
-            EventHandlerDelegate.get().scheduleServer(this);
-        }
+  @Override
+  public void initialize() {
+    super.initialize();
+    if (isServer() && getLevel() != null) {
+      EventHandlerDelegate.get().scheduleServer(this);
     }
+  }
 
-    @Override
-    public Node node() {
-        return node;
-    }
+  @Override
+  public Node node() {
+    return node;
+  }
 
-    @Override
-    public Level level() {
-        return getLevel();
-    }
+  @Override
+  public Level level() {
+    return getLevel();
+  }
 
-    @Override
-    public double xPosition() {
-        return worldPosition.getX() + 0.5;
-    }
+  @Override
+  public double xPosition() {
+    return worldPosition.getX() + 0.5;
+  }
 
-    @Override
-    public double yPosition() {
-        return worldPosition.getY() + 0.5;
-    }
+  @Override
+  public double yPosition() {
+    return worldPosition.getY() + 0.5;
+  }
 
-    @Override
-    public double zPosition() {
-        return worldPosition.getZ() + 0.5;
-    }
+  @Override
+  public double zPosition() {
+    return worldPosition.getZ() + 0.5;
+  }
 
-    @Override
-    public void markChanged() {
-    }
+  @Override
+  public void markChanged() {
+  }
 
-    @Override
-    public boolean isConnected() {
-        return node.address() != null && node.network() != null;
-    }
+  @Override
+  public boolean isConnected() {
+    return node.address() != null && node.network() != null;
+  }
 
-    @Override
-    public void onConnect(Node node) {
-    }
+  @Override
+  public void onConnect(Node node) {
+  }
 
-    @Override
-    public void onDisconnect(Node node) {
-    }
+  @Override
+  public void onDisconnect(Node node) {
+  }
 
-    @Override
-    public void onMessage(li.cil.oc.api.network.Message message) {
-    }
+  @Override
+  public void onMessage(li.cil.oc.api.network.Message message) {
+  }
 
-    public void onNeighborChanged() {
-        ae2OnNeighborChanged();
-    }
+  public void onNeighborChanged() {
+    ae2OnNeighborChanged();
+  }
 
-    @Override
-    public Object result(Object... args) {
-        return li.cil.oc.core.util.ResultWrapper.result(args);
-    }
+  @Override
+  public Object result(Object... args) {
+    return li.cil.oc.core.util.ResultWrapper.result(args);
+  }
 
-    @Override
-    public java.util.Map<String, String> getDeviceInfo() {
-        return deviceInfo;
-    }
+  @Override
+  public java.util.Map<String, String> getDeviceInfo() {
+    return deviceInfo;
+  }
 
-    @SuppressWarnings("SameReturnValue")
-    protected boolean hasConnector(Direction ignoredSide) {
-        return true;
-    }
+  @SuppressWarnings("SameReturnValue")
+  protected boolean hasConnector(Direction ignoredSide) {
+    return true;
+  }
 
-    protected Connector connector(Direction ignoredSide) {
-        return (Connector) node;
-    }
+  protected Connector connector(Direction ignoredSide) {
+    return (Connector) node;
+  }
 
-    @Override
-    public boolean canConnectPower(Direction side) {
-        return hasConnector(side);
-    }
+  @Override
+  public boolean canConnectPower(Direction side) {
+    return hasConnector(side);
+  }
 
-    @Override
-    public double tryChangeBuffer(Direction side, double amount) {
-        return tryChangeBuffer(side, amount, true);
-    }
+  @Override
+  public double tryChangeBuffer(Direction side, double amount) {
+    return tryChangeBuffer(side, amount, true);
+  }
 
-    @Override
-    public double tryChangeBuffer(Direction side, double amount, boolean doReceive) {
-        if (isClient() || OCSettings.get().ignorePower) return 0;
-        var c = connector(side);
-        if (c != null) {
-            double cappedAmount = Math.clamp(amount, 0, Math.min(energyThroughput(), globalDemand(side)));
-            if (doReceive) return cappedAmount - c.changeBuffer(cappedAmount);
-            return cappedAmount;
-        }
-        return 0;
+  @Override
+  public double tryChangeBuffer(Direction side, double amount, boolean doReceive) {
+    if (isClient() || OCSettings.get().ignorePower) return 0;
+    var c = connector(side);
+    if (c != null) {
+      double cappedAmount = Math.clamp(amount, 0, Math.min(energyThroughput(), globalDemand(side)));
+      if (doReceive) return cappedAmount - c.changeBuffer(cappedAmount);
+      return cappedAmount;
     }
+    return 0;
+  }
 
-    @Override
-    public double globalBuffer(Direction side) {
-        var c = connector(side);
-        return c != null ? c.globalBuffer() : 0.0;
-    }
+  @Override
+  public double globalBuffer(Direction side) {
+    var c = connector(side);
+    return c != null ? c.globalBuffer() : 0.0;
+  }
 
-    @Override
-    public double globalBufferSize(Direction side) {
-        var c = connector(side);
-        return c != null ? c.globalBufferSize() : 0.0;
-    }
+  @Override
+  public double globalBufferSize(Direction side) {
+    var c = connector(side);
+    return c != null ? c.globalBufferSize() : 0.0;
+  }
 
-    @Override
-    public double globalDemand(Direction side) {
-        var c = connector(side);
-        return c != null ? Math.clamp(c.globalBufferSize() - c.globalBuffer(), 0, energyThroughput()) : 0.0;
-    }
+  @Override
+  public double globalDemand(Direction side) {
+    var c = connector(side);
+    return c != null ? Math.clamp(c.globalBufferSize() - c.globalBuffer(), 0, energyThroughput()) : 0.0;
+  }
 
-    @Override
-    public double energyThroughput() {
-        return OCSettings.get().powerConverterRate;
-    }
+  @Override
+  public double energyThroughput() {
+    return OCSettings.get().powerConverterRate;
+  }
 
-    @Override
-    public Node[] onAnalyze(net.minecraft.world.entity.player.Player player, Direction side, float hitX, float hitY, float hitZ) {
-        return null;
-    }
+  @Override
+  public Node[] onAnalyze(net.minecraft.world.entity.player.Player player, Direction side, float hitX, float hitY, float hitZ) {
+    return null;
+  }
 }

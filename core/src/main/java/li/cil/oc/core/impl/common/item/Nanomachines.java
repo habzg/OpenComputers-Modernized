@@ -17,61 +17,61 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 
 public class Nanomachines extends DelegateItem {
-    public Nanomachines(Item.Properties properties) {
-        super(properties);
-    }
+  public Nanomachines(Item.Properties properties) {
+    super(properties);
+  }
 
-    @Override
-    public void appendHoverText(@NotNull ItemStack stack, Item.@NotNull TooltipContext context, @NotNull List<Component> tooltip, @NotNull TooltipFlag flag) {
-        super.appendHoverText(stack, context, tooltip, flag);
-        var customData = stack.get(DataComponents.CUSTOM_DATA);
-        if (customData != null && !customData.isEmpty()) {
-            var data = new NanomachineData(stack);
-            if (data.uuid != null && !data.uuid.isEmpty()) {
-                tooltip.add(Component.literal("§8" + data.uuid.substring(0, Math.min(13, data.uuid.length())) + "...§7"));
-            }
+  @Override
+  public void appendHoverText(@NotNull ItemStack stack, Item.@NotNull TooltipContext context, @NotNull List<Component> tooltip, @NotNull TooltipFlag flag) {
+    super.appendHoverText(stack, context, tooltip, flag);
+    var customData = stack.get(DataComponents.CUSTOM_DATA);
+    if (customData != null && !customData.isEmpty()) {
+      var data = new NanomachineData(stack);
+      if (data.uuid != null && !data.uuid.isEmpty()) {
+        tooltip.add(Component.literal("§8" + data.uuid.substring(0, Math.min(13, data.uuid.length())) + "...§7"));
+      }
+    }
+  }
+
+  @Override
+  public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, Player player, @NotNull InteractionHand hand) {
+    player.startUsingItem(hand);
+    return InteractionResultHolder.consume(player.getItemInHand(hand));
+  }
+
+  @Override
+  public @NotNull UseAnim getUseAnimation(@NotNull ItemStack stack) {
+    return UseAnim.EAT;
+  }
+
+  @Override
+  public int getUseDuration(@NotNull ItemStack stack, @NotNull LivingEntity entity) {
+    return 32;
+  }
+
+  @Override
+  public @NotNull ItemStack finishUsingItem(@NotNull ItemStack stack, @NotNull Level level, @NotNull LivingEntity entity) {
+    if (entity instanceof Player player) {
+      if (!level.isClientSide) {
+        var data = new NanomachineData(stack);
+        li.cil.oc.api.Nanomachines.uninstallController(player);
+        var controller = li.cil.oc.api.Nanomachines.installController(player);
+        if (controller instanceof ControllerImpl ctrl) {
+          if (data.uuid != null && !data.uuid.isEmpty()) {
+            ctrl.uuid = data.uuid;
+          }
+          if (data.configuration != null) {
+            ctrl.configuration.load(data.configuration, level.registryAccess());
+          } else {
+            ctrl.reconfigure();
+          }
+        } else if (controller != null) {
+          controller.reconfigure();
         }
+      }
+      stack.shrink(1);
     }
-
-    @Override
-    public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, Player player, @NotNull InteractionHand hand) {
-        player.startUsingItem(hand);
-        return InteractionResultHolder.consume(player.getItemInHand(hand));
-    }
-
-    @Override
-    public @NotNull UseAnim getUseAnimation(@NotNull ItemStack stack) {
-        return UseAnim.EAT;
-    }
-
-    @Override
-    public int getUseDuration(@NotNull ItemStack stack, @NotNull LivingEntity entity) {
-        return 32;
-    }
-
-    @Override
-    public @NotNull ItemStack finishUsingItem(@NotNull ItemStack stack, @NotNull Level level, @NotNull LivingEntity entity) {
-        if (entity instanceof Player player) {
-            if (!level.isClientSide) {
-                var data = new NanomachineData(stack);
-                li.cil.oc.api.Nanomachines.uninstallController(player);
-                var controller = li.cil.oc.api.Nanomachines.installController(player);
-                if (controller instanceof ControllerImpl ctrl) {
-                    if (data.uuid != null && !data.uuid.isEmpty()) {
-                        ctrl.uuid = data.uuid;
-                    }
-                    if (data.configuration != null) {
-                        ctrl.configuration.load(data.configuration, level.registryAccess());
-                    } else {
-                        ctrl.reconfigure();
-                    }
-                } else if (controller != null) {
-                    controller.reconfigure();
-                }
-            }
-            stack.shrink(1);
-        }
-        if (stack.getCount() > 0) return stack;
-        return ItemStack.EMPTY;
-    }
+    if (stack.getCount() > 0) return stack;
+    return ItemStack.EMPTY;
+  }
 }

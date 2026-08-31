@@ -10,25 +10,25 @@ import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("unused")
 public abstract class SimpleBlockPart extends BaseMultipart implements ModelRenderPart {
-    public abstract li.cil.oc.core.impl.common.block.SimpleBlock simpleBlock();
+  public abstract li.cil.oc.core.impl.common.block.SimpleBlock simpleBlock();
 
-    @Override
-    public @NotNull BlockState getCurrentState() {
-        return simpleBlock().defaultBlockState();
-    }
+  @Override
+  public @NotNull BlockState getCurrentState() {
+    return simpleBlock().defaultBlockState();
+  }
 
-    @Override
-    public @NotNull ItemStack getCloneStack(@NotNull PartRayTraceResult hit, @NotNull Player player) {
-        return new ItemStack(simpleBlock());
-    }
+  @Override
+  public @NotNull ItemStack getCloneStack(@NotNull PartRayTraceResult hit, @NotNull Player player) {
+    return new ItemStack(simpleBlock());
+  }
 
-    @Override
-    public @NotNull Iterable<ItemStack> getDrops() {
-        return java.util.Collections.singletonList(new ItemStack(simpleBlock()));
-    }
+  @Override
+  public @NotNull Iterable<ItemStack> getDrops() {
+    return java.util.Collections.singletonList(new ItemStack(simpleBlock()));
+  }
 
-    @Override
-    public float getExplosionResistance(net.minecraft.world.level.@NotNull Explosion explosion) {
-        return simpleBlock().getExplosionResistance(getCurrentState(), level(), pos(), explosion);
-    }
+  @Override
+  public float getExplosionResistance(net.minecraft.world.level.@NotNull Explosion explosion) {
+    return simpleBlock().getExplosionResistance(getCurrentState(), level(), pos(), explosion);
+  }
 }

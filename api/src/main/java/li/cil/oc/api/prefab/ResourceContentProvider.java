@@ -23,38 +23,38 @@ import net.minecraft.resources.ResourceLocation;
  */
 
 public class ResourceContentProvider implements ContentProvider {
-    private final String resourceDomain;
+  private final String resourceDomain;
 
-    private final String basePath;
+  private final String basePath;
 
-    @SuppressWarnings("unused")
-    public ResourceContentProvider(String resourceDomain, String basePath) {
-        this.resourceDomain = resourceDomain;
-        this.basePath = basePath;
+  @SuppressWarnings("unused")
+  public ResourceContentProvider(String resourceDomain, String basePath) {
+    this.resourceDomain = resourceDomain;
+    this.basePath = basePath;
+  }
+
+  @SuppressWarnings("unused")
+  public ResourceContentProvider(String resourceDomain) {
+    this(resourceDomain, "");
+  }
+
+  @Override
+  public Iterable<String> getContent(String path) {
+    final ResourceLocation location = ResourceLocation.parse((resourceDomain + ":" + (basePath + (path.startsWith("/") ? path.substring(1) : path))).toLowerCase(java.util.Locale.ROOT));
+    try (InputStream is = Minecraft.getInstance()
+      .getResourceManager()
+      .getResource(location)
+      .orElseThrow()
+      .open()) {
+      final BufferedReader reader = new BufferedReader(new InputStreamReader(is, Charsets.UTF_8));
+      final ArrayList<String> lines = new ArrayList<>();
+      String line;
+      while ((line = reader.readLine()) != null) {
+        lines.add(line);
+      }
+      return lines;
+    } catch (Throwable ignored) {
+      return null;
     }
-
-    @SuppressWarnings("unused")
-    public ResourceContentProvider(String resourceDomain) {
-        this(resourceDomain, "");
-    }
-
-    @Override
-    public Iterable<String> getContent(String path) {
-        final ResourceLocation location = ResourceLocation.parse((resourceDomain + ":" + (basePath + (path.startsWith("/") ? path.substring(1) : path))).toLowerCase(java.util.Locale.ROOT));
-        try (InputStream is = Minecraft.getInstance()
-                .getResourceManager()
-                .getResource(location)
-                .orElseThrow()
-                .open()) {
-            final BufferedReader reader = new BufferedReader(new InputStreamReader(is, Charsets.UTF_8));
-            final ArrayList<String> lines = new ArrayList<>();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                lines.add(line);
-            }
-            return lines;
-        } catch (Throwable ignored) {
-            return null;
-        }
-    }
+  }
 }

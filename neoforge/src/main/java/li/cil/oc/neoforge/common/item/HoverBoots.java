@@ -16,35 +16,36 @@ import org.jetbrains.annotations.NotNull;
 
 public class HoverBoots extends li.cil.oc.core.impl.common.item.HoverBoots {
   public static final ResourceLocation HOVER_BOOTS_TEXTURE = ResourceLocation.fromNamespaceAndPath("opencomputers", "textures/model/drone.png");
+
   public HoverBoots(Properties properties) {
-        super(properties);
-    }
+    super(properties);
+  }
 
-    @Override
-    public ResourceLocation getArmorTexture(@NotNull ItemStack ignoredStack, @NotNull Entity ignoredEntity, @NotNull EquipmentSlot ignoredSlot, ArmorMaterial.@NotNull Layer ignoredLayer, boolean ignoredInnerModel) {
-        return HOVER_BOOTS_TEXTURE;
-    }
+  @Override
+  public ResourceLocation getArmorTexture(@NotNull ItemStack ignoredStack, @NotNull Entity ignoredEntity, @NotNull EquipmentSlot ignoredSlot, ArmorMaterial.@NotNull Layer ignoredLayer, boolean ignoredInnerModel) {
+    return HOVER_BOOTS_TEXTURE;
+  }
 
-    @Override
-    public boolean onEntityItemUpdate(@NotNull ItemStack ignoredStack, @NotNull ItemEntity entity) {
-        if (!entity.level().isClientSide && ItemColorizer.hasColor(entity.getItem())) {
-            var pos = entity.blockPosition();
-            var state = entity.level().getBlockState(pos);
-            if (state.is(Blocks.WATER_CAULDRON)) {
-                int level = state.getValue(LayeredCauldronBlock.LEVEL);
-                if (level > 0) {
-                    ItemColorizer.removeColor(entity.getItem());
-                    LayeredCauldronBlock.lowerFillLevel(state, entity.level(), pos);
-                    return true;
-                }
-            }
+  @Override
+  public boolean onEntityItemUpdate(@NotNull ItemStack ignoredStack, @NotNull ItemEntity entity) {
+    if (!entity.level().isClientSide && ItemColorizer.hasColor(entity.getItem())) {
+      var pos = entity.blockPosition();
+      var state = entity.level().getBlockState(pos);
+      if (state.is(Blocks.WATER_CAULDRON)) {
+        int level = state.getValue(LayeredCauldronBlock.LEVEL);
+        if (level > 0) {
+          ItemColorizer.removeColor(entity.getItem());
+          LayeredCauldronBlock.lowerFillLevel(state, entity.level(), pos);
+          return true;
         }
-        return false;
+      }
     }
+    return false;
+  }
 
-    @Override
-    public boolean doesSneakBypassUse(@NotNull ItemStack stack, LevelReader level, @NotNull BlockPos pos, @NotNull Player player) {
-        if (level.getBlockEntity(pos) instanceof li.cil.oc.core.impl.common.blockentity.DiskDrive) return true;
-        return super.doesSneakBypassUse(stack, level, pos, player);
-    }
+  @Override
+  public boolean doesSneakBypassUse(@NotNull ItemStack stack, LevelReader level, @NotNull BlockPos pos, @NotNull Player player) {
+    if (level.getBlockEntity(pos) instanceof li.cil.oc.core.impl.common.blockentity.DiskDrive) return true;
+    return super.doesSneakBypassUse(stack, level, pos, player);
+  }
 }

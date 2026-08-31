@@ -7,15 +7,15 @@ import li.cil.oc.core.impl.client.renderer.font.StaticFontRenderer;
 import li.cil.oc.core.impl.client.renderer.font.TextBufferRenderData;
 
 public final class TextBufferRenderCache {
-    public static final IFontRenderer renderer =
-            "texture".equalsIgnoreCase(OCSettings.get().fontRenderer) ? new StaticFontRenderer() : new DynamicFontRenderer();
+  public static final IFontRenderer renderer =
+    "texture".equalsIgnoreCase(OCSettings.get().fontRenderer) ? new StaticFontRenderer() : new DynamicFontRenderer();
 
-    public static void generateChars(TextBufferRenderData buffer) {
-        if (buffer.dirty()) {
-            for (var line : buffer.data().buffer) {
-                renderer.generateChars(line);
-            }
-            buffer.setDirty(false);
-        }
+  public static void generateChars(TextBufferRenderData buffer) {
+    if (buffer.dirty()) {
+      for (var line : buffer.data().buffer) {
+        renderer.generateChars(line);
+      }
+      buffer.setDirty(false);
     }
+  }
 }

@@ -72,15 +72,15 @@ package li.cil.oc.api.network;
  * </pre>
  */
 public interface SimpleComponent {
-    /**
-     * The name the component should be made available as.
-     * <br>
-     * This is the name as seen in the <code>li.cil.oc.common.component.list()</code> in Lua, for
-     * example. You'll want to make this short and descriptive. The convention
-     * for component names is: all lowercase, underscores where necessary. Good
-     * component names are for example: disk_drive, furnace, crafting_table.
-     *
-     * @return the component's name.
-     */
-    String getComponentName();
+  /**
+   * The name the component should be made available as.
+   * <br>
+   * This is the name as seen in the <code>li.cil.oc.common.component.list()</code> in Lua, for
+   * example. You'll want to make this short and descriptive. The convention
+   * for component names is: all lowercase, underscores where necessary. Good
+   * component names are for example: disk_drive, furnace, crafting_table.
+   *
+   * @return the component's name.
+   */
+  String getComponentName();
 }

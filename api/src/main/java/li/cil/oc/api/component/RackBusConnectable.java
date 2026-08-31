@@ -15,11 +15,11 @@ import li.cil.oc.api.network.Packet;
  * arriving on the respective side of the rack.
  */
 public interface RackBusConnectable extends Environment {
-    /**
-     * Called to inject a network packet that arrived on the bus this
-     * environment is connected to in the hosting rack.
-     *
-     * @param packet the packet to handle.
-     */
-    void receivePacket(Packet packet);
+  /**
+   * Called to inject a network packet that arrived on the bus this
+   * environment is connected to in the hosting rack.
+   *
+   * @param packet the packet to handle.
+   */
+  void receivePacket(Packet packet);
 }

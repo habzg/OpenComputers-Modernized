@@ -10,30 +10,30 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 public class RedstoneCard extends DelegateItem implements ItemTier {
-    public final int tier;
+  public final int tier;
 
-    private static BooleanSupplier projectRedAvailable = () -> false;
+  private static BooleanSupplier projectRedAvailable = () -> false;
 
-    public static void setProjectRedAvailable(BooleanSupplier supplier) {
-        projectRedAvailable = supplier;
+  public static void setProjectRedAvailable(BooleanSupplier supplier) {
+    projectRedAvailable = supplier;
+  }
+
+  public RedstoneCard(Item.Properties properties, int tier) {
+    super(properties);
+    this.tier = tier;
+  }
+
+  @Override
+  public int tier() {
+    return tier;
+  }
+
+  @Override
+  public void tooltipExtended(ItemStack stack, List<Component> tooltip) {
+    if (tier == Tier.Two) {
+      if (projectRedAvailable.getAsBoolean()) {
+        tooltip.addAll(Tooltip.get(unlocalizedName() + ".ProjectRed"));
+      }
     }
-
-    public RedstoneCard(Item.Properties properties, int tier) {
-        super(properties);
-        this.tier = tier;
-    }
-
-    @Override
-    public int tier() {
-        return tier;
-    }
-
-    @Override
-    public void tooltipExtended(ItemStack stack, List<Component> tooltip) {
-        if (tier == Tier.Two) {
-            if (projectRedAvailable.getAsBoolean()) {
-                tooltip.addAll(Tooltip.get(unlocalizedName() + ".ProjectRed"));
-            }
-        }
-    }
+  }
 }

@@ -6,19 +6,19 @@ import li.cil.oc.core.impl.OCSettings;
 
 public class UpgradeHover extends DelegateItem implements ItemTier {
 
-    private final int tier;
+  private final int tier;
 
-    public UpgradeHover(Properties properties, int tier) {
-        super(properties);
-        this.tier = tier;
-    }
+  public UpgradeHover(Properties properties, int tier) {
+    super(properties);
+    this.tier = tier;
+  }
 
-    public int tier() {
-        return tier;
-    }
+  public int tier() {
+    return tier;
+  }
 
-    @Override
-    protected List<Object> tooltipData() {
-        return List.of(OCSettings.get().upgradeFlightHeight[tier]);
-    }
+  @Override
+  protected List<Object> tooltipData() {
+    return List.of(OCSettings.get().upgradeFlightHeight[tier]);
+  }
 }

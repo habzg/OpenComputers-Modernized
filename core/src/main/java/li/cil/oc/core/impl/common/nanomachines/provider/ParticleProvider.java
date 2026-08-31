@@ -13,63 +13,63 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 
 public class ParticleProvider extends ScalaProvider {
-    public ParticleProvider() {
-        super("b48c4bbd-51bb-4915-9367-16cff3220e4b");
-    }
+  public ParticleProvider() {
+    super("b48c4bbd-51bb-4915-9367-16cff3220e4b");
+  }
 
-    private static final Set<String> VANILLA_PARTICLES = Set.of(
-            "minecraft:firework", "minecraft:entity_effect", "minecraft:witch",
-            "minecraft:smoke", "minecraft:note", "minecraft:enchant",
-            "minecraft:flame", "minecraft:lava", "minecraft:splash",
-            "minecraft:dust", "minecraft:item_slime", "minecraft:heart",
-            "minecraft:happy_villager"
-    );
+  private static final Set<String> VANILLA_PARTICLES = Set.of(
+    "minecraft:firework", "minecraft:entity_effect", "minecraft:witch",
+    "minecraft:smoke", "minecraft:note", "minecraft:enchant",
+    "minecraft:flame", "minecraft:lava", "minecraft:splash",
+    "minecraft:dust", "minecraft:item_slime", "minecraft:heart",
+    "minecraft:happy_villager"
+  );
+
+  @Override
+  public Iterable<Behavior> createScalaBehaviors(Player player) {
+    List<Behavior> list = new ArrayList<>();
+    for (var entry : BuiltInRegistries.PARTICLE_TYPE.entrySet()) {
+      var key = entry.getKey().location();
+      if (entry.getValue() instanceof ParticleOptions && VANILLA_PARTICLES.contains(key.toString())) {
+        list.add(new ParticleBehavior(key.toString(), player));
+      }
+    }
+    return list;
+  }
+
+  @Override
+  public void writeBehaviorToNBT(Behavior behavior, CompoundTag nbt) {
+    if (behavior instanceof ParticleBehavior particles) {
+      nbt.putString("effectName", particles.effectName);
+    }
+  }
+
+  @Override
+  public Behavior readBehaviorFromNBT(Player player, CompoundTag nbt) {
+    String effectName = nbt.getString("effectName");
+    return new ParticleBehavior(effectName, player);
+  }
+
+  public static class ParticleBehavior extends AbstractBehavior {
+    public final String effectName;
+
+    public ParticleBehavior(String effectName, Player player) {
+      super(player);
+      this.effectName = effectName;
+    }
 
     @Override
-    public Iterable<Behavior> createScalaBehaviors(Player player) {
-        List<Behavior> list = new ArrayList<>();
-        for (var entry : BuiltInRegistries.PARTICLE_TYPE.entrySet()) {
-            var key = entry.getKey().location();
-            if (entry.getValue() instanceof ParticleOptions && VANILLA_PARTICLES.contains(key.toString())) {
-                list.add(new ParticleBehavior(key.toString(), player));
-            }
-        }
-        return list;
+    public String getNameHint() {
+      var idx = effectName.indexOf(':');
+      return "particles." + (idx >= 0 ? effectName.substring(idx + 1) : effectName);
     }
 
     @Override
-    public void writeBehaviorToNBT(Behavior behavior, CompoundTag nbt) {
-        if (behavior instanceof ParticleBehavior particles) {
-            nbt.putString("effectName", particles.effectName);
-        }
+    public void update() {
+      var world = player.level();
+      if (world.isClientSide && OCSettings.get().enableNanomachinePfx) {
+        PlayerUtils.spawnParticleAround(player, effectName, li.cil.oc.api.Nanomachines.getController(player).getInputCount(this) * 0.25);
+      }
     }
-
-    @Override
-    public Behavior readBehaviorFromNBT(Player player, CompoundTag nbt) {
-        String effectName = nbt.getString("effectName");
-        return new ParticleBehavior(effectName, player);
-    }
-
-    public static class ParticleBehavior extends AbstractBehavior {
-        public final String effectName;
-
-        public ParticleBehavior(String effectName, Player player) {
-            super(player);
-            this.effectName = effectName;
-        }
-
-        @Override
-        public String getNameHint() {
-            var idx = effectName.indexOf(':');
-            return "particles." + (idx >= 0 ? effectName.substring(idx + 1) : effectName);
-        }
-
-        @Override
-        public void update() {
-            var world = player.level();
-            if (world.isClientSide && OCSettings.get().enableNanomachinePfx) {
-                PlayerUtils.spawnParticleAround(player, effectName, li.cil.oc.api.Nanomachines.getController(player).getInputCount(this) * 0.25);
-            }
-        }
-    }
+  }
 }

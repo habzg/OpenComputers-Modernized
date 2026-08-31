@@ -18,44 +18,44 @@ import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 
 @SuppressWarnings("unused")
 public final class DriverBrewingStand extends DriverSidedBlockEntity {
-    @Override
-    public Class<?> getBlockEntityClass() {
-        return BrewingStandBlockEntity.class;
+  @Override
+  public Class<?> getBlockEntityClass() {
+    return BrewingStandBlockEntity.class;
+  }
+
+  @Override
+  public ManagedEnvironment createEnvironment(Level world, BlockPos pos, Direction side) {
+    return new Environment((BrewingStandBlockEntity) world.getBlockEntity(pos));
+  }
+
+  public static final class Environment extends ManagedBlockEntityEnvironment<BrewingStandBlockEntity> implements NamedBlock {
+    public Environment(BrewingStandBlockEntity BlockEntity) {
+      super(BlockEntity, "brewing_stand");
     }
 
     @Override
-    public ManagedEnvironment createEnvironment(Level world, BlockPos pos, Direction side) {
-        return new Environment((BrewingStandBlockEntity) world.getBlockEntity(pos));
+    public String preferredName() {
+      return "brewing_stand";
     }
 
-    public static final class Environment extends ManagedBlockEntityEnvironment<BrewingStandBlockEntity> implements NamedBlock {
-        public Environment(BrewingStandBlockEntity BlockEntity) {
-          super(BlockEntity, "brewing_stand");
-        }
-
-        @Override
-        public String preferredName() {
-            return "brewing_stand";
-        }
-
-        @Override
-        public int priority() {
-            return 0;
-        }
-
-        @Callback(doc = "function():number -- Get the number of ticks remaining of the current brewing operation.")
-        public Object[] getBrewTime(Context context, Arguments args) {
-            return ResultWrapper.result(this.getBlockEntity().brewTime);
-        }
+    @Override
+    public int priority() {
+      return 0;
     }
 
-    public static final class Provider implements EnvironmentProvider {
-        @Override
-        public Class<?> getEnvironment(ItemStack stack) {
-            if (stack != null && stack.getItem() == Items.BREWING_STAND) {
-                return Environment.class;
-            }
-            return null;
-        }
+    @Callback(doc = "function():number -- Get the number of ticks remaining of the current brewing operation.")
+    public Object[] getBrewTime(Context context, Arguments args) {
+      return ResultWrapper.result(this.getBlockEntity().brewTime);
     }
+  }
+
+  public static final class Provider implements EnvironmentProvider {
+    @Override
+    public Class<?> getEnvironment(ItemStack stack) {
+      if (stack != null && stack.getItem() == Items.BREWING_STAND) {
+        return Environment.class;
+      }
+      return null;
+    }
+  }
 }

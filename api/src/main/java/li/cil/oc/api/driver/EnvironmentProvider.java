@@ -10,20 +10,20 @@ import net.minecraft.world.item.ItemStack;
  * a component's API.
  */
 public interface EnvironmentProvider {
-    /**
-     * Get the environment provided by the specified stack.
-     * <br>
-     * For blocks this will usually be the block entity. In particular, for
-     * {@link li.cil.oc.api.network.SimpleComponent}s this allows returning
-     * an arbitrary class type instead of an environment type, since the
-     * {@link li.cil.oc.api.network.Environment} interface will be injected
-     * by the class transformer at runtime.
-     * <br>
-     * For items this will be the type of the environment returned by the
-     * item driver's {@link DriverItem#createEnvironment} method.
-     *
-     * @param stack the stack to get the environment type for.
-     * @return the environment type for the specified stack.
-     */
-    Class<?> getEnvironment(ItemStack stack);
+  /**
+   * Get the environment provided by the specified stack.
+   * <br>
+   * For blocks this will usually be the block entity. In particular, for
+   * {@link li.cil.oc.api.network.SimpleComponent}s this allows returning
+   * an arbitrary class type instead of an environment type, since the
+   * {@link li.cil.oc.api.network.Environment} interface will be injected
+   * by the class transformer at runtime.
+   * <br>
+   * For items this will be the type of the environment returned by the
+   * item driver's {@link DriverItem#createEnvironment} method.
+   *
+   * @param stack the stack to get the environment type for.
+   * @return the environment type for the specified stack.
+   */
+  Class<?> getEnvironment(ItemStack stack);
 }

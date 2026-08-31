@@ -30,46 +30,46 @@ import net.minecraft.world.item.ItemStack;
  * information when the analyzer is used on the mountable while it's in a rack.
  */
 public interface RackMountable extends ManagedEnvironment, StateAware {
-    /**
-     * Returns some data describing the state of the mountable.
-     * <br>
-     * This is called on the server side to synchronize data to the client after
-     * the rack's {@link li.cil.oc.api.internal.Rack#markChanged(int)}
-     * method has been called for the slot this mountable is in. It will there
-     * be passed on with the render event to allow state specific rendering of
-     * the mountable in the rack.
-     *
-     * @return the data to synchronize to the clients.
-     */
-    CompoundTag getData();
+  /**
+   * Returns some data describing the state of the mountable.
+   * <br>
+   * This is called on the server side to synchronize data to the client after
+   * the rack's {@link li.cil.oc.api.internal.Rack#markChanged(int)}
+   * method has been called for the slot this mountable is in. It will there
+   * be passed on with the render event to allow state specific rendering of
+   * the mountable in the rack.
+   *
+   * @return the data to synchronize to the clients.
+   */
+  CompoundTag getData();
 
-    /**
-     * The number of connectables exposed by the environment.
-     * <br>
-     * Node that only the first three will ever be used.
-     */
-    int getConnectableCount();
+  /**
+   * The number of connectables exposed by the environment.
+   * <br>
+   * Node that only the first three will ever be used.
+   */
+  int getConnectableCount();
 
-    /**
-     * Returns the node at the specified index.
-     */
-    RackBusConnectable getConnectableAt(int index);
+  /**
+   * Returns the node at the specified index.
+   */
+  RackBusConnectable getConnectableAt(int index);
 
-    /**
-     * This gets called when the server rack is activated by a player, and
-     * hits the space occupied by this mountable.
-     * <br>
-     * As per usual, keep in mind that the hit coordinates are comparatively
-     * imprecise on the server side, since they'll have been sent in a
-     * pointlessly compressed fashion (because MC is a dummy like that).
-     *
-     * @param player    the player activating the mountable.
-     * @param hand      the hand the player used to activate the mountable.
-     * @param heldItem  the item stack held in the activating hand.
-     * @param hitX      the relative x coordinate of the activation on the mountable.
-     * @param hitY      the relative y coordinate of the activation on the mountable.
-     * @return whether the activation was handled (e.g. GUI opened).
-     */
-    @SuppressWarnings("unused")
-    boolean onActivate(Player player, InteractionHand hand, ItemStack heldItem, float hitX, float hitY);
+  /**
+   * This gets called when the server rack is activated by a player, and
+   * hits the space occupied by this mountable.
+   * <br>
+   * As per usual, keep in mind that the hit coordinates are comparatively
+   * imprecise on the server side, since they'll have been sent in a
+   * pointlessly compressed fashion (because MC is a dummy like that).
+   *
+   * @param player   the player activating the mountable.
+   * @param hand     the hand the player used to activate the mountable.
+   * @param heldItem the item stack held in the activating hand.
+   * @param hitX     the relative x coordinate of the activation on the mountable.
+   * @param hitY     the relative y coordinate of the activation on the mountable.
+   * @return whether the activation was handled (e.g. GUI opened).
+   */
+  @SuppressWarnings("unused")
+  boolean onActivate(Player player, InteractionHand hand, ItemStack heldItem, float hitX, float hitY);
 }

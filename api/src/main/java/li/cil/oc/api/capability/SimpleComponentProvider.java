@@ -13,15 +13,15 @@ import li.cil.oc.api.network.Node;
  * code during {@link li.cil.oc.api.Network#joinOrCreateNetwork}.
  */
 public interface SimpleComponentProvider {
-    /**
-     * Returns the OC network node for the wrapped block entity.
-     */
-    @SuppressWarnings("unused")
-    Node node();
+  /**
+   * Returns the OC network node for the wrapped block entity.
+   */
+  @SuppressWarnings("unused")
+  Node node();
 
-    /**
-     * Returns the component name.
-     */
-    @SuppressWarnings("unused")
-    String getComponentName();
+  /**
+   * Returns the component name.
+   */
+  @SuppressWarnings("unused")
+  String getComponentName();
 }

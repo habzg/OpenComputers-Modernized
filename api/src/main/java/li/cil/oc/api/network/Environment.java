@@ -48,66 +48,66 @@ package li.cil.oc.api.network;
  * </ol>
  */
 public interface Environment {
-    /**
-     * The node this environment wraps.
-     * <br>
-     * The node is the environments gateway to the component network, and thus
-     * its preferred way to interact with other components in the same network.
-     *
-     * @return the node this environment wraps.
-     */
-    Node node();
+  /**
+   * The node this environment wraps.
+   * <br>
+   * The node is the environments gateway to the component network, and thus
+   * its preferred way to interact with other components in the same network.
+   *
+   * @return the node this environment wraps.
+   */
+  Node node();
 
-    /**
-     * This is called when a node is added to a network.
-     * <br>
-     * This is also called for the node itself, if it was added to the network.
-     * <br>
-     * At this point the node's network is never <code>null</code> and you can use
-     * it to query it for other nodes. Use this to perform initialization logic,
-     * such as building lists of nodes of a certain type in the network.
-     * <br>
-     * For example, if node A is added to a network with nodes B and C, these
-     * calls are made:
-     * <ul>
-     * <li>A.onConnect(A)</li>
-     * <li>A.onConnect(B)</li>
-     * <li>A.onConnect(C)</li>
-     * <li>B.onConnect(A)</li>
-     * <li>C.onConnect(A)</li>
-     * </ul>
-     */
-    void onConnect(Node node);
+  /**
+   * This is called when a node is added to a network.
+   * <br>
+   * This is also called for the node itself, if it was added to the network.
+   * <br>
+   * At this point the node's network is never <code>null</code> and you can use
+   * it to query it for other nodes. Use this to perform initialization logic,
+   * such as building lists of nodes of a certain type in the network.
+   * <br>
+   * For example, if node A is added to a network with nodes B and C, these
+   * calls are made:
+   * <ul>
+   * <li>A.onConnect(A)</li>
+   * <li>A.onConnect(B)</li>
+   * <li>A.onConnect(C)</li>
+   * <li>B.onConnect(A)</li>
+   * <li>C.onConnect(A)</li>
+   * </ul>
+   */
+  void onConnect(Node node);
 
-    /**
-     * This is called when a node is removed from the network.
-     * <br>
-     * This is also called for the node itself, when it has been removed from
-     * its network. Note that this is called on the node that is being removed
-     * <em>only once</em> with the node itself as the parameter.
-     * <br>
-     * At this point the node's network is no longer available (<code>null</code>).
-     * Use this to perform clean-up logic such as removing references to the
-     * removed node.
-     * <br>
-     * For example, if node A is removed from a network with nodes A, B and C,
-     * these calls are made:
-     * <ul>
-     * <li>A.onDisconnect(A)</li>
-     * <li>B.onDisconnect(A)</li>
-     * <li>C.onDisconnect(A)</li>
-     * </ul>
-     */
-    void onDisconnect(Node node);
+  /**
+   * This is called when a node is removed from the network.
+   * <br>
+   * This is also called for the node itself, when it has been removed from
+   * its network. Note that this is called on the node that is being removed
+   * <em>only once</em> with the node itself as the parameter.
+   * <br>
+   * At this point the node's network is no longer available (<code>null</code>).
+   * Use this to perform clean-up logic such as removing references to the
+   * removed node.
+   * <br>
+   * For example, if node A is removed from a network with nodes A, B and C,
+   * these calls are made:
+   * <ul>
+   * <li>A.onDisconnect(A)</li>
+   * <li>B.onDisconnect(A)</li>
+   * <li>C.onDisconnect(A)</li>
+   * </ul>
+   */
+  void onDisconnect(Node node);
 
-    /**
-     * This is the generic message handler.
-     * <br>
-     * It is called whenever this environments {@link Node} receives a message
-     * that was sent via one of the <code>send</code> methods in the {@link Network}
-     * or the <code>Node</code> itself.
-     *
-     * @param message the message to handle.
-     */
-    void onMessage(Message message);
+  /**
+   * This is the generic message handler.
+   * <br>
+   * It is called whenever this environments {@link Node} receives a message
+   * that was sent via one of the <code>send</code> methods in the {@link Network}
+   * or the <code>Node</code> itself.
+   *
+   * @param message the message to handle.
+   */
+  void onMessage(Message message);
 }

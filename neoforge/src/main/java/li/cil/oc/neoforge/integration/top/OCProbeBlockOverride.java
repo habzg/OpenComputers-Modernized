@@ -18,21 +18,21 @@ import net.neoforged.fml.ModList;
 
 @SuppressWarnings("unused")
 public class OCProbeBlockOverride implements IBlockDisplayOverride {
-    @Override
-    public boolean overrideStandardInfo(ProbeMode mode, IProbeInfo probeInfo, Player player, Level world, BlockState blockState, IProbeHitData data) {
-        if (!(blockState.getBlock() instanceof AbstractBlock)) return false;
-        ItemStack stack = data.getPickBlock();
-        if (stack.isEmpty() || stack.getRarity() == Rarity.COMMON) return false;
+  @Override
+  public boolean overrideStandardInfo(ProbeMode mode, IProbeInfo probeInfo, Player player, Level world, BlockState blockState, IProbeHitData data) {
+    if (!(blockState.getBlock() instanceof AbstractBlock)) return false;
+    ItemStack stack = data.getPickBlock();
+    if (stack.isEmpty() || stack.getRarity() == Rarity.COMMON) return false;
 
-        String modName = ModList.get()
-                .getModContainerById(BuiltInRegistries.BLOCK.getKey(blockState.getBlock()).getNamespace())
-                .map(container -> container.getModInfo().getDisplayName())
-                .orElse("opencomputers");
-        probeInfo.horizontal()
-                .item(stack)
-                .vertical()
-                .mcText(Component.empty().append(stack.getHoverName()).withStyle(stack.getRarity().getStyleModifier()))
-                .text(CompoundText.create().style(TextStyleClass.MODNAME).text(modName));
-        return true;
-    }
+    String modName = ModList.get()
+      .getModContainerById(BuiltInRegistries.BLOCK.getKey(blockState.getBlock()).getNamespace())
+      .map(container -> container.getModInfo().getDisplayName())
+      .orElse("opencomputers");
+    probeInfo.horizontal()
+      .item(stack)
+      .vertical()
+      .mcText(Component.empty().append(stack.getHoverName()).withStyle(stack.getRarity().getStyleModifier()))
+      .text(CompoundText.create().style(TextStyleClass.MODNAME).text(modName));
+    return true;
+  }
 }

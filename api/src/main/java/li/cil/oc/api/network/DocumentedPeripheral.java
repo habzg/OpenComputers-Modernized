@@ -12,12 +12,12 @@ import org.jetbrains.annotations.Nullable;
  * already have a different way of providing docstrings in place. (e.g Mekanism).
  */
 public interface DocumentedPeripheral {
-    /**
-     * Get the documentation string for the specified method.
-     *
-     * @param method the method name.
-     * @return the docstring for the method or null.
-     */
-    @Nullable
-    String doc(String method);
+  /**
+   * Get the documentation string for the specified method.
+   *
+   * @param method the method name.
+   * @return the docstring for the method or null.
+   */
+  @Nullable
+  String doc(String method);
 }

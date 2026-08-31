@@ -19,26 +19,26 @@ import net.minecraft.world.level.Level;
  * set language, falling back to <code>en_US</code>, during actual content lookup.
  */
 public interface PathProvider {
-    /**
-     * Get the path to the documentation page for the provided item stack.
-     * <br>
-     * Return <code>null</code> if there is no known page for this item, allowing
-     * other providers to be queried.
-     *
-     * @param stack the stack to get the documentation path to.
-     * @return the path to the page, <code>null</code> if none is known.
-     */
-    String pathFor(ItemStack stack);
+  /**
+   * Get the path to the documentation page for the provided item stack.
+   * <br>
+   * Return <code>null</code> if there is no known page for this item, allowing
+   * other providers to be queried.
+   *
+   * @param stack the stack to get the documentation path to.
+   * @return the path to the page, <code>null</code> if none is known.
+   */
+  String pathFor(ItemStack stack);
 
-    /**
-     * Get the path to the documentation page for the provided block.
-     * <br>
-     * Return <code>null</code> if there is no known page for this item, allowing
-     * other providers to be queried.
-     *
-     * @param level the Level containing the block.
-     * @param pos   the position of the block.
-     * @return the path to the page, <code>null</code> if none is known.
-     */
-    String pathFor(Level level, BlockPos pos);
+  /**
+   * Get the path to the documentation page for the provided block.
+   * <br>
+   * Return <code>null</code> if there is no known page for this item, allowing
+   * other providers to be queried.
+   *
+   * @param level the Level containing the block.
+   * @param pos   the position of the block.
+   * @return the path to the page, <code>null</code> if none is known.
+   */
+  String pathFor(Level level, BlockPos pos);
 }

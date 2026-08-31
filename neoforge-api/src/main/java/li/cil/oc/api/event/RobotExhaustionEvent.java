@@ -8,13 +8,13 @@ import li.cil.oc.api.internal.Agent;
  */
 @SuppressWarnings("unused")
 public class RobotExhaustionEvent extends RobotEvent {
-    /**
-     * The amount of exhaustion that was generated.
-     */
-    public final double exhaustion;
+  /**
+   * The amount of exhaustion that was generated.
+   */
+  public final double exhaustion;
 
-    public RobotExhaustionEvent(Agent agent, double exhaustion) {
-        super(agent);
-        this.exhaustion = exhaustion;
-    }
+  public RobotExhaustionEvent(Agent agent, double exhaustion) {
+    super(agent);
+    this.exhaustion = exhaustion;
+  }
 }

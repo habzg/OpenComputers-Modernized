@@ -12,44 +12,44 @@ import net.minecraft.world.item.crafting.RecipeSerializer;
 import org.jetbrains.annotations.NotNull;
 
 public class DecolorizeRecipeSerializer implements RecipeSerializer<DecolorizeRecipe> {
-    public static final DecolorizeRecipeSerializer INSTANCE = new DecolorizeRecipeSerializer();
+  public static final DecolorizeRecipeSerializer INSTANCE = new DecolorizeRecipeSerializer();
 
-    private static final MapCodec<DecolorizeRecipe> CODEC = RecordCodecBuilder.mapCodec(instance ->
-            instance.group(
-                    CraftingBookCategory.CODEC.optionalFieldOf("category", CraftingBookCategory.MISC).forGetter(CustomRecipe::category),
-                    BuiltInRegistries.ITEM.byNameCodec().fieldOf("target").forGetter(r -> r.targetItem)
-            ).apply(instance, DecolorizeRecipeSerializer::create)
-    );
+  private static final MapCodec<DecolorizeRecipe> CODEC = RecordCodecBuilder.mapCodec(instance ->
+    instance.group(
+      CraftingBookCategory.CODEC.optionalFieldOf("category", CraftingBookCategory.MISC).forGetter(CustomRecipe::category),
+      BuiltInRegistries.ITEM.byNameCodec().fieldOf("target").forGetter(r -> r.targetItem)
+    ).apply(instance, DecolorizeRecipeSerializer::create)
+  );
 
-    private static DecolorizeRecipe create(CraftingBookCategory category, Item target) {
-        return new DecolorizeRecipe(category, target);
-    }
+  private static DecolorizeRecipe create(CraftingBookCategory category, Item target) {
+    return new DecolorizeRecipe(category, target);
+  }
 
-    private static final StreamCodec<RegistryFriendlyByteBuf, DecolorizeRecipe> STREAM_CODEC = StreamCodec.of(
-            DecolorizeRecipeSerializer::toNetwork, DecolorizeRecipeSerializer::fromNetwork
-    );
+  private static final StreamCodec<RegistryFriendlyByteBuf, DecolorizeRecipe> STREAM_CODEC = StreamCodec.of(
+    DecolorizeRecipeSerializer::toNetwork, DecolorizeRecipeSerializer::fromNetwork
+  );
 
-    private DecolorizeRecipeSerializer() {
-    }
+  private DecolorizeRecipeSerializer() {
+  }
 
-    @Override
-    public @NotNull MapCodec<DecolorizeRecipe> codec() {
-        return CODEC;
-    }
+  @Override
+  public @NotNull MapCodec<DecolorizeRecipe> codec() {
+    return CODEC;
+  }
 
-    @Override
-    public @NotNull StreamCodec<RegistryFriendlyByteBuf, DecolorizeRecipe> streamCodec() {
-        return STREAM_CODEC;
-    }
+  @Override
+  public @NotNull StreamCodec<RegistryFriendlyByteBuf, DecolorizeRecipe> streamCodec() {
+    return STREAM_CODEC;
+  }
 
-    private static DecolorizeRecipe fromNetwork(RegistryFriendlyByteBuf buffer) {
-        var category = buffer.readEnum(CraftingBookCategory.class);
-        var item = BuiltInRegistries.ITEM.byId(buffer.readVarInt());
-        return new DecolorizeRecipe(category, item);
-    }
+  private static DecolorizeRecipe fromNetwork(RegistryFriendlyByteBuf buffer) {
+    var category = buffer.readEnum(CraftingBookCategory.class);
+    var item = BuiltInRegistries.ITEM.byId(buffer.readVarInt());
+    return new DecolorizeRecipe(category, item);
+  }
 
-    private static void toNetwork(RegistryFriendlyByteBuf buffer, DecolorizeRecipe recipe) {
-        buffer.writeEnum(recipe.category());
-        buffer.writeVarInt(BuiltInRegistries.ITEM.getId(recipe.targetItem));
-    }
+  private static void toNetwork(RegistryFriendlyByteBuf buffer, DecolorizeRecipe recipe) {
+    buffer.writeEnum(recipe.category());
+    buffer.writeVarInt(BuiltInRegistries.ITEM.getId(recipe.targetItem));
+  }
 }

@@ -10,44 +10,44 @@ import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 public class SimplePacketBuilder extends PacketBuilderBase<ByteArrayOutputStream> {
-    public final PacketType packetType;
+  public final PacketType packetType;
 
-    public SimplePacketBuilder(PacketType packetType) {
-        super(newData(false));
-        this.packetType = packetType;
-        try {
-            writeByte(packetType.ordinal());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+  public SimplePacketBuilder(PacketType packetType) {
+    super(newData(false));
+    this.packetType = packetType;
+    try {
+      writeByte(packetType.ordinal());
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
+  }
 
-    @Override
-    protected byte[] getPayloadBytes() {
-        flush();
-        return stream.toByteArray();
-    }
+  @Override
+  protected byte[] getPayloadBytes() {
+    flush();
+    return stream.toByteArray();
+  }
 
-    @Override
-    public void sendToAllPlayers() {
-        byte[] payload = getPayloadBytes();
-        logPacket(packetType, payload.length, blockEntity);
-        PacketDistributor.sendToAllPlayers(new OCPayload(payload));
-    }
+  @Override
+  public void sendToAllPlayers() {
+    byte[] payload = getPayloadBytes();
+    logPacket(packetType, payload.length, blockEntity);
+    PacketDistributor.sendToAllPlayers(new OCPayload(payload));
+  }
 
-    @Override
-    public void sendToPlayer(Player player) {
-        byte[] payload = getPayloadBytes();
-        logPacket(packetType, payload.length, blockEntity);
-        if (player instanceof ServerPlayer sp) {
-            PacketDistributor.sendToPlayer(sp, new OCPayload(payload));
-        }
+  @Override
+  public void sendToPlayer(Player player) {
+    byte[] payload = getPayloadBytes();
+    logPacket(packetType, payload.length, blockEntity);
+    if (player instanceof ServerPlayer sp) {
+      PacketDistributor.sendToPlayer(sp, new OCPayload(payload));
     }
+  }
 
-    @Override
-    public void sendToServer() {
-        byte[] payload = getPayloadBytes();
-        logPacket(packetType, payload.length, blockEntity);
-        PacketDistributor.sendToServer(new OCPayload(payload));
-    }
+  @Override
+  public void sendToServer() {
+    byte[] payload = getPayloadBytes();
+    logPacket(packetType, payload.length, blockEntity);
+    PacketDistributor.sendToServer(new OCPayload(payload));
+  }
 }

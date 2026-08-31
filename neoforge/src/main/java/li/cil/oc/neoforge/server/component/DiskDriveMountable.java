@@ -9,18 +9,18 @@ import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 
 public class DiskDriveMountable extends DiskDriveMountableBase {
-    public DiskDriveMountable(Rack rack, int slot) {
-        super(rack, slot);
-    }
+  public DiskDriveMountable(Rack rack, int slot) {
+    super(rack, slot);
+  }
 
-    @Override
-    protected void openDiskDriveGui(@NotNull Player player, @NotNull BlockPosition pos, int slot) {
-        player.openMenu(OpenComputers.getContainerProvider(GuiType.DiskDriveMountableInRack, rack.level(), pos.x(), GuiType.embedSlot(pos.y(), slot), pos.z()), (net.minecraft.network.RegistryFriendlyByteBuf buf) -> {
-            buf.writeInt(GuiType.DiskDriveMountableInRack);
-            buf.writeInt(pos.x());
-            buf.writeInt(GuiType.embedSlot(pos.y(), slot));
-            buf.writeInt(pos.z());
-            buf.writeUtf("");
-        });
-    }
+  @Override
+  protected void openDiskDriveGui(@NotNull Player player, @NotNull BlockPosition pos, int slot) {
+    player.openMenu(OpenComputers.getContainerProvider(GuiType.DiskDriveMountableInRack, rack.level(), pos.x(), GuiType.embedSlot(pos.y(), slot), pos.z()), (net.minecraft.network.RegistryFriendlyByteBuf buf) -> {
+      buf.writeInt(GuiType.DiskDriveMountableInRack);
+      buf.writeInt(pos.x());
+      buf.writeInt(GuiType.embedSlot(pos.y(), slot));
+      buf.writeInt(pos.z());
+      buf.writeUtf("");
+    });
+  }
 }

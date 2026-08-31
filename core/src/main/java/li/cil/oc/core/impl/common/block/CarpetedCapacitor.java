@@ -10,31 +10,31 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 
 public class CarpetedCapacitor extends Capacitor {
-    public static BlockEntityType<?> TYPE;
+  public static BlockEntityType<?> TYPE;
 
-    public CarpetedCapacitor(BlockEntityType<?> blockType) {
-        super();
-        TYPE = blockType;
-    }
+  public CarpetedCapacitor(BlockEntityType<?> blockType) {
+    super();
+    TYPE = blockType;
+  }
 
-    public CarpetedCapacitor() {
-        super();
-    }
+  public CarpetedCapacitor() {
+    super();
+  }
 
-    @Override
-    public BlockEntity newBlockEntity(@NotNull BlockPos pos, @NotNull BlockState state) {
-        return new li.cil.oc.core.impl.common.blockentity.CarpetedCapacitor(pos, state);
-    }
+  @Override
+  public BlockEntity newBlockEntity(@NotNull BlockPos pos, @NotNull BlockState state) {
+    return new li.cil.oc.core.impl.common.blockentity.CarpetedCapacitor(pos, state);
+  }
 
-    @Override
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(@NotNull Level level, @NotNull BlockState state, @NotNull BlockEntityType<T> type) {
-        if (level.isClientSide()) return null;
-        return type == TYPE ? (lvl, pos, st, te) -> {
-            try {
-                ((li.cil.oc.core.impl.common.blockentity.CarpetedCapacitor) te).updateEntity();
-            } catch (Exception e) {
-                Log.get().warn("Error in carpeted capacitor tick", e);
-            }
-        } : null;
-    }
+  @Override
+  public <T extends BlockEntity> BlockEntityTicker<T> getTicker(@NotNull Level level, @NotNull BlockState state, @NotNull BlockEntityType<T> type) {
+    if (level.isClientSide()) return null;
+    return type == TYPE ? (lvl, pos, st, te) -> {
+      try {
+        ((li.cil.oc.core.impl.common.blockentity.CarpetedCapacitor) te).updateEntity();
+      } catch (Exception e) {
+        Log.get().warn("Error in carpeted capacitor tick", e);
+      }
+    } : null;
+  }
 }

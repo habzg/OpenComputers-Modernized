@@ -12,24 +12,24 @@ import li.cil.oc.api.internal.Agent;
  */
 @SuppressWarnings("unused")
 public class RobotPlaceInAirEvent extends RobotEvent {
-    private boolean isAllowed = false;
+  private boolean isAllowed = false;
 
-    public RobotPlaceInAirEvent(Agent agent) {
-        super(agent);
-    }
+  public RobotPlaceInAirEvent(Agent agent) {
+    super(agent);
+  }
 
-    /**
-     * Whether the placement is allowed. Defaults to {@code false}.
-     */
-    public boolean isAllowed() {
-        return isAllowed;
-    }
+  /**
+   * Whether the placement is allowed. Defaults to {@code false}.
+   */
+  public boolean isAllowed() {
+    return isAllowed;
+  }
 
-    /**
-     * Set whether the placement is allowed, can be used to allow robots to
-     * place blocks in thin air.
-     */
-    public void setAllowed(boolean value) {
-        this.isAllowed = value;
-    }
+  /**
+   * Set whether the placement is allowed, can be used to allow robots to
+   * place blocks in thin air.
+   */
+  public void setAllowed(boolean value) {
+    this.isAllowed = value;
+  }
 }

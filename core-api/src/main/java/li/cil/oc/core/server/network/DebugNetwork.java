@@ -6,29 +6,29 @@ import java.util.WeakHashMap;
 import li.cil.oc.api.network.Packet;
 
 public final class DebugNetwork {
-    private static final Map<DebugNode, Boolean> cards = Collections.synchronizedMap(new WeakHashMap<>());
+  private static final Map<DebugNode, Boolean> cards = Collections.synchronizedMap(new WeakHashMap<>());
 
-    private DebugNetwork() {
+  private DebugNetwork() {
+  }
+
+  public static void add(DebugNode card) {
+    cards.put(card, true);
+  }
+
+  public static void remove(DebugNode card) {
+    cards.remove(card);
+  }
+
+  public static DebugNode getEndpoint(String tunnel) {
+    for (DebugNode node : cards.keySet()) {
+      if (node.address().equals(tunnel)) return node;
     }
+    return null;
+  }
 
-    public static void add(DebugNode card) {
-        cards.put(card, true);
-    }
+  public interface DebugNode {
+    String address();
 
-    public static void remove(DebugNode card) {
-        cards.remove(card);
-    }
-
-    public static DebugNode getEndpoint(String tunnel) {
-        for (DebugNode node : cards.keySet()) {
-            if (node.address().equals(tunnel)) return node;
-        }
-        return null;
-    }
-
-    public interface DebugNode {
-        String address();
-
-        void receivePacket(Packet packet) ;
-    }
+    void receivePacket(Packet packet);
+  }
 }

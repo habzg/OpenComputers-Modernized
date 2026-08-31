@@ -10,53 +10,53 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
 public class DroneData extends MicrocontrollerData {
-    public String name = "";
+  public String name = "";
 
-    public DroneData() {
-        super(Constants.ItemName.Drone);
-    }
+  public DroneData() {
+    super(Constants.ItemName.Drone);
+  }
 
-    public DroneData(ItemStack stack) {
-        this();
-        load(stack, li.cil.oc.core.impl.util.SideTracker.getCurrentServer().registryAccess());
-    }
+  public DroneData(ItemStack stack) {
+    this();
+    load(stack, li.cil.oc.core.impl.util.SideTracker.getCurrentServer().registryAccess());
+  }
 
-    @Override
-    public void load(CompoundTag nbt, HolderLookup.Provider provider) {
-        super.load(nbt, provider);
-        if (nbt.contains("display") && nbt.getCompound("display").contains("Name")) {
-            name = nbt.getCompound("display").getString("Name");
-        }
-        if (Strings.isNullOrEmpty(name)) {
-            name = NameProvider.randomName();
-        }
+  @Override
+  public void load(CompoundTag nbt, HolderLookup.Provider provider) {
+    super.load(nbt, provider);
+    if (nbt.contains("display") && nbt.getCompound("display").contains("Name")) {
+      name = nbt.getCompound("display").getString("Name");
     }
+    if (Strings.isNullOrEmpty(name)) {
+      name = NameProvider.randomName();
+    }
+  }
 
-    @Override
-    public void load(ItemStack stack, HolderLookup.Provider provider) {
-        super.load(stack, provider);
-        var customName = stack.get(DataComponents.CUSTOM_NAME);
-        if (customName != null) {
-            name = customName.getString();
-        }
+  @Override
+  public void load(ItemStack stack, HolderLookup.Provider provider) {
+    super.load(stack, provider);
+    var customName = stack.get(DataComponents.CUSTOM_NAME);
+    if (customName != null) {
+      name = customName.getString();
     }
+  }
 
-    @Override
-    public void save(ItemStack stack, HolderLookup.Provider provider) {
-        super.save(stack, provider);
-        if (!Strings.isNullOrEmpty(name)) {
-            stack.set(DataComponents.CUSTOM_NAME, Component.literal(name));
-        }
+  @Override
+  public void save(ItemStack stack, HolderLookup.Provider provider) {
+    super.save(stack, provider);
+    if (!Strings.isNullOrEmpty(name)) {
+      stack.set(DataComponents.CUSTOM_NAME, Component.literal(name));
     }
+  }
 
-    @Override
-    public void save(CompoundTag nbt, HolderLookup.Provider provider) {
-        super.save(nbt, provider);
-        if (!Strings.isNullOrEmpty(name)) {
-            if (!nbt.contains("display")) {
-                nbt.put("display", new CompoundTag());
-            }
-            nbt.getCompound("display").putString("Name", name);
-        }
+  @Override
+  public void save(CompoundTag nbt, HolderLookup.Provider provider) {
+    super.save(nbt, provider);
+    if (!Strings.isNullOrEmpty(name)) {
+      if (!nbt.contains("display")) {
+        nbt.put("display", new CompoundTag());
+      }
+      nbt.getCompound("display").putString("Name", name);
     }
+  }
 }

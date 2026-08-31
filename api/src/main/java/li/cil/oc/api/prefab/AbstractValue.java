@@ -10,30 +10,30 @@ import net.minecraft.nbt.CompoundTag;
  * Basic implementation for the <code>Value</code> interface.
  */
 public class AbstractValue implements Value {
-    @Override
-    public Object apply(Context context, Arguments arguments) {
-        return null;
-    }
+  @Override
+  public Object apply(Context context, Arguments arguments) {
+    return null;
+  }
 
-    @Override
-    public void unapply(Context context, Arguments arguments) {
-    }
+  @Override
+  public void unapply(Context context, Arguments arguments) {
+  }
 
-    @Override
-    public Object[] call(Context context, Arguments arguments) {
-        throw new RuntimeException("trying to call a non-callable value");
-    }
+  @Override
+  public Object[] call(Context context, Arguments arguments) {
+    throw new RuntimeException("trying to call a non-callable value");
+  }
 
-    @Override
-    public void dispose(Context context) {
-    }
+  @Override
+  public void dispose(Context context) {
+  }
 
-    @Override
-    public void load(CompoundTag nbt, HolderLookup.Provider provider) {
-    }
+  @Override
+  public void load(CompoundTag nbt, HolderLookup.Provider provider) {
+  }
 
-    @Override
-    public void save(CompoundTag nbt, HolderLookup.Provider provider) {
-    }
+  @Override
+  public void save(CompoundTag nbt, HolderLookup.Provider provider) {
+  }
 
 }

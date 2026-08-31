@@ -13,52 +13,52 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.NotNull;
 
 public class Wrench extends li.cil.oc.core.impl.common.item.Wrench {
-    public Wrench(Properties properties) {
-        super(properties);
-    }
+  public Wrench(Properties properties) {
+    super(properties);
+  }
 
-    @Override
-    public boolean doesSneakBypassUse(@NotNull ItemStack stack, @NotNull LevelReader level, @NotNull BlockPos pos, @NotNull Player player) {
-        return true;
-    }
+  @Override
+  public boolean doesSneakBypassUse(@NotNull ItemStack stack, @NotNull LevelReader level, @NotNull BlockPos pos, @NotNull Player player) {
+    return true;
+  }
 
-    @Override
-    public @NotNull InteractionResult onItemUseFirst(@NotNull ItemStack ignoredStack, @NotNull UseOnContext context) {
-        var world = context.getLevel();
-        var pos = context.getClickedPos();
-        var player = context.getPlayer();
-        if (player == null) return InteractionResult.PASS;
-        if (!world.isClientSide && (!player.canInteractWithBlock(pos, 9.0) || player.isSpectator())) {
-            return InteractionResult.PASS;
-        }
-        if (world.hasChunk(pos.getX() >> 4, pos.getZ() >> 4) && world.isAreaLoaded(pos, 1)) {
-            var state = world.getBlockState(pos);
-            var face = context.getClickedFace();
-            var rotation = switch (face) {
-                case UP, DOWN, SOUTH -> Rotation.CLOCKWISE_90;
-                case NORTH -> Rotation.COUNTERCLOCKWISE_90;
-                case WEST -> Rotation.NONE;
-                case EAST -> Rotation.CLOCKWISE_180;
-            };
-            var newState = state.rotate(world, pos, rotation);
-            if (newState != state) {
-                world.setBlock(pos, newState, 3);
-                world.blockUpdated(pos, state.getBlock());
-                player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
-                return !world.isClientSide ? InteractionResult.SUCCESS : InteractionResult.PASS;
-            }
-            BlockEntity te = world.getBlockEntity(pos);
-            if (te instanceof Rotatable rotatable) {
-                var currentFacing = rotatable.facing();
-                var newFacing = face.getAxis() == Direction.Axis.Y
-                        ? Direction.from2DDataValue((currentFacing.get2DDataValue() + 3) & 3)
-                        : currentFacing.getClockWise();
-                rotatable.facing(newFacing);
-                world.blockUpdated(pos, state.getBlock());
-                player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
-                return !world.isClientSide ? InteractionResult.SUCCESS : InteractionResult.PASS;
-            }
-        }
-        return InteractionResult.PASS;
+  @Override
+  public @NotNull InteractionResult onItemUseFirst(@NotNull ItemStack ignoredStack, @NotNull UseOnContext context) {
+    var world = context.getLevel();
+    var pos = context.getClickedPos();
+    var player = context.getPlayer();
+    if (player == null) return InteractionResult.PASS;
+    if (!world.isClientSide && (!player.canInteractWithBlock(pos, 9.0) || player.isSpectator())) {
+      return InteractionResult.PASS;
     }
+    if (world.hasChunk(pos.getX() >> 4, pos.getZ() >> 4) && world.isAreaLoaded(pos, 1)) {
+      var state = world.getBlockState(pos);
+      var face = context.getClickedFace();
+      var rotation = switch (face) {
+        case UP, DOWN, SOUTH -> Rotation.CLOCKWISE_90;
+        case NORTH -> Rotation.COUNTERCLOCKWISE_90;
+        case WEST -> Rotation.NONE;
+        case EAST -> Rotation.CLOCKWISE_180;
+      };
+      var newState = state.rotate(world, pos, rotation);
+      if (newState != state) {
+        world.setBlock(pos, newState, 3);
+        world.blockUpdated(pos, state.getBlock());
+        player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+        return !world.isClientSide ? InteractionResult.SUCCESS : InteractionResult.PASS;
+      }
+      BlockEntity te = world.getBlockEntity(pos);
+      if (te instanceof Rotatable rotatable) {
+        var currentFacing = rotatable.facing();
+        var newFacing = face.getAxis() == Direction.Axis.Y
+          ? Direction.from2DDataValue((currentFacing.get2DDataValue() + 3) & 3)
+          : currentFacing.getClockWise();
+        rotatable.facing(newFacing);
+        world.blockUpdated(pos, state.getBlock());
+        player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+        return !world.isClientSide ? InteractionResult.SUCCESS : InteractionResult.PASS;
+      }
+    }
+    return InteractionResult.PASS;
+  }
 }

@@ -31,102 +31,102 @@ import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import org.jetbrains.annotations.NotNull;
 
 public class Case extends RedstoneAware implements PowerAcceptor, GUI, StateAware {
-    public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
-    public static final BooleanProperty RUNNING = OCBlockStateProperties.CASE_RUNNING;
+  public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+  public static final BooleanProperty RUNNING = OCBlockStateProperties.CASE_RUNNING;
 
-    public final int tier;
+  public final int tier;
 
-    public Case(int tier) {
-        super();
-        this.tier = tier;
-        registerDefaultState(defaultBlockState()
-                .setValue(FACING, Direction.NORTH)
-                .setValue(RUNNING, false));
+  public Case(int tier) {
+    super();
+    this.tier = tier;
+    registerDefaultState(defaultBlockState()
+      .setValue(FACING, Direction.NORTH)
+      .setValue(RUNNING, false));
+  }
+
+  @Override
+  protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+    super.createBlockStateDefinition(builder);
+    builder.add(FACING, RUNNING);
+  }
+
+  @Override
+  public BlockState getStateForPlacement(BlockPlaceContext context) {
+    return defaultBlockState()
+      .setValue(FACING, context.getHorizontalDirection().getOpposite())
+      .setValue(RUNNING, false);
+  }
+
+  @Override
+  public void setPlacedBy(@NotNull Level world, @NotNull BlockPos pos, @NotNull BlockState state, LivingEntity placer, @NotNull ItemStack stack) {
+    super.setPlacedBy(world, pos, state, placer, stack);
+    setFacing(world, pos, state.getValue(FACING));
+  }
+
+  @Override
+  public int guiType() {
+    return GuiType.Case;
+  }
+
+  @Override
+  public double energyThroughput() {
+    return OCSettings.get().caseRate[tier];
+  }
+
+  @Override
+  public BlockEntity newBlockEntity(@NotNull BlockPos pos, @NotNull BlockState state) {
+    return new li.cil.oc.fabric.common.blockentity.CaseTile(pos, state, this.tier);
+  }
+
+  @Override
+  public void neighborChanged(@NotNull BlockState state, @NotNull Level world, @NotNull BlockPos pos, @NotNull Block block, @NotNull BlockPos fromPos, boolean isMoving) {
+    super.neighborChanged(state, world, pos, block, fromPos, isMoving);
+    if (world.getBlockEntity(pos) instanceof li.cil.oc.core.impl.common.blockentity.Case computer) {
+      computer.onNeighborChanged();
     }
+  }
 
-    @Override
-    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        super.createBlockStateDefinition(builder);
-        builder.add(FACING, RUNNING);
-    }
+  @Override
+  public <T extends BlockEntity> BlockEntityTicker<T> getTicker(net.minecraft.world.level.@NotNull Level level, @NotNull BlockState state, @NotNull BlockEntityType<T> type) {
+    return type == BlockEntities.CASE ? (lvl, pos, st, te) -> ((li.cil.oc.core.impl.common.blockentity.Case) te).updateEntity() : null;
+  }
 
-    @Override
-    public BlockState getStateForPlacement(BlockPlaceContext context) {
-        return defaultBlockState()
-                .setValue(FACING, context.getHorizontalDirection().getOpposite())
-                .setValue(RUNNING, false);
-    }
+  @Override
+  protected void tooltipBody(int metadata, ItemStack stack, Player player, List<Component> tooltip, boolean advanced) {
+    tooltip.addAll(Tooltip.get(getClass().getSimpleName(), slots()));
+  }
 
-    @Override
-    public void setPlacedBy(@NotNull Level world, @NotNull BlockPos pos, @NotNull BlockState state, LivingEntity placer, @NotNull ItemStack stack) {
-        super.setPlacedBy(world, pos, state, placer, stack);
-        setFacing(world, pos, state.getValue(FACING));
-    }
+  private String slots() {
+    return switch (tier) {
+      case 0 -> "2/1/1";
+      case 1 -> "2/2/2";
+      case 2, 3 -> "3/2/3";
+      default -> "0/0/0";
+    };
+  }
 
-    @Override
-    public int guiType() {
-        return GuiType.Case;
-    }
+  @Override
+  public net.minecraft.world.item.Rarity rarity(ItemStack stack) {
+    return li.cil.oc.core.impl.util.Rarity.byTier(tier);
+  }
 
-    @Override
-    public double energyThroughput() {
-        return OCSettings.get().caseRate[tier];
-    }
-
-    @Override
-    public BlockEntity newBlockEntity(@NotNull BlockPos pos, @NotNull BlockState state) {
-        return new li.cil.oc.fabric.common.blockentity.CaseTile(pos, state, this.tier);
-    }
-
-    @Override
-    public void neighborChanged(@NotNull BlockState state, @NotNull Level world, @NotNull BlockPos pos, @NotNull Block block, @NotNull BlockPos fromPos, boolean isMoving) {
-        super.neighborChanged(state, world, pos, block, fromPos, isMoving);
-        if (world.getBlockEntity(pos) instanceof li.cil.oc.core.impl.common.blockentity.Case computer) {
-            computer.onNeighborChanged();
+  @Override
+  public boolean onBlockActivated(Level world, BlockPos pos, Player player, Direction side, float hitX, float hitY, float hitZ, InteractionHand hand) {
+    if (player.isShiftKeyDown()) {
+      if (!world.isClientSide) {
+        BlockEntity te = world.getBlockEntity(pos);
+        if (te instanceof li.cil.oc.core.impl.common.blockentity.Case computer && computer.machine() != null && !computer.machine().isRunning() && computer.isUseableByPlayer(player)) {
+          computer.machine().start();
         }
+      }
+      return true;
     }
+    return super.onBlockActivated(world, pos, player, side, hitX, hitY, hitZ, hand);
+  }
 
-    @Override
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(net.minecraft.world.level.@NotNull Level level, @NotNull BlockState state, @NotNull BlockEntityType<T> type) {
-        return type == BlockEntities.CASE ? (lvl, pos, st, te) -> ((li.cil.oc.core.impl.common.blockentity.Case) te).updateEntity() : null;
-    }
-
-    @Override
-    protected void tooltipBody(int metadata, ItemStack stack, Player player, List<Component> tooltip, boolean advanced) {
-        tooltip.addAll(Tooltip.get(getClass().getSimpleName(), slots()));
-    }
-
-    private String slots() {
-        return switch (tier) {
-            case 0 -> "2/1/1";
-            case 1 -> "2/2/2";
-            case 2, 3 -> "3/2/3";
-            default -> "0/0/0";
-        };
-    }
-
-    @Override
-    public net.minecraft.world.item.Rarity rarity(ItemStack stack) {
-        return li.cil.oc.core.impl.util.Rarity.byTier(tier);
-    }
-
-    @Override
-    public boolean onBlockActivated(Level world, BlockPos pos, Player player, Direction side, float hitX, float hitY, float hitZ, InteractionHand hand) {
-        if (player.isShiftKeyDown()) {
-            if (!world.isClientSide) {
-                BlockEntity te = world.getBlockEntity(pos);
-                if (te instanceof li.cil.oc.core.impl.common.blockentity.Case computer && computer.machine() != null && !computer.machine().isRunning() && computer.isUseableByPlayer(player)) {
-                    computer.machine().start();
-                }
-            }
-            return true;
-        }
-        return super.onBlockActivated(world, pos, player, side, hitX, hitY, hitZ, hand);
-    }
-
-    @Override
-    public java.util.Set<li.cil.oc.api.util.StateAware.State> getCurrentState() {
-        return java.util.EnumSet.noneOf(li.cil.oc.api.util.StateAware.State.class);
-    }
+  @Override
+  public java.util.Set<li.cil.oc.api.util.StateAware.State> getCurrentState() {
+    return java.util.EnumSet.noneOf(li.cil.oc.api.util.StateAware.State.class);
+  }
 
 }

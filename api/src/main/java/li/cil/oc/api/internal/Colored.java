@@ -9,32 +9,32 @@ package li.cil.oc.api.internal;
  * This interface is <em>not meant to be implemented</em>, just used.
  */
 public interface Colored {
-    /**
-     * Get the current color value.
-     *
-     * @return the current color value.
-     */
-    @SuppressWarnings("unused")
-    int getColor();
+  /**
+   * Get the current color value.
+   *
+   * @return the current color value.
+   */
+  @SuppressWarnings("unused")
+  int getColor();
 
-    /**
-     * Set the color value.
-     *
-     * @param value the new color value.
-     */
-    @SuppressWarnings("unused")
-    void setColor(int value);
+  /**
+   * Set the color value.
+   *
+   * @param value the new color value.
+   */
+  @SuppressWarnings("unused")
+  void setColor(int value);
 
-    /**
-     * Whether the color of the implementing object controls how it can connect
-     * to other objects. If this is <code>true</code> for <em>both</em> involved
-     * objects, silver/light gray objects connect to any other object, but
-     * objects of otherwise different color do not connect to each other. If
-     * this is <code>false</code> for <em>either</em> of the two objects, they may
-     * always connect to each other.
-     *
-     * @return whether the color influences this object's connectivity.
-     */
-    @SuppressWarnings("unused")
-    boolean controlsConnectivity();
+  /**
+   * Whether the color of the implementing object controls how it can connect
+   * to other objects. If this is <code>true</code> for <em>both</em> involved
+   * objects, silver/light gray objects connect to any other object, but
+   * objects of otherwise different color do not connect to each other. If
+   * this is <code>false</code> for <em>either</em> of the two objects, they may
+   * always connect to each other.
+   *
+   * @return whether the color influences this object's connectivity.
+   */
+  @SuppressWarnings("unused")
+  boolean controlsConnectivity();
 }

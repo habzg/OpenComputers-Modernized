@@ -12,29 +12,29 @@ import net.minecraft.world.level.material.MapColor;
 import org.jetbrains.annotations.NotNull;
 
 public class RobotAfterimage extends li.cil.oc.core.impl.common.block.RobotAfterimage {
-    public RobotAfterimage() {
-        super(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(2f, 10f).noOcclusion().noCollission().replaceable().air());
-    }
+  public RobotAfterimage() {
+    super(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(2f, 10f).noOcclusion().noCollission().replaceable().air());
+  }
 
-    @Override
-    public li.cil.oc.core.impl.common.blockentity.RobotBase findMovingRobot(@NotNull BlockGetter world, @NotNull BlockPos pos) {
-        for (var side : Direction.values()) {
-            var tpos = pos.relative(side);
-            if (world instanceof Level l && !l.isLoaded(tpos)) continue;
-            var te = world.getBlockEntity(tpos);
-            if (te instanceof li.cil.oc.fabric.common.blockentity.RobotProxy proxy) {
-                var robot = proxy.robot;
-                if (robot.isAnimatingMove() && robot.moveFromX == pos.getX() && robot.moveFromY == pos.getY() && robot.moveFromZ == pos.getZ()) {
-                    return robot;
-                }
-            }
+  @Override
+  public li.cil.oc.core.impl.common.blockentity.RobotBase findMovingRobot(@NotNull BlockGetter world, @NotNull BlockPos pos) {
+    for (var side : Direction.values()) {
+      var tpos = pos.relative(side);
+      if (world instanceof Level l && !l.isLoaded(tpos)) continue;
+      var te = world.getBlockEntity(tpos);
+      if (te instanceof li.cil.oc.fabric.common.blockentity.RobotProxy proxy) {
+        var robot = proxy.robot;
+        if (robot.isAnimatingMove() && robot.moveFromX == pos.getX() && robot.moveFromY == pos.getY() && robot.moveFromZ == pos.getZ()) {
+          return robot;
         }
-        return null;
+      }
     }
+    return null;
+  }
 
-    @Override
-    public net.minecraft.world.item.Rarity rarity(ItemStack stack) {
-        var data = new RobotData(stack);
-        return Rarity.byTier(data.tier);
-    }
+  @Override
+  public net.minecraft.world.item.Rarity rarity(ItemStack stack) {
+    var data = new RobotData(stack);
+    return Rarity.byTier(data.tier);
+  }
 }

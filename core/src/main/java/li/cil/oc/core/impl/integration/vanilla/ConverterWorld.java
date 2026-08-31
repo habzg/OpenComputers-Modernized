@@ -6,10 +6,10 @@ import net.minecraft.world.level.Level;
 
 @SuppressWarnings("unused")
 public final class ConverterWorld implements Converter {
-    @Override
-    public void convert(Object value, Map<Object, Object> output) {
-        if (value instanceof Level world) {
-            output.put("oc:flatten", world.dimension());
-        }
+  @Override
+  public void convert(Object value, Map<Object, Object> output) {
+    if (value instanceof Level world) {
+      output.put("oc:flatten", world.dimension());
     }
+  }
 }

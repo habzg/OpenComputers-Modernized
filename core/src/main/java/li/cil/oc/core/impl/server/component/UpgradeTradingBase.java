@@ -24,64 +24,64 @@ import net.minecraft.world.item.trading.Merchant;
 import net.minecraft.world.phys.Vec3;
 
 public abstract class UpgradeTradingBase extends AbstractManagedEnvironment implements WorldAware, DeviceInfo {
-    public final EnvironmentHost host;
+  public final EnvironmentHost host;
 
-    @SuppressWarnings("unused")
-    public final li.cil.oc.api.network.Node node = Network.newNode(this, Visibility.Network)
-            .withComponent("trading")
-            .create();
-    private final Map<String, String> deviceInfo = new java.util.HashMap<>() {{
-        put(DeviceAttribute.Class, DeviceClass.Generic);
-        put(DeviceAttribute.Description, "Trading upgrade");
-        put(DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor);
-        put(DeviceAttribute.Product, "Capitalism H.O. 1200T");
-    }};
+  @SuppressWarnings("unused")
+  public final li.cil.oc.api.network.Node node = Network.newNode(this, Visibility.Network)
+    .withComponent("trading")
+    .create();
+  private final Map<String, String> deviceInfo = new java.util.HashMap<>() {{
+    put(DeviceAttribute.Class, DeviceClass.Generic);
+    put(DeviceAttribute.Description, "Trading upgrade");
+    put(DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor);
+    put(DeviceAttribute.Product, "Capitalism H.O. 1200T");
+  }};
 
-    public UpgradeTradingBase(EnvironmentHost host) {
-        this.host = host;
+  public UpgradeTradingBase(EnvironmentHost host) {
+    this.host = host;
+  }
+
+  @Override
+  public Map<String, String> getDeviceInfo() {
+    return deviceInfo;
+  }
+
+  @Override
+  public BlockPosition position() {
+    return BlockPosition.apply(host);
+  }
+
+  public double maxRange() {
+    return OCSettings.get().tradingRange;
+  }
+
+  public boolean isInRange(Entity entity) {
+    return new Vec3(entity.getX(), entity.getY(), entity.getZ()).distanceTo(position().toVec3()) <= maxRange();
+  }
+
+  protected abstract Object createTradeObject(Merchant merchant, int recipeID, int merchantID);
+
+  @Callback(doc = "function():table -- Returns a table of trades in range as userdata objects.")
+  public Object[] getTrades(Context context, Arguments args) {
+    List<Merchant> merchants = new ArrayList<>();
+    for (Entity entity : entitiesInBounds(position().bounds().inflate(maxRange(), maxRange(), maxRange()), Entity.class)) {
+      if (entity instanceof Merchant && isInRange(entity)) {
+        merchants.add((Merchant) entity);
+      }
     }
-
-    @Override
-    public Map<String, String> getDeviceInfo() {
-        return deviceInfo;
+    merchants.sort(Comparator.comparing(m -> ((Entity) m).getUUID()));
+    Map<UUID, Integer> idMap = new HashMap<>();
+    int nextId = 1;
+    for (Merchant merchant : merchants) {
+      idMap.put(((Entity) merchant).getUUID(), nextId);
+      nextId++;
     }
-
-    @Override
-    public BlockPosition position() {
-        return BlockPosition.apply(host);
+    List<Object> result = new ArrayList<>();
+    for (Merchant merchant : merchants) {
+      for (int index = 0; index < merchant.getOffers().size(); index++) {
+        result.add(createTradeObject(merchant, index, idMap.get(((Entity) merchant).getUUID())));
+      }
     }
-
-    public double maxRange() {
-        return OCSettings.get().tradingRange;
-    }
-
-    public boolean isInRange(Entity entity) {
-        return new Vec3(entity.getX(), entity.getY(), entity.getZ()).distanceTo(position().toVec3()) <= maxRange();
-    }
-
-    protected abstract Object createTradeObject(Merchant merchant, int recipeID, int merchantID);
-
-    @Callback(doc = "function():table -- Returns a table of trades in range as userdata objects.")
-    public Object[] getTrades(Context context, Arguments args) {
-        List<Merchant> merchants = new ArrayList<>();
-        for (Entity entity : entitiesInBounds(position().bounds().inflate(maxRange(), maxRange(), maxRange()), Entity.class)) {
-            if (entity instanceof Merchant && isInRange(entity)) {
-                merchants.add((Merchant) entity);
-            }
-        }
-        merchants.sort(Comparator.comparing(m -> ((Entity) m).getUUID()));
-        Map<UUID, Integer> idMap = new HashMap<>();
-        int nextId = 1;
-        for (Merchant merchant : merchants) {
-            idMap.put(((Entity) merchant).getUUID(), nextId);
-            nextId++;
-        }
-        List<Object> result = new ArrayList<>();
-        for (Merchant merchant : merchants) {
-            for (int index = 0; index < merchant.getOffers().size(); index++) {
-                result.add(createTradeObject(merchant, index, idMap.get(((Entity) merchant).getUUID())));
-            }
-        }
-        return ResultWrapper.result(result.toArray());
-    }
+    return ResultWrapper.result(result.toArray());
+  }
 }

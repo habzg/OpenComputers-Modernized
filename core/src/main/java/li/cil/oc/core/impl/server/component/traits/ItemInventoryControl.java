@@ -10,41 +10,41 @@ import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 
 public interface ItemInventoryControl extends InventoryAware {
-    @Callback(doc = "function(slot:number):number -- The size of an item inventory in the specified slot.")
-    default Object[] getItemInventorySize(Context context, Arguments args) {
-        return withItemInventory(ExtendedArguments.checkSlot(args, inventory(), 0), itemInventory -> ResultWrapper.result(itemInventory.getContainerSize()));
-    }
+  @Callback(doc = "function(slot:number):number -- The size of an item inventory in the specified slot.")
+  default Object[] getItemInventorySize(Context context, Arguments args) {
+    return withItemInventory(ExtendedArguments.checkSlot(args, inventory(), 0), itemInventory -> ResultWrapper.result(itemInventory.getContainerSize()));
+  }
 
-    @Callback(doc = "function(inventorySlot:number, slot:number[, count:number=64]):number -- Drops an item from the selected slot into the specified slot in the item inventory.")
-    default Object[] dropIntoItemInventory(Context context, Arguments args) {
-        return withItemInventory(ExtendedArguments.checkSlot(args, inventory(), 0), itemInventory -> {
-            int slot = ExtendedArguments.checkSlot(args, itemInventory, 1);
-            int count = ExtendedArguments.optItemCount(args, 2, 64);
-            return ResultWrapper.result(InventoryUtils.extractFromInventorySlot(
-                    stack -> InventoryUtils.insertIntoInventorySlot(stack, itemInventory, null, slot, count),
-                    inventory(), null, selectedSlot(), count));
-        });
-    }
+  @Callback(doc = "function(inventorySlot:number, slot:number[, count:number=64]):number -- Drops an item from the selected slot into the specified slot in the item inventory.")
+  default Object[] dropIntoItemInventory(Context context, Arguments args) {
+    return withItemInventory(ExtendedArguments.checkSlot(args, inventory(), 0), itemInventory -> {
+      int slot = ExtendedArguments.checkSlot(args, itemInventory, 1);
+      int count = ExtendedArguments.optItemCount(args, 2, 64);
+      return ResultWrapper.result(InventoryUtils.extractFromInventorySlot(
+        stack -> InventoryUtils.insertIntoInventorySlot(stack, itemInventory, null, slot, count),
+        inventory(), null, selectedSlot(), count));
+    });
+  }
 
-    @Callback(doc = "function(inventorySlot:number, slot:number[, count:number=64]):number -- Sucks an item out of the specified slot in the item inventory.")
-    default Object[] suckFromItemInventory(Context context, Arguments args) {
-        return withItemInventory(ExtendedArguments.checkSlot(args, inventory(), 0), itemInventory -> {
-            int slot = ExtendedArguments.checkSlot(args, itemInventory, 1);
-            int count = ExtendedArguments.optItemCount(args, 2, 64);
-            return ResultWrapper.result(InventoryUtils.extractFromInventorySlot(
-                    extractedStack -> {
-                        for (int s : insertionSlots()) {
-                            if (InventoryUtils.insertIntoInventorySlot(extractedStack, inventory(), null, s, 64)) break;
-                        }
-                    },
-                    itemInventory, null, slot, count));
-        });
-    }
+  @Callback(doc = "function(inventorySlot:number, slot:number[, count:number=64]):number -- Sucks an item out of the specified slot in the item inventory.")
+  default Object[] suckFromItemInventory(Context context, Arguments args) {
+    return withItemInventory(ExtendedArguments.checkSlot(args, inventory(), 0), itemInventory -> {
+      int slot = ExtendedArguments.checkSlot(args, itemInventory, 1);
+      int count = ExtendedArguments.optItemCount(args, 2, 64);
+      return ResultWrapper.result(InventoryUtils.extractFromInventorySlot(
+        extractedStack -> {
+          for (int s : insertionSlots()) {
+            if (InventoryUtils.insertIntoInventorySlot(extractedStack, inventory(), null, s, 64)) break;
+          }
+        },
+        itemInventory, null, slot, count));
+    });
+  }
 
-    default Object[] withItemInventory(int slot, java.util.function.Function<Container, Object[]> f) {
-        ItemStack stack = inventory().getItem(slot);
-        Container inv = li.cil.oc.api.Driver.inventoryFor(stack, fakePlayer());
-        if (inv != null) return f.apply(inv);
-        return ResultWrapper.result(0, "no item inventory");
-    }
+  default Object[] withItemInventory(int slot, java.util.function.Function<Container, Object[]> f) {
+    ItemStack stack = inventory().getItem(slot);
+    Container inv = li.cil.oc.api.Driver.inventoryFor(stack, fakePlayer());
+    if (inv != null) return f.apply(inv);
+    return ResultWrapper.result(0, "no item inventory");
+  }
 }

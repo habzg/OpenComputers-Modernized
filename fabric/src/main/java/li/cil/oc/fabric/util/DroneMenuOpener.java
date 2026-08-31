@@ -13,29 +13,29 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import org.jetbrains.annotations.NotNull;
 
 public class DroneMenuOpener implements DroneMenuDelegate {
-    public static final DroneMenuOpener INSTANCE = new DroneMenuOpener();
+  public static final DroneMenuOpener INSTANCE = new DroneMenuOpener();
 
-    private DroneMenuOpener() {
-    }
+  private DroneMenuOpener() {
+  }
 
-    @Override
-    public void openMenu(Player player, Object droneObj) {
-        if (!(droneObj instanceof Drone drone)) return;
-        player.openMenu(new ExtendedScreenHandlerFactory<MenuData>() {
-            @Override
-            public @NotNull Component getDisplayName() {
-                return Component.literal("Drone");
-            }
+  @Override
+  public void openMenu(Player player, Object droneObj) {
+    if (!(droneObj instanceof Drone drone)) return;
+    player.openMenu(new ExtendedScreenHandlerFactory<MenuData>() {
+      @Override
+      public @NotNull Component getDisplayName() {
+        return Component.literal("Drone");
+      }
 
-            @Override
-            public AbstractContainerMenu createMenu(int id, @NotNull Inventory inv, @NotNull Player player) {
-                return new li.cil.oc.core.impl.common.container.Drone(Menus.DRONE, id, inv, drone);
-            }
+      @Override
+      public AbstractContainerMenu createMenu(int id, @NotNull Inventory inv, @NotNull Player player) {
+        return new li.cil.oc.core.impl.common.container.Drone(Menus.DRONE, id, inv, drone);
+      }
 
-            @Override
-            public MenuData getScreenOpeningData(@NotNull ServerPlayer player) {
-                return new MenuData(li.cil.oc.core.common.GuiType.Drone, drone.getId(), 0, 0, "");
-            }
-        });
-    }
+      @Override
+      public MenuData getScreenOpeningData(@NotNull ServerPlayer player) {
+        return new MenuData(li.cil.oc.core.common.GuiType.Drone, drone.getId(), 0, 0, "");
+      }
+    });
+  }
 }

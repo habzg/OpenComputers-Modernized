@@ -1,25 +1,25 @@
 package li.cil.oc.core.impl.common.blockentity.traits;
 
 public interface SwitchLike extends Hub {
-    @SuppressWarnings("unused")
-    int relayDelay();
+  @SuppressWarnings("unused")
+  int relayDelay();
 
-    @SuppressWarnings("unused")
-    boolean isWirelessEnabled();
+  @SuppressWarnings("unused")
+  boolean isWirelessEnabled();
 
-    @SuppressWarnings("unused")
-    boolean isLinkedEnabled();
+  @SuppressWarnings("unused")
+  boolean isLinkedEnabled();
 
-    @SuppressWarnings("unused")
-    java.util.List<Object> computers();
+  @SuppressWarnings("unused")
+  java.util.List<Object> computers();
 
-    @SuppressWarnings("unused")
-    java.util.Map<Object, java.util.Set<Integer>> openPorts();
+  @SuppressWarnings("unused")
+  java.util.Map<Object, java.util.Set<Integer>> openPorts();
 
-    long lastMessage();
+  long lastMessage();
 
-    void lastMessage(long value);
+  void lastMessage(long value);
 
-    @SuppressWarnings("unused")
-    void onSwitchActivity();
+  @SuppressWarnings("unused")
+  void onSwitchActivity();
 }

@@ -18,17 +18,17 @@ import net.minecraft.world.level.block.state.BlockState;
 @SuppressWarnings("unused")
 public class OCProbeConfigProvider implements IProbeConfigProvider {
 
-    @Override
-    public void getProbeConfig(IProbeConfig config, Player player, Level world,
-                               BlockState blockState, IProbeHitData data) {
-        BlockEntity be = world.getBlockEntity(data.getPos());
-        if (be instanceof Case || be instanceof Microcontroller || be instanceof Rack || be instanceof RobotProxy) {
-            config.showChestContents(ConfigMode.NOT);
-        }
+  @Override
+  public void getProbeConfig(IProbeConfig config, Player player, Level world,
+                             BlockState blockState, IProbeHitData data) {
+    BlockEntity be = world.getBlockEntity(data.getPos());
+    if (be instanceof Case || be instanceof Microcontroller || be instanceof Rack || be instanceof RobotProxy) {
+      config.showChestContents(ConfigMode.NOT);
     }
+  }
 
-    @Override
-    public void getProbeConfig(IProbeConfig config, Player player, Level world,
-                               Entity entity, IProbeHitEntityData data) {
-    }
+  @Override
+  public void getProbeConfig(IProbeConfig config, Player player, Level world,
+                             Entity entity, IProbeHitEntityData data) {
+  }
 }

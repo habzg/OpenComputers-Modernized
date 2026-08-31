@@ -1,9 +1,9 @@
 package li.cil.oc.core.impl.client.renderer.font;
 
 public interface IFontRenderer {
-    void generateChars(int[] chars);
+  void generateChars(int[] chars);
 
-    int charRenderWidth();
+  int charRenderWidth();
 
-    int charRenderHeight();
+  int charRenderHeight();
 }

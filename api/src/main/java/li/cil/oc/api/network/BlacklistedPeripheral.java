@@ -9,5 +9,5 @@ package li.cil.oc.api.network;
  * use this.
  */
 public interface BlacklistedPeripheral {
-    boolean isPeripheralBlacklisted();
+  boolean isPeripheralBlacklisted();
 }

@@ -13,28 +13,28 @@ import net.minecraft.world.item.ItemStack;
  * maximum tier supported in the dynamic slot they provide.
  */
 public interface Container extends DriverItem {
-    /**
-     * The type of slot provided as the dynamic slot. This will usually be
-     * for other upgrades, but may be for any type of item li.cil.oc.common.component.
-     * <br>
-     * While the driver's own type implicitly has to be 'Container' and could
-     * therefore be used instead, this makes the intention more clear.
-     *
-     * @param stack the item stack to get the provided slot type for.
-     * @return the slot type provided by that dynamic slot upgrade.
-     * @see li.cil.oc.api.driver.item.Slot
-     */
-    @SuppressWarnings("unused")
-    String providedSlot(ItemStack stack);
+  /**
+   * The type of slot provided as the dynamic slot. This will usually be
+   * for other upgrades, but may be for any type of item li.cil.oc.common.component.
+   * <br>
+   * While the driver's own type implicitly has to be 'Container' and could
+   * therefore be used instead, this makes the intention more clear.
+   *
+   * @param stack the item stack to get the provided slot type for.
+   * @return the slot type provided by that dynamic slot upgrade.
+   * @see li.cil.oc.api.driver.item.Slot
+   */
+  @SuppressWarnings("unused")
+  String providedSlot(ItemStack stack);
 
-    /**
-     * The maximum item tier of the items that can be placed into the slot
-     * provided by the specified container.
-     * <br>
-     * This will usually be equal to the container's tier.
-     *
-     * @param stack the item stack to the the supported tier for.
-     * @return the maximum tier supported by that dynamic slot upgrade.
-     */
-    int providedTier(ItemStack stack);
+  /**
+   * The maximum item tier of the items that can be placed into the slot
+   * provided by the specified container.
+   * <br>
+   * This will usually be equal to the container's tier.
+   *
+   * @param stack the item stack to the the supported tier for.
+   * @return the maximum tier supported by that dynamic slot upgrade.
+   */
+  int providedTier(ItemStack stack);
 }

@@ -27,56 +27,56 @@ import net.minecraft.world.level.Level;
  * because they are more specific.
  */
 public interface DriverBlock {
-    /**
-     * Used to determine the block types this driver handles.
-     * <br>
-     * This is used to determine which driver to use for a block placed next to
-     * an <code>Adapter</code> block. Note that the return value should not change
-     * over time; if it does, though, an already installed component will not
-     * be removed, since this value is only checked when scanning blocks. You
-     * can force this by sending a neighbor block change notification.
-     * <br>
-     * The side is relative to the block, i.e. "south" is the side of the block
-     * facing south.
-     *
-     * @param world the world in which the block to check lives.
-     * @param pos   the position of the block to check.
-     * @param side  the side of the block to check.
-     * @return <code>true</code> if the block is supported; <code>false</code> otherwise.
-     */
-    boolean worksWith(Level world, BlockPos pos, Direction side);
+  /**
+   * Used to determine the block types this driver handles.
+   * <br>
+   * This is used to determine which driver to use for a block placed next to
+   * an <code>Adapter</code> block. Note that the return value should not change
+   * over time; if it does, though, an already installed component will not
+   * be removed, since this value is only checked when scanning blocks. You
+   * can force this by sending a neighbor block change notification.
+   * <br>
+   * The side is relative to the block, i.e. "south" is the side of the block
+   * facing south.
+   *
+   * @param world the world in which the block to check lives.
+   * @param pos   the position of the block to check.
+   * @param side  the side of the block to check.
+   * @return <code>true</code> if the block is supported; <code>false</code> otherwise.
+   */
+  boolean worksWith(Level world, BlockPos pos, Direction side);
 
-    /**
-     * Create a new managed environment interfacing the specified block.
-     * <br>
-     * This is used to connect the component to the component network when it
-     * is detected next to an <code>Adapter</code>. Components that are not part of
-     * the component network probably don't make much sense (can't think of any
-     * uses at this time), but you may still opt to not implement this - i.e.
-     * it is safe to return <code>null</code> here.
-     * <br>
-     * This is expected to return a <em>new instance</em> each time it is
-     * called. The created instance's life cycle is managed by the
-     * <code>Adapter</code> block that caused its creation.
-     * <br>
-     * The side is relative to the block, i.e. "south" is the side of the block
-     * facing south.
-     *
-     * @param world the world containing the block to get the environment for.
-     * @param pos   the position of the block to get the environment for.
-     * @param side  the side of the block to check.
-     * @return the environment for the block at that location.
-     */
-    ManagedEnvironment createEnvironment(Level world, BlockPos pos, Direction side);
+  /**
+   * Create a new managed environment interfacing the specified block.
+   * <br>
+   * This is used to connect the component to the component network when it
+   * is detected next to an <code>Adapter</code>. Components that are not part of
+   * the component network probably don't make much sense (can't think of any
+   * uses at this time), but you may still opt to not implement this - i.e.
+   * it is safe to return <code>null</code> here.
+   * <br>
+   * This is expected to return a <em>new instance</em> each time it is
+   * called. The created instance's life cycle is managed by the
+   * <code>Adapter</code> block that caused its creation.
+   * <br>
+   * The side is relative to the block, i.e. "south" is the side of the block
+   * facing south.
+   *
+   * @param world the world containing the block to get the environment for.
+   * @param pos   the position of the block to get the environment for.
+   * @param side  the side of the block to check.
+   * @return the environment for the block at that location.
+   */
+  ManagedEnvironment createEnvironment(Level world, BlockPos pos, Direction side);
 
-    /**
-     * Whether this is a generic, capability-based driver rather than one
-     * written for a specific block.
-     *
-     * @return <code>true</code> if this driver matches based on a generic
-     *         capability rather than a specific block class.
-     */
-    default boolean isGeneric() {
-        return false;
-    }
+  /**
+   * Whether this is a generic, capability-based driver rather than one
+   * written for a specific block.
+   *
+   * @return <code>true</code> if this driver matches based on a generic
+   * capability rather than a specific block class.
+   */
+  default boolean isGeneric() {
+    return false;
+  }
 }

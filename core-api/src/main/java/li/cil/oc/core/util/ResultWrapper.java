@@ -5,9 +5,9 @@ import java.util.Collections;
 import java.util.List;
 
 public final class ResultWrapper {
-    public static Object[] result(Object... args) {
-        List<Object> unwrapped = new ArrayList<>();
-        Collections.addAll(unwrapped, args);
-        return unwrapped.toArray();
-    }
+  public static Object[] result(Object... args) {
+    List<Object> unwrapped = new ArrayList<>();
+    Collections.addAll(unwrapped, args);
+    return unwrapped.toArray();
+  }
 }

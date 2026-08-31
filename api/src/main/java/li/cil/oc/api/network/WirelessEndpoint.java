@@ -14,34 +14,34 @@ import net.minecraft.world.level.Level;
  * {@link li.cil.oc.api.Network#updateWirelessNetwork(WirelessEndpoint)}.
  */
 public interface WirelessEndpoint {
-    /**
-     * The X coordinate of the endpoint in the Level, in block coordinates.
-     */
-    int x();
+  /**
+   * The X coordinate of the endpoint in the Level, in block coordinates.
+   */
+  int x();
 
-    /**
-     * The Y coordinate of the endpoint in the Level, in block coordinates.
-     */
-    int y();
+  /**
+   * The Y coordinate of the endpoint in the Level, in block coordinates.
+   */
+  int y();
 
-    /**
-     * The Z coordinate of the endpoint in the Level, in block coordinates.
-     */
-    int z();
+  /**
+   * The Z coordinate of the endpoint in the Level, in block coordinates.
+   */
+  int z();
 
-    /**
-     * The Level this endpoint lives in.
-     */
-    Level level();
+  /**
+   * The Level this endpoint lives in.
+   */
+  Level level();
 
-    /**
-     * Makes the endpoint receive a single packet.
-     *
-     * @param packet the packet to receive.
-     * @param sender the endpoint that sent the message. This is not
-     *               necessarily the original sender of the packet, just
-     *               the last point it went through, such as an access
-     *               point, for example.
-     */
-    void receivePacket(Packet packet, WirelessEndpoint sender);
+  /**
+   * Makes the endpoint receive a single packet.
+   *
+   * @param packet the packet to receive.
+   * @param sender the endpoint that sent the message. This is not
+   *               necessarily the original sender of the packet, just
+   *               the last point it went through, such as an access
+   *               point, for example.
+   */
+  void receivePacket(Packet packet, WirelessEndpoint sender);
 }

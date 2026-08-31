@@ -3,11 +3,11 @@ package li.cil.oc.core.impl.client.renderer.font;
 import li.cil.oc.core.impl.util.TextBuffer;
 
 public interface TextBufferRenderData {
-    boolean dirty();
+  boolean dirty();
 
-    void setDirty(boolean value);
+  void setDirty(boolean value);
 
-    TextBuffer data();
+  TextBuffer data();
 
-    int[] viewport();
+  int[] viewport();
 }

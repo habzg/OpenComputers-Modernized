@@ -19,76 +19,76 @@ import net.minecraft.world.level.block.entity.CommandBlockEntity;
 
 @SuppressWarnings("unused")
 public final class DriverCommandBlock extends DriverSidedBlockEntity {
-    @Override
-    public Class<?> getBlockEntityClass() {
-        return CommandBlockEntity.class;
+  @Override
+  public Class<?> getBlockEntityClass() {
+    return CommandBlockEntity.class;
+  }
+
+  @Override
+  public ManagedEnvironment createEnvironment(Level world, BlockPos pos, Direction side) {
+    return new Environment((CommandBlockEntity) world.getBlockEntity(pos));
+  }
+
+  public static final class Environment extends ManagedBlockEntityEnvironment<CommandBlockEntity> implements NamedBlock {
+    public Environment(CommandBlockEntity BlockEntity) {
+      super(BlockEntity, "command_block");
     }
 
     @Override
-    public ManagedEnvironment createEnvironment(Level world, BlockPos pos, Direction side) {
-        return new Environment((CommandBlockEntity) world.getBlockEntity(pos));
+    public String preferredName() {
+      return "command_block";
     }
 
-    public static final class Environment extends ManagedBlockEntityEnvironment<CommandBlockEntity> implements NamedBlock {
-        public Environment(CommandBlockEntity BlockEntity) {
-          super(BlockEntity, "command_block");
-        }
-
-        @Override
-        public String preferredName() {
-            return "command_block";
-        }
-
-        @Override
-        public int priority() {
-            return 0;
-        }
-
-        @Callback(direct = true, doc = "function():string -- Get the command currently set in this command block.")
-        public Object[] getCommand(Context context, Arguments args) {
-            return ResultWrapper.result(BlockEntity.getCommandBlock().getCommand());
-        }
-
-        @Callback(doc = "function(value:string) -- Set the specified command for the command block.")
-        public Object[] setCommand(Context context, Arguments args) {
-            BlockEntity.getCommandBlock().setCommand(args.checkString(0));
-            BlockEntity.setChanged();
-            var level = BlockEntity.getLevel();
-            if (level != null) {
-                var pos = BlockEntity.getBlockPos();
-                var state = BlockEntity.getBlockState();
-                level.sendBlockUpdated(pos, state, state, 3);
-            }
-            return ResultWrapper.result(true);
-        }
-
-        @Callback(doc = "function():number -- Execute the currently set command. This has a slight delay to allow the command block to properly update.")
-        public Object[] executeCommand(Context context, Arguments args) {
-            context.pause(0.1);
-            var level = BlockEntity.getLevel();
-            if (level == null) {
-                return ResultWrapper.result(null, "command block has no level");
-            }
-            var server = level.getServer();
-            if (server == null || !server.isCommandBlockEnabled()) {
-                return ResultWrapper.result(null, "command blocks are disabled");
-            } else {
-                var sender = BlockEntity.getCommandBlock();
-                sender.performCommand(level);
-                var lastOutput = sender.getLastOutput();
-                var outputText = net.minecraft.ChatFormatting.stripFormatting(lastOutput.getString());
-                return ResultWrapper.result(sender.getSuccessCount(), outputText);
-            }
-        }
+    @Override
+    public int priority() {
+      return 0;
     }
 
-    public static final class Provider implements EnvironmentProvider {
-        @Override
-        public Class<?> getEnvironment(ItemStack stack) {
-            if (stack != null && Block.byItem(stack.getItem()) == Blocks.COMMAND_BLOCK) {
-                return Environment.class;
-            }
-            return null;
-        }
+    @Callback(direct = true, doc = "function():string -- Get the command currently set in this command block.")
+    public Object[] getCommand(Context context, Arguments args) {
+      return ResultWrapper.result(BlockEntity.getCommandBlock().getCommand());
     }
+
+    @Callback(doc = "function(value:string) -- Set the specified command for the command block.")
+    public Object[] setCommand(Context context, Arguments args) {
+      BlockEntity.getCommandBlock().setCommand(args.checkString(0));
+      BlockEntity.setChanged();
+      var level = BlockEntity.getLevel();
+      if (level != null) {
+        var pos = BlockEntity.getBlockPos();
+        var state = BlockEntity.getBlockState();
+        level.sendBlockUpdated(pos, state, state, 3);
+      }
+      return ResultWrapper.result(true);
+    }
+
+    @Callback(doc = "function():number -- Execute the currently set command. This has a slight delay to allow the command block to properly update.")
+    public Object[] executeCommand(Context context, Arguments args) {
+      context.pause(0.1);
+      var level = BlockEntity.getLevel();
+      if (level == null) {
+        return ResultWrapper.result(null, "command block has no level");
+      }
+      var server = level.getServer();
+      if (server == null || !server.isCommandBlockEnabled()) {
+        return ResultWrapper.result(null, "command blocks are disabled");
+      } else {
+        var sender = BlockEntity.getCommandBlock();
+        sender.performCommand(level);
+        var lastOutput = sender.getLastOutput();
+        var outputText = net.minecraft.ChatFormatting.stripFormatting(lastOutput.getString());
+        return ResultWrapper.result(sender.getSuccessCount(), outputText);
+      }
+    }
+  }
+
+  public static final class Provider implements EnvironmentProvider {
+    @Override
+    public Class<?> getEnvironment(ItemStack stack) {
+      if (stack != null && Block.byItem(stack.getItem()) == Blocks.COMMAND_BLOCK) {
+        return Environment.class;
+      }
+      return null;
+    }
+  }
 }

@@ -17,29 +17,29 @@ import net.minecraft.world.phys.Vec3;
  * that <em>you should not implement this</em>.
  */
 public interface Drone extends Agent, EnvironmentHost, Rotatable, Tiered {
-    /**
-     * Get the current target coordinates of the drone.
-     */
-    @SuppressWarnings("unused")
-    Vec3 getTarget();
+  /**
+   * Get the current target coordinates of the drone.
+   */
+  @SuppressWarnings("unused")
+  Vec3 getTarget();
 
-    /**
-     * Set the new target coordinates of the drone.
-     * <br>
-     * Note that the actual value used will use a reduced accuracy. This is
-     * to avoid jitter on the client and floating point inaccuracies to
-     * accumulate.
-     */
-    @SuppressWarnings("unused")
-    void setTarget(Vec3 value);
+  /**
+   * Set the new target coordinates of the drone.
+   * <br>
+   * Note that the actual value used will use a reduced accuracy. This is
+   * to avoid jitter on the client and floating point inaccuracies to
+   * accumulate.
+   */
+  @SuppressWarnings("unused")
+  void setTarget(Vec3 value);
 
-    /**
-     * Get the drones velocity vector.
-     * <br>
-     * Note that this is really just the underlying entity's <code>motionX/Y/Z</code>,
-     * so you can cast this to {@link net.minecraft.world.entity.Entity} and use that
-     * instead, if you'd like.
-     */
-    @SuppressWarnings("unused")
-    Vec3 getVelocity();
+  /**
+   * Get the drones velocity vector.
+   * <br>
+   * Note that this is really just the underlying entity's <code>motionX/Y/Z</code>,
+   * so you can cast this to {@link net.minecraft.world.entity.Entity} and use that
+   * instead, if you'd like.
+   */
+  @SuppressWarnings("unused")
+  Vec3 getVelocity();
 }

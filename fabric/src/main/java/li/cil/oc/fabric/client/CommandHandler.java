@@ -8,14 +8,14 @@ import net.minecraft.client.Minecraft;
 
 @SuppressWarnings("unused")
 public final class CommandHandler {
-    public static void init() {
-        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> dispatcher.register(ClientCommandManager.literal("oc_setclipboard")
-                .then(ClientCommandManager.argument("text", StringArgumentType.greedyString())
-                        .executes(ctx -> {
-                            Minecraft.getInstance().keyboardHandler.setClipboard(StringArgumentType.getString(ctx, "text"));
-                            return Command.SINGLE_SUCCESS;
-                        })
-                )
-        ));
-    }
+  public static void init() {
+    ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> dispatcher.register(ClientCommandManager.literal("oc_setclipboard")
+      .then(ClientCommandManager.argument("text", StringArgumentType.greedyString())
+        .executes(ctx -> {
+          Minecraft.getInstance().keyboardHandler.setClipboard(StringArgumentType.getString(ctx, "text"));
+          return Command.SINGLE_SUCCESS;
+        })
+      )
+    ));
+  }
 }

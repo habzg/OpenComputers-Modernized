@@ -23,70 +23,70 @@ import net.minecraft.world.item.component.CustomData;
 
 @SuppressWarnings("unused")
 public abstract class DriverItem implements li.cil.oc.api.driver.DriverItem {
-    protected final ItemStack[] items;
+  protected final ItemStack[] items;
 
-    protected DriverItem(final ItemStack... items) {
-        this.items = items.clone();
-    }
+  protected DriverItem(final ItemStack... items) {
+    this.items = items.clone();
+  }
 
-    @Override
-    public boolean worksWith(final ItemStack stack) {
-        if (stack != null) {
-            for (ItemStack item : items) {
-                if (item != null && ItemStack.isSameItem(item, stack)) {
-                    return true;
-                }
-            }
+  @Override
+  public boolean worksWith(final ItemStack stack) {
+    if (stack != null) {
+      for (ItemStack item : items) {
+        if (item != null && ItemStack.isSameItem(item, stack)) {
+          return true;
         }
-        return false;
+      }
     }
+    return false;
+  }
 
-    @Override
-    public int tier(final ItemStack stack) {
-        return 0;
+  @Override
+  public int tier(final ItemStack stack) {
+    return 0;
+  }
+
+  @Override
+  public CompoundTag dataTag(final ItemStack stack) {
+    CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+    CompoundTag nbt;
+    if (customData != null && !customData.isEmpty()) {
+      nbt = customData.copyTag();
+    } else {
+      nbt = new CompoundTag();
+      stack.set(DataComponents.CUSTOM_DATA, CustomData.of(nbt));
     }
-
-    @Override
-    public CompoundTag dataTag(final ItemStack stack) {
-        CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
-        CompoundTag nbt;
-        if (customData != null && !customData.isEmpty()) {
-            nbt = customData.copyTag();
-        } else {
-            nbt = new CompoundTag();
-            stack.set(DataComponents.CUSTOM_DATA, CustomData.of(nbt));
-        }
-        // This is the suggested key under which to store item component data.
-        // You are free to change this as you please.
-        if (!nbt.contains("oc:data")) {
-            nbt.put("oc:data", new CompoundTag());
-        }
-        return nbt.getCompound("oc:data");
+    // This is the suggested key under which to store item component data.
+    // You are free to change this as you please.
+    if (!nbt.contains("oc:data")) {
+      nbt.put("oc:data", new CompoundTag());
     }
+    return nbt.getCompound("oc:data");
+  }
 
-    // Convenience methods provided for HostAware drivers.
+  // Convenience methods provided for HostAware drivers.
 
-    protected boolean isAdapter(Class<? extends EnvironmentHost> host) {
-        return li.cil.oc.api.internal.Adapter.class.isAssignableFrom(host);
-    }
+  protected boolean isAdapter(Class<? extends EnvironmentHost> host) {
+    return li.cil.oc.api.internal.Adapter.class.isAssignableFrom(host);
+  }
 
-    protected boolean isComputer(Class<? extends EnvironmentHost> host) {
-        return li.cil.oc.api.internal.Case.class.isAssignableFrom(host);
-    }
+  protected boolean isComputer(Class<? extends EnvironmentHost> host) {
+    return li.cil.oc.api.internal.Case.class.isAssignableFrom(host);
+  }
 
-    protected boolean isRobot(Class<? extends EnvironmentHost> host) {
-        return li.cil.oc.api.internal.Robot.class.isAssignableFrom(host);
-    }
+  protected boolean isRobot(Class<? extends EnvironmentHost> host) {
+    return li.cil.oc.api.internal.Robot.class.isAssignableFrom(host);
+  }
 
-    protected boolean isRotatable(Class<? extends EnvironmentHost> host) {
-        return li.cil.oc.api.internal.Rotatable.class.isAssignableFrom(host);
-    }
+  protected boolean isRotatable(Class<? extends EnvironmentHost> host) {
+    return li.cil.oc.api.internal.Rotatable.class.isAssignableFrom(host);
+  }
 
-    protected boolean isServer(Class<? extends EnvironmentHost> host) {
-        return li.cil.oc.api.internal.Server.class.isAssignableFrom(host);
-    }
+  protected boolean isServer(Class<? extends EnvironmentHost> host) {
+    return li.cil.oc.api.internal.Server.class.isAssignableFrom(host);
+  }
 
-    protected boolean isTablet(Class<? extends EnvironmentHost> host) {
-        return li.cil.oc.api.internal.Tablet.class.isAssignableFrom(host);
-    }
+  protected boolean isTablet(Class<? extends EnvironmentHost> host) {
+    return li.cil.oc.api.internal.Tablet.class.isAssignableFrom(host);
+  }
 }

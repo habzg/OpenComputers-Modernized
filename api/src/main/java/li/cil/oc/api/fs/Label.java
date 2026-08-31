@@ -8,24 +8,24 @@ import li.cil.oc.api.Persistable;
  * @see li.cil.oc.api.FileSystem#asManagedEnvironment
  */
 public interface Label extends Persistable {
-    /**
-     * Get the current value of this label.
-     * <br>
-     * May be <code>null</code> if no label is set.
-     *
-     * @return the current label.
-     */
-    String getLabel();
+  /**
+   * Get the current value of this label.
+   * <br>
+   * May be <code>null</code> if no label is set.
+   *
+   * @return the current label.
+   */
+  String getLabel();
 
-    /**
-     * Set the new value of this label.
-     * <br>
-     * May be set to <code>null</code> to clear the label.
-     * <br>
-     * May throw an exception if the label is read-only.
-     *
-     * @param value the new label.
-     * @throws IllegalArgumentException if the label is read-only.
-     */
-    void setLabel(String value);
+  /**
+   * Set the new value of this label.
+   * <br>
+   * May be set to <code>null</code> to clear the label.
+   * <br>
+   * May throw an exception if the label is read-only.
+   *
+   * @param value the new label.
+   * @throws IllegalArgumentException if the label is read-only.
+   */
+  void setLabel(String value);
 }

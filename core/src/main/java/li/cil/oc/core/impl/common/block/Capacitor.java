@@ -17,50 +17,50 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 
 public class Capacitor extends SimpleBlock {
-    public Capacitor() {
-        super(Properties.of()
-                .randomTicks()
-                .lightLevel(state -> 5));
-    }
+  public Capacitor() {
+    super(Properties.of()
+      .randomTicks()
+      .lightLevel(state -> 5));
+  }
 
-    @Override
-    public BlockEntity newBlockEntity(@NotNull BlockPos pos, @NotNull BlockState state) {
-        return new li.cil.oc.core.impl.common.blockentity.Capacitor(pos, state);
-    }
+  @Override
+  public BlockEntity newBlockEntity(@NotNull BlockPos pos, @NotNull BlockState state) {
+    return new li.cil.oc.core.impl.common.blockentity.Capacitor(pos, state);
+  }
 
-    @Override
-    protected void tooltipBody(int metadata, ItemStack stack, Player player, List<Component> tooltip, boolean advanced) {
-        tooltip.addAll(Tooltip.get(getClass().getSimpleName(), (int) OCSettings.get().capacitorRate));
-    }
+  @Override
+  protected void tooltipBody(int metadata, ItemStack stack, Player player, List<Component> tooltip, boolean advanced) {
+    tooltip.addAll(Tooltip.get(getClass().getSimpleName(), (int) OCSettings.get().capacitorRate));
+  }
 
-    @Override
-    public boolean hasAnalogOutputSignal(@NotNull BlockState state) {
-        return true;
-    }
+  @Override
+  public boolean hasAnalogOutputSignal(@NotNull BlockState state) {
+    return true;
+  }
 
-    @Override
-    public int getAnalogOutputSignal(@NotNull BlockState state, @NotNull Level world, @NotNull BlockPos pos) {
-        BlockEntity te = world.getBlockEntity(pos);
-        if (te instanceof li.cil.oc.core.impl.common.blockentity.Capacitor capacitor) {
-            var connector = (Connector) capacitor.node();
-            if (connector != null && connector.network() != null && connector.localBufferSize() > 0) {
-                return Math.round(15f * (float) (connector.localBuffer() / connector.localBufferSize()));
-            }
-        }
-        return 0;
+  @Override
+  public int getAnalogOutputSignal(@NotNull BlockState state, @NotNull Level world, @NotNull BlockPos pos) {
+    BlockEntity te = world.getBlockEntity(pos);
+    if (te instanceof li.cil.oc.core.impl.common.blockentity.Capacitor capacitor) {
+      var connector = (Connector) capacitor.node();
+      if (connector != null && connector.network() != null && connector.localBufferSize() > 0) {
+        return Math.round(15f * (float) (connector.localBuffer() / connector.localBufferSize()));
+      }
     }
+    return 0;
+  }
 
-    @Override
-    public void neighborChanged(@NotNull BlockState state, @NotNull Level world, @NotNull BlockPos pos, @NotNull Block block, @NotNull BlockPos fromPos, boolean isMoving) {
-        super.neighborChanged(state, world, pos, block, fromPos, isMoving);
-        BlockEntity te = world.getBlockEntity(pos);
-        if (te instanceof li.cil.oc.core.impl.common.blockentity.Capacitor capacitor) {
-            capacitor.recomputeCapacity(true);
-        }
+  @Override
+  public void neighborChanged(@NotNull BlockState state, @NotNull Level world, @NotNull BlockPos pos, @NotNull Block block, @NotNull BlockPos fromPos, boolean isMoving) {
+    super.neighborChanged(state, world, pos, block, fromPos, isMoving);
+    BlockEntity te = world.getBlockEntity(pos);
+    if (te instanceof li.cil.oc.core.impl.common.blockentity.Capacitor capacitor) {
+      capacitor.recomputeCapacity(true);
     }
+  }
 
-    @Override
-    public void randomTick(@NotNull BlockState state, @NotNull ServerLevel world, @NotNull BlockPos pos, @NotNull RandomSource random) {
-        world.updateNeighbourForOutputSignal(pos, this);
-    }
+  @Override
+  public void randomTick(@NotNull BlockState state, @NotNull ServerLevel world, @NotNull BlockPos pos, @NotNull RandomSource random) {
+    world.updateNeighbourForOutputSignal(pos, this);
+  }
 }

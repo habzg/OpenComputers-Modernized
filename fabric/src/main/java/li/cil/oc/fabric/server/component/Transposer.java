@@ -23,81 +23,81 @@ import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("unused")
 public final class Transposer {
-    private Transposer() {
+  private Transposer() {
+  }
+
+  @SuppressWarnings("unused")
+  public abstract static class Common extends TransposerBase implements
+    WorldInventoryAnalytics, WorldTankAnalytics, WorldFluidContainerAnalytics,
+    InventoryTransfer, FluidContainerTransfer {
+  }
+
+  public static class Block extends Common {
+    private final li.cil.oc.fabric.common.blockentity.Transposer host;
+
+    @SuppressWarnings("unused")
+    public Block(li.cil.oc.fabric.common.blockentity.Transposer host) {
+      this.host = host;
     }
 
     @SuppressWarnings("unused")
-    public abstract static class Common extends TransposerBase implements
-            WorldInventoryAnalytics, WorldTankAnalytics, WorldFluidContainerAnalytics,
-            InventoryTransfer, FluidContainerTransfer {
+    @Override
+    public BlockPosition position() {
+      return BlockPosition.apply(host);
     }
 
-    public static class Block extends Common {
-        private final li.cil.oc.fabric.common.blockentity.Transposer host;
+    @Override
+    @SuppressWarnings({"DataFlowIssue", "unused"})
+    public @NotNull String onTransferContents() {
+      String result = super.onTransferContents();
+      if (result == null) {
+        PacketSender.sendTransposerActivity(host);
+      }
+      return result;
+    }
 
-        @SuppressWarnings("unused")
-        public Block(li.cil.oc.fabric.common.blockentity.Transposer host) {
-            this.host = host;
-        }
+    @SuppressWarnings("unused")
+    @Override
+    public int fluidTransferRate() {
+      return host.info.fluidTransferRate;
+    }
+  }
 
-        @SuppressWarnings("unused")
-        @Override
-        public BlockPosition position() {
-            return BlockPosition.apply(host);
-        }
+  public static class Upgrade extends Common {
+    private final EnvironmentHost host;
 
-        @Override
-        @SuppressWarnings({"DataFlowIssue", "unused"})
-        public @NotNull String onTransferContents() {
-            String result = super.onTransferContents();
-            if (result == null) {
-                PacketSender.sendTransposerActivity(host);
+    @SuppressWarnings("unused")
+    public Upgrade(EnvironmentHost host) {
+      this.host = host;
+      ((Component) node).setVisibility(Visibility.Neighbors);
+    }
+
+    @SuppressWarnings("unused")
+    @Override
+    public BlockPosition position() {
+      return BlockPosition.apply(host);
+    }
+
+    @SuppressWarnings("unused")
+    @Override
+    public int fluidTransferRate() {
+      if (host instanceof li.cil.oc.core.impl.common.blockentity.Microcontroller mc) {
+        for (int i = 0; i < mc.info.components.size(); i++) {
+          ItemStack stack = mc.info.components.get(i);
+          if (stack != null && ItemStack.isSameItemSameComponents(stack,
+            Items.get(Constants.BlockName.Transposer).createItemStack(1))) {
+            var customData = stack.get(DataComponents.CUSTOM_DATA);
+            if (customData != null && !customData.isEmpty()) {
+              CompoundTag _tag = customData.copyTag();
+              if (_tag.contains(TransposerData.FLUID_TRANSFER_RATE)) {
+                return _tag.getInt(TransposerData.FLUID_TRANSFER_RATE);
+              }
             }
-            return result;
+            return OCSettings.get().transposerFluidTransferRate;
+          }
         }
-
-        @SuppressWarnings("unused")
-        @Override
-        public int fluidTransferRate() {
-            return host.info.fluidTransferRate;
-        }
+      }
+      return 0;
     }
-
-    public static class Upgrade extends Common {
-        private final EnvironmentHost host;
-
-        @SuppressWarnings("unused")
-        public Upgrade(EnvironmentHost host) {
-            this.host = host;
-            ((Component) node).setVisibility(Visibility.Neighbors);
-        }
-
-        @SuppressWarnings("unused")
-        @Override
-        public BlockPosition position() {
-            return BlockPosition.apply(host);
-        }
-
-        @SuppressWarnings("unused")
-        @Override
-        public int fluidTransferRate() {
-            if (host instanceof li.cil.oc.core.impl.common.blockentity.Microcontroller mc) {
-                for (int i = 0; i < mc.info.components.size(); i++) {
-                    ItemStack stack = mc.info.components.get(i);
-                    if (stack != null && ItemStack.isSameItemSameComponents(stack,
-                            Items.get(Constants.BlockName.Transposer).createItemStack(1))) {
-                        var customData = stack.get(DataComponents.CUSTOM_DATA);
-                        if (customData != null && !customData.isEmpty()) {
-                            CompoundTag _tag = customData.copyTag();
-                            if (_tag.contains(TransposerData.FLUID_TRANSFER_RATE)) {
-                                return _tag.getInt(TransposerData.FLUID_TRANSFER_RATE);
-                            }
-                        }
-                        return OCSettings.get().transposerFluidTransferRate;
-                    }
-                }
-            }
-            return 0;
-        }
-    }
+  }
 }

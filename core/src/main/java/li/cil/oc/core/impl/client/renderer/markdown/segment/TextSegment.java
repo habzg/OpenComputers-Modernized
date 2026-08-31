@@ -11,183 +11,183 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
 
 public class TextSegment extends BasicTextSegment {
-    private final String _text;
+  private final String _text;
 
-    @SuppressWarnings("unused")
-    public TextSegment(Segment parent, String text) {
-        super(parent);
-        this._text = text;
-    }
+  @SuppressWarnings("unused")
+  public TextSegment(Segment parent, String text) {
+    super(parent);
+    this._text = text;
+  }
 
-    @Override
-    public String text() {
-        return _text;
-    }
+  @Override
+  public String text() {
+    return _text;
+  }
 
-    @Override
-    public InteractiveSegment render(int x, int y, int indent, int maxWidth, Font renderer, GuiGraphics graphics, int mouseX, int mouseY) {
-        int currentX = x + indent;
-        int currentY = y;
-        String chars = _text;
-        if (indent == 0) chars = stripLeadingWhitespace(chars);
-        int wrapIndent = computeWrapIndent(renderer);
-        int numChars = maxChars(chars, maxWidth - indent, maxWidth - wrapIndent, renderer);
-        InteractiveSegment hovered = null;
+  @Override
+  public InteractiveSegment render(int x, int y, int indent, int maxWidth, Font renderer, GuiGraphics graphics, int mouseX, int mouseY) {
+    int currentX = x + indent;
+    int currentY = y;
+    String chars = _text;
+    if (indent == 0) chars = stripLeadingWhitespace(chars);
+    int wrapIndent = computeWrapIndent(renderer);
+    int numChars = maxChars(chars, maxWidth - indent, maxWidth - wrapIndent, renderer);
+    InteractiveSegment hovered = null;
 
-        int resolvedColor = resolveColor();
-        Style resolvedStyle = resolveStyle();
+    int resolvedColor = resolveColor();
+    Style resolvedStyle = resolveStyle();
 
-        while (!chars.isEmpty()) {
-            if (numChars > 0) {
-                int n = Math.min(numChars, chars.length());
-                String part = chars.substring(0, n);
+    while (!chars.isEmpty()) {
+      if (numChars > 0) {
+        int n = Math.min(numChars, chars.length());
+        String part = chars.substring(0, n);
 
-                int partWidth = (int) (stringWidth(part, renderer) * resolveScale());
+        int partWidth = (int) (stringWidth(part, renderer) * resolveScale());
 
-                InteractiveSegment self = resolveInteractive();
-                if (self != null) {
-                    InteractiveSegment h = self.checkHovered(mouseX, mouseY, currentX, currentY, partWidth, lineHeight(renderer));
-                    if (h != null) hovered = h;
-                }
-
-                renderText(graphics, renderer, part, currentX, currentY, resolvedColor, resolvedStyle, resolveScale());
-
-                if (n < chars.length()) {
-                    chars = chars.substring(n).stripLeading();
-                } else {
-                    break;
-                }
-            } else {
-                chars = chars.stripLeading();
-            }
-
-            currentX = x + wrapIndent;
-            currentY += lineHeight(renderer);
-            numChars = maxChars(chars, maxWidth - wrapIndent, maxWidth - wrapIndent, renderer);
+        InteractiveSegment self = resolveInteractive();
+        if (self != null) {
+          InteractiveSegment h = self.checkHovered(mouseX, mouseY, currentX, currentY, partWidth, lineHeight(renderer));
+          if (h != null) hovered = h;
         }
 
-        return hovered;
-    }
+        renderText(graphics, renderer, part, currentX, currentY, resolvedColor, resolvedStyle, resolveScale());
 
-    protected void renderText(GuiGraphics graphics, Font renderer, String part, int x, int y, int color, Style style, float scale) {
-        var pose = graphics.pose();
-        pose.pushPose();
-        pose.translate(x, y, 0);
-        pose.scale(scale, scale, scale);
-        var seq = FormattedCharSequence.forward(part, style);
-        renderer.drawInBatch(seq, 0, 0, color, false, pose.last().pose(), graphics.bufferSource(), Font.DisplayMode.SEE_THROUGH, 0, 0x00F000F0);
-        pose.popPose();
-    }
-
-    @Override
-    public List<Segment> refine(Pattern pattern, java.util.function.BiFunction<Segment, MatchResult, Segment> factory) {
-        var result = new ArrayList<Segment>();
-        var matcher = pattern.matcher(_text);
-        int textStart = 0;
-        while (matcher.find()) {
-            if (matcher.start() > textStart) {
-                result.add(new TextSegment(this, _text.substring(textStart, matcher.start())));
-            }
-            textStart = matcher.end();
-            result.add(factory.apply(this, matcher.toMatchResult()));
+        if (n < chars.length()) {
+          chars = chars.substring(n).stripLeading();
+        } else {
+          break;
         }
-        if (textStart == 0) {
-            result.add(this);
-        } else if (textStart < _text.length()) {
-            result.add(new TextSegment(this, _text.substring(textStart)));
-        }
-        return result;
+      } else {
+        chars = chars.stripLeading();
+      }
+
+      currentX = x + wrapIndent;
+      currentY += lineHeight(renderer);
+      numChars = maxChars(chars, maxWidth - wrapIndent, maxWidth - wrapIndent, renderer);
     }
 
-    @Override
-    public int nextX(int indent, int maxWidth, Font renderer) {
-        if (isLast()) return 0;
-        int currentX = indent;
-        String chars = _text;
-        if (ignoreLeadingWhitespace() && indent == 0) chars = stripLeadingWhitespace(chars);
-        int wrapIndent = computeWrapIndent(renderer);
-        int numChars = maxChars(chars, maxWidth - indent, maxWidth - wrapIndent, renderer);
-        while (chars.length() > numChars) {
-            chars = chars.substring(Math.max(0, numChars)).stripLeading();
-            numChars = maxChars(chars, maxWidth - wrapIndent, maxWidth - wrapIndent, renderer);
-            currentX = wrapIndent;
-        }
-        if (chars.isEmpty()) return 0;
-        return currentX + stringWidth(chars, renderer);
-    }
+    return hovered;
+  }
 
-    @Override
-    public int nextY(int indent, int maxWidth, Font renderer) {
-        int lines = 0;
-        String chars = _text;
-        if (ignoreLeadingWhitespace() && indent == 0) chars = stripLeadingWhitespace(chars);
-        int wrapIndent = computeWrapIndent(renderer);
-        int numChars = maxChars(chars, maxWidth - indent, maxWidth - wrapIndent, renderer);
-        while (chars.length() > numChars) {
-            lines++;
-            chars = chars.substring(Math.max(0, numChars)).stripLeading();
-            numChars = maxChars(chars, maxWidth - wrapIndent, maxWidth - wrapIndent, renderer);
-        }
-        if (isLast()) lines++;
-        return lines * lineHeight(renderer);
-    }
+  protected void renderText(GuiGraphics graphics, Font renderer, String part, int x, int y, int color, Style style, float scale) {
+    var pose = graphics.pose();
+    pose.pushPose();
+    pose.translate(x, y, 0);
+    pose.scale(scale, scale, scale);
+    var seq = FormattedCharSequence.forward(part, style);
+    renderer.drawInBatch(seq, 0, 0, color, false, pose.last().pose(), graphics.bufferSource(), Font.DisplayMode.SEE_THROUGH, 0, 0x00F000F0);
+    pose.popPose();
+  }
 
-    @Override
-    public String toString(MarkupFormat format) {
-        return _text;
+  @Override
+  public List<Segment> refine(Pattern pattern, java.util.function.BiFunction<Segment, MatchResult, Segment> factory) {
+    var result = new ArrayList<Segment>();
+    var matcher = pattern.matcher(_text);
+    int textStart = 0;
+    while (matcher.find()) {
+      if (matcher.start() > textStart) {
+        result.add(new TextSegment(this, _text.substring(textStart, matcher.start())));
+      }
+      textStart = matcher.end();
+      result.add(factory.apply(this, matcher.toMatchResult()));
     }
+    if (textStart == 0) {
+      result.add(this);
+    } else if (textStart < _text.length()) {
+      result.add(new TextSegment(this, _text.substring(textStart)));
+    }
+    return result;
+  }
 
-    @Override
-    protected int lineHeight(Font renderer) {
-        return (int) (super.lineHeight(renderer) * resolveScale());
+  @Override
+  public int nextX(int indent, int maxWidth, Font renderer) {
+    if (isLast()) return 0;
+    int currentX = indent;
+    String chars = _text;
+    if (ignoreLeadingWhitespace() && indent == 0) chars = stripLeadingWhitespace(chars);
+    int wrapIndent = computeWrapIndent(renderer);
+    int numChars = maxChars(chars, maxWidth - indent, maxWidth - wrapIndent, renderer);
+    while (chars.length() > numChars) {
+      chars = chars.substring(Math.max(0, numChars)).stripLeading();
+      numChars = maxChars(chars, maxWidth - wrapIndent, maxWidth - wrapIndent, renderer);
+      currentX = wrapIndent;
     }
+    if (chars.isEmpty()) return 0;
+    return currentX + stringWidth(chars, renderer);
+  }
 
-    @Override
-    protected int stringWidth(String s, Font renderer) {
-        var seq = FormattedCharSequence.forward(s, resolveStyle());
-        return (int) (renderer.width(seq) * resolveScale());
+  @Override
+  public int nextY(int indent, int maxWidth, Font renderer) {
+    int lines = 0;
+    String chars = _text;
+    if (ignoreLeadingWhitespace() && indent == 0) chars = stripLeadingWhitespace(chars);
+    int wrapIndent = computeWrapIndent(renderer);
+    int numChars = maxChars(chars, maxWidth - indent, maxWidth - wrapIndent, renderer);
+    while (chars.length() > numChars) {
+      lines++;
+      chars = chars.substring(Math.max(0, numChars)).stripLeading();
+      numChars = maxChars(chars, maxWidth - wrapIndent, maxWidth - wrapIndent, renderer);
     }
+    if (isLast()) lines++;
+    return lines * lineHeight(renderer);
+  }
 
-    protected int color() {
-        return -1;
-    }
+  @Override
+  public String toString(MarkupFormat format) {
+    return _text;
+  }
 
-    protected float scale() {
-        return Float.NaN;
-    }
+  @Override
+  protected int lineHeight(Font renderer) {
+    return (int) (super.lineHeight(renderer) * resolveScale());
+  }
 
-    protected Style style() {
-        return Style.EMPTY;
-    }
+  @Override
+  protected int stringWidth(String s, Font renderer) {
+    var seq = FormattedCharSequence.forward(s, resolveStyle());
+    return (int) (renderer.width(seq) * resolveScale());
+  }
 
-    private int resolveColor() {
-        int c = color();
-        if (c >= 0) return c;
-        if (parent instanceof TextSegment ts) return ts.resolveColor();
-        return 0xDDDDDD;
-    }
+  protected int color() {
+    return -1;
+  }
 
-    private float resolveScale() {
-        float s = scale();
-        float parentScale = (parent instanceof TextSegment ts) ? ts.resolveScale() : 1f;
-        return Float.isNaN(s) ? parentScale : s * parentScale;
-    }
+  protected float scale() {
+    return Float.NaN;
+  }
 
-    private Style resolveStyle() {
-        Style s = style();
-        if (parent instanceof TextSegment ts) return s.applyTo(ts.resolveStyle());
-        return s;
-    }
+  protected Style style() {
+    return Style.EMPTY;
+  }
 
-    private InteractiveSegment resolveInteractive() {
-        if (this instanceof InteractiveSegment) return (InteractiveSegment) this;
-        if (parent instanceof TextSegment ts) return ts.resolveInteractive();
-        return null;
-    }
+  private int resolveColor() {
+    int c = color();
+    if (c >= 0) return c;
+    if (parent instanceof TextSegment ts) return ts.resolveColor();
+    return 0xDDDDDD;
+  }
 
-    private static String stripLeadingWhitespace(String s) {
-        int i = 0;
-        while (i < s.length() && Character.isWhitespace(s.charAt(i))) i++;
-        return s.substring(i);
-    }
+  private float resolveScale() {
+    float s = scale();
+    float parentScale = (parent instanceof TextSegment ts) ? ts.resolveScale() : 1f;
+    return Float.isNaN(s) ? parentScale : s * parentScale;
+  }
+
+  private Style resolveStyle() {
+    Style s = style();
+    if (parent instanceof TextSegment ts) return s.applyTo(ts.resolveStyle());
+    return s;
+  }
+
+  private InteractiveSegment resolveInteractive() {
+    if (this instanceof InteractiveSegment) return (InteractiveSegment) this;
+    if (parent instanceof TextSegment ts) return ts.resolveInteractive();
+    return null;
+  }
+
+  private static String stripLeadingWhitespace(String s) {
+    int i = 0;
+    while (i < s.length() && Character.isWhitespace(s.charAt(i))) i++;
+    return s.substring(i);
+  }
 }

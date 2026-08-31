@@ -11,12 +11,12 @@ import net.minecraft.world.item.ItemStack;
  * in the GUI.
  */
 public interface Inventory extends DriverItem {
-    /**
-     * The additional amount of inventory space the specified item provides.
-     *
-     * @param stack the item to get the provided inventory space for.
-     * @return the provided inventory space.
-     */
-    @SuppressWarnings({"SameReturnValue", "unused"})
-    int inventoryCapacity(ItemStack stack);
+  /**
+   * The additional amount of inventory space the specified item provides.
+   *
+   * @param stack the item to get the provided inventory space for.
+   * @return the provided inventory space.
+   */
+  @SuppressWarnings({"SameReturnValue", "unused"})
+  int inventoryCapacity(ItemStack stack);
 }

@@ -35,245 +35,245 @@ import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
 public class OCWthitClientPlugin implements IWailaClientPlugin {
+  @Override
+  public void register(IClientRegistrar registrar) {
+    registrar.body(OCNodeInfoProvider.INSTANCE, BlockEntity.class, 1000);
+    registrar.body(OCRackItemProvider.INSTANCE, li.cil.oc.core.impl.common.blockentity.Rack.class, 1100);
+    registrar.icon(OCDroneIconProvider.INSTANCE, li.cil.oc.core.impl.common.entity.Drone.class, 1000);
+    registrar.icon(OCPrintIconProvider.INSTANCE, li.cil.oc.neoforge.common.block.Print.class, 900);
+    registrar.icon(OCChameliumIconProvider.INSTANCE, li.cil.oc.core.impl.common.block.ChameliumBlock.class, 900);
+    registrar.head(OCCableMultipartProvider.INSTANCE, TileMultipart.class, 900);
+    registrar.icon(OCCableMultipartProvider.INSTANCE, TileMultipart.class, 900);
+    registrar.head(OCBlockNameProvider.INSTANCE, li.cil.oc.core.impl.common.block.AbstractBlock.class, 1000);
+    registrar.head(OCEntityNameProvider.INSTANCE, li.cil.oc.core.impl.common.entity.Drone.class, 1000);
+  }
+
+  private enum OCBlockNameProvider implements IBlockComponentProvider {
+    INSTANCE;
+
     @Override
-    public void register(IClientRegistrar registrar) {
-        registrar.body(OCNodeInfoProvider.INSTANCE, BlockEntity.class, 1000);
-        registrar.body(OCRackItemProvider.INSTANCE, li.cil.oc.core.impl.common.blockentity.Rack.class, 1100);
-        registrar.icon(OCDroneIconProvider.INSTANCE, li.cil.oc.core.impl.common.entity.Drone.class, 1000);
-        registrar.icon(OCPrintIconProvider.INSTANCE, li.cil.oc.neoforge.common.block.Print.class, 900);
-        registrar.icon(OCChameliumIconProvider.INSTANCE, li.cil.oc.core.impl.common.block.ChameliumBlock.class, 900);
-        registrar.head(OCCableMultipartProvider.INSTANCE, TileMultipart.class, 900);
-        registrar.icon(OCCableMultipartProvider.INSTANCE, TileMultipart.class, 900);
-        registrar.head(OCBlockNameProvider.INSTANCE, li.cil.oc.core.impl.common.block.AbstractBlock.class, 1000);
-        registrar.head(OCEntityNameProvider.INSTANCE, li.cil.oc.core.impl.common.entity.Drone.class, 1000);
+    public void appendHead(ITooltip tooltip, IBlockAccessor accessor, IPluginConfig config) {
+      if (!config.getBoolean(OCWthitCommonPlugin.CONFIG_BLOCK_NAME)) return;
+      ItemStack stack = accessor.getStack();
+      if (stack.isEmpty()) return;
+      net.minecraft.world.item.Rarity rarity = stack.getRarity();
+      if (rarity == net.minecraft.world.item.Rarity.COMMON && !(accessor.getBlock() instanceof li.cil.oc.core.impl.common.block.Print)) {
+        return;
+      }
+      net.minecraft.network.chat.MutableComponent name = Component.empty().append(stack.getHoverName());
+      if (rarity != net.minecraft.world.item.Rarity.COMMON) {
+        name = name.withStyle(rarity.getStyleModifier());
+      } else {
+        name = name.withStyle(net.minecraft.ChatFormatting.WHITE);
+      }
+      tooltip.setLine(WailaConstants.OBJECT_NAME_TAG, name);
     }
+  }
 
-    private enum OCBlockNameProvider implements IBlockComponentProvider {
-        INSTANCE;
+  private enum OCEntityNameProvider implements IEntityComponentProvider {
+    INSTANCE;
 
-        @Override
-        public void appendHead(ITooltip tooltip, IBlockAccessor accessor, IPluginConfig config) {
-            if (!config.getBoolean(OCWthitCommonPlugin.CONFIG_BLOCK_NAME)) return;
-            ItemStack stack = accessor.getStack();
-            if (stack.isEmpty()) return;
-            net.minecraft.world.item.Rarity rarity = stack.getRarity();
-            if (rarity == net.minecraft.world.item.Rarity.COMMON && !(accessor.getBlock() instanceof li.cil.oc.core.impl.common.block.Print)) {
-                return;
-            }
-            net.minecraft.network.chat.MutableComponent name = Component.empty().append(stack.getHoverName());
-            if (rarity != net.minecraft.world.item.Rarity.COMMON) {
-                name = name.withStyle(rarity.getStyleModifier());
-            } else {
-                name = name.withStyle(net.minecraft.ChatFormatting.WHITE);
-            }
-            tooltip.setLine(WailaConstants.OBJECT_NAME_TAG, name);
+    @Override
+    public void appendHead(ITooltip tooltip, IEntityAccessor accessor, IPluginConfig config) {
+      if (!config.getBoolean(OCWthitCommonPlugin.CONFIG_DRONE_NAME)) return;
+      if (!(accessor.getEntity() instanceof li.cil.oc.core.impl.common.entity.Drone drone)) return;
+      net.minecraft.world.item.Rarity rarity = li.cil.oc.core.impl.util.Rarity.byTier(drone.tier());
+      if (rarity == net.minecraft.world.item.Rarity.COMMON) return;
+      String ocName = drone.name();
+      tooltip.setLine(WailaConstants.OBJECT_NAME_TAG,
+        Component.empty().append(ocName.isEmpty() ? accessor.getEntity().getName() : Component.literal(ocName))
+          .withStyle(rarity.getStyleModifier()));
+    }
+  }
+
+  private enum OCNodeInfoProvider implements IBlockComponentProvider {
+    INSTANCE;
+
+    @Override
+    public void appendBody(ITooltip tooltip, IBlockAccessor accessor, IPluginConfig config) {
+      if (!config.getBoolean(OCWthitCommonPlugin.CONFIG_NODE_INFO)) return;
+      CompoundTag data = accessor.getData().raw();
+      if (data.isEmpty()) return;
+
+      if (data.contains(OCWthitCommonPlugin.TAG_CHARGE_SPEED)) {
+        int speed = (int) (data.getDouble(OCWthitCommonPlugin.TAG_CHARGE_SPEED) * 100);
+        tooltip.addLine(Component.translatable("gui.opencomputers.analyzer.chargerspeed", speed + "%"));
+      }
+      if (data.contains(OCWthitCommonPlugin.TAG_PROGRESS)) {
+        double progress = data.getDouble(OCWthitCommonPlugin.TAG_PROGRESS);
+        int timeRemaining = data.getInt(OCWthitCommonPlugin.TAG_TIME_REMAINING);
+        String timeStr = timeRemaining < 60
+          ? String.format("0:%02d", timeRemaining)
+          : String.format("%d:%02d", timeRemaining / 60, timeRemaining % 60);
+        tooltip.addLine(Component.translatable("gui.opencomputers.assembler.progress", String.format("%.0f", progress), timeStr));
+        if (data.contains(OCWthitCommonPlugin.TAG_OUTPUT)) {
+          String output = data.getString(OCWthitCommonPlugin.TAG_OUTPUT);
+          tooltip.addLine(Component.literal("Building: ").append(Component.translatable(output)));
         }
-    }
+      }
+      if (data.contains(OCWthitCommonPlugin.TAG_SIGNAL_STRENGTH)) {
+        tooltip.addLine(Component.translatable("gui.opencomputers.analyzer.wirelessstrength", data.getDouble(OCWthitCommonPlugin.TAG_SIGNAL_STRENGTH)));
+      }
 
-    private enum OCEntityNameProvider implements IEntityComponentProvider {
-        INSTANCE;
-
-        @Override
-        public void appendHead(ITooltip tooltip, IEntityAccessor accessor, IPluginConfig config) {
-            if (!config.getBoolean(OCWthitCommonPlugin.CONFIG_DRONE_NAME)) return;
-            if (!(accessor.getEntity() instanceof li.cil.oc.core.impl.common.entity.Drone drone)) return;
-            net.minecraft.world.item.Rarity rarity = li.cil.oc.core.impl.util.Rarity.byTier(drone.tier());
-            if (rarity == net.minecraft.world.item.Rarity.COMMON) return;
-            String ocName = drone.name();
-            tooltip.setLine(WailaConstants.OBJECT_NAME_TAG,
-                    Component.empty().append(ocName.isEmpty() ? accessor.getEntity().getName() : Component.literal(ocName))
-                            .withStyle(rarity.getStyleModifier()));
+      int side = accessor.getSide().ordinal();
+      if (data.contains(OCWthitCommonPlugin.TAG_NODES)) {
+        ListTag nodes = data.getList(OCWthitCommonPlugin.TAG_NODES, Tag.TAG_COMPOUND);
+        if (side < nodes.size()) {
+          readNode(tooltip, nodes.getCompound(side));
         }
-    }
+      } else {
+        readNode(tooltip, data);
+      }
 
-    private enum OCNodeInfoProvider implements IBlockComponentProvider {
-        INSTANCE;
-
-        @Override
-        public void appendBody(ITooltip tooltip, IBlockAccessor accessor, IPluginConfig config) {
-            if (!config.getBoolean(OCWthitCommonPlugin.CONFIG_NODE_INFO)) return;
-            CompoundTag data = accessor.getData().raw();
-            if (data.isEmpty()) return;
-
-            if (data.contains(OCWthitCommonPlugin.TAG_CHARGE_SPEED)) {
-                int speed = (int) (data.getDouble(OCWthitCommonPlugin.TAG_CHARGE_SPEED) * 100);
-                tooltip.addLine(Component.translatable("gui.opencomputers.analyzer.chargerspeed", speed + "%"));
-            }
-            if (data.contains(OCWthitCommonPlugin.TAG_PROGRESS)) {
-                double progress = data.getDouble(OCWthitCommonPlugin.TAG_PROGRESS);
-                int timeRemaining = data.getInt(OCWthitCommonPlugin.TAG_TIME_REMAINING);
-                String timeStr = timeRemaining < 60
-                        ? String.format("0:%02d", timeRemaining)
-                        : String.format("%d:%02d", timeRemaining / 60, timeRemaining % 60);
-                tooltip.addLine(Component.translatable("gui.opencomputers.assembler.progress", String.format("%.0f", progress), timeStr));
-                if (data.contains(OCWthitCommonPlugin.TAG_OUTPUT)) {
-                    String output = data.getString(OCWthitCommonPlugin.TAG_OUTPUT);
-                    tooltip.addLine(Component.literal("Building: ").append(Component.translatable(output)));
+      if (data.contains(OCWthitCommonPlugin.TAG_RACK_MOUNTABLE_NODES)) {
+        BlockEntity be = accessor.getBlockEntity();
+        if (be instanceof li.cil.oc.core.impl.common.blockentity.Rack rack) {
+          Direction facing = accessor.getSide();
+          if (facing == rack.facing()) {
+            BlockHitResult hit = accessor.getBlockHitResult();
+            float hitY = (float) (hit.getLocation().y - hit.getBlockPos().getY());
+            var slotOpt = rack.slotAt(facing, 0, hitY, 0);
+            if (slotOpt.isPresent()) {
+              ListTag mountableNodes = data.getList(OCWthitCommonPlugin.TAG_RACK_MOUNTABLE_NODES, Tag.TAG_COMPOUND);
+              int slot = slotOpt.get();
+              if (slot < mountableNodes.size()) {
+                CompoundTag mountableTag = mountableNodes.getCompound(slot);
+                if (mountableTag.contains(OCWthitCommonPlugin.TAG_SUB_NODES)) {
+                  ListTag subNodes = mountableTag.getList(OCWthitCommonPlugin.TAG_SUB_NODES, Tag.TAG_COMPOUND);
+                  for (int i = 0; i < subNodes.size(); i++) {
+                    readNode(tooltip, subNodes.getCompound(i));
+                  }
+                } else {
+                  readNode(tooltip, mountableTag);
                 }
+              }
             }
-            if (data.contains(OCWthitCommonPlugin.TAG_SIGNAL_STRENGTH)) {
-                tooltip.addLine(Component.translatable("gui.opencomputers.analyzer.wirelessstrength", data.getDouble(OCWthitCommonPlugin.TAG_SIGNAL_STRENGTH)));
-            }
-
-            int side = accessor.getSide().ordinal();
-            if (data.contains(OCWthitCommonPlugin.TAG_NODES)) {
-                ListTag nodes = data.getList(OCWthitCommonPlugin.TAG_NODES, Tag.TAG_COMPOUND);
-                if (side < nodes.size()) {
-                    readNode(tooltip, nodes.getCompound(side));
-                }
-            } else {
-                readNode(tooltip, data);
-            }
-
-            if (data.contains(OCWthitCommonPlugin.TAG_RACK_MOUNTABLE_NODES)) {
-                BlockEntity be = accessor.getBlockEntity();
-                if (be instanceof li.cil.oc.core.impl.common.blockentity.Rack rack) {
-                    Direction facing = accessor.getSide();
-                    if (facing == rack.facing()) {
-                        BlockHitResult hit = accessor.getBlockHitResult();
-                        float hitY = (float) (hit.getLocation().y - hit.getBlockPos().getY());
-                        var slotOpt = rack.slotAt(facing, 0, hitY, 0);
-                        if (slotOpt.isPresent()) {
-                            ListTag mountableNodes = data.getList(OCWthitCommonPlugin.TAG_RACK_MOUNTABLE_NODES, Tag.TAG_COMPOUND);
-                            int slot = slotOpt.get();
-                            if (slot < mountableNodes.size()) {
-                                CompoundTag mountableTag = mountableNodes.getCompound(slot);
-                                if (mountableTag.contains(OCWthitCommonPlugin.TAG_SUB_NODES)) {
-                                    ListTag subNodes = mountableTag.getList(OCWthitCommonPlugin.TAG_SUB_NODES, Tag.TAG_COMPOUND);
-                                    for (int i = 0; i < subNodes.size(); i++) {
-                                        readNode(tooltip, subNodes.getCompound(i));
-                                    }
-                                } else {
-                                    readNode(tooltip, mountableTag);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+          }
         }
-
-        private static void readNode(ITooltip tooltip, CompoundTag tag) {
-            if (tag.contains(OCWthitCommonPlugin.TAG_ADDRESS)) {
-                tooltip.addLine(Component.translatable("gui.opencomputers.analyzer.address", tag.getString(OCWthitCommonPlugin.TAG_ADDRESS)));
-            }
-            if (tag.contains(OCWthitCommonPlugin.TAG_BUFFER) && tag.contains(OCWthitCommonPlugin.TAG_BUFFER_SIZE)) {
-                double buffer = tag.getDouble(OCWthitCommonPlugin.TAG_BUFFER);
-                double bufferSize = tag.getDouble(OCWthitCommonPlugin.TAG_BUFFER_SIZE);
-                if (bufferSize > 0) {
-                    tooltip.addLine(Component.translatable("gui.opencomputers.analyzer.storedenergy", String.format("%.1f/%.1f", buffer, bufferSize)));
-                }
-            }
-            if (tag.contains(OCWthitCommonPlugin.TAG_COMPONENT_NAME)) {
-                String name = tag.getString(OCWthitCommonPlugin.TAG_COMPONENT_NAME);
-                if (!name.isEmpty()) {
-                    tooltip.addLine(Component.translatable("gui.opencomputers.analyzer.componentname", name));
-                }
-            }
-        }
+      }
     }
 
-    private enum OCDroneIconProvider implements IEntityComponentProvider {
-        INSTANCE;
-
-        @Override
-        public ITooltipComponent getIcon(IEntityAccessor accessor, IPluginConfig config) {
-            if (!config.getBoolean(OCWthitCommonPlugin.CONFIG_DRONE_ICON)) return null;
-            return new ItemComponent(Items.DRONE.get());
+    private static void readNode(ITooltip tooltip, CompoundTag tag) {
+      if (tag.contains(OCWthitCommonPlugin.TAG_ADDRESS)) {
+        tooltip.addLine(Component.translatable("gui.opencomputers.analyzer.address", tag.getString(OCWthitCommonPlugin.TAG_ADDRESS)));
+      }
+      if (tag.contains(OCWthitCommonPlugin.TAG_BUFFER) && tag.contains(OCWthitCommonPlugin.TAG_BUFFER_SIZE)) {
+        double buffer = tag.getDouble(OCWthitCommonPlugin.TAG_BUFFER);
+        double bufferSize = tag.getDouble(OCWthitCommonPlugin.TAG_BUFFER_SIZE);
+        if (bufferSize > 0) {
+          tooltip.addLine(Component.translatable("gui.opencomputers.analyzer.storedenergy", String.format("%.1f/%.1f", buffer, bufferSize)));
         }
+      }
+      if (tag.contains(OCWthitCommonPlugin.TAG_COMPONENT_NAME)) {
+        String name = tag.getString(OCWthitCommonPlugin.TAG_COMPONENT_NAME);
+        if (!name.isEmpty()) {
+          tooltip.addLine(Component.translatable("gui.opencomputers.analyzer.componentname", name));
+        }
+      }
+    }
+  }
+
+  private enum OCDroneIconProvider implements IEntityComponentProvider {
+    INSTANCE;
+
+    @Override
+    public ITooltipComponent getIcon(IEntityAccessor accessor, IPluginConfig config) {
+      if (!config.getBoolean(OCWthitCommonPlugin.CONFIG_DRONE_ICON)) return null;
+      return new ItemComponent(Items.DRONE.get());
+    }
+  }
+
+  private enum OCPrintIconProvider implements IBlockComponentProvider {
+    INSTANCE;
+
+    @Override
+    public @NotNull ITooltipComponent getIcon(IBlockAccessor accessor, IPluginConfig config) {
+      ItemStack stack = accessor.getBlock().getCloneItemStack(
+        accessor.getBlockState(),
+        accessor.getBlockHitResult(),
+        accessor.getLevel(),
+        accessor.getPosition(),
+        accessor.getPlayer()
+      );
+      return new ItemComponent(stack);
+    }
+  }
+
+  private enum OCChameliumIconProvider implements IBlockComponentProvider {
+    INSTANCE;
+
+    @Override
+    public @NotNull ITooltipComponent getIcon(IBlockAccessor accessor, IPluginConfig config) {
+      ItemStack stack = accessor.getBlock().getCloneItemStack(
+        accessor.getBlockState(),
+        accessor.getBlockHitResult(),
+        accessor.getLevel(),
+        accessor.getPosition(),
+        accessor.getPlayer()
+      );
+      return new ItemComponent(stack);
+    }
+  }
+
+  private enum OCCableMultipartProvider implements IBlockComponentProvider {
+    INSTANCE;
+
+    @Override
+    public void appendHead(ITooltip tooltip, IBlockAccessor accessor, IPluginConfig config) {
+      if (getHitCablePart(accessor) != null) {
+        tooltip.setLine(WailaConstants.OBJECT_NAME_TAG, IWailaConfig.get().getFormatter().blockName(
+          li.cil.oc.api.Items.get(li.cil.oc.core.Constants.BlockName.Cable).block().getName()));
+      }
     }
 
-    private enum OCPrintIconProvider implements IBlockComponentProvider {
-        INSTANCE;
-
-        @Override
-        public @NotNull ITooltipComponent getIcon(IBlockAccessor accessor, IPluginConfig config) {
-            ItemStack stack = accessor.getBlock().getCloneItemStack(
-                    accessor.getBlockState(),
-                    accessor.getBlockHitResult(),
-                    accessor.getLevel(),
-                    accessor.getPosition(),
-                    accessor.getPlayer()
-            );
-            return new ItemComponent(stack);
-        }
+    @Override
+    public @Nullable ITooltipComponent getIcon(IBlockAccessor accessor, IPluginConfig config) {
+      if (getHitCablePart(accessor) != null) {
+        return new ItemComponent(
+          new ItemStack(li.cil.oc.api.Items.get(li.cil.oc.core.Constants.BlockName.Cable).block()));
+      }
+      return null;
     }
 
-    private enum OCChameliumIconProvider implements IBlockComponentProvider {
-        INSTANCE;
-
-        @Override
-        public @NotNull ITooltipComponent getIcon(IBlockAccessor accessor, IPluginConfig config) {
-            ItemStack stack = accessor.getBlock().getCloneItemStack(
-                    accessor.getBlockState(),
-                    accessor.getBlockHitResult(),
-                    accessor.getLevel(),
-                    accessor.getPosition(),
-                    accessor.getPlayer()
-            );
-            return new ItemComponent(stack);
-        }
+    @Nullable
+    private static CablePart getHitCablePart(IBlockAccessor accessor) {
+      BlockEntity te = accessor.getBlockEntity();
+      if (!(te instanceof TileMultipart)) return null;
+      BlockHitResult hitResult = accessor.getBlockHitResult();
+      if (hitResult instanceof PartRayTraceResult partHit && partHit.part instanceof CablePart cablePart) {
+        return cablePart;
+      }
+      return null;
     }
+  }
 
-    private enum OCCableMultipartProvider implements IBlockComponentProvider {
-        INSTANCE;
+  private enum OCRackItemProvider implements IBlockComponentProvider {
+    INSTANCE;
 
-        @Override
-        public void appendHead(ITooltip tooltip, IBlockAccessor accessor, IPluginConfig config) {
-            if (getHitCablePart(accessor) != null) {
-                tooltip.setLine(WailaConstants.OBJECT_NAME_TAG, IWailaConfig.get().getFormatter().blockName(
-                        li.cil.oc.api.Items.get(li.cil.oc.core.Constants.BlockName.Cable).block().getName()));
-            }
-        }
+    @Override
+    public void appendBody(ITooltip tooltip, IBlockAccessor accessor, IPluginConfig config) {
+      CompoundTag data = accessor.getData().raw();
+      if (!data.contains(OCWthitCommonPlugin.TAG_RACK_ITEMS)) return;
 
-        @Override
-        public @Nullable ITooltipComponent getIcon(IBlockAccessor accessor, IPluginConfig config) {
-            if (getHitCablePart(accessor) != null) {
-                return new ItemComponent(
-                        new ItemStack(li.cil.oc.api.Items.get(li.cil.oc.core.Constants.BlockName.Cable).block()));
-            }
-            return null;
-        }
+      ListTag items = data.getList(OCWthitCommonPlugin.TAG_RACK_ITEMS, Tag.TAG_COMPOUND);
+      if (items.isEmpty()) return;
 
-        @Nullable
-        private static CablePart getHitCablePart(IBlockAccessor accessor) {
-            BlockEntity te = accessor.getBlockEntity();
-            if (!(te instanceof TileMultipart)) return null;
-            BlockHitResult hitResult = accessor.getBlockHitResult();
-            if (hitResult instanceof PartRayTraceResult partHit && partHit.part instanceof CablePart cablePart) {
-                return cablePart;
-            }
-            return null;
-        }
+      var stacks = new ArrayList<ItemStack>();
+      for (int i = 0; i < items.size(); i++) {
+        CompoundTag itemTag = items.getCompound(i);
+        String id = itemTag.getString("id");
+        int count = itemTag.getInt("count");
+        String name = itemTag.getString("name");
+
+        Item item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(id));
+        ItemStack stack = new ItemStack(item, count);
+        stack.set(DataComponents.CUSTOM_NAME, Component.literal(name));
+        stacks.add(stack);
+      }
+
+      if (!stacks.isEmpty()) {
+        tooltip.addLine(new NamedItemListComponent(stacks, stacks.size()));
+      }
     }
-
-    private enum OCRackItemProvider implements IBlockComponentProvider {
-        INSTANCE;
-
-        @Override
-        public void appendBody(ITooltip tooltip, IBlockAccessor accessor, IPluginConfig config) {
-            CompoundTag data = accessor.getData().raw();
-            if (!data.contains(OCWthitCommonPlugin.TAG_RACK_ITEMS)) return;
-
-            ListTag items = data.getList(OCWthitCommonPlugin.TAG_RACK_ITEMS, Tag.TAG_COMPOUND);
-            if (items.isEmpty()) return;
-
-            var stacks = new ArrayList<ItemStack>();
-            for (int i = 0; i < items.size(); i++) {
-                CompoundTag itemTag = items.getCompound(i);
-                String id = itemTag.getString("id");
-                int count = itemTag.getInt("count");
-                String name = itemTag.getString("name");
-
-                Item item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(id));
-                ItemStack stack = new ItemStack(item, count);
-                stack.set(DataComponents.CUSTOM_NAME, Component.literal(name));
-                stacks.add(stack);
-            }
-
-            if (!stacks.isEmpty()) {
-                tooltip.addLine(new NamedItemListComponent(stacks, stacks.size()));
-            }
-        }
-    }
+  }
 }

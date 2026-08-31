@@ -9,34 +9,34 @@ import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
 public final class LootRecraftingCondition implements ResourceCondition {
-    public static final LootRecraftingCondition INSTANCE = new LootRecraftingCondition();
+  public static final LootRecraftingCondition INSTANCE = new LootRecraftingCondition();
 
-    public static final ResourceConditionType<LootRecraftingCondition> TYPE =
-            ResourceConditionType.create(
-                    ResourceLocation.fromNamespaceAndPath("opencomputers", "loot_recrafting"),
-                    MapCodec.unit(INSTANCE)
-            );
+  public static final ResourceConditionType<LootRecraftingCondition> TYPE =
+    ResourceConditionType.create(
+      ResourceLocation.fromNamespaceAndPath("opencomputers", "loot_recrafting"),
+      MapCodec.unit(INSTANCE)
+    );
 
-    private LootRecraftingCondition() {
-    }
+  private LootRecraftingCondition() {
+  }
 
-    public static void init() {
-        ResourceConditions.register(TYPE);
-    }
+  public static void init() {
+    ResourceConditions.register(TYPE);
+  }
 
-    @Override
-    public boolean test(net.minecraft.core.HolderLookup.Provider registryLookup) {
-        var settings = OCSettings.get();
-        return settings == null || settings.lootRecrafting;
-    }
+  @Override
+  public boolean test(net.minecraft.core.HolderLookup.Provider registryLookup) {
+    var settings = OCSettings.get();
+    return settings == null || settings.lootRecrafting;
+  }
 
-    @Override
-    public @NotNull ResourceConditionType<?> getType() {
-        return TYPE;
-    }
+  @Override
+  public @NotNull ResourceConditionType<?> getType() {
+    return TYPE;
+  }
 
-    @Override
-    public String toString() {
-        return "opencomputers:loot_recrafting";
-    }
+  @Override
+  public String toString() {
+    return "opencomputers:loot_recrafting";
+  }
 }

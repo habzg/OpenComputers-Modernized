@@ -21,60 +21,60 @@ import li.cil.oc.api.Persistable;
  * {@link Callback} annotation.
  */
 public interface Value extends Persistable {
-    /**
-     * This is called when the code running on a machine tries to index this
-     * value.
-     *
-     * @param context   the context from which the method is called, usually the
-     *                  instance of the computer running the script that made
-     *                  the call.
-     * @param arguments the arguments passed to the method.
-     * @return the current value at the specified index, or <code>null</code>.
-     */
-    @SuppressWarnings("unused")
-    Object apply(Context context, Arguments arguments);
+  /**
+   * This is called when the code running on a machine tries to index this
+   * value.
+   *
+   * @param context   the context from which the method is called, usually the
+   *                  instance of the computer running the script that made
+   *                  the call.
+   * @param arguments the arguments passed to the method.
+   * @return the current value at the specified index, or <code>null</code>.
+   */
+  @SuppressWarnings("unused")
+  Object apply(Context context, Arguments arguments);
 
-    /**
-     * This is called when the code running on a machine tries to assign a new
-     * value at the specified index of this value.
-     * <br>
-     * Does nothing if the value is not indexable.
-     *
-     * @param context   the context from which the method is called, usually the
-     *                  instance of the computer running the script that made
-     *                  the call.
-     * @param arguments the arguments passed to the method.
-     */
-    @SuppressWarnings("unused")
-    void unapply(Context context, Arguments arguments);
+  /**
+   * This is called when the code running on a machine tries to assign a new
+   * value at the specified index of this value.
+   * <br>
+   * Does nothing if the value is not indexable.
+   *
+   * @param context   the context from which the method is called, usually the
+   *                  instance of the computer running the script that made
+   *                  the call.
+   * @param arguments the arguments passed to the method.
+   */
+  @SuppressWarnings("unused")
+  void unapply(Context context, Arguments arguments);
 
-    /**
-     * This is called when the code running on a machine tries to call this
-     * value as a function.
-     * <br>
-     * If this value is not callable, throws an exception.
-     *
-     * @param context   the context from which the method is called, usually the
-     *                  instance of the computer running the script that made
-     *                  the call.
-     * @param arguments the arguments passed to the method.
-     * @return the result of the call.
-     * @throws java.lang.RuntimeException if this value is not callable.
-     */
-    @SuppressWarnings("unused")
-    Object[] call(Context context, Arguments arguments);
+  /**
+   * This is called when the code running on a machine tries to call this
+   * value as a function.
+   * <br>
+   * If this value is not callable, throws an exception.
+   *
+   * @param context   the context from which the method is called, usually the
+   *                  instance of the computer running the script that made
+   *                  the call.
+   * @param arguments the arguments passed to the method.
+   * @return the result of the call.
+   * @throws java.lang.RuntimeException if this value is not callable.
+   */
+  @SuppressWarnings("unused")
+  Object[] call(Context context, Arguments arguments);
 
-    /**
-     * This is called when the object's representation in the machine it was
-     * pushed to is garbage collected.
-     * <br>
-     * <em>Important</em>: be aware of the consequences of pushing the same
-     * object to multiple machines. You should usually <em>not</em> do that,
-     * but if you do, realize this method may be called by either machine.
-     *
-     * @param context the context from which the method is called, usually the
-     *                instance of the computer running the script that just
-     *                garbage collected the object.
-     */
-    void dispose(Context context);
+  /**
+   * This is called when the object's representation in the machine it was
+   * pushed to is garbage collected.
+   * <br>
+   * <em>Important</em>: be aware of the consequences of pushing the same
+   * object to multiple machines. You should usually <em>not</em> do that,
+   * but if you do, realize this method may be called by either machine.
+   *
+   * @param context the context from which the method is called, usually the
+   *                instance of the computer running the script that just
+   *                garbage collected the object.
+   */
+  void dispose(Context context);
 }

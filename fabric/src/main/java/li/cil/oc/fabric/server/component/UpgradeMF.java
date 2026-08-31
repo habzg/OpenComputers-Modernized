@@ -13,35 +13,35 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.NotNull;
 
 public class UpgradeMF extends UpgradeMFBase implements ChangeListener {
-    public UpgradeMF(EnvironmentHost host, BlockPosition coord, Direction dir) {
-        super(host, coord, dir);
-    }
+  public UpgradeMF(EnvironmentHost host, BlockPosition coord, Direction dir) {
+    super(host, coord, dir);
+  }
 
-    @Override
-    protected void connectToTileNode(@NotNull BlockEntity tile, @NotNull Consumer<Node> consumer) {
-        Node otherNode = li.cil.oc.core.impl.server.network.Network.getNetworkNode(tile, dir);
-        if (otherNode != null) {
-            consumer.accept(otherNode);
-        }
+  @Override
+  protected void connectToTileNode(@NotNull BlockEntity tile, @NotNull Consumer<Node> consumer) {
+    Node otherNode = li.cil.oc.core.impl.server.network.Network.getNetworkNode(tile, dir);
+    if (otherNode != null) {
+      consumer.accept(otherNode);
     }
+  }
 
-    @Override
-    protected void registerBlockChangeListener() {
-        BlockChangeHandler.addListener(this, coord);
-    }
+  @Override
+  protected void registerBlockChangeListener() {
+    BlockChangeHandler.addListener(this, coord);
+  }
 
-    @Override
-    protected void unregisterBlockChangeListener() {
-        BlockChangeHandler.removeListener(this);
-    }
+  @Override
+  protected void unregisterBlockChangeListener() {
+    BlockChangeHandler.removeListener(this);
+  }
 
-    @Override
-    protected boolean consumeEnergy(double amount) {
-        return ((Connector) node).tryChangeBuffer(-amount);
-    }
+  @Override
+  protected boolean consumeEnergy(double amount) {
+    return ((Connector) node).tryChangeBuffer(-amount);
+  }
 
-    @Override
-    public void onBlockChanged() {
-        updateBoundState();
-    }
+  @Override
+  public void onBlockChanged() {
+    updateBoundState();
+  }
 }

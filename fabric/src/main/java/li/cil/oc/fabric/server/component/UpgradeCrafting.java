@@ -13,23 +13,23 @@ import net.minecraft.world.item.crafting.RecipeType;
 import org.jetbrains.annotations.NotNull;
 
 public class UpgradeCrafting extends UpgradeCraftingBase {
-    public UpgradeCrafting(Robot host) {
-        super(host);
-    }
+  public UpgradeCrafting(Robot host) {
+    super(host);
+  }
 
-    @Override
-    protected void postItemCraftedEvent(@NotNull Player player, @NotNull ItemStack result, @NotNull CraftingInventory inventory) {
-        var level = player.level();
-        var input = CraftingInput.of(inventory.getWidth(), inventory.getHeight(), inventory.getItems());
-        var recipe = level.getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, level)
-                .map(RecipeHolder::value).orElse(null);
-        if (!(recipe instanceof ExtendedShapedRecipe) && !(recipe instanceof ExtendedShapelessOreRecipe)) {
-            ExtendedRecipe.addNBTToResult(recipe, result, input, level.registryAccess());
-        }
+  @Override
+  protected void postItemCraftedEvent(@NotNull Player player, @NotNull ItemStack result, @NotNull CraftingInventory inventory) {
+    var level = player.level();
+    var input = CraftingInput.of(inventory.getWidth(), inventory.getHeight(), inventory.getItems());
+    var recipe = level.getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, level)
+      .map(RecipeHolder::value).orElse(null);
+    if (!(recipe instanceof ExtendedShapedRecipe) && !(recipe instanceof ExtendedShapelessOreRecipe)) {
+      ExtendedRecipe.addNBTToResult(recipe, result, input, level.registryAccess());
     }
+  }
 
-    @Override
-    protected void postPlayerDestroyItemEvent(@NotNull Player player, @NotNull ItemStack stack) {
-      // Fabric has no central event for this.
-    }
+  @Override
+  protected void postPlayerDestroyItemEvent(@NotNull Player player, @NotNull ItemStack stack) {
+    // Fabric has no central event for this.
+  }
 }

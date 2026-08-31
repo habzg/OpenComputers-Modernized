@@ -20,60 +20,60 @@ import li.cil.oc.api.machine.MachineHost;
  * at that time. Only start calling these methods in the init phase or later.
  */
 public final class Machine {
-    /**
-     * The built-in Lua architecture. This will be set to the native Lua
-     * implementation when possible, to the LuaJ fallback, otherwise.
-     */
-    @SuppressWarnings("unused")
-    public static Class<? extends Architecture> LuaArchitecture = null;
+  /**
+   * The built-in Lua architecture. This will be set to the native Lua
+   * implementation when possible, to the LuaJ fallback, otherwise.
+   */
+  @SuppressWarnings("unused")
+  public static Class<? extends Architecture> LuaArchitecture = null;
 
-    private Machine() {
-    }
+  private Machine() {
+  }
 
-    /**
-     * Register an architecture that can be used to create new machines.
-     * <br>
-     * Registering an architecture will make it possible to configure CPUs to
-     * run that architecture. This allows providing architectures without
-     * implementing a custom CPU item.
-     *
-     * @param architecture the architecture to register.
-     */
-    public static void add(Class<? extends Architecture> architecture) {
-        if (API.machine == null) throw new IllegalStateException(API.ERROR_NOT_INITIALIZED);
-        API.machine.add(architecture);
-    }
+  /**
+   * Register an architecture that can be used to create new machines.
+   * <br>
+   * Registering an architecture will make it possible to configure CPUs to
+   * run that architecture. This allows providing architectures without
+   * implementing a custom CPU item.
+   *
+   * @param architecture the architecture to register.
+   */
+  public static void add(Class<? extends Architecture> architecture) {
+    if (API.machine == null) throw new IllegalStateException(API.ERROR_NOT_INITIALIZED);
+    API.machine.add(architecture);
+  }
 
-    /**
-     * A list of all <em>registered</em> architectures.
-     */
-    public static Collection<Class<? extends Architecture>> architectures() {
-        if (API.machine == null) throw new IllegalStateException(API.ERROR_NOT_INITIALIZED);
-        return API.machine.architectures();
-    }
+  /**
+   * A list of all <em>registered</em> architectures.
+   */
+  public static Collection<Class<? extends Architecture>> architectures() {
+    if (API.machine == null) throw new IllegalStateException(API.ERROR_NOT_INITIALIZED);
+    return API.machine.architectures();
+  }
 
-    /**
-     * Get the name of the specified architecture.
-     *
-     * @param architecture the architecture to get the name for.
-     * @return the name of the specified architecture.
-     */
-    public static String getArchitectureName(Class<? extends Architecture> architecture) {
-        if (API.machine == null) throw new IllegalStateException(API.ERROR_NOT_INITIALIZED);
-        return API.machine.getArchitectureName(architecture);
-    }
+  /**
+   * Get the name of the specified architecture.
+   *
+   * @param architecture the architecture to get the name for.
+   * @return the name of the specified architecture.
+   */
+  public static String getArchitectureName(Class<? extends Architecture> architecture) {
+    if (API.machine == null) throw new IllegalStateException(API.ERROR_NOT_INITIALIZED);
+    return API.machine.getArchitectureName(architecture);
+  }
 
-    /**
-     * Creates a new machine for the specified host.
-     * <br>
-     * You are responsible for calling update and save / load functions on the
-     * machine for it to work correctly.
-     *
-     * @param host the owner object of the machine, providing context.
-     * @return the newly created machine.
-     */
-    public static li.cil.oc.api.machine.Machine create(MachineHost host) {
-        if (API.machine == null) throw new IllegalStateException(API.ERROR_NOT_INITIALIZED);
-        return API.machine.create(host);
-    }
+  /**
+   * Creates a new machine for the specified host.
+   * <br>
+   * You are responsible for calling update and save / load functions on the
+   * machine for it to work correctly.
+   *
+   * @param host the owner object of the machine, providing context.
+   * @return the newly created machine.
+   */
+  public static li.cil.oc.api.machine.Machine create(MachineHost host) {
+    if (API.machine == null) throw new IllegalStateException(API.ERROR_NOT_INITIALIZED);
+    return API.machine.create(host);
+  }
 }

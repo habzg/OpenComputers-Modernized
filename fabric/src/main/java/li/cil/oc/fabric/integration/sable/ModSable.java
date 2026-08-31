@@ -12,27 +12,27 @@ import net.minecraft.world.phys.Vec3;
 
 @SuppressWarnings("unused")
 public final class ModSable implements ModProxy {
-    @Override
-    public li.cil.oc.core.integration.Mod getMod() {
-        return Mods.Sable;
-    }
+  @Override
+  public li.cil.oc.core.integration.Mod getMod() {
+    return Mods.Sable;
+  }
 
-    @Override
-    public void initialize() {
-        PacketBuilderBase.setDistanceHelper(ModSable::distanceSquared);
-        ClientDistanceHelper.setDistanceHelper(ModSable::distanceSquaredTo);
-        ClientDistanceHelper.setProjectHelper(ModSable::project);
-    }
+  @Override
+  public void initialize() {
+    PacketBuilderBase.setDistanceHelper(ModSable::distanceSquared);
+    ClientDistanceHelper.setDistanceHelper(ModSable::distanceSquaredTo);
+    ClientDistanceHelper.setProjectHelper(ModSable::project);
+  }
 
-    private static double distanceSquared(Level level, double x, double y, double z, Player player) {
-        return SableCompanion.INSTANCE.distanceSquaredWithSubLevels(level, x, y, z, player.getX(), player.getY(), player.getZ());
-    }
+  private static double distanceSquared(Level level, double x, double y, double z, Player player) {
+    return SableCompanion.INSTANCE.distanceSquaredWithSubLevels(level, x, y, z, player.getX(), player.getY(), player.getZ());
+  }
 
-    private static double distanceSquaredTo(Level level, double x, double y, double z, double px, double py, double pz) {
-        return SableCompanion.INSTANCE.distanceSquaredWithSubLevels(level, x, y, z, px, py, pz);
-    }
+  private static double distanceSquaredTo(Level level, double x, double y, double z, double px, double py, double pz) {
+    return SableCompanion.INSTANCE.distanceSquaredWithSubLevels(level, x, y, z, px, py, pz);
+  }
 
-    private static Vec3 project(Level level, Vec3 pos) {
-        return SableCompanion.INSTANCE.projectOutOfSubLevel(level, (Position) pos);
-    }
+  private static Vec3 project(Level level, Vec3 pos) {
+    return SableCompanion.INSTANCE.projectOutOfSubLevel(level, (Position) pos);
+  }
 }

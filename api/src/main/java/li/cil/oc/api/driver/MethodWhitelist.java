@@ -23,12 +23,12 @@ package li.cil.oc.api.driver;
  * different whitelists!
  */
 public interface MethodWhitelist {
-    /**
-     * The list of methods allowed to be exposed for blocks this driver is used
-     * for. Note that the names must <em>exactly</em> match the names of the
-     * methods they allow.
-     *
-     * @return the array of allowed methods.
-     */
-    String[] whitelistedMethods();
+  /**
+   * The list of methods allowed to be exposed for blocks this driver is used
+   * for. Note that the names must <em>exactly</em> match the names of the
+   * methods they allow.
+   *
+   * @return the array of allowed methods.
+   */
+  String[] whitelistedMethods();
 }

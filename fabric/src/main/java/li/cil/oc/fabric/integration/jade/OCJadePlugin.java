@@ -25,100 +25,100 @@ import snownee.jade.api.ui.IElementHelper;
 
 @SuppressWarnings("unused")
 public class OCJadePlugin implements IWailaPlugin {
-    @Override
-    public void register(final IWailaCommonRegistration registration) {
-        registration.registerBlockDataProvider(OCDataProvider.INSTANCE, AbstractBlock.class);
-        registration.registerItemStorage(OCItemSuppressionProvider.INSTANCE, AbstractBlock.class);
-        registration.registerItemStorage(OCItemSuppressionProvider.INSTANCE, Drone.class);
-    }
+  @Override
+  public void register(final IWailaCommonRegistration registration) {
+    registration.registerBlockDataProvider(OCDataProvider.INSTANCE, AbstractBlock.class);
+    registration.registerItemStorage(OCItemSuppressionProvider.INSTANCE, AbstractBlock.class);
+    registration.registerItemStorage(OCItemSuppressionProvider.INSTANCE, Drone.class);
+  }
+
+  @Override
+  public void registerClient(final IWailaClientRegistration registration) {
+    registration.registerBlockComponent(OCDataProvider.INSTANCE, AbstractBlock.class);
+    registration.registerBlockComponent(OCBlockNameProvider.INSTANCE, AbstractBlock.class);
+    registration.registerEntityIcon(DroneIconProvider.INSTANCE, Drone.class);
+    registration.registerEntityComponent(OCEntityNameProvider.INSTANCE, Drone.class);
+    registration.registerItemStorageClient(OCItemSuppressionProvider.INSTANCE);
+  }
+
+  private enum OCEntityNameProvider implements IComponentProvider<EntityAccessor> {
+    INSTANCE;
+
+    private static final ResourceLocation UID = ResourceLocation.parse("opencomputers:drone_name");
 
     @Override
-    public void registerClient(final IWailaClientRegistration registration) {
-        registration.registerBlockComponent(OCDataProvider.INSTANCE, AbstractBlock.class);
-        registration.registerBlockComponent(OCBlockNameProvider.INSTANCE, AbstractBlock.class);
-        registration.registerEntityIcon(DroneIconProvider.INSTANCE, Drone.class);
-        registration.registerEntityComponent(OCEntityNameProvider.INSTANCE, Drone.class);
-        registration.registerItemStorageClient(OCItemSuppressionProvider.INSTANCE);
+    public ResourceLocation getUid() {
+      return UID;
     }
 
-    private enum OCEntityNameProvider implements IComponentProvider<EntityAccessor> {
-        INSTANCE;
-
-        private static final ResourceLocation UID = ResourceLocation.parse("opencomputers:drone_name");
-
-        @Override
-        public ResourceLocation getUid() {
-            return UID;
-        }
-
-        @Override
-        public void appendTooltip(ITooltip tooltip, EntityAccessor accessor, IPluginConfig config) {
-            if (!(accessor.getEntity() instanceof Drone drone)) return;
-            net.minecraft.world.item.Rarity rarity = li.cil.oc.core.impl.util.Rarity.byTier(drone.tier());
-            if (rarity == Rarity.COMMON) return;
-            String ocName = drone.name();
-            MutableComponent name = Component.empty().append(
-                    ocName.isEmpty()
-                            ? ObjectNameProvider.getEntityName(drone, IWailaConfig.get().getGeneral().getEnableAccessibilityPlugin() && config.get(JadeIds.ACCESS_ENTITY_DETAILS))
-                            : Component.literal(ocName))
-                    .withStyle(rarity.color());
-            tooltip.replace(JadeIds.CORE_OBJECT_NAME, name);
-        }
-
-        @Override
-        public int getDefaultPriority() {
-            return ObjectNameProvider.getEntity().getDefaultPriority() + 10;
-        }
+    @Override
+    public void appendTooltip(ITooltip tooltip, EntityAccessor accessor, IPluginConfig config) {
+      if (!(accessor.getEntity() instanceof Drone drone)) return;
+      net.minecraft.world.item.Rarity rarity = li.cil.oc.core.impl.util.Rarity.byTier(drone.tier());
+      if (rarity == Rarity.COMMON) return;
+      String ocName = drone.name();
+      MutableComponent name = Component.empty().append(
+          ocName.isEmpty()
+            ? ObjectNameProvider.getEntityName(drone, IWailaConfig.get().getGeneral().getEnableAccessibilityPlugin() && config.get(JadeIds.ACCESS_ENTITY_DETAILS))
+            : Component.literal(ocName))
+        .withStyle(rarity.color());
+      tooltip.replace(JadeIds.CORE_OBJECT_NAME, name);
     }
 
-    private enum OCBlockNameProvider implements IComponentProvider<BlockAccessor> {
-        INSTANCE;
+    @Override
+    public int getDefaultPriority() {
+      return ObjectNameProvider.getEntity().getDefaultPriority() + 10;
+    }
+  }
 
-        private static final ResourceLocation UID = ResourceLocation.parse("opencomputers:block_name");
+  private enum OCBlockNameProvider implements IComponentProvider<BlockAccessor> {
+    INSTANCE;
 
-        @Override
-        public ResourceLocation getUid() {
-            return UID;
-        }
+    private static final ResourceLocation UID = ResourceLocation.parse("opencomputers:block_name");
 
-        @Override
-        public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
-            ItemStack picked = accessor.getPickedResult();
-            if (picked.isEmpty() || picked.getRarity() == Rarity.COMMON) return;
-            MutableComponent name = Component.empty().append(picked.getHoverName()).withStyle(picked.getRarity().color());
-            tooltip.replace(JadeIds.CORE_OBJECT_NAME, name);
-        }
-
-        @Override
-        public int getDefaultPriority() {
-            return ObjectNameProvider.getBlock().getDefaultPriority() + 10;
-        }
+    @Override
+    public ResourceLocation getUid() {
+      return UID;
     }
 
-    private enum DroneIconProvider implements IComponentProvider<EntityAccessor> {
-        INSTANCE;
-
-        private static final ItemStack DRONE_ICON = new ItemStack(Items.DRONE);
-        private static final ResourceLocation UID = ResourceLocation.parse("opencomputers:drone_icon");
-
-        @Override
-        public ResourceLocation getUid() {
-            return UID;
-        }
-
-        @Nullable
-        @Override
-        public IElement getIcon(EntityAccessor accessor, IPluginConfig config, IElement currentIcon) {
-            return IElementHelper.get().item(DRONE_ICON);
-        }
-
-        @Override
-        public void appendTooltip(ITooltip tooltip, EntityAccessor accessor, IPluginConfig config) {
-        }
-
-        @Override
-        public int getDefaultPriority() {
-            return 100;
-        }
+    @Override
+    public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
+      ItemStack picked = accessor.getPickedResult();
+      if (picked.isEmpty() || picked.getRarity() == Rarity.COMMON) return;
+      MutableComponent name = Component.empty().append(picked.getHoverName()).withStyle(picked.getRarity().color());
+      tooltip.replace(JadeIds.CORE_OBJECT_NAME, name);
     }
+
+    @Override
+    public int getDefaultPriority() {
+      return ObjectNameProvider.getBlock().getDefaultPriority() + 10;
+    }
+  }
+
+  private enum DroneIconProvider implements IComponentProvider<EntityAccessor> {
+    INSTANCE;
+
+    private static final ItemStack DRONE_ICON = new ItemStack(Items.DRONE);
+    private static final ResourceLocation UID = ResourceLocation.parse("opencomputers:drone_icon");
+
+    @Override
+    public ResourceLocation getUid() {
+      return UID;
+    }
+
+    @Nullable
+    @Override
+    public IElement getIcon(EntityAccessor accessor, IPluginConfig config, IElement currentIcon) {
+      return IElementHelper.get().item(DRONE_ICON);
+    }
+
+    @Override
+    public void appendTooltip(ITooltip tooltip, EntityAccessor accessor, IPluginConfig config) {
+    }
+
+    @Override
+    public int getDefaultPriority() {
+      return 100;
+    }
+  }
 }

@@ -11,25 +11,25 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 
 public final class DriverMekanismComputer implements DriverBlock {
 
-    @Override
-    public boolean worksWith(final Level world, final BlockPos pos, final Direction side) {
-        return resolveTile(world, pos) instanceof IComputerTile;
-    }
+  @Override
+  public boolean worksWith(final Level world, final BlockPos pos, final Direction side) {
+    return resolveTile(world, pos) instanceof IComputerTile;
+  }
 
-    @Override
-    public ManagedEnvironment createEnvironment(final Level world, final BlockPos pos, final Direction side) {
-        final IComputerTile tile = (IComputerTile) resolveTile(world, pos);
-        return tile == null ? null : new EnvironmentMekanismMachine(tile);
-    }
+  @Override
+  public ManagedEnvironment createEnvironment(final Level world, final BlockPos pos, final Direction side) {
+    final IComputerTile tile = (IComputerTile) resolveTile(world, pos);
+    return tile == null ? null : new EnvironmentMekanismMachine(tile);
+  }
 
-    private static BlockEntity resolveTile(final Level world, final BlockPos pos) {
-        BlockEntity tile = world.getBlockEntity(pos);
-        if (tile instanceof TileEntityBoundingBlock boundingBlock) {
-            final BlockEntity main = boundingBlock.getMainTile(pos);
-            if (main != null) {
-                tile = main;
-            }
-        }
-        return tile;
+  private static BlockEntity resolveTile(final Level world, final BlockPos pos) {
+    BlockEntity tile = world.getBlockEntity(pos);
+    if (tile instanceof TileEntityBoundingBlock boundingBlock) {
+      final BlockEntity main = boundingBlock.getMainTile(pos);
+      if (main != null) {
+        tile = main;
+      }
     }
+    return tile;
+  }
 }

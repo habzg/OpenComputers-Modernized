@@ -5,17 +5,17 @@ import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.network.Node;
 
 public abstract class ArchitectureAPI {
-    protected final Machine machine;
+  protected final Machine machine;
 
-    protected ArchitectureAPI(Machine machine) {
-        this.machine = machine;
-    }
+  protected ArchitectureAPI(Machine machine) {
+    this.machine = machine;
+  }
 
-    protected Node node() {
-        return machine.node();
-    }
+  protected Node node() {
+    return machine.node();
+  }
 
-    protected Map<String, String> components() {
-        return machine.components();
-    }
+  protected Map<String, String> components() {
+    return machine.components();
+  }
 }

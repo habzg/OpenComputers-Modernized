@@ -20,47 +20,47 @@ import net.minecraft.world.entity.player.Player;
  * new behaviors are added, as well as to send states to the client.
  */
 public interface BehaviorProvider {
-    /**
-     * Create all behaviors valid for the specified player.
-     * <br>
-     * Note that this is only called on the server side when reconfiguring
-     * nanomachines. If you have a behavior that actually acts client-only,
-     * you still need to return it here, as it will be synchronized to the
-     * client using {@link #writeToNBT} and {@link #readFromNBT}.
-     *
-     * @param player the player the behaviors should be created for.
-     * @return list of new behaviors, may be <code>null</code>.
-     */
-    Iterable<Behavior> createBehaviors(Player player);
+  /**
+   * Create all behaviors valid for the specified player.
+   * <br>
+   * Note that this is only called on the server side when reconfiguring
+   * nanomachines. If you have a behavior that actually acts client-only,
+   * you still need to return it here, as it will be synchronized to the
+   * client using {@link #writeToNBT} and {@link #readFromNBT}.
+   *
+   * @param player the player the behaviors should be created for.
+   * @return list of new behaviors, may be <code>null</code>.
+   */
+  Iterable<Behavior> createBehaviors(Player player);
 
-    /**
-     * Write a behavior to NBT.
-     * <br>
-     * This will only be called for behaviors originally created by this provider.
-     * <br>
-     * This will only be called on the server. All behaviors not saved will be
-     * lost when loading again, they will <em>not</em> be regenerated using
-     * {@link #createBehaviors}, so make sure to save all your behaviors.
-     *
-     * @param behavior the behavior to serialize.
-     * @return the serialized representation of the specified behavior.
-     */
-    CompoundTag writeToNBT(Behavior behavior);
+  /**
+   * Write a behavior to NBT.
+   * <br>
+   * This will only be called for behaviors originally created by this provider.
+   * <br>
+   * This will only be called on the server. All behaviors not saved will be
+   * lost when loading again, they will <em>not</em> be regenerated using
+   * {@link #createBehaviors}, so make sure to save all your behaviors.
+   *
+   * @param behavior the behavior to serialize.
+   * @return the serialized representation of the specified behavior.
+   */
+  CompoundTag writeToNBT(Behavior behavior);
 
-    /**
-     * Restore a behavior from NBT.
-     * <br>
-     * You are <em>not</em> guaranteed that his nbt belongs to a behavior
-     * created by this provider! If the NBT cannot be handled, return
-     * <code>null</code>.
-     * <br>
-     * This is called both on the server and the client; on the server it
-     * is called when restoring a saved player, on the client when
-     * synchronizing a configuration.
-     *
-     * @param player the player the behaviors should be created for.
-     * @param nbt    the tag to restore the behavior from.
-     * @return the restored behavior, or <code>null</code> if unhandled.
-     */
-    Behavior readFromNBT(Player player, CompoundTag nbt);
+  /**
+   * Restore a behavior from NBT.
+   * <br>
+   * You are <em>not</em> guaranteed that his nbt belongs to a behavior
+   * created by this provider! If the NBT cannot be handled, return
+   * <code>null</code>.
+   * <br>
+   * This is called both on the server and the client; on the server it
+   * is called when restoring a saved player, on the client when
+   * synchronizing a configuration.
+   *
+   * @param player the player the behaviors should be created for.
+   * @param nbt    the tag to restore the behavior from.
+   * @return the restored behavior, or <code>null</code> if unhandled.
+   */
+  Behavior readFromNBT(Player player, CompoundTag nbt);
 }

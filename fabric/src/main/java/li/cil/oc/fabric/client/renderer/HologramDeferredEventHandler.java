@@ -7,10 +7,10 @@ import net.minecraft.client.Minecraft;
 @SuppressWarnings("unused")
 public final class HologramDeferredEventHandler {
 
-    public static void init() {
-        WorldRenderEvents.AFTER_TRANSLUCENT.register(context -> {
-            var bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
-            HologramRenderer.drawPending(bufferSource);
-        });
-    }
+  public static void init() {
+    WorldRenderEvents.AFTER_TRANSLUCENT.register(context -> {
+      var bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
+      HologramRenderer.drawPending(bufferSource);
+    });
+  }
 }

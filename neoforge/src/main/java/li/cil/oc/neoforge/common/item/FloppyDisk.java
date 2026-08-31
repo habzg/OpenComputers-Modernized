@@ -7,13 +7,13 @@ import net.minecraft.world.level.LevelReader;
 import org.jetbrains.annotations.NotNull;
 
 public class FloppyDisk extends li.cil.oc.core.impl.common.item.FloppyDisk {
-    public FloppyDisk(Properties properties) {
-        super(properties);
-    }
+  public FloppyDisk(Properties properties) {
+    super(properties);
+  }
 
-    @Override
-    public boolean doesSneakBypassUse(@NotNull ItemStack ignoredStack, @NotNull LevelReader ignoredLevel, @NotNull BlockPos ignoredPos, @NotNull Player ignoredPlayer) {
-        return true;
-    }
+  @Override
+  public boolean doesSneakBypassUse(@NotNull ItemStack ignoredStack, @NotNull LevelReader ignoredLevel, @NotNull BlockPos ignoredPos, @NotNull Player ignoredPlayer) {
+    return true;
+  }
 
 }

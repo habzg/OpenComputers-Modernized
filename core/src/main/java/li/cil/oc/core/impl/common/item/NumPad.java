@@ -6,11 +6,11 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 public class NumPad extends DelegateItem {
-    public NumPad(Item.Properties properties) {
-        super(properties);
-    }
+  public NumPad(Item.Properties properties) {
+    super(properties);
+  }
 
-    @Override
-    public void tooltipBody(ItemStack stack, List<Component> tooltip) {
-    }
+  @Override
+  public void tooltipBody(ItemStack stack, List<Component> tooltip) {
+  }
 }

@@ -1,11 +1,11 @@
 package li.cil.oc.core.integration;
 
 public interface Mod {
-    String id();
+  String id();
 
-    boolean isModAvailable();
+  boolean isModAvailable();
 
-    default boolean isAvailable() {
-        return isModAvailable();
-    }
+  default boolean isAvailable() {
+    return isModAvailable();
+  }
 }

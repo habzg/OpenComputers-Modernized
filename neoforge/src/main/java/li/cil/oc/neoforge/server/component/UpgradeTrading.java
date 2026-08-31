@@ -6,12 +6,12 @@ import net.minecraft.world.item.trading.Merchant;
 import org.jetbrains.annotations.NotNull;
 
 public class UpgradeTrading extends UpgradeTradingBase {
-    public UpgradeTrading(EnvironmentHost host) {
-        super(host);
-    }
+  public UpgradeTrading(EnvironmentHost host) {
+    super(host);
+  }
 
-    @Override
-    protected @NotNull Object createTradeObject(@NotNull Merchant merchant, int recipeID, int merchantID) {
-        return new Trade(this, merchant, recipeID, merchantID);
-    }
+  @Override
+  protected @NotNull Object createTradeObject(@NotNull Merchant merchant, int recipeID, int merchantID) {
+    return new Trade(this, merchant, recipeID, merchantID);
+  }
 }

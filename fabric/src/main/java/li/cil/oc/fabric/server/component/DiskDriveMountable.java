@@ -14,29 +14,29 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import org.jetbrains.annotations.NotNull;
 
 public class DiskDriveMountable extends DiskDriveMountableBase {
-    public DiskDriveMountable(Rack rack, int slot) {
-        super(rack, slot);
-    }
+  public DiskDriveMountable(Rack rack, int slot) {
+    super(rack, slot);
+  }
 
-    @Override
-    protected void openDiskDriveGui(@NotNull Player player, @NotNull BlockPosition pos, int slot) {
-        player.openMenu(new ExtendedScreenHandlerFactory<MenuData>() {
-            @Override
-            public @NotNull Component getDisplayName() {
-                return Component.translatable("container.opencomputers.diskdrive");
-            }
+  @Override
+  protected void openDiskDriveGui(@NotNull Player player, @NotNull BlockPosition pos, int slot) {
+    player.openMenu(new ExtendedScreenHandlerFactory<MenuData>() {
+      @Override
+      public @NotNull Component getDisplayName() {
+        return Component.translatable("container.opencomputers.diskdrive");
+      }
 
-            @Override
-            public AbstractContainerMenu createMenu(int id, @NotNull Inventory inv, @NotNull Player p) {
-                return new li.cil.oc.core.impl.common.container.DiskDrive(
-                        li.cil.oc.fabric.common.init.Menus.DISK_DRIVE, id, inv,
-                        (net.minecraft.world.Container) rack.getMountable(slot));
-            }
+      @Override
+      public AbstractContainerMenu createMenu(int id, @NotNull Inventory inv, @NotNull Player p) {
+        return new li.cil.oc.core.impl.common.container.DiskDrive(
+          li.cil.oc.fabric.common.init.Menus.DISK_DRIVE, id, inv,
+          (net.minecraft.world.Container) rack.getMountable(slot));
+      }
 
-            @Override
-            public MenuData getScreenOpeningData(@NotNull ServerPlayer p) {
-                return new MenuData(GuiType.DiskDriveMountableInRack, pos.x(), GuiType.embedSlot(pos.y(), slot), pos.z(), "");
-            }
-        });
-    }
+      @Override
+      public MenuData getScreenOpeningData(@NotNull ServerPlayer p) {
+        return new MenuData(GuiType.DiskDriveMountableInRack, pos.x(), GuiType.embedSlot(pos.y(), slot), pos.z(), "");
+      }
+    });
+  }
 }

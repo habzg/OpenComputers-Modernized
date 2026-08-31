@@ -9,33 +9,33 @@ import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("unused")
 public final class InventoryProviderServer implements InventoryProvider {
-    @Override
-    public boolean worksWith(ItemStack stack, Player player) {
-        return new DriverServer().worksWith(stack);
-    }
+  @Override
+  public boolean worksWith(ItemStack stack, Player player) {
+    return new DriverServer().worksWith(stack);
+  }
 
-    @Override
-    public Container getInventory(ItemStack stack, Player player) {
-        return new ServerInventory() {
-            private final ItemStack container = stack;
+  @Override
+  public Container getInventory(ItemStack stack, Player player) {
+    return new ServerInventory() {
+      private final ItemStack container = stack;
 
-            @Override
-            public ItemStack container() {
-                return container;
-            }
+      @Override
+      public ItemStack container() {
+        return container;
+      }
 
-            @Override
-            public void updateItems(int slot, ItemStack stack) {
-            }
+      @Override
+      public void updateItems(int slot, ItemStack stack) {
+      }
 
-            @Override
-            public boolean stillValid(@NotNull Player player) {
-                return true;
-            }
+      @Override
+      public boolean stillValid(@NotNull Player player) {
+        return true;
+      }
 
-            @Override
-            public void clearContent() {
-            }
-        };
-    }
+      @Override
+      public void clearContent() {
+      }
+    };
+  }
 }

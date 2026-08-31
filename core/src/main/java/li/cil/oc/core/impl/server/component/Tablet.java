@@ -15,30 +15,30 @@ import li.cil.oc.core.impl.common.item.TabletWrapper;
 import li.cil.oc.core.util.ResultWrapper;
 
 public class Tablet extends AbstractManagedEnvironment implements DeviceInfo {
-    public final TabletWrapper tablet;
-    public final Node node = Network.newNode(this, Visibility.Network)
-            .withComponent("tablet")
-            .withConnector(OCSettings.get().bufferTablet)
-            .create();
-    private final Map<String, String> deviceInfo;
+  public final TabletWrapper tablet;
+  public final Node node = Network.newNode(this, Visibility.Network)
+    .withComponent("tablet")
+    .withConnector(OCSettings.get().bufferTablet)
+    .create();
+  private final Map<String, String> deviceInfo;
 
-    public Tablet(TabletWrapper tablet) {
-        this.tablet = tablet;
-        deviceInfo = Map.of(DeviceAttribute.Class, DeviceClass.System, DeviceAttribute.Description, "Tablet", DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor, DeviceAttribute.Product, "Jogger", DeviceAttribute.Capacity, String.valueOf(tablet.getContainerSize()));
-    }
+  public Tablet(TabletWrapper tablet) {
+    this.tablet = tablet;
+    deviceInfo = Map.of(DeviceAttribute.Class, DeviceClass.System, DeviceAttribute.Description, "Tablet", DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor, DeviceAttribute.Product, "Jogger", DeviceAttribute.Capacity, String.valueOf(tablet.getContainerSize()));
+  }
 
-    @Override
-    public Map<String, String> getDeviceInfo() {
-        return deviceInfo;
-    }
+  @Override
+  public Map<String, String> getDeviceInfo() {
+    return deviceInfo;
+  }
 
-    @Callback(doc = "function():number -- Gets the pitch of the player holding the tablet.")
-    public Object[] getPitch(Context context, Arguments args) {
-        return ResultWrapper.result((double) tablet.player().getXRot());
-    }
+  @Callback(doc = "function():number -- Gets the pitch of the player holding the tablet.")
+  public Object[] getPitch(Context context, Arguments args) {
+    return ResultWrapper.result((double) tablet.player().getXRot());
+  }
 
-    @Callback(doc = "function():number -- Gets the yaw of the player holding the tablet.")
-    public Object[] getYaw(Context context, Arguments args) {
-        return ResultWrapper.result((double) tablet.player().getYRot());
-    }
+  @Callback(doc = "function():number -- Gets the yaw of the player holding the tablet.")
+  public Object[] getYaw(Context context, Arguments args) {
+    return ResultWrapper.result((double) tablet.player().getYRot());
+  }
 }

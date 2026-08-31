@@ -6,28 +6,28 @@ import net.minecraft.world.item.ItemStack;
 
 
 public interface ComponentInventory extends Environment, Inventory, li.cil.oc.core.impl.common.inventory.ComponentInventory {
-    ItemStack[] pendingRemovals();
+  ItemStack[] pendingRemovals();
 
-    ItemStack[] pendingAdds();
+  ItemStack[] pendingAdds();
 
-    void readFromNBTForServer(CompoundTag nbt) ;
+  void readFromNBTForServer(CompoundTag nbt);
 
-    void writeToNBTForServer(CompoundTag nbt);
+  void writeToNBTForServer(CompoundTag nbt);
 
-    void readFromNBTForClient(CompoundTag nbt);
+  void readFromNBTForClient(CompoundTag nbt);
 
-    void writeToNBTForClient(CompoundTag nbt);
+  void writeToNBTForClient(CompoundTag nbt);
 
-    void onConnect(Node node);
+  void onConnect(Node node);
 
-    default void onDisconnect(Node node) {
-        Environment.super.onDisconnect(node);
-        if (node == node()) {
-            disconnectComponents();
-        }
+  default void onDisconnect(Node node) {
+    Environment.super.onDisconnect(node);
+    if (node == node()) {
+      disconnectComponents();
     }
+  }
 
-    void initialize();
+  void initialize();
 
-    void dispose();
+  void dispose();
 }

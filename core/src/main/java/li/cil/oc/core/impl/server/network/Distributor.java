@@ -1,17 +1,17 @@
 package li.cil.oc.core.impl.server.network;
 
 public interface Distributor {
-    double globalBuffer();
+  double globalBuffer();
 
-    void globalBuffer_$eq(double value);
+  void globalBuffer_$eq(double value);
 
-    double globalBufferSize();
+  double globalBufferSize();
 
-    void globalBufferSize_$eq(double value);
+  void globalBufferSize_$eq(double value);
 
-    void addConnector(Connector connector);
+  void addConnector(Connector connector);
 
-    void removeConnector(Connector connector);
+  void removeConnector(Connector connector);
 
-    double changeBuffer(double delta);
+  double changeBuffer(double delta);
 }

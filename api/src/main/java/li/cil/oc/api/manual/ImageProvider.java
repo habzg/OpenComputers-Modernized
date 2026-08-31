@@ -8,21 +8,21 @@ package li.cil.oc.api.manual;
  * area it will render to.
  */
 public interface ImageProvider {
-    /**
-     * Gets an image renderer for the specified data.
-     * <br>
-     * The data passed here will be part of the image URL following the prefix
-     * that the provider was registered with. So for example, if the provider
-     * was registered for the prefix <code>custom</code>, and the image to be
-     * rendered in the Markdown document was <code>[blah](custom:the data]</code>,
-     * then the string passed where would be <code>the data</code>.
-     * <br>
-     * If there is no appropriate image renderer (for example, for the built-in
-     * item stack renderers: if the item definition is invalid), this should
-     * return <code>null</code>, it should <em>never</em> throw an exception.
-     *
-     * @param data the data part of the image definition.
-     * @return the image renderer for the data.
-     */
-    ImageRenderer getImage(String data);
+  /**
+   * Gets an image renderer for the specified data.
+   * <br>
+   * The data passed here will be part of the image URL following the prefix
+   * that the provider was registered with. So for example, if the provider
+   * was registered for the prefix <code>custom</code>, and the image to be
+   * rendered in the Markdown document was <code>[blah](custom:the data]</code>,
+   * then the string passed where would be <code>the data</code>.
+   * <br>
+   * If there is no appropriate image renderer (for example, for the built-in
+   * item stack renderers: if the item definition is invalid), this should
+   * return <code>null</code>, it should <em>never</em> throw an exception.
+   *
+   * @param data the data part of the image definition.
+   * @return the image renderer for the data.
+   */
+  ImageRenderer getImage(String data);
 }

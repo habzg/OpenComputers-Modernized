@@ -4,19 +4,19 @@ import li.cil.oc.api.network.SidedEnvironment;
 
 
 public interface PowerBalancer extends PowerInformation, SidedEnvironment {
-    double globalBuffer();
+  double globalBuffer();
 
-    void globalBuffer(double value);
+  void globalBuffer(double value);
 
-    double globalBufferSize();
+  double globalBufferSize();
 
-    void globalBufferSize(double value);
+  void globalBufferSize(double value);
 
-    boolean isServer();
+  boolean isServer();
 
-    @SuppressWarnings("unused")
-    boolean isConnected();
+  @SuppressWarnings("unused")
+  boolean isConnected();
 
-    @SuppressWarnings("unused")
-    void updateEntity() ;
+  @SuppressWarnings("unused")
+  void updateEntity();
 }

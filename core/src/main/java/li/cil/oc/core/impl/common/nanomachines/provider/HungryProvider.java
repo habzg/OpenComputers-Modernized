@@ -11,39 +11,39 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 
 public class HungryProvider extends ScalaProvider {
-    public static final int FillCount = 10;
+  public static final int FillCount = 10;
 
-    public static final DamageSourceWithRandomCause HungryDamage = new DamageSourceWithRandomCause("oc.nanomachinesHungry", 3);
+  public static final DamageSourceWithRandomCause HungryDamage = new DamageSourceWithRandomCause("oc.nanomachinesHungry", 3);
 
-    public HungryProvider() {
-        super("d697c24a-014c-4773-a288-23084a59e9e8");
+  public HungryProvider() {
+    super("d697c24a-014c-4773-a288-23084a59e9e8");
+  }
+
+  @Override
+  public Iterable<Behavior> createScalaBehaviors(Player player) {
+    List<Behavior> list = new ArrayList<>();
+    for (int i = 0; i < FillCount; i++) {
+      list.add(new HungryBehavior(player));
+    }
+    return list;
+  }
+
+  @Override
+  protected Behavior readBehaviorFromNBT(Player player, CompoundTag nbt) {
+    return new HungryBehavior(player);
+  }
+
+  public static class HungryBehavior extends AbstractBehavior {
+    public HungryBehavior(Player player) {
+      super(player);
     }
 
     @Override
-    public Iterable<Behavior> createScalaBehaviors(Player player) {
-        List<Behavior> list = new ArrayList<>();
-        for (int i = 0; i < FillCount; i++) {
-            list.add(new HungryBehavior(player));
-        }
-        return list;
+    public void onDisable(DisableReason reason) {
+      if (reason == DisableReason.OutOfEnergy) {
+        player.hurt(HungryDamage, OCSettings.get().nanomachinesHungryDamage);
+        li.cil.oc.api.Nanomachines.getController(player).changeBuffer(OCSettings.get().nanomachinesHungryEnergyRestored);
+      }
     }
-
-    @Override
-    protected Behavior readBehaviorFromNBT(Player player, CompoundTag nbt) {
-        return new HungryBehavior(player);
-    }
-
-    public static class HungryBehavior extends AbstractBehavior {
-        public HungryBehavior(Player player) {
-            super(player);
-        }
-
-        @Override
-        public void onDisable(DisableReason reason) {
-            if (reason == DisableReason.OutOfEnergy) {
-                player.hurt(HungryDamage, OCSettings.get().nanomachinesHungryDamage);
-                li.cil.oc.api.Nanomachines.getController(player).changeBuffer(OCSettings.get().nanomachinesHungryEnergyRestored);
-            }
-        }
-    }
+  }
 }

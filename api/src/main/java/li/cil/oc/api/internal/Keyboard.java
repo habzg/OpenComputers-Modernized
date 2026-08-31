@@ -16,33 +16,33 @@ import net.minecraft.world.entity.player.Player;
  * </pre>
  */
 public interface Keyboard extends Environment, Persistable {
-    /**
-     * Sets a custom usability override.
-     * <br>
-     * Instead of the default check, which is based on the component's owner's
-     * position, the specified callback will be queried for usability checks
-     * instead.
-     * <br>
-     * Pass <code>null</code> here to unset a previously set override.
-     *
-     * @param callback the usability checker to use.
-     */
-    void setUsableOverride(UsabilityChecker callback);
+  /**
+   * Sets a custom usability override.
+   * <br>
+   * Instead of the default check, which is based on the component's owner's
+   * position, the specified callback will be queried for usability checks
+   * instead.
+   * <br>
+   * Pass <code>null</code> here to unset a previously set override.
+   *
+   * @param callback the usability checker to use.
+   */
+  void setUsableOverride(UsabilityChecker callback);
 
+  /**
+   * Contract interface that has to implemented for usability check overrides.
+   *
+   * @see #setUsableOverride(Keyboard.UsabilityChecker)
+   */
+  interface UsabilityChecker {
     /**
-     * Contract interface that has to implemented for usability check overrides.
+     * Whether the specified keyboard is usable by the specified player.
      *
-     * @see #setUsableOverride(Keyboard.UsabilityChecker)
+     * @param keyboard the keyboard to check for.
+     * @param player   the player to check for.
+     * @return whether the keyboard is usable by the player.
      */
-    interface UsabilityChecker {
-        /**
-         * Whether the specified keyboard is usable by the specified player.
-         *
-         * @param keyboard the keyboard to check for.
-         * @param player   the player to check for.
-         * @return whether the keyboard is usable by the player.
-         */
-        @SuppressWarnings("unused")
-        boolean isUsableByPlayer(Keyboard keyboard, Player player);
-    }
+    @SuppressWarnings("unused")
+    boolean isUsableByPlayer(Keyboard keyboard, Player player);
+  }
 }

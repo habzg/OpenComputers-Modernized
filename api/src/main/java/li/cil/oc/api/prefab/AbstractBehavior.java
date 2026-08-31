@@ -11,45 +11,45 @@ import net.minecraft.world.entity.player.Player;
  * This implementation will also store the player the behavior was created for.
  */
 public abstract class AbstractBehavior implements Behavior {
-    /**
-     * The player this behavior was created for.
-     */
-    public final Player player;
+  /**
+   * The player this behavior was created for.
+   */
+  public final Player player;
 
-    /**
-     * Pass along the player the behavior was created for here to have it stored
-     * for later use.
-     *
-     * @param player the player the behavior was created for.
-     */
-    @SuppressWarnings("unused")
-    protected AbstractBehavior(Player player) {
-        this.player = player;
-    }
+  /**
+   * Pass along the player the behavior was created for here to have it stored
+   * for later use.
+   *
+   * @param player the player the behavior was created for.
+   */
+  @SuppressWarnings("unused")
+  protected AbstractBehavior(Player player) {
+    this.player = player;
+  }
 
-    /**
-     * Use this if you do not need the player reference in your implementation.
-     */
-    @SuppressWarnings("unused")
-    protected AbstractBehavior() {
-        this(null);
-    }
+  /**
+   * Use this if you do not need the player reference in your implementation.
+   */
+  @SuppressWarnings("unused")
+  protected AbstractBehavior() {
+    this(null);
+  }
 
-    @Override
-    public String getNameHint() {
-        return null;
-    }
+  @Override
+  public String getNameHint() {
+    return null;
+  }
 
-    @Override
-    public void onEnable() {
-    }
+  @Override
+  public void onEnable() {
+  }
 
-    @Override
-    public void onDisable(DisableReason reason) {
-    }
+  @Override
+  public void onDisable(DisableReason reason) {
+  }
 
-    @Override
-    public void update() {
-    }
+  @Override
+  public void update() {
+  }
 
 }

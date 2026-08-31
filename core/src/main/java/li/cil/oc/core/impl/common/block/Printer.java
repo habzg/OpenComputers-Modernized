@@ -17,51 +17,51 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.NotNull;
 
 public class Printer extends SimpleBlock implements GUI, StateAware {
-    public static BlockEntityType<?> TYPE;
+  public static BlockEntityType<?> TYPE;
 
-    public Printer(BlockEntityType<?> blockType) {
-        super();
-        TYPE = blockType;
-    }
+  public Printer(BlockEntityType<?> blockType) {
+    super();
+    TYPE = blockType;
+  }
 
-    public Printer() {
-        super();
-    }
+  public Printer() {
+    super();
+  }
 
-    @Override
-    public int guiType() {
-        return GuiType.Printer;
-    }
+  @Override
+  public int guiType() {
+    return GuiType.Printer;
+  }
 
-    @Override
-    public boolean skipRendering(@NotNull BlockState state, @NotNull BlockState adjacentState, @NotNull Direction side) {
-        return false;
-    }
+  @Override
+  public boolean skipRendering(@NotNull BlockState state, @NotNull BlockState adjacentState, @NotNull Direction side) {
+    return false;
+  }
 
-    @Override
-    public @NotNull VoxelShape getOcclusionShape(@NotNull BlockState state, @NotNull BlockGetter level, @NotNull BlockPos pos) {
-        return Shapes.empty();
-    }
+  @Override
+  public @NotNull VoxelShape getOcclusionShape(@NotNull BlockState state, @NotNull BlockGetter level, @NotNull BlockPos pos) {
+    return Shapes.empty();
+  }
 
-    @Override
-    public BlockEntity newBlockEntity(@NotNull BlockPos pos, @NotNull BlockState state) {
-        return new li.cil.oc.core.impl.common.blockentity.Printer(pos, state);
-    }
+  @Override
+  public BlockEntity newBlockEntity(@NotNull BlockPos pos, @NotNull BlockState state) {
+    return new li.cil.oc.core.impl.common.blockentity.Printer(pos, state);
+  }
 
-    @Override
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(@NotNull Level level, @NotNull BlockState state, @NotNull BlockEntityType<T> type) {
-        if (level.isClientSide()) return null;
-        return type == TYPE ? (lvl, pos, st, te) -> {
-            try {
-                ((li.cil.oc.core.impl.common.blockentity.Printer) te).updateEntity();
-            } catch (Exception e) {
-                Log.get().warn("Error in printer tick", e);
-            }
-        } : null;
-    }
+  @Override
+  public <T extends BlockEntity> BlockEntityTicker<T> getTicker(@NotNull Level level, @NotNull BlockState state, @NotNull BlockEntityType<T> type) {
+    if (level.isClientSide()) return null;
+    return type == TYPE ? (lvl, pos, st, te) -> {
+      try {
+        ((li.cil.oc.core.impl.common.blockentity.Printer) te).updateEntity();
+      } catch (Exception e) {
+        Log.get().warn("Error in printer tick", e);
+      }
+    } : null;
+  }
 
-    @Override
-    public java.util.Set<li.cil.oc.api.util.StateAware.State> getCurrentState() {
-        return java.util.EnumSet.noneOf(li.cil.oc.api.util.StateAware.State.class);
-    }
+  @Override
+  public java.util.Set<li.cil.oc.api.util.StateAware.State> getCurrentState() {
+    return java.util.EnumSet.noneOf(li.cil.oc.api.util.StateAware.State.class);
+  }
 }

@@ -25,14 +25,14 @@ import net.minecraft.world.entity.player.Player;
  * also means that <em>you should not implement this</em>.
  */
 public interface Tablet extends EnvironmentHost, MachineHost, Rotatable {
-    /**
-     * Returns the player last holding the tablet.
-     * <br>
-     * Note that this value may change over the lifetime of a tablet instance.
-     * The player may also already have dropped the tablet - this value will
-     * <em>not</em> be set to <code>null</code> in that case!
-     *
-     * @return the player last holding the tablet.
-     */
-    Player player();
+  /**
+   * Returns the player last holding the tablet.
+   * <br>
+   * Note that this value may change over the lifetime of a tablet instance.
+   * The player may also already have dropped the tablet - this value will
+   * <em>not</em> be set to <code>null</code> in that case!
+   *
+   * @return the player last holding the tablet.
+   */
+  Player player();
 }

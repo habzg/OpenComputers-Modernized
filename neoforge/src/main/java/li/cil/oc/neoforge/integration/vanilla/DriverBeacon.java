@@ -21,65 +21,65 @@ import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 
 @SuppressWarnings("unused")
 public final class DriverBeacon extends DriverSidedBlockEntity {
-    @Override
-    public Class<?> getBlockEntityClass() {
-        return BeaconBlockEntity.class;
+  @Override
+  public Class<?> getBlockEntityClass() {
+    return BeaconBlockEntity.class;
+  }
+
+  @Override
+  public ManagedEnvironment createEnvironment(Level world, BlockPos pos, Direction side) {
+    return new Environment((BeaconBlockEntity) world.getBlockEntity(pos));
+  }
+
+  public static final class Environment extends ManagedBlockEntityEnvironment<BeaconBlockEntity> implements NamedBlock {
+    public Environment(BeaconBlockEntity BlockEntity) {
+      super(BlockEntity, "beacon");
+    }
+
+    private static String getEffectName(Holder<MobEffect> effect) {
+      if (effect != null) {
+        var key = effect.getKey();
+        if (key != null) {
+          return key.location().toString();
+        }
+        return effect.value().getDescriptionId();
+      }
+      return null;
     }
 
     @Override
-    public ManagedEnvironment createEnvironment(Level world, BlockPos pos, Direction side) {
-        return new Environment((BeaconBlockEntity) world.getBlockEntity(pos));
+    public String preferredName() {
+      return "beacon";
     }
 
-    public static final class Environment extends ManagedBlockEntityEnvironment<BeaconBlockEntity> implements NamedBlock {
-        public Environment(BeaconBlockEntity BlockEntity) {
-            super(BlockEntity, "beacon");
-        }
-
-        private static String getEffectName(Holder<MobEffect> effect) {
-            if (effect != null) {
-                var key = effect.getKey();
-                if (key != null) {
-                    return key.location().toString();
-                }
-                return effect.value().getDescriptionId();
-            }
-            return null;
-        }
-
-        @Override
-        public String preferredName() {
-            return "beacon";
-        }
-
-        @Override
-        public int priority() {
-            return 0;
-        }
-
-        @Callback(doc = "function():number -- Get the number of levels for this beacon.")
-        public Object[] getLevels(Context context, Arguments args) {
-            return ResultWrapper.result(getBlockEntity().levels);
-        }
-
-        @Callback(doc = "function():string -- Get the name of the active primary effect.")
-        public Object[] getPrimaryEffect(Context context, Arguments args) {
-            return ResultWrapper.result(getEffectName(getBlockEntity().primaryPower));
-        }
-
-        @Callback(doc = "function():string -- Get the name of the active secondary effect.")
-        public Object[] getSecondaryEffect(Context context, Arguments args) {
-            return ResultWrapper.result(getEffectName(getBlockEntity().secondaryPower));
-        }
+    @Override
+    public int priority() {
+      return 0;
     }
 
-    public static final class Provider implements EnvironmentProvider {
-        @Override
-        public Class<?> getEnvironment(ItemStack stack) {
-            if (stack != null && Block.byItem(stack.getItem()) == Blocks.BEACON) {
-                return Environment.class;
-            }
-            return null;
-        }
+    @Callback(doc = "function():number -- Get the number of levels for this beacon.")
+    public Object[] getLevels(Context context, Arguments args) {
+      return ResultWrapper.result(getBlockEntity().levels);
     }
+
+    @Callback(doc = "function():string -- Get the name of the active primary effect.")
+    public Object[] getPrimaryEffect(Context context, Arguments args) {
+      return ResultWrapper.result(getEffectName(getBlockEntity().primaryPower));
+    }
+
+    @Callback(doc = "function():string -- Get the name of the active secondary effect.")
+    public Object[] getSecondaryEffect(Context context, Arguments args) {
+      return ResultWrapper.result(getEffectName(getBlockEntity().secondaryPower));
+    }
+  }
+
+  public static final class Provider implements EnvironmentProvider {
+    @Override
+    public Class<?> getEnvironment(ItemStack stack) {
+      if (stack != null && Block.byItem(stack.getItem()) == Blocks.BEACON) {
+        return Environment.class;
+      }
+      return null;
+    }
+  }
 }

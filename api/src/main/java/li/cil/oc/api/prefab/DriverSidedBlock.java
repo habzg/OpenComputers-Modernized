@@ -1,6 +1,7 @@
 package li.cil.oc.api.prefab;
 
-import li.cil.oc.api.driver.DriverBlock;import net.minecraft.core.BlockPos;
+import li.cil.oc.api.driver.DriverBlock;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
@@ -27,29 +28,29 @@ import net.minecraft.world.level.block.state.BlockState;
  */
 
 public abstract class DriverSidedBlock implements DriverBlock {
-    protected final ItemStack[] blocks;
+  protected final ItemStack[] blocks;
 
-    @SuppressWarnings("unused")
-    protected DriverSidedBlock(final ItemStack... blocks) {
-        this.blocks = blocks.clone();
-    }
+  @SuppressWarnings("unused")
+  protected DriverSidedBlock(final ItemStack... blocks) {
+    this.blocks = blocks.clone();
+  }
 
-    @Override
-    public boolean worksWith(final Level level, final BlockPos pos, final Direction side) {
-        final BlockState state = level.getBlockState(pos);
-        return worksWith(state.getBlock(), state);
-    }
+  @Override
+  public boolean worksWith(final Level level, final BlockPos pos, final Direction side) {
+    final BlockState state = level.getBlockState(pos);
+    return worksWith(state.getBlock(), state);
+  }
 
-    @SuppressWarnings("unused")
-    protected boolean worksWith(final Block referenceBlock, final BlockState referenceState) {
-        for (ItemStack stack : blocks) {
-            if (stack != null && stack.getItem() instanceof BlockItem item) {
-                final Block supportedBlock = item.getBlock();
-                if (referenceBlock == supportedBlock) {
-                    return true;
-                }
-            }
+  @SuppressWarnings("unused")
+  protected boolean worksWith(final Block referenceBlock, final BlockState referenceState) {
+    for (ItemStack stack : blocks) {
+      if (stack != null && stack.getItem() instanceof BlockItem item) {
+        final Block supportedBlock = item.getBlock();
+        if (referenceBlock == supportedBlock) {
+          return true;
         }
-        return false;
+      }
     }
+    return false;
+  }
 }

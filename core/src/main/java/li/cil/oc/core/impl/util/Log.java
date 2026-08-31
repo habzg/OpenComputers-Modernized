@@ -4,12 +4,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class Log {
-    private static final Logger LOG = LoggerFactory.getLogger("OpenComputers");
+  private static final Logger LOG = LoggerFactory.getLogger("OpenComputers");
 
-    private Log() {
-    }
+  private Log() {
+  }
 
-    public static Logger get() {
-        return LOG;
-    }
+  public static Logger get() {
+    return LOG;
+  }
 }

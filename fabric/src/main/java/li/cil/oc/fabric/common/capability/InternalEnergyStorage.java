@@ -7,53 +7,53 @@ import net.minecraft.core.Direction;
 import team.reborn.energy.api.EnergyStorage;
 
 public final class InternalEnergyStorage implements EnergyStorage {
-    private final PowerAcceptor tile;
-    private final Direction side;
+  private final PowerAcceptor tile;
+  private final Direction side;
 
-    public InternalEnergyStorage(final PowerAcceptor tile, final Direction side) {
-        this.tile = tile;
-        this.side = side;
-    }
+  public InternalEnergyStorage(final PowerAcceptor tile, final Direction side) {
+    this.tile = tile;
+    this.side = side;
+  }
 
-    @Override
-    public long getAmount() {
-        return Power.toRF(tile.globalBuffer(side));
-    }
+  @Override
+  public long getAmount() {
+    return Power.toRF(tile.globalBuffer(side));
+  }
 
-    @Override
-    public long getCapacity() {
-        return Power.toRF(tile.globalBufferSize(side));
-    }
+  @Override
+  public long getCapacity() {
+    return Power.toRF(tile.globalBufferSize(side));
+  }
 
-    @Override
-    public boolean supportsInsertion() {
-        return tile.canConnectPower(side);
-    }
+  @Override
+  public boolean supportsInsertion() {
+    return tile.canConnectPower(side);
+  }
 
-    @Override
-    public long insert(long maxAmount, TransactionContext transaction) {
-        double ocAmount = Power.fromRF((int) Math.min(maxAmount, Integer.MAX_VALUE));
-        double received = tile.tryChangeBuffer(side, ocAmount, false);
-        if (received > 0) {
-            if (transaction == null) {
-                return Power.toRF(tile.tryChangeBuffer(side, received, true));
-            }
-            transaction.addCloseCallback((t, result) -> {
-                if (result == TransactionContext.Result.COMMITTED) {
-                    tile.tryChangeBuffer(side, received, true);
-                }
-            });
+  @Override
+  public long insert(long maxAmount, TransactionContext transaction) {
+    double ocAmount = Power.fromRF((int) Math.min(maxAmount, Integer.MAX_VALUE));
+    double received = tile.tryChangeBuffer(side, ocAmount, false);
+    if (received > 0) {
+      if (transaction == null) {
+        return Power.toRF(tile.tryChangeBuffer(side, received, true));
+      }
+      transaction.addCloseCallback((t, result) -> {
+        if (result == TransactionContext.Result.COMMITTED) {
+          tile.tryChangeBuffer(side, received, true);
         }
-        return Power.toRF(received);
+      });
     }
+    return Power.toRF(received);
+  }
 
-    @Override
-    public boolean supportsExtraction() {
-        return false;
-    }
+  @Override
+  public boolean supportsExtraction() {
+    return false;
+  }
 
-    @Override
-    public long extract(long maxAmount, TransactionContext transaction) {
-        return 0;
-    }
+  @Override
+  public long extract(long maxAmount, TransactionContext transaction) {
+    return 0;
+  }
 }

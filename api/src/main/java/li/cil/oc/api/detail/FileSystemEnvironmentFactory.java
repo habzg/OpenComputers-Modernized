@@ -6,6 +6,6 @@ import li.cil.oc.api.network.ManagedEnvironment;
 
 @FunctionalInterface
 public interface FileSystemEnvironmentFactory {
-    @SuppressWarnings("unused")
-    ManagedEnvironment create(li.cil.oc.api.fs.FileSystem fileSystem, Label label, EnvironmentHost host, String accessSound, int speed);
+  @SuppressWarnings("unused")
+  ManagedEnvironment create(li.cil.oc.api.fs.FileSystem fileSystem, Label label, EnvironmentHost host, String accessSound, int speed);
 }

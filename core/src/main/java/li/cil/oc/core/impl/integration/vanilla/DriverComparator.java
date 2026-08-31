@@ -18,44 +18,44 @@ import net.minecraft.world.level.block.entity.ComparatorBlockEntity;
 
 @SuppressWarnings("unused")
 public final class DriverComparator extends DriverSidedBlockEntity {
-    @Override
-    public Class<?> getBlockEntityClass() {
-        return ComparatorBlockEntity.class;
+  @Override
+  public Class<?> getBlockEntityClass() {
+    return ComparatorBlockEntity.class;
+  }
+
+  @Override
+  public ManagedEnvironment createEnvironment(Level world, BlockPos pos, Direction side) {
+    return new Environment((ComparatorBlockEntity) world.getBlockEntity(pos));
+  }
+
+  public static final class Environment extends ManagedBlockEntityEnvironment<ComparatorBlockEntity> implements NamedBlock {
+    public Environment(ComparatorBlockEntity BlockEntity) {
+      super(BlockEntity, "comparator");
     }
 
     @Override
-    public ManagedEnvironment createEnvironment(Level world, BlockPos pos, Direction side) {
-        return new Environment((ComparatorBlockEntity) world.getBlockEntity(pos));
+    public String preferredName() {
+      return "comparator";
     }
 
-    public static final class Environment extends ManagedBlockEntityEnvironment<ComparatorBlockEntity> implements NamedBlock {
-        public Environment(ComparatorBlockEntity BlockEntity) {
-          super(BlockEntity, "comparator");
-        }
-
-        @Override
-        public String preferredName() {
-            return "comparator";
-        }
-
-        @Override
-        public int priority() {
-            return 0;
-        }
-
-        @Callback(doc = "function():number -- Get the strength of the comparators output signal.")
-        public Object[] getOutputSignal(Context context, Arguments args) {
-            return ResultWrapper.result(BlockEntity.getOutputSignal());
-        }
+    @Override
+    public int priority() {
+      return 0;
     }
 
-    public static final class Provider implements EnvironmentProvider {
-        @Override
-        public Class<?> getEnvironment(ItemStack stack) {
-            if (stack != null && stack.getItem() == Items.COMPARATOR) {
-                return Environment.class;
-            }
-            return null;
-        }
+    @Callback(doc = "function():number -- Get the strength of the comparators output signal.")
+    public Object[] getOutputSignal(Context context, Arguments args) {
+      return ResultWrapper.result(BlockEntity.getOutputSignal());
     }
+  }
+
+  public static final class Provider implements EnvironmentProvider {
+    @Override
+    public Class<?> getEnvironment(ItemStack stack) {
+      if (stack != null && stack.getItem() == Items.COMPARATOR) {
+        return Environment.class;
+      }
+      return null;
+    }
+  }
 }

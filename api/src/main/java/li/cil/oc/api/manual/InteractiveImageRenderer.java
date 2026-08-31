@@ -8,29 +8,29 @@ package li.cil.oc.api.manual;
  * one, or render a small GUI on a page.
  */
 public interface InteractiveImageRenderer extends ImageRenderer {
-    /**
-     * Get a custom tooltip for this image renderer.
-     * <br>
-     * This can be used to override the original tooltip of an image.
-     *
-     * @param tooltip the original tooltip of the element.
-     * @return the tooltip to use for the element.
-     */
-    String getTooltip(String tooltip);
+  /**
+   * Get a custom tooltip for this image renderer.
+   * <br>
+   * This can be used to override the original tooltip of an image.
+   *
+   * @param tooltip the original tooltip of the element.
+   * @return the tooltip to use for the element.
+   */
+  String getTooltip(String tooltip);
 
-    /**
-     * Called when the mouse is clicked while over this image renderer.
-     * <br>
-     * This only fires for left-clicks, because right-clicks are reserved for
-     * navigating back in the manual.
-     * <br>
-     * If this returns <code>false</code> and the element is a link, the link will
-     * be followed. If it returns <code>true</code>, it will not.
-     *
-     * @param mouseX the X coordinate of the mouse, relative to the element.
-     * @param mouseY the Y coordinate of the mouse, relative to the element.
-     * @return whether the click was handled.
-     */
-    @SuppressWarnings({"UnusedReturnValue", "SameReturnValue", "unused"})
-    boolean onMouseClick(int mouseX, int mouseY);
+  /**
+   * Called when the mouse is clicked while over this image renderer.
+   * <br>
+   * This only fires for left-clicks, because right-clicks are reserved for
+   * navigating back in the manual.
+   * <br>
+   * If this returns <code>false</code> and the element is a link, the link will
+   * be followed. If it returns <code>true</code>, it will not.
+   *
+   * @param mouseX the X coordinate of the mouse, relative to the element.
+   * @param mouseY the Y coordinate of the mouse, relative to the element.
+   * @return whether the click was handled.
+   */
+  @SuppressWarnings({"UnusedReturnValue", "SameReturnValue", "unused"})
+  boolean onMouseClick(int mouseX, int mouseY);
 }

@@ -14,28 +14,28 @@ import li.cil.oc.core.impl.util.ExtendedArguments;
 import net.minecraft.core.Direction;
 
 public abstract class TransposerBase extends AbstractManagedEnvironment implements DeviceInfo {
-    public final Node node = Network.newNode(this, Visibility.Network)
-            .withComponent("transposer")
-            .withConnector()
-            .create();
-    private final Map<String, String> deviceInfo;
+  public final Node node = Network.newNode(this, Visibility.Network)
+    .withComponent("transposer")
+    .withConnector()
+    .create();
+  private final Map<String, String> deviceInfo;
 
-    public TransposerBase() {
-        deviceInfo = Map.of(DeviceAttribute.Class, DeviceClass.Generic, DeviceAttribute.Description, "Transposer", DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor, DeviceAttribute.Product, "TP4k-iX");
-    }
+  public TransposerBase() {
+    deviceInfo = Map.of(DeviceAttribute.Class, DeviceClass.Generic, DeviceAttribute.Description, "Transposer", DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor, DeviceAttribute.Product, "TP4k-iX");
+  }
 
-    @Override
-    public Map<String, String> getDeviceInfo() {
-        return deviceInfo;
-    }
+  @Override
+  public Map<String, String> getDeviceInfo() {
+    return deviceInfo;
+  }
 
-    @SuppressWarnings("unused")
-    public Direction checkSideForAction(Arguments args, int n) {
-        return ExtendedArguments.checkSideAny(args, n);
-    }
+  @SuppressWarnings("unused")
+  public Direction checkSideForAction(Arguments args, int n) {
+    return ExtendedArguments.checkSideAny(args, n);
+  }
 
-    public String onTransferContents() {
-        if (((Connector) node).tryChangeBuffer(-OCSettings.get().transposerCost)) return null;
-        return "not enough energy";
-    }
+  public String onTransferContents() {
+    if (((Connector) node).tryChangeBuffer(-OCSettings.get().transposerCost)) return null;
+    return "not enough energy";
+  }
 }

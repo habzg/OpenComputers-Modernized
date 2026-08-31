@@ -6,14 +6,14 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
 public class SimpleItem extends AbstractItem {
-    @SuppressWarnings("unused")
-    public SimpleItem() {
-        super(new Properties().stacksTo(64));
-    }
+  @SuppressWarnings("unused")
+  public SimpleItem() {
+    super(new Properties().stacksTo(64));
+  }
 
-    @SuppressWarnings("unused")
-    @Override
-    public void tooltipBody(ItemStack stack, List<Component> tooltip) {
-        tooltip.addAll(Tooltip.get(getClass().getSimpleName()));
-    }
+  @SuppressWarnings("unused")
+  @Override
+  public void tooltipBody(ItemStack stack, List<Component> tooltip) {
+    tooltip.addAll(Tooltip.get(getClass().getSimpleName()));
+  }
 }

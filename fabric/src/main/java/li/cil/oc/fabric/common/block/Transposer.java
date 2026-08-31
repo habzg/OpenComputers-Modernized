@@ -9,12 +9,12 @@ import net.minecraft.world.level.material.MapColor;
 import org.jetbrains.annotations.NotNull;
 
 public class Transposer extends SimpleBlock {
-    public Transposer() {
-        super(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(2f, 5f));
-    }
+  public Transposer() {
+    super(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(2f, 5f));
+  }
 
-    @Override
-    public BlockEntity newBlockEntity(@NotNull BlockPos pos, @NotNull BlockState state) {
-        return new li.cil.oc.fabric.common.blockentity.Transposer(pos, state);
-    }
+  @Override
+  public BlockEntity newBlockEntity(@NotNull BlockPos pos, @NotNull BlockState state) {
+    return new li.cil.oc.fabric.common.blockentity.Transposer(pos, state);
+  }
 }

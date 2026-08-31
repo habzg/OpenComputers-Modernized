@@ -7,13 +7,13 @@ import li.cil.oc.api.manual.InteractiveImageRenderer;
  */
 @SuppressWarnings("unused")
 public abstract class AbstractInteractiveImageRenderer implements InteractiveImageRenderer {
-    @Override
-    public String getTooltip(String tooltip) {
-        return tooltip;
-    }
+  @Override
+  public String getTooltip(String tooltip) {
+    return tooltip;
+  }
 
-    @Override
-    public boolean onMouseClick(int mouseX, int mouseY) {
-        return false;
-    }
+  @Override
+  public boolean onMouseClick(int mouseX, int mouseY) {
+    return false;
+  }
 }

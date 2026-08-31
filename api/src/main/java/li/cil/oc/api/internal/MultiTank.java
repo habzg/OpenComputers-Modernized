@@ -8,16 +8,16 @@ package li.cil.oc.api.internal;
  * fluid handler interface which also considers the side.
  */
 public interface MultiTank {
-    /**
-     * The number of tanks currently installed.
-     */
-    int tankCount();
+  /**
+   * The number of tanks currently installed.
+   */
+  int tankCount();
 
-    /**
-     * Get the installed fluid tank with the specified index.
-     *
-     * @param index the index of the tank to get.
-     * @return the tank with the specified index.
-     */
-    Object getFluidTank(int index);
+  /**
+   * Get the installed fluid tank with the specified index.
+   *
+   * @param index the index of the tank to get.
+   * @return the tank with the specified index.
+   */
+  Object getFluidTank(int index);
 }

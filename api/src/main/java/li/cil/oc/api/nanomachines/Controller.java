@@ -19,116 +19,116 @@ package li.cil.oc.api.nanomachines;
  * to a controller, use {@link li.cil.oc.api.Nanomachines#getController}.
  */
 public interface Controller {
-    /**
-     * Reconfigure the neural connections managed by this controller. This
-     * will lead to the system being unavailable for a short while, in which
-     * the neural connections are rebuilt in a new configuration. In addition,
-     * some debuffs will be applied to the player.
-     * <br>
-     * This will reset all inputs to disabled and deactivate all previously
-     * active behaviors.
-     *
-     * @return this controller, for chaining.
-     */
-    @SuppressWarnings("UnusedReturnValue")
-    Controller reconfigure();
+  /**
+   * Reconfigure the neural connections managed by this controller. This
+   * will lead to the system being unavailable for a short while, in which
+   * the neural connections are rebuilt in a new configuration. In addition,
+   * some debuffs will be applied to the player.
+   * <br>
+   * This will reset all inputs to disabled and deactivate all previously
+   * active behaviors.
+   *
+   * @return this controller, for chaining.
+   */
+  @SuppressWarnings("UnusedReturnValue")
+  Controller reconfigure();
 
-    /**
-     * Get the number of inputs available.
-     * <br>
-     * This number depends on the total number of behaviors available, to keep
-     * randomization at a manageable level. It is computed internally and
-     * based on a configuration value.
-     *
-     * @return the total number of available inputs.
-     */
-    @SuppressWarnings("unused")
-    int getTotalInputCount();
+  /**
+   * Get the number of inputs available.
+   * <br>
+   * This number depends on the total number of behaviors available, to keep
+   * randomization at a manageable level. It is computed internally and
+   * based on a configuration value.
+   *
+   * @return the total number of available inputs.
+   */
+  @SuppressWarnings("unused")
+  int getTotalInputCount();
 
-    /**
-     * Get the number of inputs that may be active at the same time
-     * before negative effects are applied to the player.
-     * <br>
-     * The number of active inputs may exceed this value, but this will
-     * have negative effects on the player.
-     *
-     * @return the number of inputs that may safely be active at a time.
-     */
-    @SuppressWarnings("unused")
-    int getSafeActiveInputs();
+  /**
+   * Get the number of inputs that may be active at the same time
+   * before negative effects are applied to the player.
+   * <br>
+   * The number of active inputs may exceed this value, but this will
+   * have negative effects on the player.
+   *
+   * @return the number of inputs that may safely be active at a time.
+   */
+  @SuppressWarnings("unused")
+  int getSafeActiveInputs();
 
-    /**
-     * Get the total number of inputs that may be active at the same time.
-     * <br>
-     * The number of active inputs cannot exceed this value.
-     *
-     * @return the number of inputs that may be active at a time.
-     */
-    @SuppressWarnings("unused")
-    int getMaxActiveInputs();
+  /**
+   * Get the total number of inputs that may be active at the same time.
+   * <br>
+   * The number of active inputs cannot exceed this value.
+   *
+   * @return the number of inputs that may be active at a time.
+   */
+  @SuppressWarnings("unused")
+  int getMaxActiveInputs();
 
-    /**
-     * Get whether the input with the specified index is active.
-     *
-     * @param index the input index.
-     * @return whether the input is active.
-     * @throws IndexOutOfBoundsException if <code>index &lt; 0</code> or <code>index &gt;= getInputCount</code>.
-     */
-    @SuppressWarnings("unused")
-    boolean getInput(int index);
+  /**
+   * Get whether the input with the specified index is active.
+   *
+   * @param index the input index.
+   * @return whether the input is active.
+   * @throws IndexOutOfBoundsException if <code>index &lt; 0</code> or <code>index &gt;= getInputCount</code>.
+   */
+  @SuppressWarnings("unused")
+  boolean getInput(int index);
 
-    /**
-     * Set the state of the input with the specified index.
-     * <br>
-     * This will fail if too many inputs are active already. It will also
-     * always fail when called on the client.
-     *
-     * @param index the input index.
-     * @param value whether the input should be active.
-     * @return whether the input was changed successfully.
-     * @throws IndexOutOfBoundsException if <code>index &lt; 0</code> or <code>index &gt;= getInputCount</code>.
-     */
-    @SuppressWarnings("unused")
-    boolean setInput(int index, boolean value);
+  /**
+   * Set the state of the input with the specified index.
+   * <br>
+   * This will fail if too many inputs are active already. It will also
+   * always fail when called on the client.
+   *
+   * @param index the input index.
+   * @param value whether the input should be active.
+   * @return whether the input was changed successfully.
+   * @throws IndexOutOfBoundsException if <code>index &lt; 0</code> or <code>index &gt;= getInputCount</code>.
+   */
+  @SuppressWarnings("unused")
+  boolean setInput(int index, boolean value);
 
-    /**
-     * Get the list of currently active behaviors, based on the current input states.
-     * <br>
-     * Note that behaviors may behave differently depending on how many active
-     * inputs they have. Behaviors in the returned list will have at least one
-     * active input.
-     *
-     * @return the list of currently active behaviors. Never <code>null</code>.
-     */
-    @SuppressWarnings("unused")
-    Iterable<Behavior> getActiveBehaviors();
+  /**
+   * Get the list of currently active behaviors, based on the current input states.
+   * <br>
+   * Note that behaviors may behave differently depending on how many active
+   * inputs they have. Behaviors in the returned list will have at least one
+   * active input.
+   *
+   * @return the list of currently active behaviors. Never <code>null</code>.
+   */
+  @SuppressWarnings("unused")
+  Iterable<Behavior> getActiveBehaviors();
 
-    /**
-     * Get the number of active inputs for the specified behavior.
-     *
-     * @param behavior the behavior to get the number of inputs for.
-     * @return the number of inputs active for the specified behavior.
-     */
-    int getInputCount(Behavior behavior);
+  /**
+   * Get the number of active inputs for the specified behavior.
+   *
+   * @param behavior the behavior to get the number of inputs for.
+   * @return the number of inputs active for the specified behavior.
+   */
+  int getInputCount(Behavior behavior);
 
-    /**
-     * The amount of energy stored by this nanomachine controller.
-     */
-    double getLocalBuffer();
+  /**
+   * The amount of energy stored by this nanomachine controller.
+   */
+  double getLocalBuffer();
 
-    /**
-     * The maximum amount of energy stored by this nanomachine controller.
-     */
-    double getLocalBufferSize();
+  /**
+   * The maximum amount of energy stored by this nanomachine controller.
+   */
+  double getLocalBufferSize();
 
-    /**
-     * Try to apply the specified delta to the controller's buffer.
-     * <br>
-     * A negative value will drain energy from the buffer, a positive value
-     * will inject energy into the buffer.
-     *
-     * @param delta the amount of energy to consume or store.
-     * @return the remainder of the delta that could not be applied.
-     */
-    double changeBuffer(double delta);
+  /**
+   * Try to apply the specified delta to the controller's buffer.
+   * <br>
+   * A negative value will drain energy from the buffer, a positive value
+   * will inject energy into the buffer.
+   *
+   * @param delta the amount of energy to consume or store.
+   * @return the remainder of the delta that could not be applied.
+   */
+  double changeBuffer(double delta);
 }

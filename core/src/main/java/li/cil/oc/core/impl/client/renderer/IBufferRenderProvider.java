@@ -4,9 +4,9 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 
 public interface IBufferRenderProvider {
-    RenderType borderRenderType();
+  RenderType borderRenderType();
 
-    RenderType backgroundRenderType();
+  RenderType backgroundRenderType();
 
-    RenderType textRenderType(ResourceLocation texture);
+  RenderType textRenderType(ResourceLocation texture);
 }

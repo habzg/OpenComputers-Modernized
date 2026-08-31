@@ -7,12 +7,12 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 
 public class NetSplitter extends li.cil.oc.core.impl.common.block.NetSplitter {
-    public NetSplitter() {
-        super();
-    }
+  public NetSplitter() {
+    super();
+  }
 
-    @Override
-    public BlockEntity newBlockEntity(@NotNull BlockPos pos, @NotNull BlockState state) {
-        return new NetSplitterTile(pos, state);
-    }
+  @Override
+  public BlockEntity newBlockEntity(@NotNull BlockPos pos, @NotNull BlockState state) {
+    return new NetSplitterTile(pos, state);
+  }
 }

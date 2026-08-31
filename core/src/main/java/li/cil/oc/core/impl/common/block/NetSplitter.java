@@ -13,29 +13,29 @@ import org.jetbrains.annotations.NotNull;
 
 
 public class NetSplitter extends RedstoneAware {
-    public NetSplitter() {
-        super();
-    }
+  public NetSplitter() {
+    super();
+  }
 
-    @Override
-    public BlockEntity newBlockEntity(@NotNull BlockPos pos, @NotNull BlockState state) {
-        return new li.cil.oc.core.impl.common.blockentity.NetSplitter(pos, state);
-    }
+  @Override
+  public BlockEntity newBlockEntity(@NotNull BlockPos pos, @NotNull BlockState state) {
+    return new li.cil.oc.core.impl.common.blockentity.NetSplitter(pos, state);
+  }
 
-    @Override
-    public boolean onBlockActivated(Level world, BlockPos pos, Player player, Direction side, float hitX, float hitY, float hitZ, InteractionHand hand) {
-        if (Wrench.holdsApplicableWrench(player, BlockPosition.apply(pos.getX(), pos.getY(), pos.getZ(), world))) {
-            Direction sideToToggle = player.isShiftKeyDown() ? side.getOpposite() : side;
-            BlockEntity te = world.getBlockEntity(pos);
-            if (te instanceof li.cil.oc.core.impl.common.blockentity.NetSplitter splitter) {
-                if (!world.isClientSide) {
-                    boolean oldValue = splitter.isSideOpen(sideToToggle);
-                    splitter.setSideOpen(sideToToggle, !oldValue);
-                }
-                return true;
-            }
+  @Override
+  public boolean onBlockActivated(Level world, BlockPos pos, Player player, Direction side, float hitX, float hitY, float hitZ, InteractionHand hand) {
+    if (Wrench.holdsApplicableWrench(player, BlockPosition.apply(pos.getX(), pos.getY(), pos.getZ(), world))) {
+      Direction sideToToggle = player.isShiftKeyDown() ? side.getOpposite() : side;
+      BlockEntity te = world.getBlockEntity(pos);
+      if (te instanceof li.cil.oc.core.impl.common.blockentity.NetSplitter splitter) {
+        if (!world.isClientSide) {
+          boolean oldValue = splitter.isSideOpen(sideToToggle);
+          splitter.setSideOpen(sideToToggle, !oldValue);
         }
-        return super.onBlockActivated(world, pos, player, side, hitX, hitY, hitZ, hand);
+        return true;
+      }
     }
+    return super.onBlockActivated(world, pos, player, side, hitX, hitY, hitZ, hand);
+  }
 
 }

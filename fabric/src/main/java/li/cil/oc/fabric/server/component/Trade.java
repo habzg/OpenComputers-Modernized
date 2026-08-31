@@ -9,22 +9,22 @@ import net.minecraft.world.item.trading.Merchant;
 import org.jetbrains.annotations.NotNull;
 
 public class Trade extends TradeBase {
-    @SuppressWarnings("unused")
-    public Trade() {
-        this(new TradeInfo());
-    }
+  @SuppressWarnings("unused")
+  public Trade() {
+    this(new TradeInfo());
+  }
 
-    public Trade(UpgradeTrading upgrade, Merchant merchant, int recipeID, int merchantID) {
-        this(new TradeInfo(upgrade.host, merchant, recipeID, merchantID));
-    }
+  public Trade(UpgradeTrading upgrade, Merchant merchant, int recipeID, int merchantID) {
+    this(new TradeInfo(upgrade.host, merchant, recipeID, merchantID));
+  }
 
-    public Trade(TradeInfo info) {
-        super(info);
-    }
+  public Trade(TradeInfo info) {
+    super(info);
+  }
 
-    @SuppressWarnings("unused")
-    @Override
-    protected void deferredLoad(@NotNull CompoundTag nbt, HolderLookup.@NotNull Provider provider, @NotNull TradeInfoBase target) {
-        EventHandler.scheduleServer(() -> target.load(nbt, provider));
-    }
+  @SuppressWarnings("unused")
+  @Override
+  protected void deferredLoad(@NotNull CompoundTag nbt, HolderLookup.@NotNull Provider provider, @NotNull TradeInfoBase target) {
+    EventHandler.scheduleServer(() -> target.load(nbt, provider));
+  }
 }

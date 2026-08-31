@@ -14,105 +14,105 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 
 public class Robot extends Player {
-    public final li.cil.oc.neoforge.common.blockentity.Robot robot;
-    public final String address;
-    private final Level level;
-    public final boolean hasScreen;
-    public final int deltaY;
-    protected final int withScreenHeight = 256;
-    protected final int noScreenHeight = 108;
-    protected final int factor = 100;
+  public final li.cil.oc.neoforge.common.blockentity.Robot robot;
+  public final String address;
+  private final Level level;
+  public final boolean hasScreen;
+  public final int deltaY;
+  protected final int withScreenHeight = 256;
+  protected final int noScreenHeight = 108;
+  protected final int factor = 100;
 
-    public Robot(int containerId, Inventory playerInventory, li.cil.oc.neoforge.common.blockentity.Robot robot) {
-        this(containerId, playerInventory, robot, robot.getLevel(), robot.computerAddress() != null ? robot.computerAddress() : "");
+  public Robot(int containerId, Inventory playerInventory, li.cil.oc.neoforge.common.blockentity.Robot robot) {
+    this(containerId, playerInventory, robot, robot.getLevel(), robot.computerAddress() != null ? robot.computerAddress() : "");
+  }
+
+  private Robot(int containerId, Inventory playerInventory, li.cil.oc.neoforge.common.blockentity.Robot robot, Level level, String address) {
+    super(Menus.ROBOT.get(), containerId, playerInventory, new DelegatingContainer(() -> resolve(robot, level, address)));
+    this.robot = robot;
+    this.address = address;
+    this.level = level;
+
+    addDataSlot(new DataSlot() {
+      @Override
+      public int get() {
+        return (int) (Robot.this.current().globalBuffer / factor);
+      }
+
+      @Override
+      public void set(int value) {
+        Robot.this.current().globalBuffer = value * factor;
+      }
+    });
+    addDataSlot(new DataSlot() {
+      @Override
+      public int get() {
+        return (int) (Robot.this.current().globalBufferSize / factor);
+      }
+
+      @Override
+      public void set(int value) {
+        Robot.this.current().globalBufferSize = value * factor;
+      }
+    });
+
+    hasScreen = robot.agentComponents().stream().anyMatch(c -> c instanceof li.cil.oc.api.internal.TextBuffer);
+    deltaY = hasScreen ? 0 : withScreenHeight - noScreenHeight;
+
+    addSlot(170, 232 - deltaY, Slot.Tool, Tier.Any);
+    addSlot(170 + slotSize, 232 - deltaY, robot.containerSlotType(1), robot.containerSlotTier(1));
+    addSlot(170 + 2 * slotSize, 232 - deltaY, robot.containerSlotType(2), robot.containerSlotTier(2));
+    addSlot(170 + 3 * slotSize, 232 - deltaY, robot.containerSlotType(3), robot.containerSlotTier(3));
+
+    for (int i = 0; i <= 3; i++) {
+      int y = 156 + i * slotSize - deltaY;
+      for (int j = 0; j <= 3; j++) {
+        int x = 170 + j * slotSize;
+        addSlot(new InventorySlot(this, otherInventory, slots.size(), x, y));
+      }
+    }
+    for (int i = 16; i < 64; i++) {
+      addSlot(new InventorySlot(this, otherInventory, slots.size(), -10000, -10000));
     }
 
-    private Robot(int containerId, Inventory playerInventory, li.cil.oc.neoforge.common.blockentity.Robot robot, Level level, String address) {
-        super(Menus.ROBOT.get(), containerId, playerInventory, new DelegatingContainer(() -> resolve(robot, level, address)));
-        this.robot = robot;
-        this.address = address;
-        this.level = level;
+    addPlayerInventorySlots(6, 174 - deltaY);
+  }
 
-        addDataSlot(new DataSlot() {
-            @Override
-            public int get() {
-                return (int) (Robot.this.current().globalBuffer / factor);
-            }
+  public li.cil.oc.neoforge.common.blockentity.Robot current() {
+    return resolve(robot, level, address);
+  }
 
-            @Override
-            public void set(int value) {
-                Robot.this.current().globalBuffer = value * factor;
-            }
-        });
-        addDataSlot(new DataSlot() {
-            @Override
-            public int get() {
-                return (int) (Robot.this.current().globalBufferSize / factor);
-            }
+  private static li.cil.oc.neoforge.common.blockentity.Robot resolve(li.cil.oc.neoforge.common.blockentity.Robot robot, Level level, String address) {
+    var resolved = RobotLookup.get(level, address);
+    if (resolved instanceof li.cil.oc.neoforge.common.blockentity.Robot lr) return lr;
+    if (level != null && level.isClientSide && net.neoforged.fml.loading.FMLLoader.getDist().isClient()) {
+      var clientLevel = net.minecraft.client.Minecraft.getInstance().level;
+      if (clientLevel != null && clientLevel != level) {
+        var r2 = RobotLookup.get(clientLevel, address);
+        if (r2 instanceof li.cil.oc.neoforge.common.blockentity.Robot lr) return lr;
+      }
+    }
+    return robot;
+  }
 
-            @Override
-            public void set(int value) {
-                Robot.this.current().globalBufferSize = value * factor;
-            }
-        });
-
-        hasScreen = robot.agentComponents().stream().anyMatch(c -> c instanceof li.cil.oc.api.internal.TextBuffer);
-        deltaY = hasScreen ? 0 : withScreenHeight - noScreenHeight;
-
-        addSlot(170, 232 - deltaY, Slot.Tool, Tier.Any);
-        addSlot(170 + slotSize, 232 - deltaY, robot.containerSlotType(1), robot.containerSlotTier(1));
-        addSlot(170 + 2 * slotSize, 232 - deltaY, robot.containerSlotType(2), robot.containerSlotTier(2));
-        addSlot(170 + 3 * slotSize, 232 - deltaY, robot.containerSlotType(3), robot.containerSlotTier(3));
-
-        for (int i = 0; i <= 3; i++) {
-            int y = 156 + i * slotSize - deltaY;
-            for (int j = 0; j <= 3; j++) {
-                int x = 170 + j * slotSize;
-                addSlot(new InventorySlot(this, otherInventory, slots.size(), x, y));
-            }
-        }
-        for (int i = 16; i < 64; i++) {
-            addSlot(new InventorySlot(this, otherInventory, slots.size(), -10000, -10000));
-        }
-
-        addPlayerInventorySlots(6, 174 - deltaY);
+  public class InventorySlot extends StaticComponentSlot {
+    public InventorySlot(Player container, Container inventory, int index, int x, int y) {
+      super(container, inventory, index, x, y, Slot.Any, Tier.Any);
     }
 
-    public li.cil.oc.neoforge.common.blockentity.Robot current() {
-        return resolve(robot, level, address);
+    public boolean isValid() {
+      return robot.isInventorySlot(getSlotIndex());
     }
 
-    private static li.cil.oc.neoforge.common.blockentity.Robot resolve(li.cil.oc.neoforge.common.blockentity.Robot robot, Level level, String address) {
-        var resolved = RobotLookup.get(level, address);
-        if (resolved instanceof li.cil.oc.neoforge.common.blockentity.Robot lr) return lr;
-        if (level != null && level.isClientSide && net.neoforged.fml.loading.FMLLoader.getDist().isClient()) {
-            var clientLevel = net.minecraft.client.Minecraft.getInstance().level;
-            if (clientLevel != null && clientLevel != level) {
-                var r2 = RobotLookup.get(clientLevel, address);
-                if (r2 instanceof li.cil.oc.neoforge.common.blockentity.Robot lr) return lr;
-            }
-        }
-        return robot;
+    @Override
+    public boolean isActive() {
+      return isValid() && super.isActive();
     }
 
-    public class InventorySlot extends StaticComponentSlot {
-        public InventorySlot(Player container, Container inventory, int index, int x, int y) {
-            super(container, inventory, index, x, y, Slot.Any, Tier.Any);
-        }
-
-        public boolean isValid() {
-            return robot.isInventorySlot(getSlotIndex());
-        }
-
-        @Override
-        public boolean isActive() {
-            return isValid() && super.isActive();
-        }
-
-        @Override
-        public net.minecraft.world.item.@NotNull ItemStack getItem() {
-            if (isValid()) return super.getItem();
-            return net.minecraft.world.item.ItemStack.EMPTY;
-        }
+    @Override
+    public net.minecraft.world.item.@NotNull ItemStack getItem() {
+      if (isValid()) return super.getItem();
+      return net.minecraft.world.item.ItemStack.EMPTY;
     }
+  }
 }

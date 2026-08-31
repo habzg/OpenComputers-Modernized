@@ -12,35 +12,35 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 
 public class CPU extends DelegateItem implements ItemTier, CPULike {
-    private final int tier;
+  private final int tier;
 
-    public CPU(Properties properties, int tier) {
-        super(properties);
-        this.tier = tier;
-    }
+  public CPU(Properties properties, int tier) {
+    super(properties);
+    this.tier = tier;
+  }
 
-    @Override
-    public int tier() {
-        return tier;
-    }
+  @Override
+  public int tier() {
+    return tier;
+  }
 
-    @Override
-    public int cpuTier() {
-        return tier;
-    }
+  @Override
+  public int cpuTier() {
+    return tier;
+  }
 
-    @Override
-    public int cpuTierForComponents() {
-        return tier;
-    }
+  @Override
+  public int cpuTierForComponents() {
+    return tier;
+  }
 
-    @Override
-    public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand hand) {
-        return useCPU(level, player, hand, player.getItemInHand(hand));
-    }
+  @Override
+  public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand hand) {
+    return useCPU(level, player, hand, player.getItemInHand(hand));
+  }
 
-    @Override
-    protected List<Object> tooltipData() {
-        return List.of(OCSettings.get().cpuComponentSupport[cpuTierForComponents()]);
-    }
+  @Override
+  protected List<Object> tooltipData() {
+    return List.of(OCSettings.get().cpuComponentSupport[cpuTierForComponents()]);
+  }
 }

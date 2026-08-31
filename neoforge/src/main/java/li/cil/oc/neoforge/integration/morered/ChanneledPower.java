@@ -9,20 +9,20 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 
 public final class ChanneledPower implements ChanneledPowerSupplier {
-    private final BundledRedstoneAware redstone;
-    private final Direction side;
+  private final BundledRedstoneAware redstone;
+  private final Direction side;
 
-    public ChanneledPower(final BundledRedstoneAware redstone, final Direction side) {
-        this.redstone = redstone;
-        this.side = side;
+  public ChanneledPower(final BundledRedstoneAware redstone, final Direction side) {
+    this.redstone = redstone;
+    this.side = side;
+  }
+
+  @Override
+  public int getPowerOnChannel(@NotNull Level world, @NotNull BlockPos wirePos, @NotNull BlockState wireState, Direction wireFace, int channel) {
+    if (side == null) {
+      return 0;
     }
 
-    @Override
-    public int getPowerOnChannel(@NotNull Level world, @NotNull BlockPos wirePos, @NotNull BlockState wireState, Direction wireFace, int channel) {
-        if (side == null) {
-            return 0;
-        }
-
-        return Math.min(31, (int) Math.round(redstone.getBundledOutput(side, channel) * 2 / 17.0));
-    }
+    return Math.min(31, (int) Math.round(redstone.getBundledOutput(side, channel) * 2 / 17.0));
+  }
 }

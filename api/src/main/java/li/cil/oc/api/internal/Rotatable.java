@@ -1,6 +1,7 @@
 package li.cil.oc.api.internal;
 
-import li.cil.oc.api.driver.DriverItem;import net.minecraft.core.Direction;
+import li.cil.oc.api.driver.DriverItem;
+import net.minecraft.core.Direction;
 
 /**
  * This interface is implemented by the computer case and robot block entities
@@ -12,51 +13,51 @@ import li.cil.oc.api.driver.DriverItem;import net.minecraft.core.Direction;
  * This interface is <em>not meant to be implemented</em>, just used.
  */
 public interface Rotatable {
-    /**
-     * The current facing of a block entity implementing this interface.
-     * <br>
-     * Intended to be used to query the orientation of an item components' host.
-     * For example:
-     * <pre>
-     * class SomeDriver implements li.cil.oc.api.driver.DriverItem {
-     *     // ...
-     *     ManagedEnvironment createEnvironment(ItemStack stack, BlockEntity BlockEntity) {
-     *         if (BlockEntity instanceof Rotatable) {
-     *             Direction facing = ((Rotatable)BlockEntity).facing();
-     *             // Do something with facing.
-     *         }
-     *     }
-     * }
-     * </pre>
-     *
-     * @return the current facing.
-     */
-    Direction facing();
+  /**
+   * The current facing of a block entity implementing this interface.
+   * <br>
+   * Intended to be used to query the orientation of an item components' host.
+   * For example:
+   * <pre>
+   * class SomeDriver implements li.cil.oc.api.driver.DriverItem {
+   *     // ...
+   *     ManagedEnvironment createEnvironment(ItemStack stack, BlockEntity BlockEntity) {
+   *         if (BlockEntity instanceof Rotatable) {
+   *             Direction facing = ((Rotatable)BlockEntity).facing();
+   *             // Do something with facing.
+   *         }
+   *     }
+   * }
+   * </pre>
+   *
+   * @return the current facing.
+   */
+  Direction facing();
 
-    /**
-     * Converts a facing relative to the block's <em>local</em> coordinate
-     * system to a <code>global orientation</code>, using south as the standard
-     * orientation.
-     * <br>
-     * For example, if the block is facing east, calling this with south will
-     * return east, calling it with west will return south and so on.
-     *
-     * @param value the value to translate.
-     * @return the translated orientation.
-     */
-    Direction toGlobal(Direction value);
+  /**
+   * Converts a facing relative to the block's <em>local</em> coordinate
+   * system to a <code>global orientation</code>, using south as the standard
+   * orientation.
+   * <br>
+   * For example, if the block is facing east, calling this with south will
+   * return east, calling it with west will return south and so on.
+   *
+   * @param value the value to translate.
+   * @return the translated orientation.
+   */
+  Direction toGlobal(Direction value);
 
-    /**
-     * Converts a <code>global</code> orientation to a facing relative to the
-     * block's <em>local</em> coordinate system, using south as the standard
-     * orientation.
-     * <br>
-     * For example, if the block is facing east, calling this with south will
-     * return east, calling it with west will return north and so on.
-     *
-     * @param value the value to translate.
-     * @return the translated orientation.
-     */
-    @SuppressWarnings("unused")
-    Direction toLocal(Direction value);
+  /**
+   * Converts a <code>global</code> orientation to a facing relative to the
+   * block's <em>local</em> coordinate system, using south as the standard
+   * orientation.
+   * <br>
+   * For example, if the block is facing east, calling this with south will
+   * return east, calling it with west will return north and so on.
+   *
+   * @param value the value to translate.
+   * @return the translated orientation.
+   */
+  @SuppressWarnings("unused")
+  Direction toLocal(Direction value);
 }

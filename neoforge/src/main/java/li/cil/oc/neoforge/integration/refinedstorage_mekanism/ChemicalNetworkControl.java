@@ -13,21 +13,21 @@ import mekanism.api.chemical.ChemicalStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 public interface ChemicalNetworkControl {
-    BlockEntity tile();
+  BlockEntity tile();
 
-    @Callback(doc = "function():table -- Get a list of the stored chemicals in the network.")
-    default Object[] getChemicalsInNetwork(Context context, Arguments args) {
-        var result = new ArrayList<>();
-        var network = RS2Util.networkOf(tile());
-        if (network == null) return ResultWrapper.result((Object) result.toArray());
-        var storage = network.getComponent(StorageNetworkComponent.class);
-        for (var resourceAmount : storage.getAll()) {
-            if (resourceAmount.resource() instanceof ChemicalResource(mekanism.api.chemical.Chemical chemical)) {
-                result.add(new ChemicalStack(
-                        MekanismAPI.CHEMICAL_REGISTRY.wrapAsHolder(chemical),
-                        resourceAmount.amount()));
-            }
-        }
-        return ResultWrapper.result((Object) result.toArray());
+  @Callback(doc = "function():table -- Get a list of the stored chemicals in the network.")
+  default Object[] getChemicalsInNetwork(Context context, Arguments args) {
+    var result = new ArrayList<>();
+    var network = RS2Util.networkOf(tile());
+    if (network == null) return ResultWrapper.result((Object) result.toArray());
+    var storage = network.getComponent(StorageNetworkComponent.class);
+    for (var resourceAmount : storage.getAll()) {
+      if (resourceAmount.resource() instanceof ChemicalResource(mekanism.api.chemical.Chemical chemical)) {
+        result.add(new ChemicalStack(
+          MekanismAPI.CHEMICAL_REGISTRY.wrapAsHolder(chemical),
+          resourceAmount.amount()));
+      }
     }
+    return ResultWrapper.result((Object) result.toArray());
+  }
 }

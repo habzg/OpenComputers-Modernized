@@ -15,110 +15,110 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 
 public class PacketBuilder extends PacketBuilderBase<ByteArrayOutputStream> {
-    public static MinecraftServer SERVER;
+  public static MinecraftServer SERVER;
 
+  public final PacketType packetType;
+
+  public PacketBuilder(PacketType packetType) {
+    super(newData(false));
+    this.packetType = packetType;
+    try {
+      writeByte(packetType.ordinal());
+    } catch (java.io.IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  protected byte[] getPayloadBytes() {
+    flush();
+    return stream.toByteArray();
+  }
+
+  @Override
+  public void sendToAllPlayers() {
+    byte[] payload = getPayloadBytes();
+    logPacket(packetType, payload.length, blockEntity);
+    if (SERVER != null) {
+      var packet = new OCPayload(payload);
+      for (var player : SERVER.getPlayerList().getPlayers()) {
+        ServerPlayNetworking.send(player, packet);
+      }
+    }
+  }
+
+  @Override
+  public void sendToPlayer(Player player) {
+    byte[] payload = getPayloadBytes();
+    logPacket(packetType, payload.length, blockEntity);
+    if (player instanceof ServerPlayer sp) {
+      ServerPlayNetworking.send(sp, new OCPayload(payload));
+    }
+  }
+
+  @Override
+  public void sendToServer() {
+    byte[] payload = getPayloadBytes();
+    logPacket(packetType, payload.length, blockEntity);
+    ClientPlayNetworking.send(new OCPayload(payload));
+  }
+
+  public static class Compressed extends PacketBuilderBase<DeflaterOutputStream> {
     public final PacketType packetType;
+    private final ByteArrayOutputStream data;
 
-    public PacketBuilder(PacketType packetType) {
-        super(newData(false));
-        this.packetType = packetType;
-        try {
-            writeByte(packetType.ordinal());
-        } catch (java.io.IOException e) {
-            throw new RuntimeException(e);
-        }
+    public Compressed(PacketType packetType) {
+      this(packetType, newData(true));
+    }
+
+    private Compressed(PacketType packetType, ByteArrayOutputStream data) {
+      super(new DeflaterOutputStream(data, new Deflater(Deflater.BEST_SPEED)));
+      this.packetType = packetType;
+      this.data = data;
+      try {
+        writeByte(packetType.ordinal());
+      } catch (IOException e) {
+        OpenComputers.log().warn("Failed writing packet type header.", e);
+      }
     }
 
     @Override
     protected byte[] getPayloadBytes() {
-        flush();
-        return stream.toByteArray();
+      flush();
+      try {
+        stream.finish();
+      } catch (IOException e) {
+        OpenComputers.log().warn("Failed finishing compression.", e);
+      }
+      return data.toByteArray();
     }
 
     @Override
     public void sendToAllPlayers() {
-        byte[] payload = getPayloadBytes();
-        logPacket(packetType, payload.length, blockEntity);
-        if (SERVER != null) {
-            var packet = new OCPayload(payload);
-            for (var player : SERVER.getPlayerList().getPlayers()) {
-                ServerPlayNetworking.send(player, packet);
-            }
+      byte[] payload = getPayloadBytes();
+      logPacket(packetType, payload.length, blockEntity);
+      var packet = new OCPayload(payload);
+      if (SERVER != null) {
+        for (var player : SERVER.getPlayerList().getPlayers()) {
+          ServerPlayNetworking.send(player, packet);
         }
+      }
     }
 
     @Override
     public void sendToPlayer(Player player) {
-        byte[] payload = getPayloadBytes();
-        logPacket(packetType, payload.length, blockEntity);
-        if (player instanceof ServerPlayer sp) {
-            ServerPlayNetworking.send(sp, new OCPayload(payload));
-        }
+      byte[] payload = getPayloadBytes();
+      logPacket(packetType, payload.length, blockEntity);
+      if (player instanceof ServerPlayer sp) {
+        ServerPlayNetworking.send(sp, new OCPayload(payload));
+      }
     }
 
     @Override
     public void sendToServer() {
-        byte[] payload = getPayloadBytes();
-        logPacket(packetType, payload.length, blockEntity);
-        ClientPlayNetworking.send(new OCPayload(payload));
+      byte[] payload = getPayloadBytes();
+      logPacket(packetType, payload.length, blockEntity);
+      ClientPlayNetworking.send(new OCPayload(payload));
     }
-
-    public static class Compressed extends PacketBuilderBase<DeflaterOutputStream> {
-        public final PacketType packetType;
-        private final ByteArrayOutputStream data;
-
-        public Compressed(PacketType packetType) {
-            this(packetType, newData(true));
-        }
-
-        private Compressed(PacketType packetType, ByteArrayOutputStream data) {
-            super(new DeflaterOutputStream(data, new Deflater(Deflater.BEST_SPEED)));
-            this.packetType = packetType;
-            this.data = data;
-            try {
-                writeByte(packetType.ordinal());
-            } catch (IOException e) {
-                OpenComputers.log().warn("Failed writing packet type header.", e);
-            }
-        }
-
-        @Override
-        protected byte[] getPayloadBytes() {
-            flush();
-            try {
-                stream.finish();
-            } catch (IOException e) {
-                OpenComputers.log().warn("Failed finishing compression.", e);
-            }
-            return data.toByteArray();
-        }
-
-        @Override
-        public void sendToAllPlayers() {
-            byte[] payload = getPayloadBytes();
-            logPacket(packetType, payload.length, blockEntity);
-            var packet = new OCPayload(payload);
-            if (SERVER != null) {
-                for (var player : SERVER.getPlayerList().getPlayers()) {
-                    ServerPlayNetworking.send(player, packet);
-                }
-            }
-        }
-
-        @Override
-        public void sendToPlayer(Player player) {
-            byte[] payload = getPayloadBytes();
-            logPacket(packetType, payload.length, blockEntity);
-            if (player instanceof ServerPlayer sp) {
-                ServerPlayNetworking.send(sp, new OCPayload(payload));
-            }
-        }
-
-        @Override
-        public void sendToServer() {
-            byte[] payload = getPayloadBytes();
-            logPacket(packetType, payload.length, blockEntity);
-            ClientPlayNetworking.send(new OCPayload(payload));
-        }
-    }
+  }
 }

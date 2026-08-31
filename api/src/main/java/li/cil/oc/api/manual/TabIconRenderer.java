@@ -12,11 +12,11 @@ package li.cil.oc.api.manual;
  * @see li.cil.oc.api.prefab.TextureTabIconRenderer
  */
 public interface TabIconRenderer {
-    /**
-     * Called when icon of a tab should be rendered.
-     * <br>
-     * This should render something in a 16x16 area. The drawing starts at (0,0)
-     * and should go to (16,16) in the given GuiGraphics coordinate space.
-     */
-    void render(net.minecraft.client.gui.GuiGraphics guiGraphics);
+  /**
+   * Called when icon of a tab should be rendered.
+   * <br>
+   * This should render something in a 16x16 area. The drawing starts at (0,0)
+   * and should go to (16,16) in the given GuiGraphics coordinate space.
+   */
+  void render(net.minecraft.client.gui.GuiGraphics guiGraphics);
 }

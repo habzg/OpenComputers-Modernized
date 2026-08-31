@@ -8,33 +8,33 @@ import net.neoforged.neoforge.event.level.ChunkEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
 
 public final class WirelessNetwork {
-    private WirelessNetwork() {
-    }
+  private WirelessNetwork() {
+  }
 
-    @SubscribeEvent
-    @SuppressWarnings("unused")
-    public static void onWorldUnload(LevelEvent.Unload e) {
-        Level level = (Level) e.getLevel();
-        if (!level.isClientSide()) {
-            WirelessNetworkManager.removeDimension(level.dimension());
-        }
+  @SubscribeEvent
+  @SuppressWarnings("unused")
+  public static void onWorldUnload(LevelEvent.Unload e) {
+    Level level = (Level) e.getLevel();
+    if (!level.isClientSide()) {
+      WirelessNetworkManager.removeDimension(level.dimension());
     }
+  }
 
-    @SubscribeEvent
-    @SuppressWarnings("unused")
-    public static void onWorldLoad(LevelEvent.Load e) {
-        Level level = (Level) e.getLevel();
-        if (!level.isClientSide()) {
-            WirelessNetworkManager.removeDimension(level.dimension());
-        }
+  @SubscribeEvent
+  @SuppressWarnings("unused")
+  public static void onWorldLoad(LevelEvent.Load e) {
+    Level level = (Level) e.getLevel();
+    if (!level.isClientSide()) {
+      WirelessNetworkManager.removeDimension(level.dimension());
     }
+  }
 
-    @SubscribeEvent
-    @SuppressWarnings("unused")
-    public static void onChunkUnload(ChunkEvent.Unload e) {
-        ((net.minecraft.world.level.chunk.LevelChunk) e.getChunk()).getBlockEntities().values().stream()
-                .filter(WirelessEndpoint.class::isInstance)
-                .map(WirelessEndpoint.class::cast)
-                .forEach(WirelessNetworkManager::remove);
-    }
+  @SubscribeEvent
+  @SuppressWarnings("unused")
+  public static void onChunkUnload(ChunkEvent.Unload e) {
+    ((net.minecraft.world.level.chunk.LevelChunk) e.getChunk()).getBlockEntities().values().stream()
+      .filter(WirelessEndpoint.class::isInstance)
+      .map(WirelessEndpoint.class::cast)
+      .forEach(WirelessNetworkManager::remove);
+  }
 }

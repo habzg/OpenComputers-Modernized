@@ -8,12 +8,12 @@ package li.cil.oc.api.internal;
  * behavior this way.
  */
 public interface Tiered {
-    /**
-     * The zero-based tier of this... thing.
-     * <br>
-     * For example, a tier one screen will return 0 here, a tier three screen
-     * will return 2.
-     */
-    @SuppressWarnings("unused")
-    int tier();
+  /**
+   * The zero-based tier of this... thing.
+   * <br>
+   * For example, a tier one screen will return 0 here, a tier three screen
+   * will return 2.
+   */
+  @SuppressWarnings("unused")
+  int tier();
 }

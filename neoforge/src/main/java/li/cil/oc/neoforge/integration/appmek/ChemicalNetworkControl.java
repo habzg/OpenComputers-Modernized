@@ -10,24 +10,24 @@ import li.cil.oc.neoforge.integration.appeng.AEUtil;
 import me.ramidzkh.mekae2.ae2.MekanismKey;
 
 public interface ChemicalNetworkControl {
-    IActionHost tile();
+  IActionHost tile();
 
-    @Callback(doc = "function():table -- Get a list of the stored chemicals in the network.")
-    default Object[] getChemicalsInNetwork(Context context, Arguments args) {
-        var node = tile().getActionableNode();
-        if (node == null) return ResultWrapper.result((Object) new Object[0]);
-        var grid = node.getGrid();
-        if (grid == null) return ResultWrapper.result((Object) new Object[0]);
-        var storage = AEUtil.getGridStorage(grid);
-        var all = new appeng.api.stacks.KeyCounter();
-        storage.getAvailableStacks(all);
-        var result = new ArrayList<>();
-        for (var entry : all) {
-            var key = entry.getKey();
-            if (key instanceof MekanismKey chemicalKey) {
-                result.add(chemicalKey.getStack().copyWithAmount(entry.getLongValue()));
-            }
-        }
-        return ResultWrapper.result((Object) result.toArray());
+  @Callback(doc = "function():table -- Get a list of the stored chemicals in the network.")
+  default Object[] getChemicalsInNetwork(Context context, Arguments args) {
+    var node = tile().getActionableNode();
+    if (node == null) return ResultWrapper.result((Object) new Object[0]);
+    var grid = node.getGrid();
+    if (grid == null) return ResultWrapper.result((Object) new Object[0]);
+    var storage = AEUtil.getGridStorage(grid);
+    var all = new appeng.api.stacks.KeyCounter();
+    storage.getAvailableStacks(all);
+    var result = new ArrayList<>();
+    for (var entry : all) {
+      var key = entry.getKey();
+      if (key instanceof MekanismKey chemicalKey) {
+        result.add(chemicalKey.getStack().copyWithAmount(entry.getLongValue()));
+      }
     }
+    return ResultWrapper.result((Object) result.toArray());
+  }
 }

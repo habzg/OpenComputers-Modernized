@@ -12,44 +12,44 @@ import net.minecraft.world.item.crafting.RecipeSerializer;
 import org.jetbrains.annotations.NotNull;
 
 public class ColorizeRecipeSerializer implements RecipeSerializer<ColorizeRecipe> {
-    public static final ColorizeRecipeSerializer INSTANCE = new ColorizeRecipeSerializer();
+  public static final ColorizeRecipeSerializer INSTANCE = new ColorizeRecipeSerializer();
 
-    private static final MapCodec<ColorizeRecipe> CODEC = RecordCodecBuilder.mapCodec(instance ->
-            instance.group(
-                    CraftingBookCategory.CODEC.optionalFieldOf("category", CraftingBookCategory.MISC).forGetter(CustomRecipe::category),
-                    BuiltInRegistries.ITEM.byNameCodec().fieldOf("target").forGetter(r -> r.targetItem)
-            ).apply(instance, ColorizeRecipeSerializer::create)
-    );
+  private static final MapCodec<ColorizeRecipe> CODEC = RecordCodecBuilder.mapCodec(instance ->
+    instance.group(
+      CraftingBookCategory.CODEC.optionalFieldOf("category", CraftingBookCategory.MISC).forGetter(CustomRecipe::category),
+      BuiltInRegistries.ITEM.byNameCodec().fieldOf("target").forGetter(r -> r.targetItem)
+    ).apply(instance, ColorizeRecipeSerializer::create)
+  );
 
-    private static ColorizeRecipe create(CraftingBookCategory category, Item target) {
-        return new ColorizeRecipe(category, target, null);
-    }
+  private static ColorizeRecipe create(CraftingBookCategory category, Item target) {
+    return new ColorizeRecipe(category, target, null);
+  }
 
-    private static final StreamCodec<RegistryFriendlyByteBuf, ColorizeRecipe> STREAM_CODEC = StreamCodec.of(
-            ColorizeRecipeSerializer::toNetwork, ColorizeRecipeSerializer::fromNetwork
-    );
+  private static final StreamCodec<RegistryFriendlyByteBuf, ColorizeRecipe> STREAM_CODEC = StreamCodec.of(
+    ColorizeRecipeSerializer::toNetwork, ColorizeRecipeSerializer::fromNetwork
+  );
 
-    private ColorizeRecipeSerializer() {
-    }
+  private ColorizeRecipeSerializer() {
+  }
 
-    @Override
-    public @NotNull MapCodec<ColorizeRecipe> codec() {
-        return CODEC;
-    }
+  @Override
+  public @NotNull MapCodec<ColorizeRecipe> codec() {
+    return CODEC;
+  }
 
-    @Override
-    public @NotNull StreamCodec<RegistryFriendlyByteBuf, ColorizeRecipe> streamCodec() {
-        return STREAM_CODEC;
-    }
+  @Override
+  public @NotNull StreamCodec<RegistryFriendlyByteBuf, ColorizeRecipe> streamCodec() {
+    return STREAM_CODEC;
+  }
 
-    private static ColorizeRecipe fromNetwork(RegistryFriendlyByteBuf buffer) {
-        var category = buffer.readEnum(CraftingBookCategory.class);
-        var item = BuiltInRegistries.ITEM.byId(buffer.readVarInt());
-        return new ColorizeRecipe(category, item, null);
-    }
+  private static ColorizeRecipe fromNetwork(RegistryFriendlyByteBuf buffer) {
+    var category = buffer.readEnum(CraftingBookCategory.class);
+    var item = BuiltInRegistries.ITEM.byId(buffer.readVarInt());
+    return new ColorizeRecipe(category, item, null);
+  }
 
-    private static void toNetwork(RegistryFriendlyByteBuf buffer, ColorizeRecipe recipe) {
-        buffer.writeEnum(recipe.category());
-        buffer.writeVarInt(BuiltInRegistries.ITEM.getId(recipe.targetItem));
-    }
+  private static void toNetwork(RegistryFriendlyByteBuf buffer, ColorizeRecipe recipe) {
+    buffer.writeEnum(recipe.category());
+    buffer.writeVarInt(BuiltInRegistries.ITEM.getId(recipe.targetItem));
+  }
 }

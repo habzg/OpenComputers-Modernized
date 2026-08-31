@@ -9,15 +9,15 @@ import net.minecraft.resources.ResourceLocation;
  */
 
 public class TextureTabIconRenderer implements TabIconRenderer {
-    private final ResourceLocation location;
+  private final ResourceLocation location;
 
-    @SuppressWarnings("unused")
-    public TextureTabIconRenderer(ResourceLocation location) {
-        this.location = location;
-    }
+  @SuppressWarnings("unused")
+  public TextureTabIconRenderer(ResourceLocation location) {
+    this.location = location;
+  }
 
-    @Override
-    public void render(GuiGraphics guiGraphics) {
-        guiGraphics.blit(location, 0, 0, 0, 0, 16, 16, 16, 16);
-    }
+  @Override
+  public void render(GuiGraphics guiGraphics) {
+    guiGraphics.blit(location, 0, 0, 0, 0, 16, 16, 16, 16);
+  }
 }

@@ -8,21 +8,21 @@ import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
 public record OCPayload(byte[] data) implements CustomPacketPayload {
-    public static final CustomPacketPayload.Type<OCPayload> TYPE =
-            new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Tags.MOD_ID, "packet"));
+  public static final CustomPacketPayload.Type<OCPayload> TYPE =
+    new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Tags.MOD_ID, "packet"));
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, OCPayload> CODEC =
-            StreamCodec.of(
-                    (buf, payload) -> buf.writeBytes(payload.data()),
-                    buf -> {
-                        byte[] data = new byte[buf.readableBytes()];
-                        buf.readBytes(data);
-                        return new OCPayload(data);
-                    }
-            );
+  public static final StreamCodec<RegistryFriendlyByteBuf, OCPayload> CODEC =
+    StreamCodec.of(
+      (buf, payload) -> buf.writeBytes(payload.data()),
+      buf -> {
+        byte[] data = new byte[buf.readableBytes()];
+        buf.readBytes(data);
+        return new OCPayload(data);
+      }
+    );
 
-    @Override
-    public CustomPacketPayload.@NotNull Type<? extends CustomPacketPayload> type() {
-        return TYPE;
-    }
+  @Override
+  public CustomPacketPayload.@NotNull Type<? extends CustomPacketPayload> type() {
+    return TYPE;
+  }
 }

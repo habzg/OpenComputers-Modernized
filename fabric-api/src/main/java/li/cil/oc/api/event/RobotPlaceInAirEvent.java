@@ -13,47 +13,47 @@ import net.fabricmc.fabric.api.event.EventFactory;
  * for other upgrades, too.
  */
 public class RobotPlaceInAirEvent extends RobotEvent implements Cancelled {
-    private boolean isAllowed = false;
-    private boolean canceled;
+  private boolean isAllowed = false;
+  private boolean canceled;
 
-    public RobotPlaceInAirEvent(Agent agent) {
-        super(agent);
+  public RobotPlaceInAirEvent(Agent agent) {
+    super(agent);
+  }
+
+  /**
+   * Whether the placement is allowed. Defaults to {@code false}.
+   */
+  public boolean isAllowed() {
+    return isAllowed;
+  }
+
+  /**
+   * Set whether the placement is allowed, can be used to allow robots to
+   * place blocks in thin air.
+   */
+  public void setAllowed(boolean value) {
+    this.isAllowed = value;
+  }
+
+  @Override
+  public boolean isCanceled() {
+    return canceled;
+  }
+
+  @Override
+  public void setCanceled(boolean canceled) {
+    this.canceled = canceled;
+  }
+
+  @FunctionalInterface
+  public interface Listener {
+    void onRobotPlaceInAir(RobotPlaceInAirEvent event);
+  }
+
+  public static final Event<Listener> EVENT = EventFactory.createArrayBacked(Listener.class, (listeners) -> (event) -> {
+    for (Listener listener : listeners) {
+      listener.onRobotPlaceInAir(event);
+      if (event.isCanceled()) break;
     }
-
-    /**
-     * Whether the placement is allowed. Defaults to {@code false}.
-     */
-    public boolean isAllowed() {
-        return isAllowed;
-    }
-
-    /**
-     * Set whether the placement is allowed, can be used to allow robots to
-     * place blocks in thin air.
-     */
-    public void setAllowed(boolean value) {
-        this.isAllowed = value;
-    }
-
-    @Override
-    public boolean isCanceled() {
-        return canceled;
-    }
-
-    @Override
-    public void setCanceled(boolean canceled) {
-        this.canceled = canceled;
-    }
-
-    @FunctionalInterface
-    public interface Listener {
-        void onRobotPlaceInAir(RobotPlaceInAirEvent event);
-    }
-
-    public static final Event<Listener> EVENT = EventFactory.createArrayBacked(Listener.class, (listeners) -> (event) -> {
-        for (Listener listener : listeners) {
-            listener.onRobotPlaceInAir(event);
-            if (event.isCanceled()) break;
-        }
-    });
+  });
 }

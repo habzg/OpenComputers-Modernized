@@ -10,18 +10,18 @@ import li.cil.oc.core.Constants;
 import li.cil.oc.core.impl.OCSettings;
 
 public class CPU extends AbstractManagedEnvironment implements DeviceInfo {
-    @SuppressWarnings("unused")
-    public final Node node;
-    private final Map<String, String> deviceInfo;
+  @SuppressWarnings("unused")
+  public final Node node;
+  private final Map<String, String> deviceInfo;
 
-    public CPU(int tier) {
-        this.node = Network.newNode(this, Visibility.Neighbors).create();
-        this.deviceInfo = Map.of(DeviceAttribute.Class, DeviceClass.Processor, DeviceAttribute.Description, "CPU", DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor, DeviceAttribute.Product, "FlexiArch " + (tier + 1) + " Processor", DeviceAttribute.Clock, String.valueOf((int) (OCSettings.get().callBudgets[tier] * 1000)));
-    }
+  public CPU(int tier) {
+    this.node = Network.newNode(this, Visibility.Neighbors).create();
+    this.deviceInfo = Map.of(DeviceAttribute.Class, DeviceClass.Processor, DeviceAttribute.Description, "CPU", DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor, DeviceAttribute.Product, "FlexiArch " + (tier + 1) + " Processor", DeviceAttribute.Clock, String.valueOf((int) (OCSettings.get().callBudgets[tier] * 1000)));
+  }
 
-    @Override
-    public java.util.Map<String, String> getDeviceInfo() {
-        return deviceInfo;
-    }
+  @Override
+  public java.util.Map<String, String> getDeviceInfo() {
+    return deviceInfo;
+  }
 
 }

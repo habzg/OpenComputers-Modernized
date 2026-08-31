@@ -8,19 +8,19 @@ import net.minecraft.world.level.block.state.BlockState;
 
 public class NetSplitterTile extends NetSplitter implements RenderDataBlockEntity {
 
-    public record NetSplitterRenderData(boolean[] openSides) {
-    }
+  public record NetSplitterRenderData(boolean[] openSides) {
+  }
 
-    public NetSplitterTile(BlockPos pos, BlockState state) {
-        super(pos, state);
-    }
+  public NetSplitterTile(BlockPos pos, BlockState state) {
+    super(pos, state);
+  }
 
-    @Override
-    public Object getRenderData() {
-        boolean[] openSides = new boolean[6];
-        for (Direction dir : Direction.values()) {
-            openSides[dir.get3DDataValue()] = isSideOpen(dir);
-        }
-        return new NetSplitterRenderData(openSides);
+  @Override
+  public Object getRenderData() {
+    boolean[] openSides = new boolean[6];
+    for (Direction dir : Direction.values()) {
+      openSides[dir.get3DDataValue()] = isSideOpen(dir);
     }
+    return new NetSplitterRenderData(openSides);
+  }
 }

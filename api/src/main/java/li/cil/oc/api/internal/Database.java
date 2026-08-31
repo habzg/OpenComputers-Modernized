@@ -18,47 +18,47 @@ import net.minecraft.world.item.ItemStack;
  * the network to look for one those that have a <code>Database</code> as host.
  */
 public interface Database {
-    /**
-     * The container backing this database's slots.
-     */
-    Container data();
+  /**
+   * The container backing this database's slots.
+   */
+  Container data();
 
-    /**
-     * The number of slots in this database.
-     */
-    int size();
+  /**
+   * The number of slots in this database.
+   */
+  int size();
 
-    /**
-     * Get an item stack stored in the specified slot of this database.
-     * <br>
-     * This will return <code>null</code> if there is no entry for the specified
-     * slot. If there is an entry, this will return a <em>copy</em> of that
-     * item stack, so it is safe to modify the returned stack.
-     *
-     * @param slot the slot of the item stack.
-     * @return the item stack stored in that slot.
-     */
-    ItemStack getStackInSlot(int slot);
+  /**
+   * Get an item stack stored in the specified slot of this database.
+   * <br>
+   * This will return <code>null</code> if there is no entry for the specified
+   * slot. If there is an entry, this will return a <em>copy</em> of that
+   * item stack, so it is safe to modify the returned stack.
+   *
+   * @param slot the slot of the item stack.
+   * @return the item stack stored in that slot.
+   */
+  ItemStack getStackInSlot(int slot);
 
-    /**
-     * Set the contents of a slot in the database upgrade.
-     * <br>
-     * Use this to change the configuration of a database upgrade.
-     *
-     * @param slot  the slot to configure.
-     * @param stack the stack to configure the slot to, <code>null</code> to clear.
-     */
-    void setStackInSlot(int slot, ItemStack stack);
+  /**
+   * Set the contents of a slot in the database upgrade.
+   * <br>
+   * Use this to change the configuration of a database upgrade.
+   *
+   * @param slot  the slot to configure.
+   * @param stack the stack to configure the slot to, <code>null</code> to clear.
+   */
+  void setStackInSlot(int slot, ItemStack stack);
 
-    /**
-     * Get an item stack with the specified hash stored in this database.
-     * <br>
-     * This will return a negative value if there is no entry with a matching
-     * hash.
-     *
-     * @param hash the hash of the item stack.
-     * @return the index of item stack with the specified hash.
-     */
-    @SuppressWarnings("unused")
-    int findStackWithHash(String hash);
+  /**
+   * Get an item stack with the specified hash stored in this database.
+   * <br>
+   * This will return a negative value if there is no entry with a matching
+   * hash.
+   *
+   * @param hash the hash of the item stack.
+   * @return the index of item stack with the specified hash.
+   */
+  @SuppressWarnings("unused")
+  int findStackWithHash(String hash);
 }

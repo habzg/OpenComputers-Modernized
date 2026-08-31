@@ -11,21 +11,21 @@ import org.jetbrains.annotations.Nullable;
 
 public interface CustomDrops<T extends BlockEntity> {
 
-    @SuppressWarnings("unused")
-    default void onBlockPlacedBy(Level world, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
-        BlockEntity te = world.getBlockEntity(pos);
-        if (te != null && getBlockClass().isInstance(te)) {
-            doCustomInit(getBlockClass().cast(te), placer, stack);
-        }
+  @SuppressWarnings("unused")
+  default void onBlockPlacedBy(Level world, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
+    BlockEntity te = world.getBlockEntity(pos);
+    if (te != null && getBlockClass().isInstance(te)) {
+      doCustomInit(getBlockClass().cast(te), placer, stack);
     }
+  }
 
-    Class<T> getBlockClass();
+  Class<T> getBlockClass();
 
-    @SuppressWarnings("unused")
-    default void doCustomInit(T blockEntity, LivingEntity player, ItemStack stack) {
-    }
+  @SuppressWarnings("unused")
+  default void doCustomInit(T blockEntity, LivingEntity player, ItemStack stack) {
+  }
 
-    @SuppressWarnings("unused")
-    default void doCustomDrops(T blockEntity, Player player, boolean willHarvest) {
-    }
+  @SuppressWarnings("unused")
+  default void doCustomDrops(T blockEntity, Player player, boolean willHarvest) {
+  }
 }

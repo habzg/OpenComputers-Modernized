@@ -9,36 +9,36 @@ import net.minecraft.world.item.ItemStack;
 
 @SuppressWarnings("unused")
 public final class DriverLinkedCard extends Item {
+  @Override
+  public boolean worksWith(ItemStack stack) {
+    return isOneOf(stack, li.cil.oc.api.Items.get(Constants.ItemName.LinkedCard));
+  }
+
+  @Override
+  public li.cil.oc.api.network.ManagedEnvironment createEnvironment(ItemStack stack, EnvironmentHost host) {
+    if (host.level() != null && host.level().isClientSide()) return null;
+    return new li.cil.oc.core.impl.server.component.LinkedCard();
+  }
+
+  @Override
+  public String slot(ItemStack stack) {
+    return Slot.Card;
+  }
+
+  @Override
+  public int tier(ItemStack stack) {
+    return Tier.Three;
+  }
+
+  private static final DriverLinkedCard INSTANCE = new DriverLinkedCard();
+
+  public static final class Provider implements EnvironmentProvider {
     @Override
-    public boolean worksWith(ItemStack stack) {
-        return isOneOf(stack, li.cil.oc.api.Items.get(Constants.ItemName.LinkedCard));
+    public Class<?> getEnvironment(ItemStack stack) {
+      if (INSTANCE.worksWith(stack)) {
+        return li.cil.oc.core.impl.server.component.LinkedCard.class;
+      }
+      return null;
     }
-
-    @Override
-    public li.cil.oc.api.network.ManagedEnvironment createEnvironment(ItemStack stack, EnvironmentHost host) {
-        if (host.level() != null && host.level().isClientSide()) return null;
-        return new li.cil.oc.core.impl.server.component.LinkedCard();
-    }
-
-    @Override
-    public String slot(ItemStack stack) {
-        return Slot.Card;
-    }
-
-    @Override
-    public int tier(ItemStack stack) {
-        return Tier.Three;
-    }
-
-    private static final DriverLinkedCard INSTANCE = new DriverLinkedCard();
-
-    public static final class Provider implements EnvironmentProvider {
-        @Override
-        public Class<?> getEnvironment(ItemStack stack) {
-            if (INSTANCE.worksWith(stack)) {
-                return li.cil.oc.core.impl.server.component.LinkedCard.class;
-            }
-            return null;
-        }
-    }
+  }
 }

@@ -6,20 +6,20 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
 public class DelegateItem extends AbstractItem {
-    public DelegateItem(Properties properties) {
-        super(properties);
-    }
+  public DelegateItem(Properties properties) {
+    super(properties);
+  }
 
-    public String unlocalizedName() {
-        return getClass().getSimpleName();
-    }
+  public String unlocalizedName() {
+    return getClass().getSimpleName();
+  }
 
-    protected List<Object> tooltipData() {
-        return List.of();
-    }
+  protected List<Object> tooltipData() {
+    return List.of();
+  }
 
-    @Override
-    public void tooltipBody(ItemStack ignoredStack, List<Component> tooltip) {
-        tooltip.addAll(Tooltip.get(unlocalizedName(), tooltipData().toArray()));
-    }
+  @Override
+  public void tooltipBody(ItemStack ignoredStack, List<Component> tooltip) {
+    tooltip.addAll(Tooltip.get(unlocalizedName(), tooltipData().toArray()));
+  }
 }

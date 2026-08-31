@@ -13,31 +13,31 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 
 public class UpgradeMF extends DelegateItem {
-    public UpgradeMF(Properties properties) {
-        super(properties);
-    }
+  public UpgradeMF(Properties properties) {
+    super(properties);
+  }
 
-    @Override
-    public @NotNull InteractionResult onItemUseFirst(@NotNull ItemStack stack, @NotNull UseOnContext context) {
-        Level world = context.getLevel();
-        var player = context.getPlayer();
-        if (player == null) return InteractionResult.PASS;
-        if (!world.isClientSide && player.isShiftKeyDown()) {
-            BlockPos pos = context.getClickedPos();
-            Direction side = context.getClickedFace();
-            CustomData cd = stack.get(DataComponents.CUSTOM_DATA);
-            CompoundTag data;
-            if (cd == null || cd.isEmpty()) {
-                data = new CompoundTag();
-            } else {
-                data = cd.copyTag();
-            }
-            data.putIntArray(OCSettings.namespace + "coord", new int[]{
-                    pos.getX(), pos.getY(), pos.getZ(), world.dimension().location().hashCode(), side.ordinal()
-            });
-            stack.set(DataComponents.CUSTOM_DATA, CustomData.of(data));
-            return InteractionResult.SUCCESS;
-        }
-        return InteractionResult.PASS;
+  @Override
+  public @NotNull InteractionResult onItemUseFirst(@NotNull ItemStack stack, @NotNull UseOnContext context) {
+    Level world = context.getLevel();
+    var player = context.getPlayer();
+    if (player == null) return InteractionResult.PASS;
+    if (!world.isClientSide && player.isShiftKeyDown()) {
+      BlockPos pos = context.getClickedPos();
+      Direction side = context.getClickedFace();
+      CustomData cd = stack.get(DataComponents.CUSTOM_DATA);
+      CompoundTag data;
+      if (cd == null || cd.isEmpty()) {
+        data = new CompoundTag();
+      } else {
+        data = cd.copyTag();
+      }
+      data.putIntArray(OCSettings.namespace + "coord", new int[]{
+        pos.getX(), pos.getY(), pos.getZ(), world.dimension().location().hashCode(), side.ordinal()
+      });
+      stack.set(DataComponents.CUSTOM_DATA, CustomData.of(data));
+      return InteractionResult.SUCCESS;
     }
+    return InteractionResult.PASS;
+  }
 }

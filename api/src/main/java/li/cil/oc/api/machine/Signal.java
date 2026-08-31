@@ -7,13 +7,13 @@ package li.cil.oc.api.machine;
  * type for {@link Machine#popSignal()}.
  */
 public interface Signal {
-    /**
-     * The name of the signal.
-     */
-    String name();
+  /**
+   * The name of the signal.
+   */
+  String name();
 
-    /**
-     * The list of arguments for the signal.
-     */
-    Object[] args();
+  /**
+   * The list of arguments for the signal.
+   */
+  Object[] args();
 }

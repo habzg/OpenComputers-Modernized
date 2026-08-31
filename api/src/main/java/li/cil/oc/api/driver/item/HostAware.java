@@ -12,17 +12,17 @@ import net.minecraft.world.item.ItemStack;
  * environments, such as robot specific upgrades.
  */
 public interface HostAware extends DriverItem {
-    /**
-     * Used to determine the item types this driver handles.
-     * <br>
-     * This is used to determine which driver to use for an item when it should
-     * be installed in a computer. Note that the return value should not change
-     * over time; if it does, though, an already installed component will not
-     * be ejected, since this value is only checked when adding components.
-     *
-     * @param stack the item to check.
-     * @param host  the type of host the environment would live in.
-     * @return <code>true</code> if the item is supported; <code>false</code> otherwise.
-     */
-    boolean worksWith(ItemStack stack, Class<? extends EnvironmentHost> host);
+  /**
+   * Used to determine the item types this driver handles.
+   * <br>
+   * This is used to determine which driver to use for an item when it should
+   * be installed in a computer. Note that the return value should not change
+   * over time; if it does, though, an already installed component will not
+   * be ejected, since this value is only checked when adding components.
+   *
+   * @param stack the item to check.
+   * @param host  the type of host the environment would live in.
+   * @return <code>true</code> if the item is supported; <code>false</code> otherwise.
+   */
+  boolean worksWith(ItemStack stack, Class<? extends EnvironmentHost> host);
 }

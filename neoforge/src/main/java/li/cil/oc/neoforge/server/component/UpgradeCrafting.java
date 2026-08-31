@@ -11,17 +11,17 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import org.jetbrains.annotations.NotNull;
 
 public class UpgradeCrafting extends UpgradeCraftingBase {
-    public UpgradeCrafting(Robot host) {
-        super(host);
-    }
+  public UpgradeCrafting(Robot host) {
+    super(host);
+  }
 
-    @Override
-    protected void postItemCraftedEvent(@NotNull Player player, @NotNull ItemStack result, @NotNull CraftingInventory inventory) {
-        NeoForge.EVENT_BUS.post(new PlayerEvent.ItemCraftedEvent(player, result, inventory));
-    }
+  @Override
+  protected void postItemCraftedEvent(@NotNull Player player, @NotNull ItemStack result, @NotNull CraftingInventory inventory) {
+    NeoForge.EVENT_BUS.post(new PlayerEvent.ItemCraftedEvent(player, result, inventory));
+  }
 
-    @Override
-    protected void postPlayerDestroyItemEvent(@NotNull Player player, @NotNull ItemStack stack) {
-        NeoForge.EVENT_BUS.post(new PlayerDestroyItemEvent(player, stack, InteractionHand.MAIN_HAND));
-    }
+  @Override
+  protected void postPlayerDestroyItemEvent(@NotNull Player player, @NotNull ItemStack stack) {
+    NeoForge.EVENT_BUS.post(new PlayerDestroyItemEvent(player, stack, InteractionHand.MAIN_HAND));
+  }
 }

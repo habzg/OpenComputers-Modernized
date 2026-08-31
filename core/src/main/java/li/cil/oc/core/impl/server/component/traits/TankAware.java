@@ -8,30 +8,30 @@ import li.cil.oc.core.util.FluidStack;
 import li.cil.oc.core.util.FluidTank;
 
 public interface TankAware {
-    MultiTank tank();
+  MultiTank tank();
 
-    int selectedTank();
+  int selectedTank();
 
-    void selectedTank_$eq(int value);
+  void selectedTank_$eq(int value);
 
-    default int optTank(Arguments args, int ignoredN) {
-        if (args.count() > 0 && args.checkAny(0) != null)
-            return ExtendedArguments.checkTank(args, tank(), 0);
-        return selectedTank();
-    }
+  default int optTank(Arguments args, int ignoredN) {
+    if (args.count() > 0 && args.checkAny(0) != null)
+      return ExtendedArguments.checkTank(args, tank(), 0);
+    return selectedTank();
+  }
 
-    default FluidTank getTank(int index) {
-        if (index >= 0 && index < tank().tankCount())
-            return FluidUtils.tankFrom(tank(), index);
-        return null;
-    }
+  default FluidTank getTank(int index) {
+    if (index >= 0 && index < tank().tankCount())
+      return FluidUtils.tankFrom(tank(), index);
+    return null;
+  }
 
-    default FluidStack fluidInTank(int index) {
-        FluidTank t = getTank(index);
-        return t != null ? t.getFluid() : null;
-    }
+  default FluidStack fluidInTank(int index) {
+    FluidTank t = getTank(index);
+    return t != null ? t.getFluid() : null;
+  }
 
-    default boolean haveSameFluidType(FluidStack stackA, FluidStack stackB) {
-        return stackA != null && stackA.hasSameFluid(stackB);
-    }
+  default boolean haveSameFluidType(FluidStack stackA, FluidStack stackB) {
+    return stackA != null && stackA.hasSameFluid(stackB);
+  }
 }

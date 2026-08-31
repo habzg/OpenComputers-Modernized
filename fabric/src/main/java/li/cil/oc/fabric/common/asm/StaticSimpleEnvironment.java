@@ -12,33 +12,33 @@ import li.cil.oc.core.impl.util.SideTracker;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 public final class StaticSimpleEnvironment {
-    private static final Map<BlockEntity, Node> nodes = new HashMap<>();
+  private static final Map<BlockEntity, Node> nodes = new HashMap<>();
 
-    private StaticSimpleEnvironment() {
-    }
+  private StaticSimpleEnvironment() {
+  }
 
-    public static Node node(final BlockEntity blockEntity, final SimpleComponent simpleComponent) {
-        if (SideTracker.isClient()) {
-            return null;
-        }
-        final String name = simpleComponent.getComponentName();
-        if (Strings.isNullOrEmpty(name)) {
-            final Node node = nodes.remove(blockEntity);
-            if (node != null) {
-                node.remove();
-            }
-        } else if (!nodes.containsKey(blockEntity)) {
-            nodes.put(
-                    blockEntity,
-                    Network.newNode(blockEntity instanceof Environment env ? env : null, Visibility.Network)
-                            .withComponent(name)
-                            .create());
-        }
-        return nodes.get(blockEntity);
+  public static Node node(final BlockEntity blockEntity, final SimpleComponent simpleComponent) {
+    if (SideTracker.isClient()) {
+      return null;
     }
+    final String name = simpleComponent.getComponentName();
+    if (Strings.isNullOrEmpty(name)) {
+      final Node node = nodes.remove(blockEntity);
+      if (node != null) {
+        node.remove();
+      }
+    } else if (!nodes.containsKey(blockEntity)) {
+      nodes.put(
+        blockEntity,
+        Network.newNode(blockEntity instanceof Environment env ? env : null, Visibility.Network)
+          .withComponent(name)
+          .create());
+    }
+    return nodes.get(blockEntity);
+  }
 
-    @SuppressWarnings("unused")
-    public static void onServerStopped() {
-        nodes.clear();
-    }
+  @SuppressWarnings("unused")
+  public static void onServerStopped() {
+    nodes.clear();
+  }
 }

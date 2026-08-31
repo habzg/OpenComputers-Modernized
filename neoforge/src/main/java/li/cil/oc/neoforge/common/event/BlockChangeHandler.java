@@ -9,28 +9,28 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
 
 public final class BlockChangeHandler {
-    private static final Map<ChangeListener, BlockPosition> changeListeners = new HashMap<>();
+  private static final Map<ChangeListener, BlockPosition> changeListeners = new HashMap<>();
 
-    public static void addListener(ChangeListener listener, BlockPosition coord) {
-        EventHandler.scheduleServer(() -> changeListeners.put(listener, coord));
-    }
+  public static void addListener(ChangeListener listener, BlockPosition coord) {
+    EventHandler.scheduleServer(() -> changeListeners.put(listener, coord));
+  }
 
-    public static void removeListener(ChangeListener listener) {
-        EventHandler.scheduleServer(() -> changeListeners.remove(listener));
-    }
+  public static void removeListener(ChangeListener listener) {
+    EventHandler.scheduleServer(() -> changeListeners.remove(listener));
+  }
 
-    @SuppressWarnings("unused")
-    @SubscribeEvent
-    public static void onNeighborNotify(BlockEvent.NeighborNotifyEvent e) {
-        BlockPosition current = BlockPosition.apply(e.getPos().getX(), e.getPos().getY(), e.getPos().getZ(), (Level) e.getLevel());
-        for (Map.Entry<ChangeListener, BlockPosition> entry : changeListeners.entrySet()) {
-            if (entry.getValue().equals(current)) {
-                entry.getKey().onBlockChanged();
-            }
-        }
+  @SuppressWarnings("unused")
+  @SubscribeEvent
+  public static void onNeighborNotify(BlockEvent.NeighborNotifyEvent e) {
+    BlockPosition current = BlockPosition.apply(e.getPos().getX(), e.getPos().getY(), e.getPos().getZ(), (Level) e.getLevel());
+    for (Map.Entry<ChangeListener, BlockPosition> entry : changeListeners.entrySet()) {
+      if (entry.getValue().equals(current)) {
+        entry.getKey().onBlockChanged();
+      }
     }
+  }
 
-    public interface ChangeListener {
-        void onBlockChanged();
-    }
+  public interface ChangeListener {
+    void onBlockChanged();
+  }
 }

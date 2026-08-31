@@ -12,57 +12,57 @@ import net.minecraft.world.item.ItemStack;
  * running in, to allow querying the time of day, for example.
  */
 public interface MachineHost extends EnvironmentHost {
-    /**
-     * The machine currently hosted.
-     */
-    Machine machine();
+  /**
+   * The machine currently hosted.
+   */
+  Machine machine();
 
-    /**
-     * List of all components that are built into this machine directly.
-     * <br>
-     * This is used to find CPUs, component buses and memory.
-     */
-    Iterable<ItemStack> internalComponents();
+  /**
+   * List of all components that are built into this machine directly.
+   * <br>
+   * This is used to find CPUs, component buses and memory.
+   */
+  Iterable<ItemStack> internalComponents();
 
-    /**
-     * Get the slot a component with the specified address is in.
-     * <br>
-     * This is intended to allow determining the slot of <em>item</em>
-     * components sitting in computers. For other components this returns
-     * negative values.
-     *
-     * @param address the address of the component to get the slot for.
-     * @return the index of the slot the component is in.
-     */
-    int componentSlot(String address);
+  /**
+   * Get the slot a component with the specified address is in.
+   * <br>
+   * This is intended to allow determining the slot of <em>item</em>
+   * components sitting in computers. For other components this returns
+   * negative values.
+   *
+   * @param address the address of the component to get the slot for.
+   * @return the index of the slot the component is in.
+   */
+  int componentSlot(String address);
 
-    /**
-     * This is called on the owner when the machine's {@link Environment#onConnect(Node)}
-     * method gets called. This can be useful for reacting to network events
-     * when the owner does not have its own node (for example, computer cases
-     * expose their machine's node as their own node). This callback allows it
-     * to connect its components (graphics cards and the like) when it is
-     * connected to a node network (when added to the Level, for example).
-     *
-     * @param node the node that was connected to the network.
-     */
-    void onMachineConnect(Node node);
+  /**
+   * This is called on the owner when the machine's {@link Environment#onConnect(Node)}
+   * method gets called. This can be useful for reacting to network events
+   * when the owner does not have its own node (for example, computer cases
+   * expose their machine's node as their own node). This callback allows it
+   * to connect its components (graphics cards and the like) when it is
+   * connected to a node network (when added to the Level, for example).
+   *
+   * @param node the node that was connected to the network.
+   */
+  void onMachineConnect(Node node);
 
-    /**
-     * Like {@link #onMachineConnect(Node)}, except that this is called whenever
-     * the machine's {@link Environment#onDisconnect(Node)} method is called.
-     *
-     * @param node the node that was disconnected from the network.
-     */
-    void onMachineDisconnect(Node node);
+  /**
+   * Like {@link #onMachineConnect(Node)}, except that this is called whenever
+   * the machine's {@link Environment#onDisconnect(Node)} method is called.
+   *
+   * @param node the node that was disconnected from the network.
+   */
+  void onMachineDisconnect(Node node);
 
-    /**
-     * Helper method for printing the machine position in error messages and debug statements.
-     */
-    default String machinePosition() {
-        if (level() != null)
-            return String.format("(%g, %g, %g, %s)", xPosition(), yPosition(), zPosition(), level().dimension().location());
-        else
-            return String.format("(%g, %g, %g)", xPosition(), yPosition(), zPosition());
-    }
+  /**
+   * Helper method for printing the machine position in error messages and debug statements.
+   */
+  default String machinePosition() {
+    if (level() != null)
+      return String.format("(%g, %g, %g, %s)", xPosition(), yPosition(), zPosition(), level().dimension().location());
+    else
+      return String.format("(%g, %g, %g)", xPosition(), yPosition(), zPosition());
+  }
 }

@@ -19,88 +19,88 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class FloppyModel implements BakedModel {
-    private final ResourceLocation[] dyeModelIds;
-    private BakedModel[] dyeModels;
-    private final ItemOverrides overrides;
+  private final ResourceLocation[] dyeModelIds;
+  private BakedModel[] dyeModels;
+  private final ItemOverrides overrides;
 
-    @SuppressWarnings("unused")
-    public FloppyModel(ResourceLocation[] dyeModelIds) {
-        this.dyeModelIds = dyeModelIds;
-        this.dyeModels = null;
-        this.overrides = new ItemOverrides(null, null, List.of()) {
-            @Override
-            public @NotNull BakedModel resolve(@NotNull BakedModel original, @NotNull ItemStack stack, @Nullable ClientLevel level, @Nullable LivingEntity entity, int seed) {
-                int color = 8;
-                var data = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
-                if (data != null && !data.isEmpty()) {
-                    var tag = data.copyTag();
-                    if (tag.contains(OCSettings.namespace + "color")) {
-                        color = tag.getInt(OCSettings.namespace + "color");
-                    }
-                }
-                color = Math.clamp(color, 0, 15);
-                BakedModel result = resolveDyeModel(color);
-                return result != null ? result : original;
-            }
-        };
-    }
-
-    private BakedModel resolveDyeModel(int index) {
-        if (dyeModels == null) {
-            dyeModels = new BakedModel[dyeModelIds.length];
+  @SuppressWarnings("unused")
+  public FloppyModel(ResourceLocation[] dyeModelIds) {
+    this.dyeModelIds = dyeModelIds;
+    this.dyeModels = null;
+    this.overrides = new ItemOverrides(null, null, List.of()) {
+      @Override
+      public @NotNull BakedModel resolve(@NotNull BakedModel original, @NotNull ItemStack stack, @Nullable ClientLevel level, @Nullable LivingEntity entity, int seed) {
+        int color = 8;
+        var data = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+        if (data != null && !data.isEmpty()) {
+          var tag = data.copyTag();
+          if (tag.contains(OCSettings.namespace + "color")) {
+            color = tag.getInt(OCSettings.namespace + "color");
+          }
         }
-        if (dyeModels[index] == null) {
-            var modelManager = Minecraft.getInstance().getModelManager();
-            var id = dyeModelIds[index];
-            dyeModels[index] = modelManager.getModel(id);
-        }
-        return dyeModels[index];
-    }
+        color = Math.clamp(color, 0, 15);
+        BakedModel result = resolveDyeModel(color);
+        return result != null ? result : original;
+      }
+    };
+  }
 
-    private BakedModel defaultModel() {
-        return resolveDyeModel(8);
+  private BakedModel resolveDyeModel(int index) {
+    if (dyeModels == null) {
+      dyeModels = new BakedModel[dyeModelIds.length];
     }
+    if (dyeModels[index] == null) {
+      var modelManager = Minecraft.getInstance().getModelManager();
+      var id = dyeModelIds[index];
+      dyeModels[index] = modelManager.getModel(id);
+    }
+    return dyeModels[index];
+  }
 
-    @Override
-    public @NotNull List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, @NotNull RandomSource rand) {
-        var m = defaultModel();
-        return m != null ? m.getQuads(state, side, rand) : List.of();
-    }
+  private BakedModel defaultModel() {
+    return resolveDyeModel(8);
+  }
 
-    @Override
-    public @NotNull ItemOverrides getOverrides() {
-        return overrides;
-    }
+  @Override
+  public @NotNull List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, @NotNull RandomSource rand) {
+    var m = defaultModel();
+    return m != null ? m.getQuads(state, side, rand) : List.of();
+  }
 
-    @Override
-    public boolean useAmbientOcclusion() {
-        return true;
-    }
+  @Override
+  public @NotNull ItemOverrides getOverrides() {
+    return overrides;
+  }
 
-    @Override
-    public boolean isGui3d() {
-        return false;
-    }
+  @Override
+  public boolean useAmbientOcclusion() {
+    return true;
+  }
 
-    @Override
-    public boolean usesBlockLight() {
-        return false;
-    }
+  @Override
+  public boolean isGui3d() {
+    return false;
+  }
 
-    @Override
-    public boolean isCustomRenderer() {
-        return false;
-    }
+  @Override
+  public boolean usesBlockLight() {
+    return false;
+  }
 
-    @Override
-    public @NotNull TextureAtlasSprite getParticleIcon() {
-        var m = defaultModel();
-        return m != null ? m.getParticleIcon() : Minecraft.getInstance().getModelManager().getMissingModel().getParticleIcon();
-    }
+  @Override
+  public boolean isCustomRenderer() {
+    return false;
+  }
 
-    @Override
-    public @NotNull ItemTransforms getTransforms() {
-        var m = defaultModel();
-        return m != null ? m.getTransforms() : ItemTransforms.NO_TRANSFORMS;
-    }
+  @Override
+  public @NotNull TextureAtlasSprite getParticleIcon() {
+    var m = defaultModel();
+    return m != null ? m.getParticleIcon() : Minecraft.getInstance().getModelManager().getMissingModel().getParticleIcon();
+  }
+
+  @Override
+  public @NotNull ItemTransforms getTransforms() {
+    var m = defaultModel();
+    return m != null ? m.getTransforms() : ItemTransforms.NO_TRANSFORMS;
+  }
 }

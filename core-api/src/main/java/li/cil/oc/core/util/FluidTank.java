@@ -1,15 +1,15 @@
 package li.cil.oc.core.util;
 
 public interface FluidTank {
-    FluidStack getFluid();
+  FluidStack getFluid();
 
-    int getCapacity();
+  int getCapacity();
 
-    int getFluidAmount();
+  int getFluidAmount();
 
-    int getSpace();
+  int getSpace();
 
-    int fill(FluidStack resource, boolean simulate);
+  int fill(FluidStack resource, boolean simulate);
 
-    FluidStack drain(int maxDrain, boolean simulate);
+  FluidStack drain(int maxDrain, boolean simulate);
 }

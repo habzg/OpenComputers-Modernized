@@ -15,38 +15,38 @@ import net.minecraft.world.level.Level;
  * more options, if necessary.
  */
 public interface EnvironmentHost {
-    /**
-     * The Level the container lives in.
-     */
-    Level level();
+  /**
+   * The Level the container lives in.
+   */
+  Level level();
 
-    /**
-     * The container's X position in the Level.
-     * <br>
-     * For block entities this is the <em>centered</em> position. For example,
-     * if the block entity is located at (0, 2, 3) this will be 0.5.
-     */
-    double xPosition();
+  /**
+   * The container's X position in the Level.
+   * <br>
+   * For block entities this is the <em>centered</em> position. For example,
+   * if the block entity is located at (0, 2, 3) this will be 0.5.
+   */
+  double xPosition();
 
-    /**
-     * The container's Y position in the Level.
-     * <br>
-     * For block entities this is the <em>centered</em> position. For example,
-     * if the block entity is located at (0, 2, 3) this will be 2.5.
-     */
-    double yPosition();
+  /**
+   * The container's Y position in the Level.
+   * <br>
+   * For block entities this is the <em>centered</em> position. For example,
+   * if the block entity is located at (0, 2, 3) this will be 2.5.
+   */
+  double yPosition();
 
-    /**
-     * The container's Z position in the Level.
-     * <br>
-     * For block entities this is the <em>centered</em> position. For example,
-     * if the block entity is located at (0, 2, 3) this will be 3.5.
-     */
-    double zPosition();
+  /**
+   * The container's Z position in the Level.
+   * <br>
+   * For block entities this is the <em>centered</em> position. For example,
+   * if the block entity is located at (0, 2, 3) this will be 3.5.
+   */
+  double zPosition();
 
-    /**
-     * Marks the container as "changed" so that it knows it has to be saved
-     * again in the next Level save.
-     */
-    void markChanged();
+  /**
+   * Marks the container as "changed" so that it knows it has to be saved
+   * again in the next Level save.
+   */
+  void markChanged();
 }

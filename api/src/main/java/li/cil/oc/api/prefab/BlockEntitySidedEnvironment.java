@@ -17,74 +17,74 @@ import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("unused")
 public abstract class BlockEntitySidedEnvironment extends BlockEntity implements Environment, SidedEnvironment {
-    protected final Node[] nodes = new Node[6];
+  protected final Node[] nodes = new Node[6];
 
-    protected boolean addedToNetwork = false;
+  protected boolean addedToNetwork = false;
 
-    protected BlockEntitySidedEnvironment(BlockEntityType<?> type, BlockPos pos, BlockState state, final Node... nodes) {
-        super(type, pos, state);
-        System.arraycopy(nodes, 0, this.nodes, 0, Math.min(nodes.length, this.nodes.length));
+  protected BlockEntitySidedEnvironment(BlockEntityType<?> type, BlockPos pos, BlockState state, final Node... nodes) {
+    super(type, pos, state);
+    System.arraycopy(nodes, 0, this.nodes, 0, Math.min(nodes.length, this.nodes.length));
+  }
+
+  @Override
+  public Node node() {
+    return null;
+  }
+
+  @Override
+  public void onConnect(final Node node) {
+  }
+
+  @Override
+  public void onDisconnect(final Node node) {
+  }
+
+  @Override
+  public void onMessage(final Message message) {
+  }
+
+  @Override
+  public Node sidedNode(final Direction side) {
+    return side == null ? null : nodes[side.ordinal()];
+  }
+
+  public void updateEntity() {
+    if (!addedToNetwork) {
+      addedToNetwork = true;
+      Network.joinOrCreateNetwork(this);
     }
+  }
 
-    @Override
-    public Node node() {
-        return null;
+  @Override
+  public void setRemoved() {
+    super.setRemoved();
+    for (Node node : nodes) {
+      if (node != null) node.remove();
     }
+  }
 
-    @Override
-    public void onConnect(final Node node) {
+  @Override
+  public void loadAdditional(final @NotNull CompoundTag nbt, final HolderLookup.@NotNull Provider registries) {
+    super.loadAdditional(nbt, registries);
+    int index = 0;
+    for (Node node : nodes) {
+      if (node != null && Objects.equals(node.host(), this)) {
+        node.load(nbt.getCompound("oc:node" + index), registries);
+      }
+      ++index;
     }
+  }
 
-    @Override
-    public void onDisconnect(final Node node) {
+  public void saveAdditional(@NotNull CompoundTag nbt, final HolderLookup.@NotNull Provider registries) {
+    super.saveAdditional(nbt, registries);
+    int index = 0;
+    for (Node node : nodes) {
+      if (node != null && Objects.equals(node.host(), this)) {
+        final CompoundTag nodeNbt = new CompoundTag();
+        node.save(nodeNbt, registries);
+        nbt.put("oc:node" + index, nodeNbt);
+      }
+      ++index;
     }
-
-    @Override
-    public void onMessage(final Message message) {
-    }
-
-    @Override
-    public Node sidedNode(final Direction side) {
-        return side == null ? null : nodes[side.ordinal()];
-    }
-
-    public void updateEntity() {
-        if (!addedToNetwork) {
-            addedToNetwork = true;
-            Network.joinOrCreateNetwork(this);
-        }
-    }
-
-    @Override
-    public void setRemoved() {
-        super.setRemoved();
-        for (Node node : nodes) {
-            if (node != null) node.remove();
-        }
-    }
-
-    @Override
-    public void loadAdditional(final @NotNull CompoundTag nbt, final HolderLookup.@NotNull Provider registries) {
-        super.loadAdditional(nbt, registries);
-        int index = 0;
-        for (Node node : nodes) {
-            if (node != null && Objects.equals(node.host(), this)) {
-                node.load(nbt.getCompound("oc:node" + index), registries);
-            }
-            ++index;
-        }
-    }
-
-    public void saveAdditional(@NotNull CompoundTag nbt, final HolderLookup.@NotNull Provider registries) {
-        super.saveAdditional(nbt, registries);
-        int index = 0;
-        for (Node node : nodes) {
-            if (node != null && Objects.equals(node.host(), this)) {
-                final CompoundTag nodeNbt = new CompoundTag();
-                node.save(nodeNbt, registries);
-                nbt.put("oc:node" + index, nodeNbt);
-            }
-            ++index;
-        }
-    }
+  }
 }

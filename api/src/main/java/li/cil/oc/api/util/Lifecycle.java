@@ -11,56 +11,56 @@ import li.cil.oc.api.network.Node;
  * are no nodes, to allow components to know when they are being unloaded.
  */
 public interface Lifecycle {
+  /**
+   * Called when the state of the object changes.
+   *
+   * @param state the lifecycle state that is being <em>entered</em>.
+   */
+  void onLifecycleStateChange(LifecycleState state);
+
+  /**
+   * States an object can enter.
+   */
+  enum LifecycleState {
     /**
-     * Called when the state of the object changes.
-     *
-     * @param state the lifecycle state that is being <em>entered</em>.
+     * State immediately active after construction of the object.
+     * <br>
+     * This generally means initial construction of the object and
+     * restoring its state (e.g. loading data if it's persistable).
      */
-    void onLifecycleStateChange(LifecycleState state);
+    Constructing,
 
     /**
-     * States an object can enter.
+     * State active when object is being lazily set up.
+     * <br>
+     * This generally means setting up references, and connecting
+     * nodes if the object is networked.
      */
-    enum LifecycleState {
-        /**
-         * State immediately active after construction of the object.
-         * <br>
-         * This generally means initial construction of the object and
-         * restoring its state (e.g. loading data if it's persistable).
-         */
-        Constructing,
+    Initializing,
 
-        /**
-         * State active when object is being lazily set up.
-         * <br>
-         * This generally means setting up references, and connecting
-         * nodes if the object is networked.
-         */
-        Initializing,
+    /**
+     * State active when object finished setting up.
+     * <br>
+     * This means everything is set up and the object now enters
+     * its general use lifetime (where components are updated each
+     * tick for example).
+     */
+    Initialized,
 
-        /**
-         * State active when object finished setting up.
-         * <br>
-         * This means everything is set up and the object now enters
-         * its general use lifetime (where components are updated each
-         * tick for example).
-         */
-        Initialized,
+    /**
+     * State active when object begins cleaning up.
+     * <br>
+     * This means tearing down references and disconnecting nodes,
+     * for example.
+     */
+    Disposing,
 
-        /**
-         * State active when object begins cleaning up.
-         * <br>
-         * This means tearing down references and disconnecting nodes,
-         * for example.
-         */
-        Disposing,
-
-        /**
-         * State active after object has been cleaned up, right before
-         * references by the managing container to it are dropped.
-         * <br>
-         * This means the object is now considered "dead".
-         */
-        Disposed
-    }
+    /**
+     * State active after object has been cleaned up, right before
+     * references by the managing container to it are dropped.
+     * <br>
+     * This means the object is now considered "dead".
+     */
+    Disposed
+  }
 }

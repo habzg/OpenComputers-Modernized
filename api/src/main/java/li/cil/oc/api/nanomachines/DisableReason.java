@@ -7,18 +7,18 @@ package li.cil.oc.api.nanomachines;
  */
 @SuppressWarnings("unused")
 public enum DisableReason {
-    /**
-     * This covers things like players logging off or the controller being reset.
-     */
-    Default,
+  /**
+   * This covers things like players logging off or the controller being reset.
+   */
+  Default,
 
-    /**
-     * Input state changed, leading to a behavior being disabled.
-     */
-    InputChanged,
+  /**
+   * Input state changed, leading to a behavior being disabled.
+   */
+  InputChanged,
 
-    /**
-     * System has run out of energy and is powering down.
-     */
-    OutOfEnergy
+  /**
+   * System has run out of energy and is powering down.
+   */
+  OutOfEnergy
 }

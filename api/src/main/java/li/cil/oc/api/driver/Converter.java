@@ -11,20 +11,20 @@ import java.util.Map;
  * which converters are called depends on the order they were registered in.
  */
 public interface Converter {
-    /**
-     * Converts a type to a Map.
-     * <br>
-     * The keys and values in the resulting map will be converted in turn.
-     * If after those conversions the map still contains unsupported values,
-     * they will not be retained.
-     * <br>
-     * The conversion result should be placed into the the passed map, i.e. the
-     * map will represent the original object. For example, if the value had a
-     * field <code>name</code>, add a key <code>name</code> to the map with the value
-     * of that field.
-     *
-     * @param value  the value to convert.
-     * @param output the map conversion results are accumulated into.
-     */
-    void convert(Object value, Map<Object, Object> output);
+  /**
+   * Converts a type to a Map.
+   * <br>
+   * The keys and values in the resulting map will be converted in turn.
+   * If after those conversions the map still contains unsupported values,
+   * they will not be retained.
+   * <br>
+   * The conversion result should be placed into the the passed map, i.e. the
+   * map will represent the original object. For example, if the value had a
+   * field <code>name</code>, add a key <code>name</code> to the map with the value
+   * of that field.
+   *
+   * @param value  the value to convert.
+   * @param output the map conversion results are accumulated into.
+   */
+  void convert(Object value, Map<Object, Object> output);
 }

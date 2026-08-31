@@ -7,21 +7,21 @@ import li.cil.oc.neoforge.common.init.Blocks;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 
 public final class PeripheralProvider {
-    private PeripheralProvider() {
-    }
+  private PeripheralProvider() {
+  }
 
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        try {
-            event.registerBlock(PeripheralCapability.get(),
-                    (level, pos, state, blockEntity, side) -> {
-                        if (blockEntity instanceof Relay relay) {
-                            return new RelayPeripheral(relay);
-                        }
-                        return null;
-                    },
-                    Blocks.RELAY.get()
-            );
-        } catch (Exception | NoClassDefFoundError ignored) {
-        }
+  public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+    try {
+      event.registerBlock(PeripheralCapability.get(),
+        (level, pos, state, blockEntity, side) -> {
+          if (blockEntity instanceof Relay relay) {
+            return new RelayPeripheral(relay);
+          }
+          return null;
+        },
+        Blocks.RELAY.get()
+      );
+    } catch (Exception | NoClassDefFoundError ignored) {
     }
+  }
 }

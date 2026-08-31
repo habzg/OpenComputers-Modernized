@@ -9,24 +9,24 @@ import net.fabricmc.fabric.api.event.EventFactory;
  * player. Used for the experience upgrade, for example.
  */
 public class RobotExhaustionEvent extends RobotEvent {
-    /**
-     * The amount of exhaustion that was generated.
-     */
-    public final double exhaustion;
+  /**
+   * The amount of exhaustion that was generated.
+   */
+  public final double exhaustion;
 
-    public RobotExhaustionEvent(Agent agent, double exhaustion) {
-        super(agent);
-        this.exhaustion = exhaustion;
+  public RobotExhaustionEvent(Agent agent, double exhaustion) {
+    super(agent);
+    this.exhaustion = exhaustion;
+  }
+
+  @FunctionalInterface
+  public interface Listener {
+    void onRobotExhaustion(RobotExhaustionEvent event);
+  }
+
+  public static final Event<Listener> EVENT = EventFactory.createArrayBacked(Listener.class, (listeners) -> (event) -> {
+    for (Listener listener : listeners) {
+      listener.onRobotExhaustion(event);
     }
-
-    @FunctionalInterface
-    public interface Listener {
-        void onRobotExhaustion(RobotExhaustionEvent event);
-    }
-
-    public static final Event<Listener> EVENT = EventFactory.createArrayBacked(Listener.class, (listeners) -> (event) -> {
-        for (Listener listener : listeners) {
-            listener.onRobotExhaustion(event);
-        }
-    });
+  });
 }

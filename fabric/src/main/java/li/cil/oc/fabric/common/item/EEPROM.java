@@ -8,23 +8,23 @@ import net.minecraft.world.item.component.CustomData;
 import org.jetbrains.annotations.NotNull;
 
 public class EEPROM extends SimpleItem {
-    @SuppressWarnings("unused")
-    public EEPROM() {
-        super();
-    }
+  @SuppressWarnings("unused")
+  public EEPROM() {
+    super();
+  }
 
-    @Override
-    public @NotNull String getDescriptionId(ItemStack stack) {
-        CustomData cd = stack.get(DataComponents.CUSTOM_DATA);
-        if (cd != null && !cd.isEmpty()) {
-            CompoundTag tag = cd.copyTag();
-            if (tag.contains(OCSettings.namespace + "data")) {
-                CompoundTag data = tag.getCompound(OCSettings.namespace + "data");
-                if (data.contains(OCSettings.namespace + "label")) {
-                    return data.getString(OCSettings.namespace + "label");
-                }
-            }
+  @Override
+  public @NotNull String getDescriptionId(ItemStack stack) {
+    CustomData cd = stack.get(DataComponents.CUSTOM_DATA);
+    if (cd != null && !cd.isEmpty()) {
+      CompoundTag tag = cd.copyTag();
+      if (tag.contains(OCSettings.namespace + "data")) {
+        CompoundTag data = tag.getCompound(OCSettings.namespace + "data");
+        if (data.contains(OCSettings.namespace + "label")) {
+          return data.getString(OCSettings.namespace + "label");
         }
-        return super.getDescriptionId(stack);
+      }
     }
+    return super.getDescriptionId(stack);
+  }
 }

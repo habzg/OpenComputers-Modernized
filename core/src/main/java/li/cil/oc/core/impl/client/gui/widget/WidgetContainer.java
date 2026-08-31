@@ -7,30 +7,30 @@ import java.util.WeakHashMap;
 import net.minecraft.client.gui.GuiGraphics;
 
 public interface WidgetContainer {
-    Map<WidgetContainer, List<Widget>> _widgets = new WeakHashMap<>();
+  Map<WidgetContainer, List<Widget>> _widgets = new WeakHashMap<>();
 
-    default List<Widget> widgets() {
-        return _widgets.computeIfAbsent(this, k -> new ArrayList<>());
-    }
+  default List<Widget> widgets() {
+    return _widgets.computeIfAbsent(this, k -> new ArrayList<>());
+  }
 
-    default <T extends Widget> T addWidget(T widget) {
-        widgets().add(widget);
-        widget.owner = this;
-        return widget;
-    }
+  default <T extends Widget> T addWidget(T widget) {
+    widgets().add(widget);
+    widget.owner = this;
+    return widget;
+  }
 
-    default int windowX() {
-        return 0;
-    }
+  default int windowX() {
+    return 0;
+  }
 
-    default int windowY() {
-        return 0;
-    }
+  default int windowY() {
+    return 0;
+  }
 
-    default void drawWidgets(GuiGraphics guiGraphics) {
-        for (Widget w : widgets()) {
-            w.guiGraphics = guiGraphics;
-            w.draw();
-        }
+  default void drawWidgets(GuiGraphics guiGraphics) {
+    for (Widget w : widgets()) {
+      w.guiGraphics = guiGraphics;
+      w.draw();
     }
+  }
 }

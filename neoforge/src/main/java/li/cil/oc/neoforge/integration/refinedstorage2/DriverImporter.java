@@ -18,55 +18,55 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 
 @SuppressWarnings("unused")
 public class DriverImporter extends DriverSidedBlockEntity {
-    @Override
-    public Class<?> getBlockEntityClass() {
-        return RS2Util.importerClass();
+  @Override
+  public Class<?> getBlockEntityClass() {
+    return RS2Util.importerClass();
+  }
+
+  @Override
+  public ManagedEnvironment createEnvironment(Level world, BlockPos pos, Direction side) {
+    return new Environment(world.getBlockEntity(pos));
+  }
+
+  public static final class Environment extends ManagedBlockEntityEnvironment<AbstractImporterBlockEntity>
+    implements NamedBlock {
+    public Environment(BlockEntity tile) {
+      super((AbstractImporterBlockEntity) tile, "rs_importer");
     }
 
     @Override
-    public ManagedEnvironment createEnvironment(Level world, BlockPos pos, Direction side) {
-        return new Environment(world.getBlockEntity(pos));
+    public String preferredName() {
+      return "rs_importer";
     }
 
-    public static final class Environment extends ManagedBlockEntityEnvironment<AbstractImporterBlockEntity>
-            implements NamedBlock {
-        public Environment(BlockEntity tile) {
-            super((AbstractImporterBlockEntity) tile, "rs_importer");
-        }
-
-        @Override
-        public String preferredName() {
-            return "rs_importer";
-        }
-
-        @Override
-        public int priority() {
-            return 2;
-        }
-
-        @Override
-        public Node node() {
-            return super.node();
-        }
-
-        @Callback(doc = "function([slot:number]):table -- Get the configuration of the importer.")
-        public Object[] getImportConfiguration(Context context, Arguments args) {
-            return ConfigHelper.getImportConfiguration(getBlockEntity(), args);
-        }
-
-        @Callback(doc = "function([slot:number][, database:address, entry:number]):boolean -- Configure the importer.")
-        public Object[] setImportConfiguration(Context context, Arguments args) {
-            return ConfigHelper.setImportConfiguration(getBlockEntity(), args, node());
-        }
+    @Override
+    public int priority() {
+      return 2;
     }
 
-    public static final class Provider implements EnvironmentProvider {
-        @Override
-        public Class<?> getEnvironment(ItemStack stack) {
-            if (RS2Util.isImporter(stack)) {
-                return Environment.class;
-            }
-            return null;
-        }
+    @Override
+    public Node node() {
+      return super.node();
     }
+
+    @Callback(doc = "function([slot:number]):table -- Get the configuration of the importer.")
+    public Object[] getImportConfiguration(Context context, Arguments args) {
+      return ConfigHelper.getImportConfiguration(getBlockEntity(), args);
+    }
+
+    @Callback(doc = "function([slot:number][, database:address, entry:number]):boolean -- Configure the importer.")
+    public Object[] setImportConfiguration(Context context, Arguments args) {
+      return ConfigHelper.setImportConfiguration(getBlockEntity(), args, node());
+    }
+  }
+
+  public static final class Provider implements EnvironmentProvider {
+    @Override
+    public Class<?> getEnvironment(ItemStack stack) {
+      if (RS2Util.isImporter(stack)) {
+        return Environment.class;
+      }
+      return null;
+    }
+  }
 }

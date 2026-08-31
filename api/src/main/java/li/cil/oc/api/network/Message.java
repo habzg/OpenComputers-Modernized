@@ -7,34 +7,34 @@ package li.cil.oc.api.network;
  * more clear (returning a boolean can get annoying very fast).
  */
 public interface Message {
-    /**
-     * The node that sent the message.
-     *
-     * @return the source node.
-     */
-    Node source();
+  /**
+   * The node that sent the message.
+   *
+   * @return the source node.
+   */
+  Node source();
 
-    /**
-     * The name of this message.
-     *
-     * @return the name of the message.
-     */
-    String name();
+  /**
+   * The name of this message.
+   *
+   * @return the name of the message.
+   */
+  String name();
 
-    /**
-     * The values passed along in the message.
-     *
-     * @return the message data.
-     */
-    Object[] data();
+  /**
+   * The values passed along in the message.
+   *
+   * @return the message data.
+   */
+  Object[] data();
 
-    /**
-     * Stop further propagation of a broadcast message.
-     * <br>
-     * This can be used to stop further distributing messages when either
-     * serving a message to a specific address and there are multiple nodes
-     * with that address, or when serving a broadcast message.
-     */
-    @SuppressWarnings("unused")
-    void cancel();
+  /**
+   * Stop further propagation of a broadcast message.
+   * <br>
+   * This can be used to stop further distributing messages when either
+   * serving a message to a specific address and there are multiple nodes
+   * with that address, or when serving a broadcast message.
+   */
+  @SuppressWarnings("unused")
+  void cancel();
 }

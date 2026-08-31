@@ -6,14 +6,14 @@ import li.cil.oc.neoforge.integration.Mods;
 
 @SuppressWarnings("unused")
 public final class ModAppliedMekanistics implements ModProxy {
-    @Override
-    public Mod getMod() {
-        return Mods.AppliedMekanistics;
-    }
+  @Override
+  public Mod getMod() {
+    return Mods.AppliedMekanistics;
+  }
 
-    @Override
-    public void initialize() {
-        li.cil.oc.api.API.driver.add(new DriverController());
-        li.cil.oc.api.API.driver.add(new DriverBlockInterface());
-    }
+  @Override
+  public void initialize() {
+    li.cil.oc.api.API.driver.add(new DriverController());
+    li.cil.oc.api.API.driver.add(new DriverBlockInterface());
+  }
 }

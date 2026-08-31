@@ -15,60 +15,60 @@ import net.minecraft.world.item.ItemStack;
 import static li.cil.oc.core.util.ResultWrapper.result;
 
 public interface InventoryWorldControlMk2 extends InventoryAware, WorldAware, SideRestricted {
-    @Override
-    Player fakePlayer();
+  @Override
+  Player fakePlayer();
 
-    @Callback(doc = "function(facing:number, slot:number[, count:number[, fromSide:number]]):boolean -- Drops the selected item stack into the specified slot of an inventory.")
-    default Object[] dropIntoSlot(Context context, Arguments args) {
-        Direction facing = checkSideForAction(args, 0);
-        int count = ExtendedArguments.optItemCount(args, 2, 64);
-        Direction fromSide = ExtendedArguments.optSideAny(args, 3, facing.getOpposite());
-        ItemStack stack = inventory().getItem(selectedSlot());
-        if (stack.getCount() > 0) {
-            return withInventory(position().offset(facing), fromSide, inv -> {
-                int slot = ExtendedArguments.checkSlot(args, inv, 1);
-                if (!InventoryUtils.insertIntoInventorySlot(stack, inv, fromSide, slot, count)) {
-                    return result(false, "inventory full/invalid slot");
-                } else if (stack.getCount() == 0) {
-                    inventory().setItem(selectedSlot(), ItemStack.EMPTY);
-                } else {
-                    inventory().setChanged();
-                }
-                context.pause(OCSettings.get().dropDelay);
-                return result(true);
-            });
+  @Callback(doc = "function(facing:number, slot:number[, count:number[, fromSide:number]]):boolean -- Drops the selected item stack into the specified slot of an inventory.")
+  default Object[] dropIntoSlot(Context context, Arguments args) {
+    Direction facing = checkSideForAction(args, 0);
+    int count = ExtendedArguments.optItemCount(args, 2, 64);
+    Direction fromSide = ExtendedArguments.optSideAny(args, 3, facing.getOpposite());
+    ItemStack stack = inventory().getItem(selectedSlot());
+    if (stack.getCount() > 0) {
+      return withInventory(position().offset(facing), fromSide, inv -> {
+        int slot = ExtendedArguments.checkSlot(args, inv, 1);
+        if (!InventoryUtils.insertIntoInventorySlot(stack, inv, fromSide, slot, count)) {
+          return result(false, "inventory full/invalid slot");
+        } else if (stack.getCount() == 0) {
+          inventory().setItem(selectedSlot(), ItemStack.EMPTY);
+        } else {
+          inventory().setChanged();
         }
-        return result(false);
+        context.pause(OCSettings.get().dropDelay);
+        return result(true);
+      });
     }
+    return result(false);
+  }
 
-    @Callback(doc = "function(facing:number, slot:number[, count:number[, fromSide:number]]):boolean -- Sucks items from the specified slot of an inventory.")
-    default Object[] suckFromSlot(Context context, Arguments args) {
-        Direction facing = checkSideForAction(args, 0);
-        int count = ExtendedArguments.optItemCount(args, 2, 64);
-        Direction fromSide = ExtendedArguments.optSideAny(args, 3, facing.getOpposite());
-        return withInventory(position().offset(facing), fromSide, inv -> {
-            int slot = ExtendedArguments.checkSlot(args, inv, 1);
-            int extracted = InventoryUtils.extractFromInventorySlot(
-                    extractedStack -> {
-                        for (int s : insertionSlots()) {
-                            if (InventoryUtils.insertIntoInventorySlot(extractedStack, this.inventory(), null, s, 64))
-                                break;
-                        }
-                    },
-                    inv, fromSide, slot, count);
-            if (extracted > 0) {
-                context.pause(OCSettings.get().suckDelay);
-                return result(extracted);
-            }
-            return result(false);
-        });
-    }
+  @Callback(doc = "function(facing:number, slot:number[, count:number[, fromSide:number]]):boolean -- Sucks items from the specified slot of an inventory.")
+  default Object[] suckFromSlot(Context context, Arguments args) {
+    Direction facing = checkSideForAction(args, 0);
+    int count = ExtendedArguments.optItemCount(args, 2, 64);
+    Direction fromSide = ExtendedArguments.optSideAny(args, 3, facing.getOpposite());
+    return withInventory(position().offset(facing), fromSide, inv -> {
+      int slot = ExtendedArguments.checkSlot(args, inv, 1);
+      int extracted = InventoryUtils.extractFromInventorySlot(
+        extractedStack -> {
+          for (int s : insertionSlots()) {
+            if (InventoryUtils.insertIntoInventorySlot(extractedStack, this.inventory(), null, s, 64))
+              break;
+          }
+        },
+        inv, fromSide, slot, count);
+      if (extracted > 0) {
+        context.pause(OCSettings.get().suckDelay);
+        return result(extracted);
+      }
+      return result(false);
+    });
+  }
 
-    default Object[] withInventory(BlockPosition blockPos, Direction fromSide, java.util.function.Function<Container, Object[]> f) {
-        Container inv = InventoryUtils.inventoryAt(blockPos);
-        if (inv != null && inv.stillValid(fakePlayer()) && mayInteract(blockPos, fromSide)) {
-            return f.apply(inv);
-        }
-        return result(null, "no inventory");
+  default Object[] withInventory(BlockPosition blockPos, Direction fromSide, java.util.function.Function<Container, Object[]> f) {
+    Container inv = InventoryUtils.inventoryAt(blockPos);
+    if (inv != null && inv.stillValid(fakePlayer()) && mayInteract(blockPos, fromSide)) {
+      return f.apply(inv);
     }
+    return result(null, "no inventory");
+  }
 }

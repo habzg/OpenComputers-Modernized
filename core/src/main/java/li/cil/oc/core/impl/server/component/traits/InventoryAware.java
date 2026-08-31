@@ -8,31 +8,31 @@ import net.minecraft.world.item.ItemStack;
 
 
 public interface InventoryAware {
-    Player fakePlayer();
+  Player fakePlayer();
 
-    Container inventory();
+  Container inventory();
 
-    int selectedSlot();
+  int selectedSlot();
 
-    void selectedSlot_$eq(int value) ;
+  void selectedSlot_$eq(int value);
 
-    default int[] insertionSlots() {
-        int size = inventory().getContainerSize();
-        int[] result = new int[size];
-        int sel = selectedSlot();
-        int idx = 0;
-        for (int i = sel; i < size; i++) result[idx++] = i;
-        for (int i = 0; i < sel; i++) result[idx++] = i;
-        return result;
-    }
+  default int[] insertionSlots() {
+    int size = inventory().getContainerSize();
+    int[] result = new int[size];
+    int sel = selectedSlot();
+    int idx = 0;
+    for (int i = sel; i < size; i++) result[idx++] = i;
+    for (int i = 0; i < sel; i++) result[idx++] = i;
+    return result;
+  }
 
-    default int optSlot(Arguments args, int n) {
-        if (args.count() > 0 && args.checkAny(0) != null)
-            return ExtendedArguments.checkSlot(args, inventory(), 0);
-        return selectedSlot();
-    }
+  default int optSlot(Arguments args, int n) {
+    if (args.count() > 0 && args.checkAny(0) != null)
+      return ExtendedArguments.checkSlot(args, inventory(), 0);
+    return selectedSlot();
+  }
 
-    default ItemStack stackInSlot(int slot) {
-        return inventory().getItem(slot);
-    }
+  default ItemStack stackInSlot(int slot) {
+    return inventory().getItem(slot);
+  }
 }

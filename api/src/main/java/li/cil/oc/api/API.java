@@ -1,6 +1,5 @@
 package li.cil.oc.api;
 
-import li.cil.repack.com.typesafe.config.Config;
 import li.cil.oc.api.detail.DriverAPI;
 import li.cil.oc.api.detail.FileSystemAPI;
 import li.cil.oc.api.detail.ItemAPI;
@@ -8,6 +7,7 @@ import li.cil.oc.api.detail.MachineAPI;
 import li.cil.oc.api.detail.ManualAPI;
 import li.cil.oc.api.detail.NanomachinesAPI;
 import li.cil.oc.api.detail.NetworkAPI;
+import li.cil.repack.com.typesafe.config.Config;
 
 /**
  * Central reference for the API.
@@ -18,34 +18,34 @@ import li.cil.oc.api.detail.NetworkAPI;
  */
 @SuppressWarnings("unused")
 public class API {
-    public static final String ID_OWNER = "opencomputers|core";
-    public static final String VERSION = "8.0.0-alpha";
+  public static final String ID_OWNER = "opencomputers|core";
+  public static final String VERSION = "8.0.0-alpha";
 
-    /**
-     * The loaded config.
-     */
-    public static Config config = null;
+  /**
+   * The loaded config.
+   */
+  public static Config config = null;
 
-    /**
-     * Whether OpenComputers uses power.
-     * <br>
-     * This is set in the init phase, so do not rely it before the post-init phase.
-     */
-    public static boolean isPowerEnabled = false;
+  /**
+   * Whether OpenComputers uses power.
+   * <br>
+   * This is set in the init phase, so do not rely it before the post-init phase.
+   */
+  public static boolean isPowerEnabled = false;
 
-    // Prefer using the static methods in the respective classes in this package
-    // over accessing these instances directly.
+  // Prefer using the static methods in the respective classes in this package
+  // over accessing these instances directly.
 
-    public static DriverAPI driver = null;
-    public static FileSystemAPI fileSystem = null;
-    public static ItemAPI items = null;
-    public static MachineAPI machine = null;
-    public static ManualAPI manual = null;
-    public static NanomachinesAPI nanomachines = null;
-    public static NetworkAPI network = null;
+  public static DriverAPI driver = null;
+  public static FileSystemAPI fileSystem = null;
+  public static ItemAPI items = null;
+  public static MachineAPI machine = null;
+  public static ManualAPI manual = null;
+  public static NanomachinesAPI nanomachines = null;
+  public static NetworkAPI network = null;
 
-    private API() {
-    }
+  private API() {
+  }
 
-    public static final String ERROR_NOT_INITIALIZED = "OpenComputers API called before it was ready, this is likely a bug!";
+  public static final String ERROR_NOT_INITIALIZED = "OpenComputers API called before it was ready, this is likely a bug!";
 }

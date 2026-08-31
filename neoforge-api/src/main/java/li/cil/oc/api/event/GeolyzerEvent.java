@@ -1,12 +1,11 @@
 package li.cil.oc.api.event;
 
+import java.util.HashMap;
+import java.util.Map;
 import li.cil.oc.api.network.EnvironmentHost;
 import net.minecraft.core.BlockPos;
 import net.neoforged.bus.api.Event;
 import net.neoforged.bus.api.ICancellableEvent;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * This event is fired by the geolyzer block/upgrade.
@@ -16,103 +15,103 @@ import java.util.Map;
  */
 @SuppressWarnings("unused")
 public abstract class GeolyzerEvent extends Event implements ICancellableEvent {
+  /**
+   * The container of the geolyzer component. This can either be the
+   * geolyzer block, or something with the geolyzer upgrade (a robot).
+   */
+  public final EnvironmentHost host;
+
+  /**
+   * The options the operation was invoked with.
+   */
+  public final Map<?, ?> options;
+
+  protected GeolyzerEvent(EnvironmentHost host, Map<?, ?> options) {
+    this.host = host;
+    this.options = options;
+  }
+
+  /**
+   * Long-distance scan, getting quantified information about blocks around
+   * the geolyzer. By default this will yield a (noisy) listing of the
+   * hardness of the blocks.
+   * <br>
+   * The bounds are guaranteed to not define a volume larger than 64.
+   * Resulting data should be written to the {@link #data} array such that
+   * <code>index = x + z*w + y*w*d</code>, with <code>w = maxX - minX</code>
+   * and <code>d = maxZ - minZ</code> ({@code h} meaning height, {@code d}
+   * meaning depth).
+   */
+  public static class Scan extends GeolyzerEvent {
     /**
-     * The container of the geolyzer component. This can either be the
-     * geolyzer block, or something with the geolyzer upgrade (a robot).
+     * The <em>relative</em> minimal x coordinate of the box being scanned (inclusive).
      */
-    public final EnvironmentHost host;
+    public final int minX;
 
     /**
-     * The options the operation was invoked with.
+     * The <em>relative</em> minimal y coordinate of the box being scanned (inclusive).
      */
-    public final Map<?, ?> options;
+    public final int minY;
 
-    protected GeolyzerEvent(EnvironmentHost host, Map<?, ?> options) {
-        this.host = host;
-        this.options = options;
+    /**
+     * The <em>relative</em> minimal z coordinate of the box being scanned (inclusive).
+     */
+    public final int minZ;
+
+    /**
+     * The <em>relative</em> maximal x coordinate of the box being scanned (inclusive).
+     */
+    public final int maxX;
+
+    /**
+     * The <em>relative</em> maximal y coordinate of the box being scanned (inclusive).
+     */
+    public final int maxY;
+
+    /**
+     * The <em>relative</em> maximal z coordinate of the box being scanned (inclusive).
+     */
+    public final int maxZ;
+
+    /**
+     * The data for the column of blocks being scanned, which is an
+     * interval around the geolyzer itself, with the geolyzer block
+     * being at index 32.
+     */
+    public final float[] data = new float[64];
+
+    public Scan(EnvironmentHost host, Map<?, ?> options, int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
+      super(host, options);
+      this.minX = minX;
+      this.minY = minY;
+      this.minZ = minZ;
+      this.maxX = maxX;
+      this.maxY = maxY;
+      this.maxZ = maxZ;
     }
+  }
 
+  /**
+   * Zero-range scan, getting in-depth information about blocks directly
+   * adjacent to the geolyzer. By default this will yield the block's
+   * name, metadata, hardness and harvest information.
+   */
+  public static class Analyze extends GeolyzerEvent {
     /**
-     * Long-distance scan, getting quantified information about blocks around
-     * the geolyzer. By default this will yield a (noisy) listing of the
-     * hardness of the blocks.
+     * The position of the block to scan.
      * <br>
-     * The bounds are guaranteed to not define a volume larger than 64.
-     * Resulting data should be written to the {@link #data} array such that
-     * <code>index = x + z*w + y*w*d</code>, with <code>w = maxX - minX</code>
-     * and <code>d = maxZ - minZ</code> ({@code h} meaning height, {@code d}
-     * meaning depth).
+     * Note: get the world via the host if you need it.
      */
-    public static class Scan extends GeolyzerEvent {
-        /**
-         * The <em>relative</em> minimal x coordinate of the box being scanned (inclusive).
-         */
-        public final int minX;
-
-        /**
-         * The <em>relative</em> minimal y coordinate of the box being scanned (inclusive).
-         */
-        public final int minY;
-
-        /**
-         * The <em>relative</em> minimal z coordinate of the box being scanned (inclusive).
-         */
-        public final int minZ;
-
-        /**
-         * The <em>relative</em> maximal x coordinate of the box being scanned (inclusive).
-         */
-        public final int maxX;
-
-        /**
-         * The <em>relative</em> maximal y coordinate of the box being scanned (inclusive).
-         */
-        public final int maxY;
-
-        /**
-         * The <em>relative</em> maximal z coordinate of the box being scanned (inclusive).
-         */
-        public final int maxZ;
-
-        /**
-         * The data for the column of blocks being scanned, which is an
-         * interval around the geolyzer itself, with the geolyzer block
-         * being at index 32.
-         */
-        public final float[] data = new float[64];
-
-        public Scan(EnvironmentHost host, Map<?, ?> options, int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
-            super(host, options);
-            this.minX = minX;
-            this.minY = minY;
-            this.minZ = minZ;
-            this.maxX = maxX;
-            this.maxY = maxY;
-            this.maxZ = maxZ;
-        }
-    }
+    public final BlockPos pos;
 
     /**
-     * Zero-range scan, getting in-depth information about blocks directly
-     * adjacent to the geolyzer. By default this will yield the block's
-     * name, metadata, hardness and harvest information.
+     * The retrieved data for the block being scanned.
      */
-    public static class Analyze extends GeolyzerEvent {
-        /**
-         * The position of the block to scan.
-         * <br>
-         * Note: get the world via the host if you need it.
-         */
-        public final BlockPos pos;
+    public final Map<String, Object> data = new HashMap<>();
 
-        /**
-         * The retrieved data for the block being scanned.
-         */
-        public final Map<String, Object> data = new HashMap<>();
-
-        public Analyze(EnvironmentHost host, Map<?, ?> options, BlockPos pos) {
-            super(host, options);
-            this.pos = pos;
-        }
+    public Analyze(EnvironmentHost host, Map<?, ?> options, BlockPos pos) {
+      super(host, options);
+      this.pos = pos;
     }
+  }
 }

@@ -7,6 +7,6 @@ import java.io.Serial;
  * been reached in {@link Machine#invoke(String, String, Object[])}.
  */
 public class LimitReachedException extends RuntimeException {
-    @Serial
-    private static final long serialVersionUID = -5199996679654187159L;
+  @Serial
+  private static final long serialVersionUID = -5199996679654187159L;
 }

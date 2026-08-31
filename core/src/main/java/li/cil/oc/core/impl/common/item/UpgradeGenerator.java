@@ -6,18 +6,18 @@ import li.cil.oc.core.impl.OCSettings;
 
 public class UpgradeGenerator extends DelegateItem implements ItemTier {
 
-    @SuppressWarnings("unused")
-    public UpgradeGenerator(Properties properties) {
-        super(properties);
-    }
+  @SuppressWarnings("unused")
+  public UpgradeGenerator(Properties properties) {
+    super(properties);
+  }
 
-    @Override
-    public int tier() {
-        return 0;
-    }
+  @Override
+  public int tier() {
+    return 0;
+  }
 
-    @Override
-    protected List<Object> tooltipData() {
-        return List.of((int) (OCSettings.get().generatorEfficiency * 100));
-    }
+  @Override
+  protected List<Object> tooltipData() {
+    return List.of((int) (OCSettings.get().generatorEfficiency * 100));
+  }
 }
