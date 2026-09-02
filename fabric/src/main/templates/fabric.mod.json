@@ -34,16 +34,16 @@
     },
     "depends": {
         "fabricloader": ">=${loader_version}",
-        "minecraft": "~${minecraft_version}",
+        "minecraft": "${minecraft_version}",
         "fabric-api": ">=${fabric_api_version}"
     },
     "recommends": {
         "computercraft": ">=1.120.2",
-        "tis3d": ">=1.7.7",
+        "tis3d": ">=2.0.0",
         "sable": ">=2.0.5",
         "jade": ">=15.10.6",
         "wthit": ">=12.10.2",
-        "jei": ">=19.44.0.403",
+        "jei": ">=19.50.0.414",
         "rei": ">=16.0.799",
         "emi": ">=1.1.24",
         "team_reborn_energy": ">=4.1.0",
@@ -51,11 +51,11 @@
     },
     "breaks": {
         "computercraft": "<1.120.2",
-        "tis3d": "<1.7.7",
+        "tis3d": "<2.0.0",
         "sable": "<2.0.5",
         "jade": "<15.10.6",
         "wthit": "<12.10.2",
-        "jei": "<19.44.0.403",
+        "jei": "<19.50.0.414",
         "rei": "<16.0.799",
         "emi": "<1.1.24",
         "team_reborn_energy": "<4.1.0",

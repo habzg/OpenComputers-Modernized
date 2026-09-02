@@ -93,7 +93,7 @@ This mod adds modular computers and robots that can be programmed in Lua.
 [[dependencies.${mod_id}]]
     modId = "jei"
     type = "optional"
-    versionRange = "[19.44.0.403,)"
+    versionRange = "[19.50.0.414,)"
     ordering = "NONE"
     side = "BOTH"
 
@@ -163,7 +163,7 @@ This mod adds modular computers and robots that can be programmed in Lua.
 [[dependencies.${mod_id}]]
     modId = "tis3d"
     type = "optional"
-    versionRange = "[1.7.7,)"
+    versionRange = "[2.0.0,)"
     ordering = "NONE"
     side = "BOTH"
 

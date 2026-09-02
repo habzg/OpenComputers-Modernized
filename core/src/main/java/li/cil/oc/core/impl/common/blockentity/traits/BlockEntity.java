@@ -24,6 +24,7 @@ public abstract class BlockEntity extends net.minecraft.world.level.block.entity
   protected HolderLookup.Provider loadProvider;
 
   private boolean initialized;
+  private boolean unloading;
 
   public BlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
     super(type, pos, state);
@@ -56,10 +57,16 @@ public abstract class BlockEntity extends net.minecraft.world.level.block.entity
     return BlockPosition.apply(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), getLevel());
   }
 
+  public void markUnloading() {
+    unloading = true;
+  }
+
   @Override
   public void setRemoved() {
     super.setRemoved();
-    dispose();
+    if (!unloading) {
+      dispose();
+    }
   }
 
   public void initialize() {

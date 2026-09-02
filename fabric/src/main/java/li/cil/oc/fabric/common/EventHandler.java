@@ -230,11 +230,7 @@ public final class EventHandler {
 
     ServerBlockEntityEvents.BLOCK_ENTITY_UNLOAD.register((blockEntity, world) -> {
       if (blockEntity instanceof BlockEntity te) {
-        try {
-          te.dispose();
-        } catch (Throwable t) {
-          li.cil.oc.fabric.OpenComputers.log().warn("Failed disposing block entity on chunk unload.", t);
-        }
+        te.markUnloading();
       }
       if (blockEntity instanceof Screen screen) {
         if (!world.isClientSide && screen.node != null) {

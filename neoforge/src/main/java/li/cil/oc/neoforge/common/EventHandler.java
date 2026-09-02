@@ -265,11 +265,7 @@ public final class EventHandler {
       if (chunk instanceof net.minecraft.world.level.chunk.LevelChunk levelChunk) {
         for (var be : levelChunk.getBlockEntities().values()) {
           if (be instanceof li.cil.oc.core.impl.common.blockentity.traits.BlockEntity te) {
-            try {
-              te.dispose();
-            } catch (Throwable t) {
-              OpenComputers.log().warn("Failed disposing block entity on chunk unload.", t);
-            }
+            te.markUnloading();
           }
           if (be instanceof li.cil.oc.core.impl.common.blockentity.Screen screen) {
             if (screen.node != null) {

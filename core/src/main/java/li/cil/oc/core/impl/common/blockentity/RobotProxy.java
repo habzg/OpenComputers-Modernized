@@ -242,7 +242,18 @@ public class RobotProxy extends BlockEntity implements Computer, PowerInformatio
   }
 
   @Override
+  public void dispose() {
+    if (li.cil.oc.core.impl.common.blockentity.RobotBase.movingRobot.get() == robot) {
+      return;
+    }
+    super.dispose();
+  }
+
+  @Override
   public void setRemoved() {
+    if (li.cil.oc.core.impl.common.blockentity.RobotBase.movingRobot.get() == robot) {
+      return;
+    }
     super.setRemoved();
     if (robot.proxy == this) {
       var level = getLevel();
