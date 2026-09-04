@@ -22,6 +22,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class TabletHostBase implements ComponentInventory, MachineHost, Environment, li.cil.oc.api.internal.Tablet, TabletWrapper, DeviceInfo {
@@ -55,7 +56,6 @@ public abstract class TabletHostBase implements ComponentInventory, MachineHost,
   @Override
   public li.cil.oc.api.machine.Machine machine() {
     if (_machine == null) {
-      level();
       _machine = Machine.create(this);
       if (_machine != null && !level().isClientSide()) {
         var tag = loadMachineTag();
@@ -87,20 +87,42 @@ public abstract class TabletHostBase implements ComponentInventory, MachineHost,
 
   public void persistMachineState() {
     if (_machine != null) {
-      level();
       if (!level().isClientSide() && _machine.node() != null) {
         var tag = new CompoundTag();
         _machine.save(tag, level().registryAccess());
         saveMachineTag(tag);
       }
     }
+    if (_tabletComponent != null) {
+      if (!level().isClientSide()) {
+        var componentTag = new CompoundTag();
+        _tabletComponent.save(componentTag, level().registryAccess());
+        var stack = getStack();
+        var existing = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+        CompoundTag t;
+        if (existing != null && !existing.isEmpty()) {
+          t = existing.copyTag();
+        } else {
+          t = new CompoundTag();
+        }
+        t.put(OCSettings.namespace + "component", componentTag);
+        stack.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.of(t));
+      }
+    }
   }
 
   public @Nullable Tablet serverComponent() {
     if (_tabletComponent == null) {
-      level();
       if (!level().isClientSide()) {
         _tabletComponent = new Tablet(this);
+        var stack = getStack();
+        var existing = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+        if (existing != null && !existing.isEmpty()) {
+          var t = existing.copyTag();
+          if (t.contains(OCSettings.namespace + "component")) {
+            _tabletComponent.load(t.getCompound(OCSettings.namespace + "component"), level().registryAccess());
+          }
+        }
       }
     }
     return _tabletComponent;
@@ -296,6 +318,16 @@ public abstract class TabletHostBase implements ComponentInventory, MachineHost,
     setChanged();
   }
 
+  @Override
+  public boolean canPlaceItem(int slot, @NotNull ItemStack stack) {
+    if (slot != getContainerSize() - 1) return false;
+    if (stack.isEmpty()) return false;
+    var driver = li.cil.oc.api.API.driver.driverFor(stack, li.cil.oc.api.internal.Tablet.class);
+    if (driver == null) return false;
+    if (driver instanceof li.cil.oc.core.impl.integration.opencomputers.DriverScreen) return false;
+    return driver.slot(stack).equals(containerSlotType()) && driver.tier(stack) <= containerSlotTier();
+  }
+
   public boolean isCreative() {
     var data = new li.cil.oc.core.impl.common.item.data.TabletData(getStack());
     return data.tier == li.cil.oc.core.common.Tier.Four;
@@ -344,8 +376,7 @@ public abstract class TabletHostBase implements ComponentInventory, MachineHost,
 
   @Override
   public Level level() {
-    var p = player();
-    return p != null ? p.level() : null;
+    return creationLevel;
   }
 
   @Override

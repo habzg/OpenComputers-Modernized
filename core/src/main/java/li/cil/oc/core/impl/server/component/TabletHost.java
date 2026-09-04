@@ -72,12 +72,18 @@ public class TabletHost extends TabletHostBase {
 
   @Override
   public @NotNull String containerSlotType() {
-    return li.cil.oc.core.common.Slot.Tablet;
+    var data = new TabletData(stack);
+    if (data.container == null || data.container.isEmpty()) return li.cil.oc.core.common.Slot.None;
+    var driver = li.cil.oc.api.API.driver.driverFor(data.container, li.cil.oc.api.internal.Tablet.class);
+    return driver instanceof li.cil.oc.api.driver.item.Container c ? c.providedSlot(data.container) : li.cil.oc.core.common.Slot.None;
   }
 
   @Override
   public int containerSlotTier() {
-    return new TabletData(stack).tier;
+    var data = new TabletData(stack);
+    if (data.container == null || data.container.isEmpty()) return li.cil.oc.core.common.Tier.None;
+    var driver = li.cil.oc.api.API.driver.driverFor(data.container, li.cil.oc.api.internal.Tablet.class);
+    return driver instanceof li.cil.oc.api.driver.item.Container c ? c.providedTier(data.container) : li.cil.oc.core.common.Tier.None;
   }
 
   @Override

@@ -12,7 +12,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.Tag;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
@@ -59,8 +58,8 @@ public abstract class RobotProxy extends RedstoneAware implements GUI, StateAwar
   }
 
   @Override
-  protected void tooltipHead(int metadata, ItemStack stack, Player player, List<net.minecraft.network.chat.Component> tooltip, boolean advanced) {
-    super.tooltipHead(metadata, stack, player, tooltip, advanced);
+  protected void tooltipHead(int metadata, ItemStack stack, List<net.minecraft.network.chat.Component> tooltip, boolean advanced) {
+    super.tooltipHead(metadata, stack, tooltip, advanced);
     var data = new RobotData(stack);
     if (data.totalEnergy > 0) {
       tooltip.addAll(Tooltip.get("robot_storedenergy", data.totalEnergy));
@@ -84,13 +83,13 @@ public abstract class RobotProxy extends RedstoneAware implements GUI, StateAwar
   }
 
   @Override
-  protected void tooltipBody(int metadata, ItemStack stack, Player player, List<net.minecraft.network.chat.Component> tooltip, boolean advanced) {
+  protected void tooltipBody(int metadata, ItemStack stack, List<net.minecraft.network.chat.Component> tooltip, boolean advanced) {
     tooltip.addAll(Tooltip.get("robot"));
   }
 
   @Override
-  public void tooltipTail(int metadata, ItemStack stack, Player player, List<net.minecraft.network.chat.Component> tooltip, boolean advanced) {
-    super.tooltipTail(metadata, stack, player, tooltip, advanced);
+  public void tooltipTail(int metadata, ItemStack stack, List<net.minecraft.network.chat.Component> tooltip, boolean advanced) {
+    super.tooltipTail(metadata, stack, tooltip, advanced);
     var data = new RobotData(stack);
     var components = new java.util.ArrayList<ItemStack>();
     components.addAll(data.containers);

@@ -86,13 +86,20 @@ public class Robot extends Player {
     var resolved = RobotLookup.get(level, address);
     if (resolved instanceof li.cil.oc.neoforge.common.blockentity.Robot lr) return lr;
     if (level != null && level.isClientSide && net.neoforged.fml.loading.FMLLoader.getDist().isClient()) {
+      return ClientResolveHelper.tryResolveClientLevel(robot, level, address);
+    }
+    return robot;
+  }
+
+  private static class ClientResolveHelper {
+    private static li.cil.oc.neoforge.common.blockentity.Robot tryResolveClientLevel(li.cil.oc.neoforge.common.blockentity.Robot robot, Level level, String address) {
       var clientLevel = net.minecraft.client.Minecraft.getInstance().level;
       if (clientLevel != null && clientLevel != level) {
         var r2 = RobotLookup.get(clientLevel, address);
         if (r2 instanceof li.cil.oc.neoforge.common.blockentity.Robot lr) return lr;
       }
+      return robot;
     }
-    return robot;
   }
 
   public class InventorySlot extends StaticComponentSlot {

@@ -37,12 +37,12 @@ public class SimpleBlock extends AbstractBlock {
   }
 
   @Override
-  protected void tooltipBody(int ignoredMetadata, ItemStack ignoredStack, Player ignoredPlayer, List<Component> tooltip, boolean ignoredAdvanced) {
+  protected void tooltipBody(int ignoredMetadata, ItemStack ignoredStack, List<Component> tooltip, boolean ignoredAdvanced) {
     tooltip.addAll(Tooltip.get(getClass().getSimpleName()));
   }
 
   @Override
-  public void tooltipTail(int ignoredMetadata, ItemStack ignoredStack, Player ignoredPlayer, List<Component> tooltip, boolean ignoredAdvanced) {
+  public void tooltipTail(int ignoredMetadata, ItemStack ignoredStack, List<Component> tooltip, boolean ignoredAdvanced) {
     if (this instanceof PowerAcceptor acceptor) {
       tooltip.addAll(Tooltip.extended("PowerAcceptor", (int) acceptor.energyThroughput()));
     }

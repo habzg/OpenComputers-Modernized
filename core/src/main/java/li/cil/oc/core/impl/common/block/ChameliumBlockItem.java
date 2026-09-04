@@ -24,7 +24,7 @@ public class ChameliumBlockItem extends BlockItem {
     super.appendHoverText(stack, context, tooltip, flag);
     var block = getBlock();
     if (block instanceof AbstractBlock base) {
-      base.addInformation(stack.getDamageValue(), stack, null, tooltip, flag.isAdvanced());
+      base.addInformation(stack.getDamageValue(), stack, tooltip, flag.isAdvanced());
     }
   }
 }

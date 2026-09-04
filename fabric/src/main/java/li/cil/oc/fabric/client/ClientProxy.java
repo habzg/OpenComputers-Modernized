@@ -1,7 +1,10 @@
 package li.cil.oc.fabric.client;
 
+import li.cil.oc.api.nanomachines.Controller;
 import li.cil.oc.core.common.GuiType;
+import li.cil.oc.core.impl.ClientTerminalHelper;
 import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.client.Textures;
 import li.cil.oc.core.impl.client.renderer.blockentity.AdapterRenderer;
 import li.cil.oc.core.impl.client.renderer.blockentity.AssemblerRenderer;
 import li.cil.oc.core.impl.client.renderer.blockentity.CaseRenderer;
@@ -18,6 +21,7 @@ import li.cil.oc.core.impl.client.renderer.blockentity.RelayRenderer;
 import li.cil.oc.core.impl.client.renderer.blockentity.TransposerRenderer;
 import li.cil.oc.core.impl.client.renderer.entity.DroneRenderer;
 import li.cil.oc.core.impl.common.block.ChameliumBlock;
+import li.cil.oc.core.impl.common.nanomachines.ControllerImpl;
 import li.cil.oc.core.impl.util.Color;
 import li.cil.oc.core.impl.util.ItemColorizer;
 import li.cil.oc.fabric.client.renderer.HighlightRenderer;
@@ -39,10 +43,12 @@ import li.cil.oc.fabric.common.init.Items;
 import li.cil.oc.fabric.common.network.OCPayload;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientChunkEvents;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.ArmorRenderer;
 import net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.LivingEntityFeatureRendererRegistrationCallback;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
@@ -56,6 +62,7 @@ public final class ClientProxy implements ClientModInitializer {
   @Override
   @SuppressWarnings({"rawtypes", "unchecked"})
   public void onInitializeClient() {
+    li.cil.oc.core.impl.common.item.Terminal.setTerminalOpener(ClientTerminalHelper::openTerminalScreen);
     li.cil.oc.core.impl.util.Tooltip.setExtendedTooltips(KeyBindings::showExtendedTooltips);
     li.cil.oc.core.impl.common.item.Drone.setExtendedTooltips(KeyBindings::showExtendedTooltips);
     li.cil.oc.core.impl.common.block.PowerConverter.setFabric(true);
@@ -88,7 +95,7 @@ public final class ClientProxy implements ClientModInitializer {
     EntityRendererRegistry.register(Entities.DRONE, DroneRenderer::new);
 
     LivingEntityFeatureRendererRegistrationCallback.EVENT.register((entityType, entityRenderer, registrationHelper, context) -> {
-      if (entityRenderer instanceof LivingEntityRenderer<?, ?> livingRenderer && livingRenderer.getModel() instanceof net.minecraft.client.model.PlayerModel) {
+      if (entityType == net.minecraft.world.entity.EntityType.PLAYER && entityRenderer instanceof LivingEntityRenderer<?, ?> livingRenderer && livingRenderer.getModel() instanceof net.minecraft.client.model.PlayerModel) {
         registrationHelper.register(new HoverBootLayer((net.minecraft.client.renderer.entity.RenderLayerParent) entityRenderer));
       }
     });
@@ -202,7 +209,53 @@ public final class ClientProxy implements ClientModInitializer {
       return sprite.contents().name().toString();
     });
 
-    li.cil.oc.fabric.common.event.NanomachinesHandler.initClient();
+    ClientTickEvents.END_CLIENT_TICK.register(client -> {
+      if (client.player != null && !client.isPaused()) {
+        Controller ctrl = li.cil.oc.api.Nanomachines.getController(client.player);
+        if (ctrl instanceof ControllerImpl controller && controller.player == client.player) {
+          controller.update();
+        }
+      }
+    });
+
+    HudRenderCallback.EVENT.register((drawContext, tickCounter) -> {
+      var mc = Minecraft.getInstance();
+      if (mc.player == null || mc.options.hideGui) return;
+      Controller controller = li.cil.oc.api.Nanomachines.getController(mc.player);
+      if (controller == null) return;
+      int sizeX = 8;
+      int sizeY = 12;
+      int width = drawContext.guiWidth();
+      int height = drawContext.guiHeight();
+      double[] pos = OCSettings.get().nanomachineHudPos;
+      double x = pos[0];
+      double y = pos[1];
+      double leftValue;
+      if (x < 0) {
+        leftValue = (double) width / 2 - 91 - 12;
+      } else if (x < 1) {
+        leftValue = width * x;
+      } else {
+        leftValue = x;
+      }
+      int left = (int) Math.min(width - sizeX, leftValue);
+      double topValue;
+      if (y < 0) {
+        topValue = height - 39;
+      } else if (y < 1) {
+        topValue = y * height;
+      } else {
+        topValue = y;
+      }
+      int top = (int) Math.min(height - sizeY, topValue);
+      double fill = controller.getLocalBuffer() / controller.getLocalBufferSize();
+      drawContext.blit(Textures.overlayNanomachines, left, top, 0, 0f, 0f, sizeX, sizeY, sizeX, sizeY);
+      int barHeight = (int) Math.round(sizeY * fill);
+      if (barHeight > 0) {
+        drawContext.blit(Textures.overlayNanomachinesBar, left, top + sizeY - barHeight, 0, 0f, (float) (sizeY - barHeight), sizeX, barHeight, sizeX, sizeY);
+      }
+    });
+
     li.cil.oc.fabric.common.EventHandler.initClient();
     li.cil.oc.fabric.client.CommandHandler.init();
 

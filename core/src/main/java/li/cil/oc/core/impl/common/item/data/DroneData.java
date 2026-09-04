@@ -18,7 +18,7 @@ public class DroneData extends MicrocontrollerData {
 
   public DroneData(ItemStack stack) {
     this();
-    load(stack, li.cil.oc.core.impl.util.SideTracker.getCurrentServer().registryAccess());
+    load(stack);
   }
 
   @Override

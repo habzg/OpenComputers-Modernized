@@ -80,8 +80,8 @@ public class DiskDrive extends SimpleBlock implements li.cil.oc.core.impl.common
   }
 
   @Override
-  public void tooltipTail(int metadata, ItemStack stack, Player player, java.util.List<net.minecraft.network.chat.Component> tooltip, boolean advanced) {
-    super.tooltipTail(metadata, stack, player, tooltip, advanced);
+  public void tooltipTail(int metadata, ItemStack stack, java.util.List<net.minecraft.network.chat.Component> tooltip, boolean advanced) {
+    super.tooltipTail(metadata, stack, tooltip, advanced);
     if (ModIDs.isModLoaded(ModIDs.ComputerCraft)) {
       tooltip.addAll(Tooltip.get(getClass().getSimpleName() + ".CC"));
     }

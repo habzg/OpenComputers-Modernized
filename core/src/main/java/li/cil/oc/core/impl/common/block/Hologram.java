@@ -9,7 +9,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
@@ -114,7 +113,7 @@ public class Hologram extends SimpleBlock {
   }
 
   @Override
-  protected void tooltipBody(int metadata, ItemStack stack, Player player, List<Component> tooltip, boolean advanced) {
+  protected void tooltipBody(int metadata, ItemStack stack, List<Component> tooltip, boolean advanced) {
     tooltip.addAll(Tooltip.get("Hologram" + tier));
   }
 }

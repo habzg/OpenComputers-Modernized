@@ -5,14 +5,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import li.cil.oc.api.nanomachines.Controller;
 import li.cil.oc.core.impl.OCSettings;
-import li.cil.oc.core.impl.client.Textures;
 import li.cil.oc.core.impl.common.nanomachines.ControllerImpl;
 import li.cil.oc.core.impl.util.PlayerUtils;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
@@ -57,54 +53,6 @@ public final class NanomachinesHandler {
         savePlayerData(player);
         li.cil.oc.api.Nanomachines.uninstallController(player);
         PlayerUtils.persistedData(player).putBoolean(OCSettings.namespace + "hasNanomachines", true);
-      }
-    });
-  }
-
-  public static void initClient() {
-    ClientTickEvents.END_CLIENT_TICK.register(client -> {
-      if (client.player != null && !client.isPaused()) {
-        Controller ctrl = li.cil.oc.api.Nanomachines.getController(client.player);
-        if (ctrl instanceof ControllerImpl controller && controller.player == client.player) {
-          controller.update();
-        }
-      }
-    });
-    HudRenderCallback.EVENT.register((drawContext, tickCounter) -> {
-      var mc = Minecraft.getInstance();
-      if (mc.player == null || mc.options.hideGui) return;
-      Controller controller = li.cil.oc.api.Nanomachines.getController(mc.player);
-      if (controller == null) return;
-      int sizeX = 8;
-      int sizeY = 12;
-      int width = drawContext.guiWidth();
-      int height = drawContext.guiHeight();
-      double[] pos = OCSettings.get().nanomachineHudPos;
-      double x = pos[0];
-      double y = pos[1];
-      double leftValue;
-      if (x < 0) {
-        leftValue = (double) width / 2 - 91 - 12;
-      } else if (x < 1) {
-        leftValue = width * x;
-      } else {
-        leftValue = x;
-      }
-      int left = (int) Math.min(width - sizeX, leftValue);
-      double topValue;
-      if (y < 0) {
-        topValue = height - 39;
-      } else if (y < 1) {
-        topValue = y * height;
-      } else {
-        topValue = y;
-      }
-      int top = (int) Math.min(height - sizeY, topValue);
-      double fill = controller.getLocalBuffer() / controller.getLocalBufferSize();
-      drawContext.blit(Textures.overlayNanomachines, left, top, 0, 0f, 0f, sizeX, sizeY, sizeX, sizeY);
-      int barHeight = (int) Math.round(sizeY * fill);
-      if (barHeight > 0) {
-        drawContext.blit(Textures.overlayNanomachinesBar, left, top + sizeY - barHeight, 0, 0f, (float) (sizeY - barHeight), sizeX, barHeight, sizeX, sizeY);
       }
     });
   }

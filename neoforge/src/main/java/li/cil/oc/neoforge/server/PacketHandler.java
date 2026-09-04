@@ -306,13 +306,9 @@ public final class PacketHandler extends li.cil.oc.neoforge.common.PacketHandler
 
   public static void onMachineItemStateRequest(li.cil.oc.neoforge.common.PacketHandler.PacketParser p) {
     if (p.player instanceof net.minecraft.server.level.ServerPlayer player) {
-      if (player.containerMenu instanceof li.cil.oc.core.impl.common.container.Tablet) {
-        var stack = p.readItemStack();
-        var isRunning = li.cil.oc.core.impl.common.item.Tablet.get(stack, p.player).machine().isRunning();
-        PacketSender.sendMachineItemState(player, stack, isRunning);
-      } else {
-        logForgedPacket(player);
-      }
+      var stack = p.readItemStack();
+      var isRunning = li.cil.oc.core.impl.common.item.Tablet.get(stack, p.player).machine().isRunning();
+      PacketSender.sendMachineItemState(player, stack, isRunning);
     }
   }
 

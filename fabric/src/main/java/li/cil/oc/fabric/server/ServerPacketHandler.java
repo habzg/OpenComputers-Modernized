@@ -345,13 +345,9 @@ public final class ServerPacketHandler extends CommonPacketHandler {
 
   private void onMachineItemStateRequest(PacketParser p) {
     if (p.player instanceof ServerPlayer player) {
-      if (player.containerMenu instanceof li.cil.oc.core.impl.common.container.Tablet) {
-        var stack = p.readItemStack();
-        var isRunning = li.cil.oc.core.impl.common.item.Tablet.get(stack, p.player).machine().isRunning();
-        li.cil.oc.core.impl.common.PacketSender.sendMachineItemState(player, stack, isRunning);
-      } else {
-        logForgedPacket(player);
-      }
+      var stack = p.readItemStack();
+      var isRunning = li.cil.oc.core.impl.common.item.Tablet.get(stack, p.player).machine().isRunning();
+      li.cil.oc.core.impl.common.PacketSender.sendMachineItemState(player, stack, isRunning);
     }
   }
 

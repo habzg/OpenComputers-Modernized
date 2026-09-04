@@ -88,7 +88,7 @@ public class Screen extends RedstoneAware {
   }
 
   @Override
-  protected void tooltipBody(int metadata, ItemStack stack, Player player, List<Component> tooltip, boolean advanced) {
+  protected void tooltipBody(int metadata, ItemStack stack, List<Component> tooltip, boolean advanced) {
     int w = OCSettings.screenResolutionsByTier[tier][0];
     int h = OCSettings.screenResolutionsByTier[tier][1];
     int depth = PackedColor.Depth.bits(OCSettings.screenDepthsByTier[tier]);

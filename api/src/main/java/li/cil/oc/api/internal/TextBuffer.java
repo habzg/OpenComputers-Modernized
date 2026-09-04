@@ -1,6 +1,5 @@
 package li.cil.oc.api.internal;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import li.cil.oc.api.Persistable;
 import li.cil.oc.api.network.ManagedEnvironment;
 import net.minecraft.world.entity.player.Player;
@@ -445,12 +444,12 @@ public interface TextBuffer extends ManagedEnvironment, Persistable {
    * <br>
    * You can use this to either render the text in a GUI or in the world.
    *
-   * @param stack the transformation stack to render with.
+   * @param stack the transformation stack to render with. (PoseStack)
    * @return <code>true</code> if the displayed content changed since the last
    * call to this method.
    */
   @SuppressWarnings("unused")
-  boolean renderText(PoseStack stack);
+  boolean renderText(Object stack);
 
   /**
    * The natural width of the rendered text.

@@ -140,8 +140,8 @@ public class Microcontroller extends SimpleBlock implements PowerAcceptor, State
   }
 
   @Override
-  public void tooltipTail(int metadata, ItemStack stack, Player player, List<Component> tooltip, boolean advanced) {
-    super.tooltipTail(metadata, stack, player, tooltip, advanced);
+  public void tooltipTail(int metadata, ItemStack stack, List<Component> tooltip, boolean advanced) {
+    super.tooltipTail(metadata, stack, tooltip, advanced);
     var info = new li.cil.oc.core.impl.common.item.data.MicrocontrollerData(stack);
     if (!info.components.isEmpty()) {
       var header = li.cil.oc.core.impl.util.Tooltip.extended("server.Components");

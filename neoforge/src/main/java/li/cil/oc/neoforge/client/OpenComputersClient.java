@@ -1,5 +1,6 @@
 package li.cil.oc.neoforge.client;
 
+import li.cil.oc.core.impl.ClientTerminalHelper;
 import li.cil.oc.core.impl.util.Tooltip;
 import li.cil.oc.neoforge.OpenComputers;
 import li.cil.oc.neoforge.client.renderer.item.UpgradeRenderers;
@@ -31,7 +32,7 @@ public final class OpenComputersClient {
     UpgradeRenderers.register();
 
     li.cil.oc.core.impl.client.gui.traits.InputBuffer.ClipboardPaste.set(() -> KeyBindings.clipboardPaste.getKey().getValue());
-
+    li.cil.oc.core.impl.common.item.Terminal.setTerminalOpener(ClientTerminalHelper::openTerminalScreen);
     li.cil.oc.core.impl.common.block.Screen.setOpenGui(pos ->
       li.cil.oc.neoforge.client.GuiHandler.openScreen(li.cil.oc.core.common.GuiType.Screen, pos.getX(), pos.getY(), pos.getZ()));
     li.cil.oc.core.impl.common.block.Waypoint.setOpenGui(pos ->

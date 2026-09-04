@@ -85,19 +85,19 @@ public abstract class AbstractBlock extends Block implements EntityBlock {
     return net.minecraft.world.item.Rarity.COMMON;
   }
 
-  public void addInformation(int metadata, ItemStack stack, Player player, List<Component> tooltip, boolean advanced) {
-    tooltipHead(metadata, stack, player, tooltip, advanced);
-    tooltipBody(metadata, stack, player, tooltip, advanced);
-    tooltipTail(metadata, stack, player, tooltip, advanced);
+  public void addInformation(int metadata, ItemStack stack, List<Component> tooltip, boolean advanced) {
+    tooltipHead(metadata, stack, tooltip, advanced);
+    tooltipBody(metadata, stack, tooltip, advanced);
+    tooltipTail(metadata, stack, tooltip, advanced);
   }
 
-  protected void tooltipHead(int ignoredMetadata, ItemStack ignoredStack, Player ignoredPlayer, List<Component> ignoredTooltip, boolean ignoredAdvanced) {
+  protected void tooltipHead(int ignoredMetadata, ItemStack ignoredStack, List<Component> ignoredTooltip, boolean ignoredAdvanced) {
   }
 
-  protected void tooltipBody(int ignoredMetadata, ItemStack stack, Player ignoredPlayer, List<Component> tooltip, boolean ignoredAdvanced) {
+  protected void tooltipBody(int ignoredMetadata, ItemStack ignoredStack, List<Component> ignoredTooltip, boolean ignoredAdvanced) {
   }
 
-  public void tooltipTail(int metadata, ItemStack stack, Player player, List<Component> tooltip, boolean advanced) {
+  public void tooltipTail(int ignoredMetadata, ItemStack ignoredStack, List<Component> tooltip, boolean advanced) {
     if (advanced && this instanceof li.cil.oc.core.impl.common.block.traits.PowerAcceptor powerAcceptor) {
       tooltip.add(Component.translatable("tooltip.opencomputers.poweracceptor", (int) powerAcceptor.energyThroughput()));
     }

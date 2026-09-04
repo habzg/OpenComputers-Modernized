@@ -5,7 +5,6 @@ import li.cil.oc.core.Constants;
 import li.cil.oc.core.impl.common.CraftHandler;
 import li.cil.oc.core.impl.common.item.data.PrintData;
 import li.cil.oc.core.impl.common.item.data.RobotData;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -32,8 +31,7 @@ public class Item extends BlockItem {
     super.appendHoverText(stack, context, tooltip, flag);
     Block block = getBlock();
     if (block instanceof AbstractBlock base) {
-      Player player = Minecraft.getInstance().player;
-      base.addInformation(stack.getDamageValue(), stack, player, tooltip, flag.isAdvanced());
+      base.addInformation(stack.getDamageValue(), stack, tooltip, flag.isAdvanced());
     }
   }
 

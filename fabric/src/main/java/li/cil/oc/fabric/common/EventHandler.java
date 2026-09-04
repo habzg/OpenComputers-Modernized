@@ -198,6 +198,11 @@ public final class EventHandler {
 
     ServerChunkEvents.CHUNK_UNLOAD.register((world, chunk) -> {
       var chunkPos = chunk.getPos();
+      for (var be : chunk.getBlockEntities().values()) {
+        if (be instanceof BlockEntity te) {
+          te.markUnloading();
+        }
+      }
       var chunkMin = new net.minecraft.core.BlockPos(chunkPos.getMinBlockX(), 0, chunkPos.getMinBlockZ());
       var chunkMax = new net.minecraft.core.BlockPos(chunkPos.getMaxBlockX(), 255, chunkPos.getMaxBlockZ());
       var aabb = new net.minecraft.world.phys.AABB(chunkMin.getX(), chunkMin.getY(), chunkMin.getZ(), chunkMax.getX(), chunkMax.getY(), chunkMax.getZ());
@@ -229,9 +234,6 @@ public final class EventHandler {
     });
 
     ServerBlockEntityEvents.BLOCK_ENTITY_UNLOAD.register((blockEntity, world) -> {
-      if (blockEntity instanceof BlockEntity te) {
-        te.markUnloading();
-      }
       if (blockEntity instanceof Screen screen) {
         if (!world.isClientSide && screen.node != null) {
           screen.node.remove();

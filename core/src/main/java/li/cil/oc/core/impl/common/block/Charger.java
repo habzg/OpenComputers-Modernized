@@ -108,7 +108,7 @@ public class Charger extends RedstoneAware implements PowerAcceptor, GUI, StateA
   }
 
   @Override
-  protected void tooltipBody(int metadata, ItemStack stack, Player player, List<Component> tooltip, boolean advanced) {
+  protected void tooltipBody(int metadata, ItemStack stack, List<Component> tooltip, boolean advanced) {
     tooltip.addAll(Tooltip.get(getClass().getSimpleName(), (int) OCSettings.get().chargerRate));
   }
 

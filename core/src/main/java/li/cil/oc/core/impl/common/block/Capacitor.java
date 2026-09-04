@@ -8,7 +8,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -29,7 +28,7 @@ public class Capacitor extends SimpleBlock {
   }
 
   @Override
-  protected void tooltipBody(int metadata, ItemStack stack, Player player, List<Component> tooltip, boolean advanced) {
+  protected void tooltipBody(int metadata, ItemStack stack, List<Component> tooltip, boolean advanced) {
     tooltip.addAll(Tooltip.get(getClass().getSimpleName(), (int) OCSettings.get().capacitorRate));
   }
 

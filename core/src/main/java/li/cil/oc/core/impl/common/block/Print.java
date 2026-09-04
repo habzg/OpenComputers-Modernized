@@ -60,7 +60,7 @@ public class Print extends RedstoneAware implements CustomDrops<li.cil.oc.core.i
   }
 
   @Override
-  protected void tooltipBody(int metadata, ItemStack stack, Player player, List<Component> tooltip, boolean advanced) {
+  protected void tooltipBody(int metadata, ItemStack stack, List<Component> tooltip, boolean advanced) {
     var data = new PrintData(stack);
     if (data.tooltip != null) {
       for (var line : data.tooltip.split("\n")) {
@@ -70,8 +70,8 @@ public class Print extends RedstoneAware implements CustomDrops<li.cil.oc.core.i
   }
 
   @Override
-  public void tooltipTail(int metadata, ItemStack stack, Player player, List<Component> tooltip, boolean advanced) {
-    super.tooltipTail(metadata, stack, player, tooltip, advanced);
+  public void tooltipTail(int metadata, ItemStack stack, List<Component> tooltip, boolean advanced) {
+    super.tooltipTail(metadata, stack, tooltip, advanced);
     var data = new PrintData(stack);
     if (data.isBeaconBase || Items.get(stack) == Items.get(Constants.BlockName.BeaconBasePrint)) {
       tooltip.add(Component.translatable("tooltip.opencomputers.print.beaconbase"));

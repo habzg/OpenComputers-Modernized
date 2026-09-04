@@ -10,7 +10,6 @@ import li.cil.oc.core.impl.util.Log;
 import li.cil.oc.core.impl.util.Tooltip;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -50,8 +49,8 @@ public class PowerConverter extends SimpleBlock implements PowerAcceptor {
   }
 
   @Override
-  public void tooltipTail(int metadata, ItemStack stack, Player player, List<Component> tooltip, boolean advanced) {
-    super.tooltipTail(metadata, stack, player, tooltip, advanced);
+  public void tooltipTail(int metadata, ItemStack stack, List<Component> tooltip, boolean advanced) {
+    super.tooltipTail(metadata, stack, tooltip, advanced);
     addRatio(tooltip, isFabric ? "rebornenergy" : "thermalexpansion", OCSettings.get().ratioRedstoneFlux());
     if (AE2Power.delegate() != null) {
       addRatio(tooltip, "appliedenergistics2", OCSettings.get().ratioAppliedEnergistics2());

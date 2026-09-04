@@ -5,7 +5,6 @@ import java.util.List;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Tier;
 import li.cil.oc.core.impl.OCSettings;
-import li.cil.oc.core.impl.util.SideTracker;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -28,7 +27,7 @@ public class MicrocontrollerData extends ItemData {
 
   public MicrocontrollerData(ItemStack stack) {
     this();
-    load(stack, SideTracker.getCurrentServer().registryAccess());
+    load(stack);
   }
 
   @Override

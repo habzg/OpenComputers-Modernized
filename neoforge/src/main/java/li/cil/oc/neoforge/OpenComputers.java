@@ -70,9 +70,6 @@ public final class OpenComputers {
   public OpenComputers(IEventBus modEventBus) {
     OpenComputers.modEventBus = modEventBus;
     if (net.neoforged.fml.ModList.get().isLoaded(li.cil.oc.core.integration.ModIDs.TIS3D)) {
-      // Must be done in the constructor: the RegisterEvent for TIS-3D's
-      // serial interface provider registry fires during mod loading,
-      // before common setup, when the regular integration init runs.
       li.cil.oc.neoforge.integration.tis3d.ModTIS3D proxy = new li.cil.oc.neoforge.integration.tis3d.ModTIS3D();
       proxy.initialize();
     }

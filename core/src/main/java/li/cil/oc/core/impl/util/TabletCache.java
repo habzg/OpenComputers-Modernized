@@ -58,20 +58,15 @@ public abstract class TabletCache {
       .removalListener((com.google.common.cache.RemovalNotification<String, TabletHostBase> notification) -> {
         var wrapper = notification.getValue();
         if (wrapper != null) {
+          wrapper.stopMachine();
           var level = wrapper.level();
-          if (!level.isClientSide()) {
+          if (level != null && !level.isClientSide()) {
             var provider = level.registryAccess();
             wrapper.saveComponents(provider);
             wrapper.persistMachineState();
           }
-          wrapper.stopMachine();
           if (wrapper.node() != null && wrapper.node().network() != null) {
             wrapper.node().remove();
-          }
-          if (!level.isClientSide()) {
-            var provider = level.registryAccess();
-            wrapper.saveComponents(provider);
-            wrapper.persistMachineState();
           }
         }
       })
@@ -84,12 +79,15 @@ public abstract class TabletCache {
     var id = getOrCreateId(stack);
     try {
       var host = cache.get(id, () -> createHost(stack, player));
-      if (host.creationLevel != player.level()) {
+      var dimChanged = host.creationLevel != null && !host.creationLevel.dimension().equals(player.level().dimension());
+      if (dimChanged) {
         host.creationLevel = player.level();
 
         if (!player.level().isClientSide) {
-          host.machine();
+          host.stopMachine();
           if (host.machine().node() != null && host.machine().node().network() != null) {
+            var provider = player.level().registryAccess();
+            host.saveComponents(provider);
             host.persistMachineState();
           }
         }

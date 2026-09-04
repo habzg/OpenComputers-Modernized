@@ -68,6 +68,7 @@ public abstract class MachineBase extends AbstractManagedEnvironment implements 
   public final li.cil.oc.api.network.ManagedEnvironment tmp;
   private final Deque<State> state = new ArrayDeque<>();
   private final Map<String, String> _components = new LinkedHashMap<>();
+  private final Map<String, String> _loadedComponents = new LinkedHashMap<>();
   private final Set<Component> addedComponents = new LinkedHashSet<>();
   private final Set<String> _users = new LinkedHashSet<>();
   private final Queue<Signal> signals = new LinkedList<>();
@@ -746,6 +747,7 @@ public abstract class MachineBase extends AbstractManagedEnvironment implements 
     synchronized (_components) {
       if (_components.containsKey(c.address())) {
         _components.remove(c.address());
+        _loadedComponents.remove(c.address());
         signal("component_removed", c.address(), c.name());
       }
     }
@@ -801,10 +803,13 @@ public abstract class MachineBase extends AbstractManagedEnvironment implements 
         for (int i = 0; i < ul.size(); i++) _users.add(ul.getString(i));
         if (nbt.contains("message")) message = nbt.getString("message");
         _components.clear();
+        _loadedComponents.clear();
         ListTag cl = nbt.getList("components", Tag.TAG_COMPOUND);
         for (int i = 0; i < cl.size(); i++) {
           CompoundTag t = cl.getCompound(i);
-          _components.put(t.getString("address"), t.getString("name"));
+          var addr = t.getString("address");
+          var name = t.getString("name");
+          _loadedComponents.put(addr, name);
         }
         if (tmp != null) {
           if (nbt.contains("tmp")) {
@@ -866,7 +871,9 @@ public abstract class MachineBase extends AbstractManagedEnvironment implements 
   public void save(CompoundTag nbt, HolderLookup.Provider provider) {
     synchronized (this) {
       synchronized (state) {
-        if (isExecuting() || SaveHandlerDelegate.get().savingForClients()) return;
+        if (isExecuting() || SaveHandlerDelegate.get().savingForClients()) {
+          return;
+        }
         pause(0.05);
         super.save(nbt, provider);
         processAddedComponents();
@@ -879,13 +886,16 @@ public abstract class MachineBase extends AbstractManagedEnvironment implements 
         nbt.put("users", ul);
         if (message != null) nbt.putString("message", message);
         ListTag cl = new ListTag();
-        for (Map.Entry<String, String> e : _components.entrySet()) {
+        var componentsToSave = _components.isEmpty() ? _loadedComponents : _components;
+        for (Map.Entry<String, String> e : componentsToSave.entrySet()) {
           CompoundTag t = new CompoundTag();
           t.putString("address", e.getKey());
           t.putString("name", e.getValue());
           cl.add(t);
         }
         nbt.put("components", cl);
+        _loadedComponents.clear();
+        _loadedComponents.putAll(componentsToSave);
         if (tmp != null) saveTmp(nbt, tmp);
         if (state.peek() != State.Stopped) try {
           architecture.save(nbt);

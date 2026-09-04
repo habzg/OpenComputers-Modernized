@@ -10,7 +10,6 @@ import li.cil.oc.core.impl.util.Log;
 import li.cil.oc.core.impl.util.Tooltip;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -38,7 +37,7 @@ public class Disassembler extends SimpleBlock implements PowerAcceptor, GUI, Sta
   }
 
   @Override
-  protected void tooltipBody(int metadata, ItemStack stack, Player player, List<Component> tooltip, boolean advanced) {
+  protected void tooltipBody(int metadata, ItemStack stack, List<Component> tooltip, boolean advanced) {
     tooltip.addAll(Tooltip.get(getClass().getSimpleName(), (int) (OCSettings.get().disassemblerBreakChance * 100)));
   }
 

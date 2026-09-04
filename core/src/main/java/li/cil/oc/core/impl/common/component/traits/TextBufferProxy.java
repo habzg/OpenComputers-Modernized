@@ -1,6 +1,5 @@
 package li.cil.oc.core.impl.common.component.traits;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import li.cil.oc.core.impl.client.renderer.TextBufferRenderCache;
 import li.cil.oc.core.impl.common.component.TextBufferBase;
 import li.cil.oc.core.impl.util.PackedColor;
@@ -236,7 +235,7 @@ public interface TextBufferProxy extends li.cil.oc.api.internal.TextBuffer {
 
   @Override
   @SuppressWarnings("unused")
-  default boolean renderText(PoseStack stack) {
+  default boolean renderText(Object poseStack) {
     if (this instanceof TextBufferBase base && base.hasLitContent()) {
       boolean wasDirty = base.isBufferDirty();
       if (wasDirty) {
