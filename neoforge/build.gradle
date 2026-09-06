@@ -124,11 +124,6 @@ dependencies {
     additionalRuntimeClasspath("li.cil.repack:OC-JNLua-Natives:${jnlua_natives_version}")
 }
 
-// Merge bundled libraries into the mod's build output so they are part of the
-// mod jar: OC-JNLua (LuaState in the same classloader as the code calling
-// System.load(), required for JNI resolution), OC-LuaJ, OC-JNLua-Natives and
-// com.typesafe:config (used by OCSettings). This mirrors the original 1.12.2
-// build, which embedded all of these into the mod jar.
 def embeddedConfig = configurations.create('embedded') {
     canBeResolved = true
     canBeConsumed = false

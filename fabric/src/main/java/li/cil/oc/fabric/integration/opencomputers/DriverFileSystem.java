@@ -95,6 +95,7 @@ public final class DriverFileSystem extends Item {
     } else {
       String address = addressFromTag(getTag(stack));
       li.cil.oc.api.fs.Label label = new ReadWriteItemLabel();
+      label.load(getTag(stack), null);
       boolean isFloppy = li.cil.oc.api.Items.get(stack) == li.cil.oc.api.Items.get(Constants.ItemName.Floppy);
       String sound = OCSettings.resourceDomain + ":" + (isFloppy ? "floppy_access" : "hdd_access");
       DriveData drive = new DriveData(stack);

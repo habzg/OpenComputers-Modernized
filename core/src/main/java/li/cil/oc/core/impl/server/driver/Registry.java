@@ -18,6 +18,7 @@ import li.cil.oc.api.driver.EnvironmentProvider;
 import li.cil.oc.api.driver.InventoryProvider;
 import li.cil.oc.api.driver.item.HostAware;
 import li.cil.oc.api.machine.Value;
+import li.cil.oc.core.impl.server.machine.luaj.ScalaClosure;
 import li.cil.oc.api.network.EnvironmentHost;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -258,6 +259,9 @@ public final class Registry implements li.cil.oc.api.detail.DriverAPI {
         return valueRef;
       }
       case Value ignored -> {
+        return valueRef;
+      }
+      case ScalaClosure.LuaCallable ignored -> {
         return valueRef;
       }
       case Object[] objects -> {

@@ -3,6 +3,7 @@ package li.cil.oc.core.impl.integration.computercraft;
 import dan200.computercraft.api.lua.Coerced;
 import dan200.computercraft.api.lua.IArguments;
 import dan200.computercraft.api.lua.ILuaContext;
+import dan200.computercraft.api.lua.ILuaFunction;
 import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.api.lua.LuaFunction;
 import dan200.computercraft.api.lua.MethodResult;
@@ -16,6 +17,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalDouble;
@@ -29,11 +31,24 @@ public class AnnotationPeripheral implements IDynamicPeripheral {
   private final IPeripheral peripheral;
   private final Map<String, Method> methods;
   private final String[] methodNames;
+  private final Map<String, Integer> dynamicMethods;
 
   public AnnotationPeripheral(final IPeripheral peripheral) {
     this.peripheral = peripheral;
     this.methods = discoverMethods(peripheral.getClass());
-    this.methodNames = this.methods.keySet().toArray(new String[0]);
+
+    this.dynamicMethods = new LinkedHashMap<>();
+    if (peripheral instanceof IDynamicPeripheral dynamic) {
+      String[] dynamicNames = dynamic.getMethodNames();
+      for (int i = 0; i < dynamicNames.length; i++) {
+        this.dynamicMethods.put(dynamicNames[i], i);
+      }
+    }
+
+    LinkedHashSet<String> allMethodNames = new LinkedHashSet<>();
+    allMethodNames.addAll(methods.keySet());
+    allMethodNames.addAll(dynamicMethods.keySet());
+    this.methodNames = allMethodNames.toArray(new String[0]);
   }
 
   private static Map<String, Method> discoverMethods(final Class<?> clazz) {
@@ -88,6 +103,16 @@ public class AnnotationPeripheral implements IDynamicPeripheral {
     final int method,
     final @NotNull IArguments arguments) throws LuaException {
     var name = methodNames[method];
+
+    // Method declared directly on DynamicPeripheral
+    if (!methods.containsKey(name) && peripheral instanceof IDynamicPeripheral dynamic) {
+      var dynIndex = dynamicMethods.get(name);
+      if (dynIndex != null) {
+        return dynamic.callMethod(computer, context, dynIndex, arguments);
+      }
+    }
+
+    // Annotation-based method
     var javaMethod = methods.get(name);
     if (javaMethod == null) return MethodResult.of();
 
@@ -186,10 +211,83 @@ public class AnnotationPeripheral implements IDynamicPeripheral {
 
   private static MethodResult convertResult(final Object value, final Class<?> returnType) {
     if (returnType == void.class) return MethodResult.of();
-    if (value instanceof MethodResult mr) return mr;
-    if (value == null) return MethodResult.of();
-    if (value instanceof Object[] arr) return MethodResult.of(arr);
+    switch (value) {
+      case null -> {
+        return MethodResult.of();
+      }
+      case MethodResult mr -> {
+        if (mr.getCallback() != null) return mr;
+        Object[] inner = mr.getResult();
+        if (inner == null || inner.length == 0) return MethodResult.of();
+        if (inner.length == 1) return MethodResult.of(inner[0]);
+        return MethodResult.of(inner);
+      }
+      case Object[] arr -> {
+        return MethodResult.of(arr);
+      }
+      case Map<?, ?> map -> {
+        return MethodResult.of(convertMapValues(map));
+      }
+      default -> {
+      }
+    }
     return MethodResult.of(value);
+  }
+
+  private static Map<Object, Object> convertMapValues(Map<?, ?> map) {
+    Map<Object, Object> result = new LinkedHashMap<>();
+    for (var entry : map.entrySet()) {
+      Object key = entry.getKey();
+      Object val = entry.getValue();
+      if (val instanceof Map<?, ?> nested) {
+        result.put(key, convertMapValues(nested));
+      } else if (val instanceof ILuaFunction func) {
+        result.put(key, wrapCCTLuaFunction(func));
+      } else {
+        result.put(key, val);
+      }
+    }
+    return result;
+  }
+
+  private static li.cil.oc.core.impl.server.machine.luaj.ScalaClosure.LuaCallable wrapCCTLuaFunction(ILuaFunction func) {
+    return args -> {
+      var iargs = createCCTArguments(args);
+      var result = func.call(iargs);
+      if (result.getCallback() != null) {
+        throw new UnsupportedOperationException("async not supported via OC bridge");
+      }
+      return result.getResult();
+    };
+  }
+
+  private static IArguments createCCTArguments(Object[] args) {
+    return new IArguments() {
+      @Override public int count() { return args.length; }
+      @Override public Object get(int index) {
+        if (index < 0 || index >= args.length) return null;
+        return args[index];
+      }
+      @Override public @NotNull String getType(int index) {
+        Object val = get(index);
+        return switch (val) {
+          case null -> "nil";
+          case Boolean b -> "boolean";
+          case Number number -> "number";
+          case String s -> "string";
+          //noinspection rawtypes
+          case Map map -> "table";
+          default -> "object";
+        };
+      }
+      @Override public @NotNull IArguments drop(int count) {
+        if (count <= 0) return this;
+        if (count >= args.length) return createCCTArguments(new Object[0]);
+        Object[] newArgs = new Object[args.length - count];
+        System.arraycopy(args, count, newArgs, 0, newArgs.length);
+        return createCCTArguments(newArgs);
+      }
+    };
   }
 
   @Override

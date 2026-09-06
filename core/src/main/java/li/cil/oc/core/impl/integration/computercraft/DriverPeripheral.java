@@ -85,9 +85,6 @@ public final class DriverPeripheral implements DriverBlock {
           if (!isAllowed(peripheral)) {
             return null;
           }
-          if (peripheral instanceof IDynamicPeripheral dynamic) {
-            return dynamic;
-          }
           return new AnnotationPeripheral(peripheral);
         }
       } catch (Exception e) {

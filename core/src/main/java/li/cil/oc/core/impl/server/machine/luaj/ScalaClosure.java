@@ -18,6 +18,11 @@ import org.slf4j.LoggerFactory;
 public final class ScalaClosure {
   private static final Logger LOGGER = LoggerFactory.getLogger(ScalaClosure.class);
 
+  @FunctionalInterface
+  public interface LuaCallable {
+    Object[] call(Object[] args) throws Exception;
+  }
+
   public static LuaValue wrapClosure(Function<Varargs, Varargs> f) {
     return new VarArgFunction() {
       @Override
@@ -92,6 +97,7 @@ public final class ScalaClosure {
       case Object[] a -> toLuaList(java.util.Arrays.asList(a));
       case Map<?, ?> m -> toLuaTable(m);
       case Iterable<?> it -> toLuaList(it);
+      case LuaCallable f -> wrapLuaFunction(f);
       default -> {
         if (value.getClass().isArray()) {
           int len = java.lang.reflect.Array.getLength(value);
@@ -121,5 +127,27 @@ public final class ScalaClosure {
       table.set(toLuaValue(entry.getKey()), toLuaValue(entry.getValue()));
     }
     return table;
+  }
+
+  private static LuaValue wrapLuaFunction(LuaCallable func) {
+    return new VarArgFunction() {
+      @Override
+      public Varargs invoke(Varargs args) {
+        try {
+          Object[] javaArgs = toSimpleJavaObjects(args, 1).toArray();
+          Object[] result = func.call(javaArgs);
+          if (result == null || result.length == 0) return LuaValue.TRUE;
+          if (result.length == 1) return toLuaValue(result[0]);
+          LuaValue[] luaResults = new LuaValue[result.length + 1];
+          luaResults[0] = LuaValue.TRUE;
+          for (int i = 0; i < result.length; i++) {
+            luaResults[i + 1] = toLuaValue(result[i]);
+          }
+          return LuaValue.varargsOf(luaResults);
+        } catch (Exception e) {
+          return LuaValue.varargsOf(LuaValue.FALSE, LuaValue.valueOf(e.getMessage()));
+        }
+      }
+    };
   }
 }

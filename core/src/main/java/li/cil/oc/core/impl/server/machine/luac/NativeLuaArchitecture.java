@@ -30,6 +30,7 @@ public abstract class NativeLuaArchitecture implements Architecture {
   LuaState lua = null;
   int kernelMemory = 0;
   double ramScale = 1.0;
+  private volatile boolean luaBusy = false;
 
   public NativeLuaArchitecture(li.cil.oc.api.machine.Machine machine) {
     this.machine = machine;
@@ -159,7 +160,7 @@ public abstract class NativeLuaArchitecture implements Architecture {
   @Override
   public boolean recomputeMemory(Iterable<ItemStack> components) {
     int memoryBytes = memoryInBytes(components);
-    if (lua != null && OCSettings.get().limitMemory) {
+    if (lua != null && OCSettings.get().limitMemory && !luaBusy) {
       lua.setTotalMemory(Integer.MAX_VALUE);
       if (kernelMemory > 0) {
         lua.setTotalMemory(kernelMemory + (int) Math.ceil(memoryBytes * ramScale));
@@ -198,32 +199,39 @@ public abstract class NativeLuaArchitecture implements Architecture {
     try {
       assert lua.isThread(1);
 
+      luaBusy = true;
       int results;
-      if (isSynchronizedReturn) {
-        assert lua.getTop() == 2;
-        assert lua.isTable(2);
-        results = lua.resume(1, 1);
-      } else if (kernelMemory == 0) {
-        if (lua.resume(1, 0) > 0) {
-          results = 0;
-        } else {
-          lua.gc(LuaState.GcAction.COLLECT, 0);
-          kernelMemory = Math.max(lua.getTotalMemory() - lua.getFreeMemory(), 1);
-          recomputeMemory(machine.host().internalComponents());
-          lua.pushInteger(0);
-          results = 1;
-        }
-      } else {
-        li.cil.oc.api.machine.Signal signal = machine.popSignal();
-        if (signal != null) {
-          lua.pushString(signal.name());
-          for (Object arg : signal.args()) {
-            ExtendedLuaState.pushValue(lua, arg);
+      try {
+        if (isSynchronizedReturn) {
+          assert lua.getTop() == 2;
+          assert lua.isTable(2);
+          results = lua.resume(1, 1);
+        } else if (kernelMemory == 0) {
+          if (lua.resume(1, 0) > 0) {
+            results = 0;
+          } else {
+            lua.gc(LuaState.GcAction.COLLECT, 0);
+            kernelMemory = Math.max(lua.getTotalMemory() - lua.getFreeMemory(), 1);
+            luaBusy = false;
+            recomputeMemory(machine.host().internalComponents());
+            luaBusy = true;
+            lua.pushInteger(0);
+            results = 1;
           }
-          results = lua.resume(1, 1 + signal.args().length);
         } else {
-          results = lua.resume(1, 0);
+          li.cil.oc.api.machine.Signal signal = machine.popSignal();
+          if (signal != null) {
+            lua.pushString(signal.name());
+            for (Object arg : signal.args()) {
+              ExtendedLuaState.pushValue(lua, arg);
+            }
+            results = lua.resume(1, 1 + signal.args().length);
+          } else {
+            results = lua.resume(1, 0);
+          }
         }
+      } finally {
+        luaBusy = false;
       }
 
       if (lua.status(1) == LuaState.YIELD) {

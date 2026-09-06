@@ -6,8 +6,17 @@
     "description": "This mod adds modular computers and robots that can be programmed in Lua.",
     "authors": [
         "Florian 'Sangar' Nuecke",
-        "Johannes 'Lord Joda' Lohrer"
+        "Johannes 'Lord Joda' Lohrer",
+        "habzg"
     ],
+    "contributors": [
+      "Everyone who contributed to the mod on Github - thank you!"
+    ],
+    "contact": {
+      "homepage": "https://github.com/habzg/OpenComputers-Modernized",
+      "issues": "https://github.com/habzg/OpenComputers-Modernized/issues",
+      "sources": "https://github.com/habzg/OpenComputers-Modernized"
+    },
     "license": "${mod_license}",
     "icon": "assets/opencomputers/textures/gui/logo.png",
     "accessWidener": "opencomputers.accesswidener",

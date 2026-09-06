@@ -100,6 +100,7 @@ public abstract class MachineBase extends AbstractManagedEnvironment implements 
   private volatile double maxCallBudget = 1.0;
   private boolean hasMemory = false;
   private volatile double callBudget = 0.0;
+  private final Object callBudgetLock = new Object();
   private boolean inSynchronizedCall = false;
   private long uptime = 0;
   private long cpuTotal = 0;
@@ -371,7 +372,7 @@ public abstract class MachineBase extends AbstractManagedEnvironment implements 
   public void consumeCallBudget(double callCost) {
     if (architecture != null && architecture.isInitialized() && !inSynchronizedCall) {
       double c = Math.max(0.0, callCost);
-      synchronized (this) {
+      synchronized (callBudgetLock) {
         if (c > callBudget) throw new LimitReachedException();
         callBudget -= c;
       }
@@ -869,6 +870,9 @@ public abstract class MachineBase extends AbstractManagedEnvironment implements 
 
   @Override
   public void save(CompoundTag nbt, HolderLookup.Provider provider) {
+    if (isExecuting() || SaveHandlerDelegate.get().savingForClients()) {
+      return;
+    }
     synchronized (this) {
       synchronized (state) {
         if (isExecuting() || SaveHandlerDelegate.get().savingForClients()) {

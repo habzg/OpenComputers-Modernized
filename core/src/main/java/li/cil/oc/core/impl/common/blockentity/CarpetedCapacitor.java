@@ -9,6 +9,7 @@ import li.cil.oc.core.impl.OCSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.Cat;
 import net.minecraft.world.entity.animal.Ocelot;
 import net.minecraft.world.entity.animal.Sheep;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -47,7 +48,7 @@ public class CarpetedCapacitor extends Capacitor implements DeviceInfo {
       for (var e : entities) if (e.isAlive() && e instanceof Sheep) sheepEntities.add(e);
       var sheepPower = energyFromGroup(sheepEntities, OCSettings.get().sheepPower);
       var ocelotEntities = new HashSet<LivingEntity>();
-      for (var e : entities) if (e.isAlive() && e instanceof Ocelot) ocelotEntities.add(e);
+      for (var e : entities) if (e.isAlive() && (e instanceof Ocelot || e instanceof Cat)) ocelotEntities.add(e);
       var ocelotPower = energyFromGroup(ocelotEntities, OCSettings.get().ocelotPower);
       var totalPower = sheepPower + ocelotPower;
       if (totalPower > 0) {

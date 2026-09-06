@@ -37,6 +37,8 @@ layout.json
 **/build/
 **/runs/
 /build/
+.github/maven-dl
+.github/maven
 
 # shhh...
 opencode.json

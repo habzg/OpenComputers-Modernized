@@ -57,6 +57,15 @@ public final class ExtendedLuaState {
         }
         case Value ignored when OCSettings.get().allowUserdata -> lua.pushJavaObjectRaw(value);
         case Map<?, ?> map -> pushTableFromJavaMap(lua, value, map, memo);
+        case li.cil.oc.core.impl.server.machine.luaj.ScalaClosure.LuaCallable f -> pushLuaCallable(lua, f, memo);
+        case Iterable<?> iterable -> {
+          java.util.List<java.util.Map.Entry<Object, Integer>> list = new java.util.ArrayList<>();
+          int idx = 0;
+          for (Object item : iterable) {
+            list.add(new java.util.AbstractMap.SimpleEntry<>(item, idx++));
+          }
+          pushList(lua, value, list.iterator(), memo);
+        }
         default -> {
           LOGGER.warn("Tried to push an unsupported value of type to Lua: {}.", value.getClass().getName());
           lua.pushNil();
@@ -106,6 +115,27 @@ public final class ExtendedLuaState {
       }
     }
     lua.pushValue(tableIndex);
+  }
+
+  private static void pushLuaCallable(LuaState lua, li.cil.oc.core.impl.server.machine.luaj.ScalaClosure.LuaCallable func, IdentityHashMap<Object, Integer> memo) {
+    lua.pushJavaFunction(l -> {
+      try {
+        Object[] javaArgs = toSimpleJavaObjects(l, 1).toArray();
+        Object[] result = func.call(javaArgs);
+        if (result == null || result.length == 0) {
+          l.pushBoolean(true);
+          return 1;
+        }
+        for (Object r : result) {
+          pushValue(l, r, memo);
+        }
+        return result.length;
+      } catch (Exception e) {
+        l.pushBoolean(false);
+        l.pushString(e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
+        return 2;
+      }
+    });
   }
 
   public static Object toSimpleJavaObject(LuaState lua, int index) {

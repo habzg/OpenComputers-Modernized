@@ -31,7 +31,6 @@ public class LuaJLuaArchitecture implements Architecture {
   private LuaFunction synchronizedCall = null;
   private LuaValue synchronizedResult = null;
   private boolean doneWithInitRun = false;
-  private int memoryCheckCounter = 0;
 
   public LuaJLuaArchitecture(li.cil.oc.api.machine.Machine machine) {
     this.machine = machine;
@@ -147,12 +146,6 @@ public class LuaJLuaArchitecture implements Architecture {
   @Override
   public ExecutionResult runThreaded(boolean isSynchronizedReturn) {
     try {
-      if (memory > 0 && ++memoryCheckCounter % 100 == 0) {
-        long usedMem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-        if (usedMem > memory) {
-          throw new RuntimeException("Computer exceeded memory limit");
-        }
-      }
       Varargs results;
       if (isSynchronizedReturn) {
         results = thread.resume(synchronizedResult);
