@@ -1231,7 +1231,8 @@ public class Network implements li.cil.oc.api.detail.NetworkAPI, Distributor {
     }
 
     public Packet(String source, String destination, int port, Object[] data, int ttl) {
-      if (source != null && source.length() > MAX_STRING_LENGTH) throw new IllegalArgumentException("source too long");
+      if (source != null && source.length() > MAX_STRING_LENGTH)
+        throw new IllegalArgumentException("source too long");
       if (destination != null && destination.length() > MAX_STRING_LENGTH)
         throw new IllegalArgumentException("destination too long");
       this.source = source;
@@ -1260,11 +1261,13 @@ public class Network implements li.cil.oc.api.detail.NetworkAPI, Distributor {
           case Float ignored -> s += 4;
           case Double ignored -> s += 8;
           case String string -> {
-            if (string.length() > MAX_STRING_LENGTH) throw new IllegalArgumentException("string data too large");
+            if (string.length() > MAX_STRING_LENGTH)
+              throw new IllegalArgumentException("string data too large");
             s += Math.max(string.length(), 1);
           }
           case byte[] bytes -> {
-            if (bytes.length > MAX_BYTE_ARRAY_LENGTH) throw new IllegalArgumentException("byte array data too large");
+            if (bytes.length > MAX_BYTE_ARRAY_LENGTH)
+              throw new IllegalArgumentException("byte array data too large");
             s += Math.max(bytes.length, 1);
           }
           default -> throw new IllegalArgumentException("unsupported data type");

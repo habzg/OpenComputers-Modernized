@@ -29,7 +29,6 @@ import li.cil.oc.fabric.client.renderer.HologramDeferredEventHandler;
 import li.cil.oc.fabric.client.renderer.MFUTargetRenderer;
 import li.cil.oc.fabric.client.renderer.PetRenderer;
 import li.cil.oc.fabric.client.renderer.WirelessNetworkDebugRenderer;
-import li.cil.oc.fabric.client.renderer.blockentity.CableRenderer;
 import li.cil.oc.fabric.client.renderer.blockentity.HologramRenderer;
 import li.cil.oc.fabric.client.renderer.blockentity.RobotRenderer;
 import li.cil.oc.fabric.client.renderer.blockentity.ScreenRenderer;
@@ -90,7 +89,6 @@ public final class ClientProxy implements ClientModInitializer {
     BlockEntityRenderers.register(BlockEntities.RACK, li.cil.oc.fabric.client.renderer.blockentity.RackRenderer::new);
     BlockEntityRenderers.register(BlockEntities.SCREEN, ScreenRenderer::new);
     BlockEntityRenderers.register(BlockEntities.HOLOGRAM, HologramRenderer::new);
-    BlockEntityRenderers.register(BlockEntities.CABLE, CableRenderer::new);
     BlockEntityRenderers.register(BlockEntities.ROBOT, RobotRenderer::new);
     EntityRendererRegistry.register(Entities.DRONE, DroneRenderer::new);
 

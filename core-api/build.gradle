@@ -10,6 +10,9 @@ var tagsDir = layout.buildDirectory.dir("generated/sources/tags/java/main")
 var generateTags = tasks.register("generateTags", Sync) {
     from "src/main/templates"
     into tagsDir
+    inputs.property("mod_version", mod_version)
+    inputs.property("mod_id", mod_id)
+    inputs.property("mod_name", mod_name)
     expand(
         mod_version: mod_version,
         mod_id: mod_id,

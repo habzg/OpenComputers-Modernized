@@ -60,6 +60,7 @@ public class RobotModel implements BakedModel, FabricBakedModel {
     return OVERRIDES;
   }
 
+  @SuppressWarnings("DataFlowIssue")
   private static final ItemOverrides OVERRIDES = new ItemOverrides(null, null, List.of()) {
     @Override
     public @NotNull BakedModel resolve(@NotNull BakedModel original, @NotNull net.minecraft.world.item.ItemStack stack, @Nullable net.minecraft.client.multiplayer.ClientLevel level, @Nullable net.minecraft.world.entity.LivingEntity entity, int seed) {

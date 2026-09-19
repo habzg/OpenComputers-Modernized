@@ -221,6 +221,7 @@ public class PrintModel implements BakedModel, FabricBakedModel {
     return OVERRIDES;
   }
 
+  @SuppressWarnings("DataFlowIssue")
   private static final ItemOverrides OVERRIDES = new ItemOverrides(null, null, List.of()) {
     @Override
     public @NotNull BakedModel resolve(@NotNull BakedModel original, @NotNull ItemStack stack, @Nullable ClientLevel level, @Nullable LivingEntity entity, int seed) {

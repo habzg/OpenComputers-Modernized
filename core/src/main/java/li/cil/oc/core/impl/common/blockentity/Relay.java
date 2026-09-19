@@ -31,6 +31,7 @@ import li.cil.oc.core.impl.common.blockentity.traits.SwitchLike;
 import li.cil.oc.core.impl.common.item.Memory;
 import li.cil.oc.core.impl.integration.opencomputers.DriverLinkedCard;
 import li.cil.oc.core.impl.util.EventHandlerDelegate;
+import li.cil.oc.core.impl.util.InventoryUtils;
 import li.cil.oc.core.integration.ModIDs;
 import li.cil.oc.core.server.network.QuantumNetwork;
 import net.minecraft.core.BlockPos;
@@ -500,9 +501,15 @@ public class Relay extends HubBlockEntity implements ComponentInventory, PowerAc
   }
 
   public void spawnStackInWorld(ItemStack stack) {
+    if (isServer()) {
+      InventoryUtils.spawnStackInWorld(position(), stack, null, null);
+    }
   }
 
   public void spawnStackInWorld(ItemStack stack, Direction direction) {
+    if (isServer()) {
+      InventoryUtils.spawnStackInWorld(position(), stack, direction, null);
+    }
   }
 
   @Override

@@ -23,7 +23,7 @@ public class FloppyModel implements BakedModel {
   private BakedModel[] dyeModels;
   private final ItemOverrides overrides;
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"unused", "DataFlowIssue"})
   public FloppyModel(ResourceLocation[] dyeModelIds) {
     this.dyeModelIds = dyeModelIds;
     this.dyeModels = null;

@@ -39,6 +39,11 @@ public abstract class BlockEntity extends net.minecraft.world.level.block.entity
     }
   }
 
+  // Workaround for some Intermediary vs SRG mapping runtime weirdness.
+  public net.minecraft.world.level.Level level() {
+    return getLevel();
+  }
+
   public boolean isClient() {
     return !isServer();
   }

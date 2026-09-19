@@ -23,7 +23,6 @@ import li.cil.oc.neoforge.client.renderer.HologramDeferredEventHandler;
 import li.cil.oc.neoforge.client.renderer.MFUTargetRenderer;
 import li.cil.oc.neoforge.client.renderer.PetRenderer;
 import li.cil.oc.neoforge.client.renderer.WirelessNetworkDebugRenderer;
-import li.cil.oc.neoforge.client.renderer.blockentity.CableRenderer;
 import li.cil.oc.neoforge.client.renderer.blockentity.HologramRenderer;
 import li.cil.oc.neoforge.client.renderer.blockentity.RackRenderer;
 import li.cil.oc.neoforge.client.renderer.blockentity.RobotRenderer;
@@ -132,14 +131,27 @@ public class Proxy extends li.cil.oc.neoforge.common.Proxy {
       return model;
     });
 
-    var cableLoc = ResourceLocation.fromNamespaceAndPath("opencomputers", "block/cable");
-    var capLoc = ResourceLocation.fromNamespaceAndPath("opencomputers", "block/cablecap");
+    var cableBlockId = ResourceLocation.fromNamespaceAndPath("opencomputers", "cable");
+    event.getModels().replaceAll((key, model) -> {
+      if (key.id().equals(cableBlockId) && !"inventory".equals(key.variant())) {
+        return new CableModel(model);
+      }
+      return model;
+    });
 
     var itemKey = new ModelResourceLocation(Items.CABLE.getId(), "inventory");
     var itemModel = event.getModels().get(itemKey);
     if (itemModel != null) {
-      event.getModels().put(itemKey, new CableModel(cableLoc, capLoc, itemModel));
+      event.getModels().put(itemKey, new CableModel(itemModel));
     }
+
+    var rackBlockId = ResourceLocation.fromNamespaceAndPath("opencomputers", "rack");
+    event.getModels().replaceAll((key, model) -> {
+      if (key.id().equals(rackBlockId) && !"inventory".equals(key.variant())) {
+        return new li.cil.oc.neoforge.model.RackModel(model);
+      }
+      return model;
+    });
 
     var floppyKey = new ModelResourceLocation(Items.FLOPPY.getId(), "inventory");
     var floppyModel = event.getModels().get(floppyKey);
@@ -175,7 +187,6 @@ public class Proxy extends li.cil.oc.neoforge.common.Proxy {
 
   public static void handleRegisterBlockEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
     event.registerBlockEntityRenderer(BlockEntities.ADAPTER.get(), AdapterRenderer::new);
-    event.registerBlockEntityRenderer(BlockEntities.CABLE.get(), CableRenderer::new);
     event.registerBlockEntityRenderer(BlockEntities.ASSEMBLER.get(), AssemblerRenderer::new);
     event.registerBlockEntityRenderer(BlockEntities.CASE.get(), CaseRenderer::new);
     event.registerBlockEntityRenderer(BlockEntities.CHARGER.get(), ChargerRenderer::new);

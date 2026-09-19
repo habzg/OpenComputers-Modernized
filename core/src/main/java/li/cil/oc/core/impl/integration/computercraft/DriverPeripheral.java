@@ -182,8 +182,7 @@ public final class DriverPeripheral implements DriverBlock {
               case String ignored -> "string";
               case Boolean ignored -> "boolean";
               case Number ignored -> "number";
-              //noinspection rawtypes
-              case Map ignored -> "table";
+              case Map<?, ?> ignored -> "table";
               default -> "userdata";
             };
           }

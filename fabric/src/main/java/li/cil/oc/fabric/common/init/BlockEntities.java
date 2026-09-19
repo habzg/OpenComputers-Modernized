@@ -20,7 +20,6 @@ import li.cil.oc.core.impl.common.blockentity.PowerConverter;
 import li.cil.oc.core.impl.common.blockentity.PowerDistributor;
 import li.cil.oc.core.impl.common.blockentity.Print;
 import li.cil.oc.core.impl.common.blockentity.Printer;
-import li.cil.oc.core.impl.common.blockentity.Rack;
 import li.cil.oc.core.impl.common.blockentity.Raid;
 import li.cil.oc.core.impl.common.blockentity.Redstone;
 import li.cil.oc.core.impl.common.blockentity.Screen;
@@ -29,6 +28,7 @@ import li.cil.oc.fabric.OpenComputers;
 import li.cil.oc.fabric.common.blockentity.CaseTile;
 import li.cil.oc.fabric.common.blockentity.NetSplitterTile;
 import li.cil.oc.fabric.common.blockentity.PrintFabric;
+import li.cil.oc.fabric.common.blockentity.RackFabric;
 import li.cil.oc.fabric.common.blockentity.RedstoneTile;
 import li.cil.oc.fabric.common.blockentity.RobotProxy;
 import li.cil.oc.fabric.common.blockentity.ScreenTile;
@@ -43,6 +43,7 @@ public final class BlockEntities {
   private BlockEntities() {
   }
 
+  @SuppressWarnings("DataFlowIssue")
   private static <T extends BlockEntity> BlockEntityType<T> register(
     String name, BlockEntityType.Builder<T> builder) {
     BlockEntityType<T> type = builder.build(null);
@@ -90,8 +91,8 @@ public final class BlockEntities {
     BlockEntityType.Builder.of(PowerDistributor::new, Blocks.POWER_DISTRIBUTOR));
   public static final BlockEntityType<Printer> PRINTER = register("Printer",
     BlockEntityType.Builder.of(Printer::new, Blocks.PRINTER));
-  public static final BlockEntityType<Rack> RACK = register("Rack",
-    BlockEntityType.Builder.of(Rack::new, Blocks.RACK));
+  public static final BlockEntityType<RackFabric> RACK = register("Rack",
+    BlockEntityType.Builder.of(RackFabric::new, Blocks.RACK));
   public static final BlockEntityType<Raid> RAID = register("Raid",
     BlockEntityType.Builder.of(Raid::new, Blocks.RAID));
   public static final BlockEntityType<Redstone> REDSTONE = register("Redstone",
@@ -137,7 +138,7 @@ public final class BlockEntities {
     Print.TYPE = PRINT;
     Printer.TYPE = PRINTER;
     li.cil.oc.core.impl.common.block.Printer.TYPE = PRINTER;
-    Rack.TYPE = RACK;
+    li.cil.oc.fabric.common.blockentity.RackFabric.TYPE = RACK;
     li.cil.oc.core.impl.common.block.Rack.TYPE = RACK;
     Raid.TYPE = RAID;
     Redstone.TYPE = REDSTONE;

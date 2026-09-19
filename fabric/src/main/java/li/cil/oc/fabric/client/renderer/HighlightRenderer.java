@@ -185,6 +185,11 @@ public final class HighlightRenderer {
   private static final double CABLE_EXPAND = 0.002;
 
   private static int getCableConnections(net.minecraft.world.level.Level level, net.minecraft.core.BlockPos pos) {
+    int selfColor = li.cil.oc.core.impl.util.Color.LightGray;
+    var selfTe = level.getBlockEntity(pos);
+    if (selfTe instanceof Cable selfCable) {
+      selfColor = selfCable.color();
+    }
     int mask = 0;
     for (Direction side : Direction.values()) {
       var neighborPos = pos.relative(side);
@@ -198,7 +203,13 @@ public final class HighlightRenderer {
           }
         }
         if (hasNode) {
-          mask |= (1 << side.get3DDataValue());
+          int neighborColor = li.cil.oc.core.impl.util.Color.LightGray;
+          if (neighbor instanceof Cable nc) {
+            neighborColor = nc.color();
+          }
+          if (selfColor == neighborColor || selfColor == li.cil.oc.core.impl.util.Color.LightGray || neighborColor == li.cil.oc.core.impl.util.Color.LightGray) {
+            mask |= (1 << side.get3DDataValue());
+          }
         }
       }
     }

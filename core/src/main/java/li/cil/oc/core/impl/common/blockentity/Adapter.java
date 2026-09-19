@@ -19,6 +19,7 @@ import li.cil.oc.core.impl.common.PacketSender;
 import li.cil.oc.core.impl.common.blockentity.traits.BlockEntity;
 import li.cil.oc.core.impl.common.blockentity.traits.ComponentInventory;
 import li.cil.oc.core.impl.common.blockentity.traits.OpenSides;
+import li.cil.oc.core.impl.util.InventoryUtils;
 import li.cil.oc.core.util.ResultWrapper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -229,10 +230,16 @@ public class Adapter extends BlockEntity implements li.cil.oc.api.network.Enviro
 
   @Override
   public void spawnStackInWorld(ItemStack stack) {
+    if (isServer()) {
+      InventoryUtils.spawnStackInWorld(position(), stack, null, null);
+    }
   }
 
   @Override
   public void spawnStackInWorld(ItemStack stack, Direction side) {
+    if (isServer()) {
+      InventoryUtils.spawnStackInWorld(position(), stack, side, null);
+    }
   }
 
   @Override

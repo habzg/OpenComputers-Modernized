@@ -47,7 +47,7 @@ public class NetSplitterModel implements BakedModel, FabricBakedModel {
 
   private final ItemOverrides overrides;
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"unused", "DataFlowIssue"})
   public NetSplitterModel() {
     this.overrides = new ItemOverrides(null, null, List.of()) {
       @Override

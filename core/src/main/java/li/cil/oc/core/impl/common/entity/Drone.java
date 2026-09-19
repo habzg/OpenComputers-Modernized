@@ -51,6 +51,7 @@ import net.minecraft.world.level.portal.DimensionTransition;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 public class Drone extends Entity implements MachineHost, li.cil.oc.api.internal.Drone, li.cil.oc.api.internal.Rotatable, li.cil.oc.api.network.Analyzable, Context {
   private static final EntityDataAccessor<Byte> DATA_RUNNING = SynchedEntityData.defineId(Drone.class, EntityDataSerializers.BYTE);
@@ -439,6 +440,11 @@ public class Drone extends Entity implements MachineHost, li.cil.oc.api.internal
 
   @Override
   public void markChanged() {
+  }
+
+  @Override
+  public @NonNull Level level() {
+    return super.level();
   }
 
   @Override

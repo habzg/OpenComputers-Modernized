@@ -2,8 +2,8 @@
   "sources": [
     {
       "type": "directory",
-      "source": "block/overlay",
-      "prefix": "block/overlay/"
+      "source": "block",
+      "prefix": "block/"
     }
   ]
 }

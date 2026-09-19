@@ -228,4 +228,20 @@ subprojects {
     tasks.withType(JavaCompile).configureEach {
         options.encoding = 'UTF-8'
     }
+
+    afterEvaluate {
+        jar {
+            doFirst {
+                manifest.attributes(
+                    'Implementation-Title':   mod_name,
+                    'Implementation-Version': mod_version,
+                    'Implementation-Vendor':  "Florian 'Sangar' Nuecke, Johannes 'Lord Joda' Lohrer, habzg, Everyone who contributed to the mod on Github - thank you!",
+                    'Implementation-URL':     'https://github.com/habzg/OpenComputers-Modernized',
+                    'Specification-Title':   "${mod_name} API",
+                    'Specification-Version': mod_version,
+                    'Specification-Vendor':  "Florian 'Sangar' Nuecke, Johannes 'Lord Joda' Lohrer, habzg, Everyone who contributed to the mod on Github - thank you!",
+                )
+            }
+        }
+    }
 }

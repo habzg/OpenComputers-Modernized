@@ -18,6 +18,7 @@ import li.cil.oc.core.impl.common.blockentity.traits.Inventory;
 import li.cil.oc.core.impl.common.blockentity.traits.Rotatable;
 import li.cil.oc.core.impl.common.item.data.PrintData;
 import li.cil.oc.core.impl.util.EventHandlerDelegate;
+import li.cil.oc.core.impl.util.InventoryUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -521,9 +522,15 @@ public class Printer extends BlockEntity implements li.cil.oc.api.network.Enviro
   }
 
   public void spawnStackInWorld(ItemStack stack) {
+    if (isServer()) {
+      InventoryUtils.spawnStackInWorld(position(), stack, null, null);
+    }
   }
 
   public void spawnStackInWorld(ItemStack stack, Direction direction) {
+    if (isServer()) {
+      InventoryUtils.spawnStackInWorld(position(), stack, direction, null);
+    }
   }
 
   public boolean isUseableByPlayer(Player player) {

@@ -2,12 +2,12 @@ package li.cil.oc.core.impl.client.renderer.blockentity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import li.cil.oc.core.impl.client.Textures;
 import li.cil.oc.core.impl.common.blockentity.traits.Environment;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,7 +33,7 @@ public class TransposerRenderer implements BlockEntityRenderer<BlockEntity> {
     poseStack.translate(-0.5, -0.5, -0.5);
 
     int fullBright = 0xF000F0;
-    VertexConsumer consumer = bufferSource.getBuffer(RenderType.entityTranslucent(Textures.blockTransposerOn));
+    VertexConsumer consumer = bufferSource.getBuffer(RenderType.entityTranslucent(InventoryMenu.BLOCK_ATLAS));
     var matrix = poseStack.last().pose();
 
     // DOWN (y=1)

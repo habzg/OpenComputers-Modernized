@@ -99,7 +99,7 @@ public class Rack extends DynamicGuiContainer<li.cil.oc.core.impl.common.contain
     super.init();
 
     relayButton = new ImageButton(0, leftPos + 101, topPos + 96, 65, 18, Textures.guiButtonRelay,
-      Component.translatable("gui.opencomputers.rack.disabled").getString(), 0xE0E0E0, true, 0xA0A0A0, 0xFFFFA0, 18);
+      Component.translatable("gui.opencomputers.rack.disabled").getString(), 0xE0E0E0, false, 0xA0A0A0, 0xFFFFA0, 18);
     addRenderableWidget(relayButton);
     relayButton.setPressHandler(this::actionPerformed);
 

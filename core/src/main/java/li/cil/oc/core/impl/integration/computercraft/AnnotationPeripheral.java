@@ -263,24 +263,32 @@ public class AnnotationPeripheral implements IDynamicPeripheral {
 
   private static IArguments createCCTArguments(Object[] args) {
     return new IArguments() {
-      @Override public int count() { return args.length; }
-      @Override public Object get(int index) {
+      @Override
+      public int count() {
+        return args.length;
+      }
+
+      @Override
+      public Object get(int index) {
         if (index < 0 || index >= args.length) return null;
         return args[index];
       }
-      @Override public @NotNull String getType(int index) {
+
+      @Override
+      public @NotNull String getType(int index) {
         Object val = get(index);
         return switch (val) {
           case null -> "nil";
           case Boolean b -> "boolean";
           case Number number -> "number";
           case String s -> "string";
-          //noinspection rawtypes
-          case Map map -> "table";
+          case Map<?, ?> map -> "table";
           default -> "object";
         };
       }
-      @Override public @NotNull IArguments drop(int count) {
+
+      @Override
+      public @NotNull IArguments drop(int count) {
         if (count <= 0) return this;
         if (count >= args.length) return createCCTArguments(new Object[0]);
         Object[] newArgs = new Object[args.length - count];

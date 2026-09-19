@@ -22,6 +22,7 @@ import li.cil.oc.core.impl.common.entity.Drone;
 import li.cil.oc.core.impl.integration.util.ItemCharge;
 import li.cil.oc.core.impl.util.BlockPosition;
 import li.cil.oc.core.impl.util.EventHandlerDelegate;
+import li.cil.oc.core.impl.util.InventoryUtils;
 import li.cil.oc.core.util.RobotChargeableFactory;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -141,10 +142,16 @@ public class Charger extends BlockEntity implements li.cil.oc.api.network.Enviro
 
   @Override
   public void spawnStackInWorld(ItemStack stack) {
+    if (isServer()) {
+      InventoryUtils.spawnStackInWorld(position(), stack, null, null);
+    }
   }
 
   @Override
   public void spawnStackInWorld(ItemStack stack, Direction direction) {
+    if (isServer()) {
+      InventoryUtils.spawnStackInWorld(position(), stack, direction, null);
+    }
   }
 
   @Override

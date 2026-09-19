@@ -9,7 +9,6 @@ import li.cil.oc.core.client.renderer.blockentity.RenderUtil;
 import li.cil.oc.core.impl.client.Textures;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemDisplayContext;
@@ -110,16 +109,21 @@ public final class RackMountableRenderHandler {
     PoseStack poseStack = e.getPoseStack();
     MultiBufferSource bufferSource = e.getBufferSource();
     if (poseStack == null || bufferSource == null) return;
-    int packedOverlay = e.getPackedOverlay();
-    var consumer = bufferSource.getBuffer(RenderType.entityCutoutNoCull(texture));
+    var atlas = Minecraft.getInstance().getModelManager().getAtlas(net.minecraft.world.inventory.InventoryMenu.BLOCK_ATLAS);
+    var sprite = atlas.getSprite(texture);
+    var consumer = bufferSource.getBuffer(li.cil.oc.core.impl.client.renderer.RenderHelper.BLOCK_OVERLAY);
     var m = poseStack.last().pose();
-    int fullBright = 0xF000F0;
-    float v0 = e.v0;
-    float v1 = e.v1;
-    consumer.addVertex(m, u0, v1, 0).setColor(255, 255, 255, 255).setUv(u0, v1).setOverlay(packedOverlay).setLight(fullBright).setNormal(0, 1, 0);
-    consumer.addVertex(m, u1, v1, 0).setColor(255, 255, 255, 255).setUv(u1, v1).setOverlay(packedOverlay).setLight(fullBright).setNormal(0, 1, 0);
-    consumer.addVertex(m, u1, v0, 0).setColor(255, 255, 255, 255).setUv(u1, v0).setOverlay(packedOverlay).setLight(fullBright).setNormal(0, 1, 0);
-    consumer.addVertex(m, u0, v0, 0).setColor(255, 255, 255, 255).setUv(u0, v0).setOverlay(packedOverlay).setLight(fullBright).setNormal(0, 1, 0);
+    float su0 = sprite.getU0();
+    float su1 = sprite.getU1();
+    float sv0 = sprite.getV0();
+    float sv1 = sprite.getV1();
+    float vRange = sv1 - sv0;
+    float mv0 = sv0 + (2 + e.mountable * 3f) / 16f * vRange;
+    float mv1 = sv0 + (5 + e.mountable * 3f) / 16f * vRange;
+    consumer.addVertex(m, u0, e.v1, 0).setUv(su0 + u0 * (su1 - su0), mv1);
+    consumer.addVertex(m, u1, e.v1, 0).setUv(su0 + u1 * (su1 - su0), mv1);
+    consumer.addVertex(m, u1, e.v0, 0).setUv(su0 + u1 * (su1 - su0), mv0);
+    consumer.addVertex(m, u0, e.v0, 0).setUv(su0 + u0 * (su1 - su0), mv0);
     if (bufferSource instanceof MultiBufferSource.BufferSource bs) {
       bs.endBatch();
     }

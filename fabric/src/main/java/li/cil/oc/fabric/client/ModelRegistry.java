@@ -7,6 +7,7 @@ import li.cil.oc.fabric.model.DroneModel;
 import li.cil.oc.fabric.model.FloppyModel;
 import li.cil.oc.fabric.model.NetSplitterModel;
 import li.cil.oc.fabric.model.PrintModel;
+import li.cil.oc.fabric.model.RackModel;
 import li.cil.oc.fabric.model.RobotModel;
 import li.cil.oc.fabric.model.ScreenModel;
 import net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin;
@@ -30,9 +31,6 @@ public final class ModelRegistry {
         floppyDyeIds[i] = ResourceLocation.fromNamespaceAndPath(OpenComputers.ID, "item/floppy_" + Color.dyes[i].toLowerCase());
       }
 
-      var cableLoc = ResourceLocation.fromNamespaceAndPath(OpenComputers.ID, "block/cable");
-      var capLoc = ResourceLocation.fromNamespaceAndPath(OpenComputers.ID, "block/cablecap");
-
       var printId = ResourceLocation.fromNamespaceAndPath(OpenComputers.ID, "print");
       var beaconId = ResourceLocation.fromNamespaceAndPath(OpenComputers.ID, "beaconbaseprint");
       var netSplitterId = ResourceLocation.fromNamespaceAndPath(OpenComputers.ID, "netsplitter");
@@ -55,11 +53,15 @@ public final class ModelRegistry {
           return new NetSplitterModel();
         }
 
-        if (!"inventory".equals(variant)) return model;
-
         if (id.equals(ResourceLocation.fromNamespaceAndPath(OpenComputers.ID, "cable"))) {
-          return model != null ? new CableModel(cableLoc, capLoc, model) : null;
+          return model != null ? new CableModel(model) : null;
         }
+
+        if (id.equals(ResourceLocation.fromNamespaceAndPath(OpenComputers.ID, "rack"))) {
+          return model != null ? new RackModel(model) : null;
+        }
+
+        if (!"inventory".equals(variant)) return model;
 
         if (id.equals(ResourceLocation.fromNamespaceAndPath(OpenComputers.ID, "floppy"))) {
           return new FloppyModel(floppyDyeIds);

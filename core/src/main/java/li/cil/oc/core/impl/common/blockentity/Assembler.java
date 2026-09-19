@@ -16,6 +16,7 @@ import li.cil.oc.core.impl.common.blockentity.traits.Inventory;
 import li.cil.oc.core.impl.common.blockentity.traits.PowerAcceptor;
 import li.cil.oc.core.impl.common.template.AssemblerTemplates;
 import li.cil.oc.core.impl.util.EventHandlerDelegate;
+import li.cil.oc.core.impl.util.InventoryUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -291,10 +292,16 @@ public class Assembler extends BlockEntity implements li.cil.oc.api.network.Envi
 
   @Override
   public void spawnStackInWorld(ItemStack stack) {
+    if (isServer()) {
+      InventoryUtils.spawnStackInWorld(position(), stack, null, null);
+    }
   }
 
   @Override
   public void spawnStackInWorld(ItemStack stack, Direction direction) {
+    if (isServer()) {
+      InventoryUtils.spawnStackInWorld(position(), stack, direction, null);
+    }
   }
 
   @Override

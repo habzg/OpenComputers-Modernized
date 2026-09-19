@@ -26,6 +26,7 @@ import li.cil.oc.core.impl.common.blockentity.traits.PowerBalancer;
 import li.cil.oc.core.impl.common.blockentity.traits.RedstoneAware;
 import li.cil.oc.core.impl.common.blockentity.traits.Rotatable;
 import li.cil.oc.core.impl.util.EventHandlerDelegate;
+import li.cil.oc.core.impl.util.InventoryUtils;
 import li.cil.oc.core.impl.util.RotationHelper;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -571,10 +572,16 @@ public class Rack extends HubBlockEntity implements PowerAcceptor, PowerBalancer
 
   @Override
   public void spawnStackInWorld(ItemStack stack) {
+    if (isServer()) {
+      InventoryUtils.spawnStackInWorld(position(), stack, null, null);
+    }
   }
 
   @Override
   public void spawnStackInWorld(ItemStack stack, Direction direction) {
+    if (isServer()) {
+      InventoryUtils.spawnStackInWorld(position(), stack, direction, null);
+    }
   }
 
   @Override

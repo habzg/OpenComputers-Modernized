@@ -15,10 +15,11 @@ public final class ModTIS3D implements ModProxy {
 
   @Override
   public void initialize() {
-    // TIS-3D registers its serial interface provider registry in its own
-    // mod initializer, which may run after ours, so the provider cannot be
-    // registered there. Instead, register it when TIS-3D adds the registry
-    // to the root registry, at which point it exists and is not frozen.
+    // If the registry already exists (TIS-3D loaded before us), register now.
+    if (BuiltInRegistries.REGISTRY.containsKey(SerialInterfaceProvider.REGISTRY.location())) {
+      li.cil.oc.core.impl.integration.tis3d.ModTIS3D.initialize();
+    }
+    // Also listen for late registration (TIS-3D loads after us).
     RegistryEntryAddedCallback.event(BuiltInRegistries.REGISTRY).register((rawId, id, registry) -> {
       if (id.equals(SerialInterfaceProvider.REGISTRY.location())) {
         li.cil.oc.core.impl.integration.tis3d.ModTIS3D.initialize();

@@ -188,8 +188,12 @@ public final class HighlightRenderer {
 
   @SuppressWarnings("unused")
   private static int getCableConnections(net.minecraft.world.level.Level level, net.minecraft.core.BlockPos pos) {
+    int selfColor = li.cil.oc.core.impl.util.Color.LightGray;
+    var selfTe = level.getBlockEntity(pos);
+    if (selfTe instanceof Cable selfCable) {
+      selfColor = selfCable.color();
+    }
     int mask = 0;
-    var te = level.getBlockEntity(pos);
     for (Direction side : Direction.values()) {
       var neighborPos = pos.relative(side);
       var neighbor = level.getBlockEntity(neighborPos);
@@ -197,11 +201,17 @@ public final class HighlightRenderer {
         boolean hasNode;
         switch (neighbor) {
           case SidedEnvironment sided -> hasNode = sided.canConnect(side.getOpposite());
-          case li.cil.oc.api.network.Environment environment -> hasNode = true;
+          case li.cil.oc.api.network.Environment ignored -> hasNode = true;
           default -> hasNode = li.cil.oc.neoforge.common.MultipartHooks.hasOCPart(neighbor);
         }
         if (hasNode) {
-          mask |= (1 << side.get3DDataValue());
+          int neighborColor = li.cil.oc.core.impl.util.Color.LightGray;
+          if (neighbor instanceof Cable nc) {
+            neighborColor = nc.color();
+          }
+          if (selfColor == neighborColor || selfColor == li.cil.oc.core.impl.util.Color.LightGray || neighborColor == li.cil.oc.core.impl.util.Color.LightGray) {
+            mask |= (1 << side.get3DDataValue());
+          }
         }
       }
     }

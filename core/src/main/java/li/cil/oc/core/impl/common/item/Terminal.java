@@ -22,7 +22,8 @@ public class Terminal extends DelegateItem {
     super(properties.stacksTo(1));
   }
 
-  private static ClientTerminalOpener terminalOpener = (player, stack, key, address) -> {};
+  private static ClientTerminalOpener terminalOpener = (player, stack, key, address) -> {
+  };
 
   public static void setTerminalOpener(ClientTerminalOpener handler) {
     terminalOpener = handler;
