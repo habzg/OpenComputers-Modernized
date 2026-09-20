@@ -256,11 +256,10 @@ public class Adapter extends BlockEntity implements li.cil.oc.api.network.Enviro
 
   @Override
   public void dropSlot(int slot, int count, Direction direction) {
-    var stack = getItem(slot);
-    if (!stack.isEmpty()) {
-      var toDrop = stack.split(count);
-      if (direction != null) spawnStackInWorld(toDrop, direction);
-      else spawnStackInWorld(toDrop);
+    var removed = removeItem(slot, count);
+    if (!removed.isEmpty()) {
+      if (direction != null) spawnStackInWorld(removed, direction);
+      else spawnStackInWorld(removed);
     }
   }
 

@@ -54,7 +54,7 @@ public class TextBuffer extends TextBufferBase {
   public static void registerClientBuffer(TextBuffer t) {
     ClientPacketSenderDelegate.get().sendTextBufferInit(t.proxy.nodeAddress);
     ClientComponentTracker.INSTANCE.add(t.host().level(), t.proxy.nodeAddress, t);
-    clientBuffers.add(t);
+    if (!clientBuffers.contains(t)) clientBuffers.add(t);
   }
 
   private PacketBuilderBase<?> pendingCommands = null;
@@ -78,16 +78,11 @@ public class TextBuffer extends TextBufferBase {
 
   @Override
   protected void flushPendingCommands() {
-    boolean hadCommands;
     synchronized (this) {
-      hadCommands = pendingCommands != null;
-      if (hadCommands) {
+      if (pendingCommands != null) {
         pendingCommands.sendToPlayersNearHost(host(), OCSettings.get().maxWirelessRange[Tier.Two] * OCSettings.get().maxWirelessRange[Tier.Two]);
         pendingCommands = null;
       }
-    }
-    if (hadCommands) {
-      host().markChanged();
     }
   }
 
@@ -309,7 +304,7 @@ public class TextBuffer extends TextBufferBase {
 
     @Override
     public void onBufferColorChange() {
-
+      owner.host().markChanged();
       synchronized (owner) {
         PacketSender.appendTextBufferColorChange(((TextBuffer) owner).pendingCommands(), owner.data.foreground(), owner.data.background());
       }
@@ -318,7 +313,7 @@ public class TextBuffer extends TextBufferBase {
     @Override
     public void onBufferCopy(int col, int row, int w, int h, int tx, int ty) {
       owner.relativeLitArea = -1;
-
+      owner.host().markChanged();
       synchronized (owner) {
         PacketSender.appendTextBufferCopy(((TextBuffer) owner).pendingCommands(), col, row, w, h, tx, ty);
       }
@@ -326,7 +321,7 @@ public class TextBuffer extends TextBufferBase {
 
     @Override
     public void onBufferDepthChange(li.cil.oc.api.internal.TextBuffer.ColorDepth depth) {
-
+      owner.host().markChanged();
       synchronized (owner) {
         PacketSender.appendTextBufferDepthChange(((TextBuffer) owner).pendingCommands(), depth);
       }
@@ -335,7 +330,7 @@ public class TextBuffer extends TextBufferBase {
     @Override
     public void onBufferFill(int col, int row, int w, int h, int c) {
       owner.relativeLitArea = -1;
-
+      owner.host().markChanged();
       synchronized (owner) {
         PacketSender.appendTextBufferFill(((TextBuffer) owner).pendingCommands(), col, row, w, h, c);
       }
@@ -343,7 +338,7 @@ public class TextBuffer extends TextBufferBase {
 
     @Override
     public void onBufferPaletteChange(int index) {
-
+      owner.host().markChanged();
       synchronized (owner) {
         PacketSender.appendTextBufferPaletteChange(((TextBuffer) owner).pendingCommands(), index, owner.getPaletteColor(index));
       }
@@ -352,7 +347,7 @@ public class TextBuffer extends TextBufferBase {
     @Override
     public void onBufferResolutionChange(int w, int h) {
       owner.relativeLitArea = -1;
-
+      owner.host().markChanged();
       synchronized (owner) {
         PacketSender.appendTextBufferResolutionChange(((TextBuffer) owner).pendingCommands(), w, h);
       }
@@ -361,7 +356,7 @@ public class TextBuffer extends TextBufferBase {
     @Override
     public void onBufferViewportResolutionChange(int w, int h) {
       owner.relativeLitArea = -1;
-
+      owner.host().markChanged();
       synchronized (owner) {
         PacketSender.appendTextBufferViewportResolutionChange(((TextBuffer) owner).pendingCommands(), w, h);
       }
@@ -371,7 +366,7 @@ public class TextBuffer extends TextBufferBase {
     public void onBufferMaxResolutionChange(int w, int h) {
       if (owner.node.network() != null) {
         owner.relativeLitArea = -1;
-
+        owner.host().markChanged();
         synchronized (owner) {
           PacketSender.appendTextBufferMaxResolutionChange(((TextBuffer) owner).pendingCommands(), w, h);
         }
@@ -381,7 +376,7 @@ public class TextBuffer extends TextBufferBase {
     @Override
     public void onBufferSet(int col, int row, String s, boolean vertical) {
       owner.relativeLitArea = -1;
-
+      owner.host().markChanged();
       synchronized (owner) {
         PacketSender.appendTextBufferSet(((TextBuffer) owner).pendingCommands(), col, row, s, vertical);
       }
@@ -390,7 +385,7 @@ public class TextBuffer extends TextBufferBase {
     @Override
     public void onBufferBitBlt(int col, int row, int w, int h, GpuTextBuffer ram, int fromCol, int fromRow) {
       owner.relativeLitArea = -1;
-
+      owner.host().markChanged();
       synchronized (owner) {
         PacketSender.appendTextBufferBitBlt(((TextBuffer) owner).pendingCommands(), col, row, w, h, ram.owner, ram.id, fromCol, fromRow);
       }
@@ -399,7 +394,7 @@ public class TextBuffer extends TextBufferBase {
     @Override
     public void onBufferRamInit(GpuTextBuffer ram) {
       owner.relativeLitArea = -1;
-
+      owner.host().markChanged();
       var nbt = new CompoundTag();
       ram.save(nbt, null);
       synchronized (owner) {
@@ -410,7 +405,7 @@ public class TextBuffer extends TextBufferBase {
     @Override
     public void onBufferRamDestroy(GpuTextBuffer ram) {
       owner.relativeLitArea = -1;
-
+      owner.host().markChanged();
       synchronized (owner) {
         PacketSender.appendTextBufferRamDestroy(((TextBuffer) owner).pendingCommands(), ram.owner, ram.id);
       }
@@ -419,7 +414,7 @@ public class TextBuffer extends TextBufferBase {
     @Override
     public void onBufferRawSetText(int col, int row, int[][] text) {
       owner.relativeLitArea = -1;
-
+      owner.host().markChanged();
       synchronized (owner) {
         PacketSender.appendTextBufferRawSetText(((TextBuffer) owner).pendingCommands(), col, row, text);
       }
@@ -428,7 +423,7 @@ public class TextBuffer extends TextBufferBase {
     @Override
     public void onBufferRawSetBackground(int col, int row, int[][] color) {
       owner.relativeLitArea = -1;
-
+      owner.host().markChanged();
       synchronized (owner) {
         PacketSender.appendTextBufferRawSetBackground(((TextBuffer) owner).pendingCommands(), col, row, color);
       }
@@ -437,7 +432,7 @@ public class TextBuffer extends TextBufferBase {
     @Override
     public void onBufferRawSetForeground(int col, int row, int[][] color) {
       owner.relativeLitArea = -1;
-
+      owner.host().markChanged();
       synchronized (owner) {
         PacketSender.appendTextBufferRawSetForeground(((TextBuffer) owner).pendingCommands(), col, row, color);
       }

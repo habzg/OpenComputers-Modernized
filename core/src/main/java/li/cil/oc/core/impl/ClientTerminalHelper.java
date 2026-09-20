@@ -36,10 +36,10 @@ public class ClientTerminalHelper {
       return;
     }
     var initialBuffer = terminal.buffer();
-    var initialNode = initialBuffer != null ? initialBuffer.node() : null;
-    var bufferAddress = initialNode != null ? initialNode.address() : null;
-    if (bufferAddress == null || bufferAddress.isEmpty()) {
-      bufferAddress = terminal.address();
+    String bufferAddress = null;
+    if (initialBuffer instanceof li.cil.oc.core.impl.common.component.TextBufferBase base
+      && base.proxy != null && base.proxy.nodeAddress != null && !base.proxy.nodeAddress.isEmpty()) {
+      bufferAddress = base.proxy.nodeAddress;
     }
 
     final String lockedBufferAddress = bufferAddress;
@@ -73,7 +73,7 @@ public class ClientTerminalHelper {
       public TextBuffer buffer() {
         var mc = Minecraft.getInstance();
         var lvl = mc.level;
-        if (lvl != null && lockedBufferAddress != null && !lockedBufferAddress.isEmpty()) {
+        if (lvl != null && lockedBufferAddress != null) {
           var found = li.cil.oc.core.impl.client.ClientComponentTracker.INSTANCE.get(lvl, lockedBufferAddress);
           if (found instanceof TextBuffer tb) return tb;
         }

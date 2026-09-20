@@ -40,6 +40,9 @@ public final class DriverServer extends Item implements HostAware {
     for (int i = 0; i < rack.getContainerSize(); i++) {
       if (rack.getItem(i) == stack) return i;
     }
+    for (int i = 0; i < rack.getContainerSize(); i++) {
+      if (ItemStack.isSameItemSameComponents(rack.getItem(i), stack)) return i;
+    }
     return -1;
   }
 

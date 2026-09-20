@@ -683,9 +683,8 @@ public final class ClientPacketHandler extends PacketHandler {
           int slot = p.readInt();
           if (slot < 0 || slot >= t.getContainerSize()) continue;
           var stack = p.readItemStack();
-          t.updateItems(slot, stack);
+          t.setItem(slot, stack);
         }
-        t.connectComponents();
       }
     } catch (IOException e) {
       throw new RuntimeException(e);

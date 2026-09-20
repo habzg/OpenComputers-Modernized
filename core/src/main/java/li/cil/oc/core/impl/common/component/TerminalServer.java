@@ -26,7 +26,6 @@ import li.cil.oc.api.util.StateAware;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Tier;
 import li.cil.oc.core.impl.OCSettings;
-import li.cil.oc.core.impl.common.PacketSender;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
@@ -39,7 +38,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 
 public class TerminalServer implements Environment, EnvironmentHost, Analyzable, RackMountable, Lifecycle, DeviceInfo {
   public final Rack rack;
@@ -50,6 +48,7 @@ public class TerminalServer implements Environment, EnvironmentHost, Analyzable,
 
   public final double range = OCSettings.get().maxWirelessRange[Tier.Two];
   public final List<String> keys = new ArrayList<>();
+  private volatile String persistedAddress = null;
 
   private final Map<String, String> deviceInfo;
 
@@ -122,18 +121,24 @@ public class TerminalServer implements Environment, EnvironmentHost, Analyzable,
   }
 
   public boolean hasAddress() {
-    if (rack == null) return false;
-    var data = rack.getMountableData(slot);
-    if (data == null) return false;
-    return data.contains("terminalAddress");
+    if (rack != null) {
+      var data = rack.getMountableData(slot);
+      if (data != null && data.contains("terminalAddress")) return true;
+    }
+    var persisted = persistedAddress;
+    return persisted != null && !persisted.isEmpty();
   }
 
   public String address() {
-    if (rack == null) return null;
-    var data = rack.getMountableData(slot);
-    if (data == null) return null;
-    var addr = data.getString("terminalAddress");
-    return addr.isEmpty() ? null : addr;
+    if (rack != null) {
+      var data = rack.getMountableData(slot);
+      if (data != null) {
+        var addr = data.getString("terminalAddress");
+        if (!addr.isEmpty()) return addr;
+      }
+    }
+    var persisted = persistedAddress;
+    return (persisted == null || persisted.isEmpty()) ? null : persisted;
   }
 
   public List<String> sidedKeys() {
@@ -141,13 +146,17 @@ public class TerminalServer implements Environment, EnvironmentHost, Analyzable,
     var level = rack.level();
     if (level == null || !level.isClientSide()) return keys;
     var data = rack.getMountableData(slot);
-    if (data == null) return List.of();
-    var tagList = data.getList("keys", Tag.TAG_STRING);
-    var result = new ArrayList<String>(tagList.size());
-    for (int i = 0; i < tagList.size(); i++) {
-      result.add(tagList.getString(i));
+    if (data != null) {
+      var tagList = data.getList("keys", Tag.TAG_STRING);
+      var result = new ArrayList<String>(tagList.size());
+      for (int i = 0; i < tagList.size(); i++) {
+        result.add(tagList.getString(i));
+      }
+      if (!result.isEmpty()) return result;
     }
-    return result;
+    synchronized (keys) {
+      return new ArrayList<>(keys);
+    }
   }
 
   @Override
@@ -226,6 +235,10 @@ public class TerminalServer implements Environment, EnvironmentHost, Analyzable,
       }
       nbt.putString("terminalAddress", node.address() == null ? "" : node.address());
     }
+    var buf = bufferIfLoaded();
+    if (buf != null && buf.node() != null && buf.node().address() != null) {
+      nbt.putString("bufferAddress", buf.node().address());
+    }
     return nbt;
   }
 
@@ -266,7 +279,6 @@ public class TerminalServer implements Environment, EnvironmentHost, Analyzable,
       tag.putString(OCSettings.namespace + "server", node != null ? node.address() : "");
       heldItem.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
       rack.markChanged(slot);
-      PacketSender.sendRackMountableData((BlockEntity) rack, slot, getData());
       player.getInventory().setChanged();
     }
     return true;
@@ -279,8 +291,16 @@ public class TerminalServer implements Environment, EnvironmentHost, Analyzable,
   @Override
   public void load(CompoundTag nbt, HolderLookup.Provider provider) {
     var level = rack.level();
-    if (level != null && !level.isClientSide() && node != null) {
+    boolean isClient = level != null && level.isClientSide();
+    if (nbt.contains("address")) {
+      var persisted = nbt.getString("address");
+      persistedAddress = persisted.isEmpty() ? null : persisted;
+    }
+    if (level != null && !isClient && node != null) {
       node.load(nbt, provider);
+      if (node.address() != null && !node.address().isEmpty()) {
+        persistedAddress = node.address();
+      }
     }
     if (nbt.contains(BufferTag)) {
       buffer().load(nbt.getCompound(BufferTag), provider);
@@ -365,7 +385,14 @@ public class TerminalServer implements Environment, EnvironmentHost, Analyzable,
     public void completePending() {
       var promoted = new ArrayList<TerminalServer>();
       for (var term : pending) {
-        if (term.hasAddress()) {
+        if (!term.hasAddress()) continue;
+        var address = term.address();
+        if (address == null) {
+          promoted.add(term);
+          continue;
+        }
+        var prev = ready.get(address);
+        if (prev == null || prev == term) {
           promoted.add(term);
         }
       }
@@ -384,15 +411,19 @@ public class TerminalServer implements Environment, EnvironmentHost, Analyzable,
         if (terminal.hasAddress()) {
           var newAddress = terminal.address();
           if (newAddress == null) {
-            pending.add(terminal);
+            if (!pending.contains(terminal)) pending.add(terminal);
+            return true;
+          }
+          var prev = ready.get(newAddress);
+          if (prev != null && prev != terminal) {
+            if (!pending.contains(terminal)) pending.add(terminal);
             return true;
           }
           ready.put(newAddress, terminal);
-          return true;
         } else {
-          pending.add(terminal);
-          return true;
+          if (!pending.contains(terminal)) pending.add(terminal);
         }
+        return true;
       }
     }
 
@@ -400,6 +431,7 @@ public class TerminalServer implements Environment, EnvironmentHost, Analyzable,
     public boolean remove(TerminalServer terminal) {
       synchronized (this) {
         completePending();
+        boolean removed;
         if (terminal.hasAddress()) {
           var addr = terminal.address();
           if (addr == null) {
@@ -408,12 +440,15 @@ public class TerminalServer implements Environment, EnvironmentHost, Analyzable,
           var existing = ready.get(addr);
           if (existing == terminal) {
             ready.remove(addr);
-            return true;
+            removed = true;
+          } else {
+            removed = pending.remove(terminal);
           }
-          return pending.remove(terminal);
         } else {
-          return pending.remove(terminal);
+          removed = pending.remove(terminal);
         }
+        if (removed) completePending();
+        return removed;
       }
     }
 

@@ -550,14 +550,23 @@ public class Microcontroller extends BlockEntity implements PowerAcceptor, Hub, 
 
   @Override
   public void dropSlot(int slot) {
+    dropSlot(slot, 1, null);
   }
 
   @Override
   public void dropSlot(int slot, int count, Direction direction) {
+    var stack = getItem(slot);
+    if (!stack.isEmpty()) {
+      if (direction != null) spawnStackInWorld(stack, direction);
+      else spawnStackInWorld(stack);
+    }
   }
 
   @Override
   public void dropAllSlots() {
+    for (int i = 0; i < getContainerSize(); i++) {
+      dropSlot(i);
+    }
   }
 
   @Override

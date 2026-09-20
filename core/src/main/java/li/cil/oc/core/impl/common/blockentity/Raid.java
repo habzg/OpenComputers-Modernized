@@ -199,10 +199,14 @@ public class Raid extends BlockEntity implements li.cil.oc.api.network.Environme
 
   @Override
   public void spawnStackInWorld(ItemStack stack) {
+    spawnStackInWorld(stack, null);
   }
 
   @Override
   public void spawnStackInWorld(ItemStack stack, Direction direction) {
+    if (isServer()) {
+      li.cil.oc.core.impl.util.InventoryUtils.spawnStackInWorld(position(), stack, direction, null);
+    }
   }
 
   @Override
@@ -226,6 +230,11 @@ public class Raid extends BlockEntity implements li.cil.oc.api.network.Environme
 
   @Override
   public void dropSlot(int slot, int count, Direction direction) {
+    var removed = removeItem(slot, count);
+    if (!removed.isEmpty()) {
+      if (direction != null) spawnStackInWorld(removed, direction);
+      else spawnStackInWorld(removed);
+    }
   }
 
   private final ItemStack[] _items = new ItemStack[getContainerSize()];

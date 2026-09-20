@@ -312,7 +312,7 @@ public class GraphicsCardBase extends AbstractManagedEnvironment implements Devi
   public Object[] bind(Context context, Arguments args) {
     String address = args.checkString(0);
     boolean reset = args.optBoolean(1, true);
-    Node screenNode = node.network().node(address);
+    Node screenNode = node.network() != null ? node.network().node(address) : null;
     if (screenNode == null) {
       return ResultWrapper.result(null, "invalid address");
     }

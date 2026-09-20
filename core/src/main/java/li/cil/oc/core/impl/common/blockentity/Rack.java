@@ -93,7 +93,7 @@ public class Rack extends HubBlockEntity implements PowerAcceptor, PowerBalancer
     }
 
     nodeMapping[slot][connectableIndex + 1] = newSide;
-    setChanged();
+    super.setChanged();
 
     if (mountable != null && newSide != null) {
       if (connectableIndex == -1) {
@@ -396,17 +396,12 @@ public class Rack extends HubBlockEntity implements PowerAcceptor, PowerBalancer
     synchronized (hasChanged) {
       hasChanged[slot] = true;
     }
-    if (isServer()) {
-      var mountable = getMountable(slot);
-      if (mountable != null) {
-        lastData[slot] = mountable.getData();
-      }
-    }
-    var level = getLevel();
-    if (level != null && level.getServer() != null && Thread.currentThread() == level.getServer().getRunningThread()) {
-      setChanged();
-    }
     setOutputEnabled(hasRedstoneCard());
+  }
+
+  @Override
+  public void markChanged() {
+    super.setChanged();
   }
 
   @Override
@@ -555,11 +550,10 @@ public class Rack extends HubBlockEntity implements PowerAcceptor, PowerBalancer
 
   @Override
   public void dropSlot(int slot, int count, Direction direction) {
-    var stack = getItem(slot);
-    if (!stack.isEmpty()) {
-      var toDrop = stack.split(count);
-      if (direction != null) spawnStackInWorld(toDrop, direction);
-      else spawnStackInWorld(toDrop);
+    var removed = removeItem(slot, count);
+    if (!removed.isEmpty()) {
+      if (direction != null) spawnStackInWorld(removed, direction);
+      else spawnStackInWorld(removed);
     }
   }
 
@@ -662,7 +656,6 @@ public class Rack extends HubBlockEntity implements PowerAcceptor, PowerBalancer
             if (hasChanged[slot]) {
               hasChanged[slot] = false;
               lastData[slot] = mountable.getData();
-              setChanged();
               PacketSender.sendRackMountableData(this, slot, lastData[slot]);
               var level = getLevel();
               if (level != null) {

@@ -538,12 +538,21 @@ public class Printer extends BlockEntity implements li.cil.oc.api.network.Enviro
   }
 
   public void dropAllSlots() {
+    for (int i = 0; i < getContainerSize(); i++) {
+      dropSlot(i);
+    }
   }
 
   public void dropSlot(int slot) {
+    dropSlot(slot, 1, null);
   }
 
   public void dropSlot(int slot, int count, Direction direction) {
+    var removed = removeItem(slot, count);
+    if (!removed.isEmpty()) {
+      if (direction != null) spawnStackInWorld(removed, direction);
+      else spawnStackInWorld(removed);
+    }
   }
 
   @Override

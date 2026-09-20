@@ -138,14 +138,14 @@ public class RackModel implements BakedModel, FabricBakedModel {
 
   @Override
   public @NotNull ItemOverrides getOverrides() {
-    return OVERRIDES;
+    return overrides;
   }
 
   @SuppressWarnings("DataFlowIssue")
-  private static final ItemOverrides OVERRIDES = new ItemOverrides(null, null, List.of()) {
+  private final ItemOverrides overrides = new ItemOverrides(null, null, List.of()) {
     @Override
     public @NotNull BakedModel resolve(@NotNull BakedModel original, @NotNull ItemStack stack, @Nullable ClientLevel level, @Nullable LivingEntity entity, int seed) {
-      return original;
+      return originalModel;
     }
   };
 
