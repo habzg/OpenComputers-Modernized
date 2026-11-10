@@ -70,11 +70,11 @@ public class SpawnComputerCommand extends SimpleCommand {
         ItemStack apu = li.cil.oc.api.Items.get(Constants.ItemName.APUCreative).createItemStack(1);
         LuaStateFactory.setDefaultArch(apu);
         BlockPosition caseBlockPos = BlockPosition.apply(casePos.getX(), casePos.getY(), casePos.getZ(), world);
-        InventoryUtils.insertIntoInventoryAt(apu, caseBlockPos, Direction.DOWN);
-        InventoryUtils.insertIntoInventoryAt(li.cil.oc.api.Items.get(Constants.ItemName.RAMTier6).createItemStack(2), caseBlockPos, Direction.DOWN);
-        InventoryUtils.insertIntoInventoryAt(li.cil.oc.api.Items.get(Constants.ItemName.HDDTier3).createItemStack(1), caseBlockPos, Direction.DOWN);
-        InventoryUtils.insertIntoInventoryAt(li.cil.oc.api.Items.get(Constants.ItemName.LuaBios).createItemStack(1), caseBlockPos, Direction.DOWN);
-        InventoryUtils.insertIntoInventoryAt(li.cil.oc.api.Items.get(Constants.ItemName.OpenOS).createItemStack(1), caseBlockPos, Direction.DOWN);
+        InventoryUtils.insertIntoInventoryAt(apu, caseBlockPos, Direction.DOWN, 64, false);
+        InventoryUtils.insertIntoInventoryAt(li.cil.oc.api.Items.get(Constants.ItemName.RAMTier6).createItemStack(2), caseBlockPos, Direction.DOWN, 64, false);
+        InventoryUtils.insertIntoInventoryAt(li.cil.oc.api.Items.get(Constants.ItemName.HDDTier3).createItemStack(1), caseBlockPos, Direction.DOWN, 64, false);
+        InventoryUtils.insertIntoInventoryAt(li.cil.oc.api.Items.get(Constants.ItemName.LuaBios).createItemStack(1), caseBlockPos, Direction.DOWN, 64, false);
+        InventoryUtils.insertIntoInventoryAt(li.cil.oc.api.Items.get(Constants.ItemName.OpenOS).createItemStack(1), caseBlockPos, Direction.DOWN, 64, false);
       } else {
         source.sendFailure(Component.literal("You need to be looking at a nearby block."));
       }

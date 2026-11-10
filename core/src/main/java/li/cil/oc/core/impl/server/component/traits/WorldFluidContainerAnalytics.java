@@ -67,7 +67,7 @@ public interface WorldFluidContainerAnalytics extends WorldAware, SideRestricted
   }
 
   private Object[] withInventory(Direction side, Function<Container, Object[]> f) {
-    Container inv = InventoryUtils.inventoryAt(position().offset(side));
+    Container inv = InventoryUtils.inventoryAt(position().offset(side), null);
     if (inv != null && inv.stillValid(fakePlayer()) && mayInteract(position().offset(side), side.getOpposite())) {
       return f.apply(inv);
     }

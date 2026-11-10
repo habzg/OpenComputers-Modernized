@@ -43,8 +43,6 @@ public class RackModel implements IDynamicBakedModel {
     this.originalModel = originalModel;
   }
 
-  // --- ModelData keys ---
-
   public static final ModelProperty<ResourceLocation[]> SLOT_TEXTURES = new ModelProperty<>();
 
   @Override

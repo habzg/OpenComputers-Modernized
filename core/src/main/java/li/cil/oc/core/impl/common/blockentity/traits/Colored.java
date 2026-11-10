@@ -6,8 +6,9 @@ public interface Colored extends li.cil.oc.api.internal.Colored {
 
   void color(int value);
 
-  @SuppressWarnings("SameReturnValue")
-  boolean consumesDye();
+  default boolean consumesDye() {
+    return false;
+  }
 
   @Override
   @SuppressWarnings("SameReturnValue")

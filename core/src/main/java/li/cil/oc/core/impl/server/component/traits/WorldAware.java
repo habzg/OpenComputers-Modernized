@@ -2,6 +2,7 @@ package li.cil.oc.core.impl.server.component.traits;
 
 import java.util.List;
 import li.cil.oc.core.impl.util.BlockPosition;
+import li.cil.oc.core.impl.util.InventoryUtils;
 import li.cil.oc.core.impl.util.Log;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -30,8 +31,28 @@ public interface WorldAware {
       return WorldAction.mayInteract(level(), blockPos, face);
     } catch (Throwable t) {
       Log.get().warn("Some event handler threw up while checking for permission to access a block.", t);
-      return false;
+      return true;
     }
+  }
+
+  default boolean mayInteract(net.minecraft.world.entity.Entity entity) {
+    try {
+      return WorldAction.mayInteractEntity(fakePlayer(), entity);
+    } catch (Throwable t) {
+      Log.get().warn("Some event handler threw up while checking for permission to access an entity.", t);
+      return true;
+    }
+  }
+
+  default boolean mayInteract(InventoryUtils.InventorySource source) {
+    if (!source.inventory().stillValid(fakePlayer())) return false;
+    if (source instanceof InventoryUtils.EntityInventorySource entity) {
+      return mayInteract(entity.entity());
+    }
+    if (source instanceof InventoryUtils.BlockInventorySource block) {
+      return mayInteract(block.position(), block.side());
+    }
+    return true;
   }
 
   default <T extends Entity> List<T> entitiesInBounds(AABB bounds, Class<T> type) {
@@ -49,8 +70,18 @@ public interface WorldAware {
   default <T extends Entity> T closestEntity(Direction side, Class<T> type) {
     BlockPosition blockPos = position().offset(side);
     var entities = level().getEntitiesOfClass(type, blockPos.bounds());
-    if (entities.isEmpty()) return null;
-    return entities.getFirst();
+    Player base = fakePlayer();
+    T closest = null;
+    double closestDistance = Double.MAX_VALUE;
+    for (T entity : entities) {
+      if (entity == base || entity.isSpectator()) continue;
+      double distance = entity.distanceToSqr(base.getX(), base.getY(), base.getZ());
+      if (distance <= closestDistance) {
+        closest = entity;
+        closestDistance = distance;
+      }
+    }
+    return closest;
   }
 
   default Object[] blockContent(Direction side) {

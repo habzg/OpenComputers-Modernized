@@ -1,5 +1,6 @@
 package li.cil.oc.neoforge.common.item;
 
+import li.cil.oc.core.impl.common.item.SneakBypass;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -12,8 +13,8 @@ public class AbstractItem extends li.cil.oc.core.impl.common.item.AbstractItem {
   }
 
   @Override
-  public boolean doesSneakBypassUse(@NotNull ItemStack stack, LevelReader level, @NotNull BlockPos pos, @NotNull Player player) {
-    if (level.getBlockEntity(pos) instanceof li.cil.oc.core.impl.common.blockentity.DiskDrive) return true;
+  public boolean doesSneakBypassUse(@NotNull ItemStack stack, @NotNull LevelReader level, @NotNull BlockPos pos, @NotNull Player player) {
+    if (SneakBypass.bypasses(stack, level, pos)) return true;
     return super.doesSneakBypassUse(stack, level, pos, player);
   }
 }

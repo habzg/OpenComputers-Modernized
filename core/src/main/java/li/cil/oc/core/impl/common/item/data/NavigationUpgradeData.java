@@ -63,14 +63,19 @@ public class NavigationUpgradeData extends ItemData {
   @Override
   public void load(CompoundTag nbt, HolderLookup.Provider provider) {
     if (nbt.contains(OCSettings.namespace + "map")) {
-      map = ItemStack.parseOptional(provider, nbt.getCompound(OCSettings.namespace + "map"));
+      var tag = nbt.getCompound(OCSettings.namespace + "map");
+      map = tag.isEmpty() ? ItemStack.EMPTY : ItemStack.parseOptional(provider, tag);
     }
   }
 
   @Override
   public void save(CompoundTag nbt, HolderLookup.Provider provider) {
-    if (map != null && !map.isEmpty()) {
-      nbt.put(OCSettings.namespace + "map", map.save(provider, new CompoundTag()));
+    if (map != null) {
+      if (map.isEmpty()) {
+        nbt.put(OCSettings.namespace + "map", new CompoundTag());
+      } else {
+        nbt.put(OCSettings.namespace + "map", map.save(provider, new CompoundTag()));
+      }
     }
   }
 }

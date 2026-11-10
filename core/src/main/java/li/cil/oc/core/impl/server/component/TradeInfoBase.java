@@ -56,13 +56,13 @@ public abstract class TradeInfoBase {
   public void save(CompoundTag nbt, HolderLookup.Provider ignoredProvider) {
     if (host instanceof Entity entity) {
       nbt.putBoolean("hostIsEntity", true);
-      nbt.putInt("dimensionID", entity.level().dimension().location().hashCode());
+      nbt.putString("dimensionID", entity.level().dimension().location().toString());
       nbt.putLong("hostUUIDLeast", entity.getUUID().getLeastSignificantBits());
       nbt.putLong("hostUUIDMost", entity.getUUID().getMostSignificantBits());
     } else if (host instanceof net.minecraft.world.level.block.entity.BlockEntity te) {
       nbt.putBoolean("hostIsEntity", false);
       var level = te.getLevel();
-      nbt.putInt("dimensionID", level != null ? level.dimension().location().hashCode() : 0);
+      nbt.putString("dimensionID", level != null ? level.dimension().location().toString() : "");
       nbt.putInt("hostX", te.getBlockPos().getX());
       nbt.putInt("hostY", te.getBlockPos().getY());
       nbt.putInt("hostZ", te.getBlockPos().getZ());

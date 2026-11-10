@@ -56,10 +56,10 @@ public interface ComponentInventory extends Inventory, Environment {
 
   default void updateComponents() {
     ArrayList<ManagedEnvironment> comps = updatingComponents();
-    if (!comps.isEmpty()) {
-      for (ManagedEnvironment comp : comps) {
-        comp.update();
-      }
+    int i = 0;
+    while (i < comps.size()) {
+      comps.get(i).update();
+      i++;
     }
   }
 
@@ -176,10 +176,11 @@ public interface ComponentInventory extends Inventory, Environment {
           removals[slot] != null && !removals[slot].isEmpty() &&
           ItemStack.isSameItemSameComponents(stack, removals[slot])) {
           removals[slot] = ItemStack.EMPTY;
+          adds[slot] = ItemStack.EMPTY;
         } else {
           adds[slot] = stack.copy();
+          scheduleInventoryChange();
         }
-        scheduleInventoryChange();
       }
     }
   }
@@ -193,16 +194,15 @@ public interface ComponentInventory extends Inventory, Environment {
       var adds = pendingAdds();
       if (adds != null && slot >= 0 && slot < adds.length) {
         var addsStack = adds[slot];
-        if (addsStack != null && !addsStack.isEmpty() &&
-          ItemStack.isSameItemSameComponents(stack, addsStack)) {
+        if (addsStack != null && !addsStack.isEmpty()) {
           adds[slot] = ItemStack.EMPTY;
         } else {
           var removals = pendingRemovals();
-          if (removals != null && slot < removals.length && removals[slot] == null) {
+          if (removals != null && slot < removals.length && (removals[slot] == null || removals[slot].isEmpty())) {
             removals[slot] = stack.copy();
+            scheduleInventoryChange();
           }
         }
-        scheduleInventoryChange();
       }
     }
   }
@@ -320,23 +320,27 @@ public interface ComponentInventory extends Inventory, Environment {
     return li.cil.oc.core.impl.integration.opencomputers.Item.getDataTag(stack);
   }
 
+  static void saveComponentData(ManagedEnvironment component, ItemStack stack, HolderLookup.Provider provider) {
+    var customData = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+    CompoundTag nbt;
+    if (customData != null && !customData.isEmpty()) {
+      nbt = customData.copyTag();
+    } else {
+      nbt = new CompoundTag();
+    }
+    CompoundTag data = nbt.contains(OCSettings.namespace + "data") ?
+      nbt.getCompound(OCSettings.namespace + "data") : new CompoundTag();
+    for (String key : List.copyOf(data.getAllKeys())) {
+      data.remove(key);
+    }
+    component.save(data, provider);
+    nbt.put(OCSettings.namespace + "data", data);
+    stack.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.of(nbt));
+  }
+
   default void save(ManagedEnvironment component, DriverItem driver, ItemStack stack, HolderLookup.Provider provider) {
     try {
-      var customData = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
-      CompoundTag nbt;
-      if (customData != null && !customData.isEmpty()) {
-        nbt = customData.copyTag();
-      } else {
-        nbt = new CompoundTag();
-      }
-      CompoundTag data = nbt.contains(OCSettings.namespace + "data") ?
-        nbt.getCompound(OCSettings.namespace + "data") : new CompoundTag();
-      for (String key : List.copyOf(data.getAllKeys())) {
-        data.remove(key);
-      }
-      component.save(data, provider);
-      nbt.put(OCSettings.namespace + "data", data);
-      stack.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.of(nbt));
+      saveComponentData(component, stack, provider);
     } catch (Throwable e) {
       LOGGER.warn("An item component of type '{}' (provided by driver '{}') threw an error while saving.", component.getClass().getName(), driver.getClass().getName(), e);
     }

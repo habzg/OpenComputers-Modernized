@@ -17,7 +17,6 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.TransientCraftingContainer;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.RecipeType;
@@ -98,28 +97,44 @@ public abstract class UpgradeCraftingBase extends AbstractManagedEnvironment imp
         if (currentRecipeOpt.get() != originalHolder) break;
         ItemStack result = currentRecipeOpt.get().value().assemble(currentInput, level.registryAccess());
         if (result.isEmpty()) break;
-        countCrafted += result.getCount();
+        countCrafted += Math.max(result.getCount(), 1);
         postItemCraftedEvent(player, result, this);
+        var remainders = currentRecipeOpt.get().value().getRemainingItems(currentInput);
         List<ItemStack> surplus = new ArrayList<>();
         for (int slot = 0; slot < getContainerSize(); slot++) {
           ItemStack stack = getItem(slot);
           if (!stack.isEmpty()) {
             removeItem(slot, 1);
-            Item containerItem = stack.getItem().getCraftingRemainingItem();
-            ItemStack container = containerItem != null ? containerItem.getDefaultInstance() : ItemStack.EMPTY;
-            if (!container.isEmpty()) {
-              surplus.add(container);
+            ItemStack after = getItem(slot);
+            ItemStack remainder = slot < remainders.size() ? remainders.get(slot) : ItemStack.EMPTY;
+            if (!remainder.isEmpty()) {
+              if (remainder.isDamageableItem() && remainder.getDamageValue() > remainder.getMaxDamage()) {
+                postPlayerDestroyItemEvent(player, remainder);
+              } else if (after.isEmpty()) {
+                setItem(slot, remainder);
+              } else if (ItemStack.isSameItemSameComponents(after, remainder)) {
+                remainder.grow(after.getCount());
+                setItem(slot, remainder);
+              } else {
+                surplus.add(remainder);
+              }
             }
           }
         }
         save(player.getInventory());
-        InventoryUtils.addToPlayerInventory(result, player);
+        InventoryUtils.addToPlayerInventory(result, player, true);
         for (ItemStack stack : surplus) {
-          InventoryUtils.addToPlayerInventory(stack, player);
+          InventoryUtils.addToPlayerInventory(stack, player, true);
         }
         load(player.getInventory());
       }
-      return new Object[]{true, countCrafted};
+      var playerInventory = player.getInventory();
+      var mainInventory = host.mainInventory();
+      for (int i = 0; i < mainInventory.getContainerSize() && i < playerInventory.items.size(); i++) {
+        var stack = playerInventory.items.get(i);
+        mainInventory.setItem(i, stack.isEmpty() ? ItemStack.EMPTY : stack.copy());
+      }
+      return new Object[]{countCrafted > 0, countCrafted};
     }
 
     void load(Container inventory) {

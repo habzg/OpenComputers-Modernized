@@ -4,6 +4,7 @@ import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.inventory.ItemStackInventory;
 import li.cil.oc.fabric.integration.opencomputers.DriverUpgradeDatabase;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 public interface DatabaseInventory extends ItemStackInventory {
   default int tier() {
@@ -26,7 +27,7 @@ public interface DatabaseInventory extends ItemStackInventory {
   }
 
   @Override
-  default boolean canPlaceItem(int slot, ItemStack stack) {
-    return stack.getItem() != container().getItem();
+  default boolean canPlaceItem(int slot, @NotNull ItemStack stack) {
+    return !ItemStack.matches(stack, container());
   }
 }

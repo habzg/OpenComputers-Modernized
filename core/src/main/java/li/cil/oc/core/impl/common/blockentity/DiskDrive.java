@@ -197,11 +197,6 @@ public class DiskDrive extends BlockEntity implements Environment, EnvironmentHo
     }
   }
 
-  @Override
-  public Object result(Object... args) {
-    return ResultWrapper.result(args);
-  }
-
   @Callback(doc = "function():boolean -- Checks whether some medium is currently in the drive.")
   public Object[] isEmpty(Context context, Arguments args) {
     return ResultWrapper.result(filesystemNode() == null);
@@ -210,21 +205,20 @@ public class DiskDrive extends BlockEntity implements Environment, EnvironmentHo
   @Callback(doc = "function([velocity:number]):boolean -- Eject the currently present medium from the drive.")
   public Object[] eject(Context context, Arguments args) {
     double velocity = Math.clamp(args.optDouble(0, 0), 0, 1);
-    ItemStack stack = getItem(0);
-    if (!stack.isEmpty()) {
-      var ejected = stack.split(1);
-      if (!ejected.isEmpty()) {
-        var entity = InventoryUtils.spawnStackInWorld(BlockPosition.apply(this), ejected, facing(), null);
+    ItemStack ejected = removeItem(0, 1);
+    if (!ejected.isEmpty()) {
+      runOnServerThread(() -> {
+        var dir = facing();
+        var entity = InventoryUtils.spawnStackInWorld(BlockPosition.apply(this), ejected, dir, null);
         if (entity != null) {
-          var dir = facing();
           entity.addDeltaMovement(new net.minecraft.world.phys.Vec3(
             dir.getStepX() * velocity,
             dir.getStepY() * velocity,
             dir.getStepZ() * velocity
           ));
         }
-        return ResultWrapper.result(true);
-      }
+      });
+      return ResultWrapper.result(true);
     }
     return ResultWrapper.result(false);
   }
@@ -376,20 +370,15 @@ public class DiskDrive extends BlockEntity implements Environment, EnvironmentHo
   }
 
   @Override
+  public boolean stillValid(@NotNull Player player) {
+    return player.distanceToSqr(worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5) <= 64;
+  }
+
+  @Override
   public void clearContent() {
     for (int i = 0; i < getContainerSize(); i++) {
       setItem(i, ItemStack.EMPTY);
     }
-  }
-
-  @Override
-  public ItemStack[] pendingRemovals() {
-    return null;
-  }
-
-  @Override
-  public ItemStack[] pendingAdds() {
-    return null;
   }
 
   @Override

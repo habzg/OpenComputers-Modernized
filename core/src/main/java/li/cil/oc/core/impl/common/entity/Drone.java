@@ -51,7 +51,6 @@ import net.minecraft.world.level.portal.DimensionTransition;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
-import org.jspecify.annotations.NonNull;
 
 public class Drone extends Entity implements MachineHost, li.cil.oc.api.internal.Drone, li.cil.oc.api.internal.Rotatable, li.cil.oc.api.network.Analyzable, Context {
   private static final EntityDataAccessor<Byte> DATA_RUNNING = SynchedEntityData.defineId(Drone.class, EntityDataSerializers.BYTE);
@@ -239,6 +238,9 @@ public class Drone extends Entity implements MachineHost, li.cil.oc.api.internal
 
     mainInventory = new Inventory() {
       private final ItemStack[] items = new ItemStack[8];
+      {
+        java.util.Arrays.fill(items, ItemStack.EMPTY);
+      }
 
       @Override
       public ItemStack[] items() {
@@ -257,7 +259,7 @@ public class Drone extends Entity implements MachineHost, li.cil.oc.api.internal
 
       @Override
       public void updateItems(int slot, ItemStack stack) {
-        items[slot] = stack;
+        items[slot] = stack != null ? stack : ItemStack.EMPTY;
       }
 
       @Override
@@ -443,11 +445,6 @@ public class Drone extends Entity implements MachineHost, li.cil.oc.api.internal
   }
 
   @Override
-  public @NonNull Level level() {
-    return super.level();
-  }
-
-  @Override
   public Direction facing() {
     return Direction.SOUTH;
   }
@@ -525,7 +522,7 @@ public class Drone extends Entity implements MachineHost, li.cil.oc.api.internal
     ((Connector) control.node()).changeBuffer(info.storedEnergy - ((Connector) control.node()).localBuffer());
     wireThingsTogether();
     inventorySize(computeInventorySize());
-    setPos(position.x, position.y + getDimensions(Pose.STANDING).height() / 2, position.z);
+    setPos(position.x, position.y, position.z);
   }
 
   public void preparePowerUp() {
@@ -655,7 +652,7 @@ public class Drone extends Entity implements MachineHost, li.cil.oc.api.internal
     super.tick();
 
     if (!level().isClientSide) {
-      if (isInWater() || isInLava()) {
+      if (isInsideOfMaterial(FluidTags.WATER, true) || isInsideOfMaterial(FluidTags.LAVA, false)) {
         if (machine != null) machine.stop();
       }
       if (machine != null) machine.update();
@@ -927,6 +924,14 @@ public class Drone extends Entity implements MachineHost, li.cil.oc.api.internal
   @Override
   public boolean isInLava() {
     return level().getFluidState(BlockPos.containing(position())).is(FluidTags.LAVA);
+  }
+
+  private boolean isInsideOfMaterial(net.minecraft.tags.TagKey<net.minecraft.world.level.material.Fluid> tag, boolean testSurface) {
+    BlockPos pos = BlockPos.containing(getX(), getEyeY(), getZ());
+    var fluid = level().getFluidState(pos);
+    if (!fluid.is(tag)) return false;
+    if (!testSurface) return true;
+    return getEyeY() < pos.getY() + fluid.getHeight(level(), pos);
   }
 
   public @NotNull Packet<ClientGamePacketListener> getAddEntityPacket(net.minecraft.server.level.@NotNull ServerEntity entity) {

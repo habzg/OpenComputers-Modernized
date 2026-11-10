@@ -32,14 +32,14 @@ public class Chamelium extends DelegateItem {
     if (OCSettings.get().chameliumEdible) {
       player.startUsingItem(hand);
     }
-    return super.use(world, player, hand);
+    return InteractionResultHolder.success(player.getItemInHand(hand));
   }
 
   @Override
   public @NotNull ItemStack finishUsingItem(@NotNull ItemStack stack, Level world, @NotNull LivingEntity entity) {
-    if (!world.isClientSide && entity instanceof Player player) {
-      player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 100, 0));
-      player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 200, 0));
+    if (!world.isClientSide) {
+      entity.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 100, 0));
+      entity.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 200, 0));
     }
     stack.shrink(1);
     return stack.isEmpty() ? ItemStack.EMPTY : stack;

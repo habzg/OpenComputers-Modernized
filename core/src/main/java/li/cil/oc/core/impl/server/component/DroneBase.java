@@ -10,6 +10,7 @@ import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.server.component.traits.WorldAction;
 import li.cil.oc.core.impl.util.InventoryUtils;
 import li.cil.oc.core.util.ResultWrapper;
 import net.minecraft.core.Direction;
@@ -81,8 +82,13 @@ public abstract class DroneBase extends AgentBase implements DeviceInfo {
 
   @Override
   public void onSuckCollect(ItemEntity entity) {
+    if (WorldAction.checkItemPickup(fakePlayer(), entity)) {
+      return;
+    }
     var inv = inventory();
-    if (InventoryUtils.insertIntoInventory(entity.getItem(), inv, null, 64)) {
+    int before = entity.getItem().getCount();
+    InventoryUtils.insertIntoInventory(entity.getItem(), inv, null, 64, false, insertionSlots());
+    if (entity.getItem().getCount() < before) {
       playPickupSound();
     }
   }

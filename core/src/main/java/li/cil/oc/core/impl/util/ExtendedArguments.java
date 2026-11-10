@@ -58,6 +58,11 @@ public final class ExtendedArguments {
     return optSide(args, index, defaultVal);
   }
 
+  public static Direction optSideForAction(Arguments args, int index, Direction defaultVal) {
+    if (isUndefined(args, index)) return defaultVal;
+    return checkSideForAction(args, index);
+  }
+
   public static Direction checkSideForAction(Arguments args, int index) {
     return checkSide(args, index, Direction.SOUTH, Direction.UP, Direction.DOWN);
   }

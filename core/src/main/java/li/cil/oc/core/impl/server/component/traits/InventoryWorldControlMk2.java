@@ -27,7 +27,7 @@ public interface InventoryWorldControlMk2 extends InventoryAware, WorldAware, Si
     if (stack.getCount() > 0) {
       return withInventory(position().offset(facing), fromSide, inv -> {
         int slot = ExtendedArguments.checkSlot(args, inv, 1);
-        if (!InventoryUtils.insertIntoInventorySlot(stack, inv, fromSide, slot, count)) {
+        if (!InventoryUtils.insertIntoInventorySlot(stack, inv, fromSide, slot, count, false)) {
           return result(false, "inventory full/invalid slot");
         } else if (stack.getCount() == 0) {
           inventory().setItem(selectedSlot(), ItemStack.EMPTY);
@@ -49,12 +49,7 @@ public interface InventoryWorldControlMk2 extends InventoryAware, WorldAware, Si
     return withInventory(position().offset(facing), fromSide, inv -> {
       int slot = ExtendedArguments.checkSlot(args, inv, 1);
       int extracted = InventoryUtils.extractFromInventorySlot(
-        extractedStack -> {
-          for (int s : insertionSlots()) {
-            if (InventoryUtils.insertIntoInventorySlot(extractedStack, this.inventory(), null, s, 64))
-              break;
-          }
-        },
+        (extractedStack, simulate) -> InventoryUtils.insertIntoInventory(extractedStack, this.inventory(), null, 64, simulate, insertionSlots()),
         inv, fromSide, slot, count);
       if (extracted > 0) {
         context.pause(OCSettings.get().suckDelay);
@@ -65,9 +60,9 @@ public interface InventoryWorldControlMk2 extends InventoryAware, WorldAware, Si
   }
 
   default Object[] withInventory(BlockPosition blockPos, Direction fromSide, java.util.function.Function<Container, Object[]> f) {
-    Container inv = InventoryUtils.inventoryAt(blockPos);
-    if (inv != null && inv.stillValid(fakePlayer()) && mayInteract(blockPos, fromSide)) {
-      return f.apply(inv);
+    InventoryUtils.InventorySource source = InventoryUtils.inventorySourceAt(blockPos, fromSide);
+    if (source != null && mayInteract(source)) {
+      return f.apply(source.inventory());
     }
     return result(null, "no inventory");
   }

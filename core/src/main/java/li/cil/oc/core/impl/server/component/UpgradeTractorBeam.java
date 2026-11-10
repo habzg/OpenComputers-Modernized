@@ -1,9 +1,7 @@
 package li.cil.oc.core.impl.server.component;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
@@ -14,6 +12,7 @@ import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.server.component.traits.WorldAction;
 import li.cil.oc.core.impl.util.BlockPosition;
 import li.cil.oc.core.impl.util.InventoryUtils;
 import li.cil.oc.core.util.ResultWrapper;
@@ -88,7 +87,19 @@ public class UpgradeTractorBeam {
 
     @Override
     protected void collectItem(ItemEntity item) {
-      item.playerTouch(player.get());
+      if (owner instanceof li.cil.oc.api.internal.Agent agent) {
+        if (WorldAction.checkItemPickup(player.get(), item)) {
+          return;
+        }
+        if (InventoryUtils.insertIntoInventory(item.getItem(), agent.mainInventory(), null, 64, false, insertionSlots(agent))) {
+          InventoryUtils.playPickupSound(position());
+        }
+        if (item.getItem().isEmpty()) {
+          item.discard();
+        }
+      } else {
+        item.playerTouch(player.get());
+      }
     }
   }
 
@@ -106,17 +117,22 @@ public class UpgradeTractorBeam {
 
     @Override
     protected void collectItem(ItemEntity item) {
-      InventoryUtils.insertIntoInventory(item.getItem(), owner.mainInventory(), null, 64, false, Arrays.stream(insertionSlots()).boxed().collect(Collectors.toList()));
+      if (WorldAction.checkItemPickup(owner.player(), item)) {
+        return;
+      }
+      InventoryUtils.insertIntoInventory(item.getItem(), owner.mainInventory(), null, 64, false, insertionSlots(owner));
     }
+  }
 
-    private int[] insertionSlots() {
-      int size = owner.mainInventory().getContainerSize();
-      int sel = owner.selectedSlot();
-      int[] result = new int[size];
-      int idx = 0;
-      for (int i = sel; i < size; i++) result[idx++] = i;
-      for (int i = 0; i < sel; i++) result[idx++] = i;
-      return result;
-    }
+  static int[] insertionSlots(li.cil.oc.api.internal.Agent agent) {
+    int size = agent.mainInventory().getContainerSize();
+    int sel = agent.selectedSlot();
+    if (sel < 0) sel = 0;
+    if (sel > size) sel = size;
+    int[] result = new int[size];
+    int idx = 0;
+    for (int i = sel; i < size; i++) result[idx++] = i;
+    for (int i = 0; i < sel; i++) result[idx++] = i;
+    return result;
   }
 }

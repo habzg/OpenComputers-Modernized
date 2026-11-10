@@ -78,6 +78,11 @@ public class Robot extends Player {
     addPlayerInventorySlots(6, 174 - deltaY);
   }
 
+  @Override
+  public boolean stillValid(net.minecraft.world.entity.player.@NotNull Player player) {
+    return super.stillValid(player) && current().isUseableByPlayer(player);
+  }
+
   public li.cil.oc.neoforge.common.blockentity.Robot current() {
     return resolve(robot, level, address);
   }
@@ -108,7 +113,7 @@ public class Robot extends Player {
     }
 
     public boolean isValid() {
-      return robot.isInventorySlot(getSlotIndex());
+      return robot.isInventorySlot(getContainerSlot());
     }
 
     @Override

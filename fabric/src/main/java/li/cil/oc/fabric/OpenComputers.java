@@ -710,6 +710,7 @@ public final class OpenComputers implements ModInitializer {
     li.cil.oc.api.Driver.add(new DriverGeolyzer.Provider());
     li.cil.oc.api.Driver.add(new DriverMotionSensor.Provider());
     li.cil.oc.api.Driver.add(new DriverScreen.Provider());
+    li.cil.oc.api.Driver.add(new DriverTerminalServer.Provider());
     li.cil.oc.api.Driver.add(new li.cil.oc.fabric.integration.opencomputers.DriverTransposer.Provider());
     li.cil.oc.api.Driver.add(new li.cil.oc.fabric.integration.opencomputers.DriverUpgradeChunkloader.Provider());
     li.cil.oc.api.Driver.add(new li.cil.oc.fabric.integration.opencomputers.DriverUpgradeCrafting.Provider());
@@ -846,6 +847,7 @@ public final class OpenComputers implements ModInitializer {
     li.cil.oc.fabric.common.SaveHandler.init();
     li.cil.oc.fabric.common.event.AnalyzerEventHandler.init();
     li.cil.oc.fabric.common.event.HoverBootsHandler.init();
+    li.cil.oc.fabric.common.event.SneakBypassHandler.init();
     li.cil.oc.fabric.server.ComponentTracker.init();
     li.cil.oc.fabric.server.network.Waypoints.init();
     li.cil.oc.fabric.server.network.WirelessNetwork.init();

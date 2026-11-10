@@ -75,7 +75,7 @@ public abstract class ServerBase implements ComponentInventory, MachineHost, Ser
   @Override
   public ItemStack[] items() {
     if (_items == null) {
-      _items = new ItemStack[getContainerSize()];
+      _items = li.cil.oc.core.impl.common.inventory.Inventory.filledItems(getContainerSize());
     }
     return _items;
   }
@@ -167,13 +167,6 @@ public abstract class ServerBase implements ComponentInventory, MachineHost, Ser
       var level = rack.level();
       if (level == null || !level.isClientSide()) {
         machine.load(nbt.getCompound("machine"), provider);
-        boolean isRunning = machine.isRunning();
-        boolean hasErrored = machine.lastError() != null;
-        if (isRunning != wasRunning || hasErrored != hadErrored) {
-          rack.markChanged(slot);
-        }
-        wasRunning = isRunning;
-        hadErrored = hasErrored;
       }
     }
   }
@@ -249,7 +242,7 @@ public abstract class ServerBase implements ComponentInventory, MachineHost, Ser
 
   @Override
   public void markChanged() {
-    rack.markChanged(slot);
+    rack.markChanged();
   }
 
   @Override

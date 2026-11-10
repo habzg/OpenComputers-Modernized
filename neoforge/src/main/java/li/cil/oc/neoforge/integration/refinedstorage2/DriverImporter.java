@@ -7,7 +7,6 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.ManagedEnvironment;
-import li.cil.oc.api.network.Node;
 import li.cil.oc.api.prefab.DriverSidedBlockEntity;
 import li.cil.oc.core.impl.integration.ManagedBlockEntityEnvironment;
 import net.minecraft.core.BlockPos;
@@ -42,11 +41,6 @@ public class DriverImporter extends DriverSidedBlockEntity {
     @Override
     public int priority() {
       return 2;
-    }
-
-    @Override
-    public Node node() {
-      return super.node();
     }
 
     @Callback(doc = "function([slot:number]):table -- Get the configuration of the importer.")

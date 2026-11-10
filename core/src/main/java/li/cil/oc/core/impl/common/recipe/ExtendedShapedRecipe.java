@@ -80,6 +80,7 @@ public class ExtendedShapedRecipe extends ShapedRecipe {
       buffer.writeUtf(recipe.getGroup());
       buffer.writeEnum(recipe.category());
       ShapedRecipePattern.STREAM_CODEC.encode(buffer, recipe.pattern);
+      //noinspection DataFlowIssue
       ItemStack.STREAM_CODEC.encode(buffer, recipe.getResultItem(null));
       buffer.writeBoolean(recipe.showNotification());
     }

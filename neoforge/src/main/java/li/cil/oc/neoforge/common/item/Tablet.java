@@ -15,17 +15,17 @@ public class Tablet extends li.cil.oc.core.impl.common.item.Tablet {
 
   @Override
   public @NotNull InteractionResult onItemUseFirst(@NotNull ItemStack ignoredStack, @NotNull UseOnContext context) {
-    currentBlockPos = new li.cil.oc.core.impl.util.BlockPosition(context.getClickedPos().getX(), context.getClickedPos().getY(), context.getClickedPos().getZ(), context.getLevel());
-    currentSide = context.getClickedFace();
-    currentHitX = (float) (context.getClickLocation().x - context.getClickedPos().getX());
-    currentHitY = (float) (context.getClickLocation().y - context.getClickedPos().getY());
-    currentHitZ = (float) (context.getClickLocation().z - context.getClickedPos().getZ());
-    return InteractionResult.PASS;
+    return useFirst(context);
   }
 
   @Override
   public boolean doesSneakBypassUse(@NotNull ItemStack stack, LevelReader level, @NotNull BlockPos pos, @NotNull Player player) {
     if (level.getBlockEntity(pos) instanceof li.cil.oc.core.impl.common.blockentity.DiskDrive) return true;
     return super.doesSneakBypassUse(stack, level, pos, player);
+  }
+
+  @Override
+  public boolean shouldCauseReequipAnimation(@NotNull ItemStack oldStack, @NotNull ItemStack newStack, boolean slotChanged) {
+    return slotChanged || oldStack.getItem() != newStack.getItem();
   }
 }

@@ -52,6 +52,7 @@ public final class WirelessRedstone {
     return true;
   }
 
+  @SuppressWarnings("unused")
   public static boolean canHandleFrequency(String providerName, int frequency) {
     for (WirelessRedstoneSystem system : systems) {
       if (system.name().equals(providerName)) {
@@ -119,9 +120,9 @@ public final class WirelessRedstone {
   public interface WirelessRedstoneSystem {
     String name();
 
-    void addReceiver(RedstoneWireless rs);
+    void addReceiver(RedstoneWireless ignoredRs);
 
-    void removeReceiver(RedstoneWireless rs);
+    void removeReceiver(RedstoneWireless ignoredRs);
 
     void updateOutput(RedstoneWireless rs);
 
@@ -129,9 +130,6 @@ public final class WirelessRedstone {
 
     boolean getInput(RedstoneWireless rs);
 
-    @SuppressWarnings("unused")
-    void resetRedstone(RedstoneWireless rs);
-
-    boolean canHandleFrequency(int frequency);
+    boolean canHandleFrequency(int ignoredFrequency);
   }
 }

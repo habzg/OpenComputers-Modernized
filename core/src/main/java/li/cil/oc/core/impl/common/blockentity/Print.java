@@ -32,6 +32,8 @@ public class Print extends BlockEntity implements RedstoneAware, Rotatable, Name
   public AABB boundsOn = ExtendedAABB.unitBounds();
   public VoxelShape shapeOff = Shapes.create(ExtendedAABB.unitBounds());
   public VoxelShape shapeOn = Shapes.create(ExtendedAABB.unitBounds());
+  public VoxelShape collisionOff = Shapes.create(ExtendedAABB.unitBounds());
+  public VoxelShape collisionOn = Shapes.create(ExtendedAABB.unitBounds());
   public boolean state = false;
   private boolean _isOutputEnabled;
   private Direction _facing = Direction.SOUTH;
@@ -232,6 +234,15 @@ public class Print extends BlockEntity implements RedstoneAware, Rotatable, Name
 
   @Override
   public int[] output() {
+    var result = new int[Direction.values().length];
+    for (var side : Direction.values()) {
+      result[side.ordinal()] = _output[toLocal(side).ordinal()];
+    }
+    return result;
+  }
+
+  @Override
+  public int[] outputLocal() {
     return _output;
   }
 
@@ -246,20 +257,6 @@ public class Print extends BlockEntity implements RedstoneAware, Rotatable, Name
     if (_output[ord] != value) {
       _output[ord] = value;
       onRedstoneOutputChanged(side);
-    }
-  }
-
-  @Override
-  public void setOutput(Map<?, ?> values) {
-    for (var side : Direction.values()) {
-      var ord = toLocal(side).ordinal();
-      var key = Integer.valueOf(ord);
-      if (values.containsKey(key)) {
-        var raw = values.get(key);
-        if (raw instanceof Number num) {
-          setOutput(side, num.intValue());
-        }
-      }
     }
   }
 
@@ -314,20 +311,9 @@ public class Print extends BlockEntity implements RedstoneAware, Rotatable, Name
   }
 
   public void onRedstoneInputChanged(RedstoneChangedEventArgs args) {
-    if (!data.emitRedstone() && data.hasActiveState()) {
-      state = args.newValue() > 0;
-      var level = getLevel();
-      if (level == null) return;
-      level.playSeededSound(null, worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5,
-        net.minecraft.sounds.SoundEvents.LEVER_CLICK, net.minecraft.sounds.SoundSource.BLOCKS,
-        0.3F, state ? 0.6F : 0.5F, level.random.nextLong());
-      level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
-      if (state && data.isButtonMode) {
-        level.scheduleTick(worldPosition, block(), 20);
-      }
-      if (!level.isClientSide) {
-        setChanged();
-      }
+    var newState = args.newValue() > 0;
+    if (!data.emitRedstone() && data.hasActiveState() && state != newState) {
+      toggleState();
     }
   }
 
@@ -412,6 +398,8 @@ public class Print extends BlockEntity implements RedstoneAware, Rotatable, Name
 
     shapeOff = buildShape(data.stateOff, facing());
     shapeOn = buildShape(data.stateOn, facing());
+    collisionOff = buildCollisionShape(data.stateOff, facing(), data.noclipOff);
+    collisionOn = buildCollisionShape(data.stateOn, facing(), data.noclipOn);
   }
 
   private static VoxelShape buildShape(Set<PrintData.Shape> shapes, Direction dir) {
@@ -421,6 +409,21 @@ public class Print extends BlockEntity implements RedstoneAware, Rotatable, Name
     VoxelShape result = Shapes.empty();
     for (var shape : shapes) {
       if (shape.texture() == null || shape.texture().isEmpty()) continue;
+      var bounds = ExtendedAABB.rotateTowards(shape.bounds(), dir);
+      result = Shapes.or(result, Shapes.create(bounds));
+    }
+    return result.optimize();
+  }
+
+  private static VoxelShape buildCollisionShape(Set<PrintData.Shape> shapes, Direction dir, boolean noclip) {
+    if (noclip) {
+      return Shapes.empty();
+    }
+    if (shapes.isEmpty()) {
+      return Shapes.create(ExtendedAABB.unitBounds());
+    }
+    VoxelShape result = Shapes.empty();
+    for (var shape : shapes) {
       var bounds = ExtendedAABB.rotateTowards(shape.bounds(), dir);
       result = Shapes.or(result, Shapes.create(bounds));
     }

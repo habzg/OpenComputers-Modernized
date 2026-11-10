@@ -5,8 +5,10 @@ import li.cil.oc.api.network.Node;
 
 
 public interface Environment extends li.cil.oc.api.network.Environment, li.cil.oc.api.network.EnvironmentHost {
-  @SuppressWarnings("unused")
-  boolean isConnected();
+  default boolean isConnected() {
+    Node node = node();
+    return node != null && node.address() != null && node.network() != null;
+  }
 
   @SuppressWarnings("unused")
   void initialize();
@@ -26,8 +28,9 @@ public interface Environment extends li.cil.oc.api.network.Environment, li.cil.o
   @SuppressWarnings("unused")
   void writeToNBTForClient(net.minecraft.nbt.CompoundTag nbt);
 
-  @SuppressWarnings("unused")
-  Object result(Object... args);
+  default Object result(Object... args) {
+    return li.cil.oc.core.util.ResultWrapper.result(args);
+  }
 
   default long getLastOperation() {
     return 0;
@@ -35,7 +38,11 @@ public interface Environment extends li.cil.oc.api.network.Environment, li.cil.o
 
   @Override
   default void onDisconnect(Node node) {
-    if (node == node() && node instanceof Connector connector) {
+    flushBuffer(node, node());
+  }
+
+  static void flushBuffer(Node node, Node ownNode) {
+    if (node == ownNode && node instanceof Connector connector) {
       double bufferSize = connector.localBufferSize();
       connector.setLocalBufferSize(0);
       connector.setLocalBufferSize(bufferSize);

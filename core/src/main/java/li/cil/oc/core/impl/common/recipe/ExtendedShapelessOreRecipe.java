@@ -79,6 +79,7 @@ public class ExtendedShapelessOreRecipe extends ShapelessRecipe {
   public static class Serializer implements RecipeSerializer<ExtendedShapelessOreRecipe> {
     public static final Serializer INSTANCE = new Serializer();
 
+    @SuppressWarnings("DataFlowIssue")
     private static final MapCodec<ExtendedShapelessOreRecipe> CODEC = RecordCodecBuilder.mapCodec(
       instance -> instance.group(
           Codec.STRING.optionalFieldOf("group", "").forGetter(ShapelessRecipe::getGroup),
@@ -138,6 +139,7 @@ public class ExtendedShapelessOreRecipe extends ShapelessRecipe {
         Ingredient.CONTENTS_STREAM_CODEC.encode(buffer, ingredient);
       }
 
+      //noinspection DataFlowIssue
       ItemStack.STREAM_CODEC.encode(buffer, recipe.getResultItem(null));
     }
   }

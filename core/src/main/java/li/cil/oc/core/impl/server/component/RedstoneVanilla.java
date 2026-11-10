@@ -78,7 +78,7 @@ public abstract class RedstoneVanilla extends RedstoneSignaller implements Devic
     if (level.isLoaded(blockPos.toBlockPos())) {
       BlockState state = level.getBlockState(blockPos.toBlockPos());
       if (state.hasAnalogOutputSignal()) {
-        return ResultWrapper.result((double) state.getSignal(level, blockPos.toBlockPos(), side.getOpposite()));
+        return ResultWrapper.result((double) state.getAnalogOutputSignal(level, blockPos.toBlockPos()));
       }
     }
     return ResultWrapper.result(0);

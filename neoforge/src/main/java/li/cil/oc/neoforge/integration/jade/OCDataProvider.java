@@ -70,7 +70,7 @@ public enum OCDataProvider implements IBlockComponentProvider, IServerDataProvid
       if (assembler.isAssembling()) {
         data.putDouble(TAG_PROGRESS, assembler.progress());
         data.putInt(TAG_TIME_REMAINING, assembler.timeRemaining());
-        if (assembler.output != null && !assembler.output.isEmpty()) {
+        if (!assembler.output.isEmpty()) {
           data.putString(TAG_OUTPUT, assembler.output.getDescriptionId());
         }
       }

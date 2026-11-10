@@ -53,9 +53,9 @@ public class FileSystem extends AbstractManagedEnvironment implements DeviceInfo
     this.label = label;
     this.sound = sound;
     this.speed = speed;
-    deviceInfo = Map.of(DeviceAttribute.Class, DeviceClass.Volume, DeviceAttribute.Description, "Filesystem", DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor, DeviceAttribute.Product, "MPFS.21.6", DeviceAttribute.Capacity, String.valueOf((int) (fileSystem.spaceTotal() * 1.024)), DeviceAttribute.Size, String.valueOf(fileSystem.spaceTotal()), DeviceAttribute.Clock, ((2000 / readCosts[speed]) / 100) + "/" +
-      ((2000 / seekCosts[speed]) / 100) + "/" +
-      ((2000 / writeCosts[speed]) / 100));
+    deviceInfo = Map.of(DeviceAttribute.Class, DeviceClass.Volume, DeviceAttribute.Description, "Filesystem", DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor, DeviceAttribute.Product, "MPFS.21.6", DeviceAttribute.Capacity, String.valueOf((int) (fileSystem.spaceTotal() * 1.024)), DeviceAttribute.Size, String.valueOf(fileSystem.spaceTotal()), DeviceAttribute.Clock, (int) (2000 / readCosts[speed]) / 100 + "/" +
+      (int) (2000 / seekCosts[speed]) / 100 + "/" +
+      (int) (2000 / writeCosts[speed]) / 100);
     setNode(this.node);
   }
 
@@ -159,14 +159,13 @@ public class FileSystem extends AbstractManagedEnvironment implements DeviceInfo
   }
 
   private boolean recurseMkdir(String path) {
-    if (fileSystem.exists(path)) return true;
+    if (fileSystem.exists(path)) return false;
     if (fileSystem.makeDirectory(path)) return true;
     String parent = path.contains("/") ? path.substring(0, path.lastIndexOf('/')) : "";
     if (!parent.isEmpty()) {
-      recurseMkdir(parent);
-      return fileSystem.makeDirectory(path);
+      return recurseMkdir(parent) && fileSystem.makeDirectory(path);
     }
-    return fileSystem.makeDirectory(path);
+    return false;
   }
 
   @Callback(doc = "function(path:string):boolean -- Removes the object at the specified absolute path in the file system.")
@@ -179,7 +178,6 @@ public class FileSystem extends AbstractManagedEnvironment implements DeviceInfo
   }
 
   private boolean recurseDelete(String path) {
-    if (!fileSystem.exists(path)) return true;
     if (fileSystem.isDirectory(path)) {
       String[] children = fileSystem.list(path);
       if (children != null) {

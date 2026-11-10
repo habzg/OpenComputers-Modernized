@@ -44,9 +44,9 @@ public class Hologram extends BlockEntity implements Environment, SidedEnvironme
     .create();
   public final int[] volume = new int[WIDTH * WIDTH * 2];
   public final BitSet dirty = new BitSet(WIDTH * WIDTH);
-  public final int[] colors;
+  public final int[][] colorsByTier;
   public int tier;
-  private final Map<String, String> deviceInfo;
+  private Map<String, String> deviceInfo;
   public double scale = 1.0;
   public double translationX, translationY, translationZ;
   public double litRatio = -1.0;
@@ -64,9 +64,14 @@ public class Hologram extends BlockEntity implements Environment, SidedEnvironme
   public Hologram(BlockPos pos, BlockState state, int tier) {
     super(TYPE, pos, state);
     this.tier = tier;
-    colors = new int[COLORS_BY_TIER[tier].length];
-    System.arraycopy(COLORS_BY_TIER[tier], 0, colors, 0, colors.length);
-    deviceInfo = createDeviceInfo();
+    colorsByTier = new int[COLORS_BY_TIER.length][];
+    for (int i = 0; i < COLORS_BY_TIER.length; i++) {
+      colorsByTier[i] = COLORS_BY_TIER[i].clone();
+    }
+  }
+
+  public int[] colors() {
+    return colorsByTier[tier];
   }
 
   private Map<String, String> createDeviceInfo() {
@@ -76,12 +81,15 @@ public class Hologram extends BlockEntity implements Environment, SidedEnvironme
       DeviceInfo.DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor,
       DeviceInfo.DeviceAttribute.Product, "VirtualViewer H1-" + (tier + 1),
       DeviceInfo.DeviceAttribute.Capacity, String.valueOf(WIDTH * WIDTH * HEIGHT),
-      DeviceInfo.DeviceAttribute.Width, String.valueOf(colors.length)
+      DeviceInfo.DeviceAttribute.Width, String.valueOf(colors().length)
     );
   }
 
   @Override
   public Map<String, String> getDeviceInfo() {
+    if (deviceInfo == null) {
+      deviceInfo = createDeviceInfo();
+    }
     return deviceInfo;
   }
 
@@ -124,16 +132,7 @@ public class Hologram extends BlockEntity implements Environment, SidedEnvironme
   }
 
   @Override
-  public void onDisconnect(Node node) {
-  }
-
-  @Override
   public void onMessage(li.cil.oc.api.network.Message message) {
-  }
-
-  @Override
-  public Object result(Object... args) {
-    return li.cil.oc.core.util.ResultWrapper.result(args);
   }
 
   private Direction facingDirection = Direction.SOUTH;
@@ -454,18 +453,18 @@ public class Hologram extends BlockEntity implements Environment, SidedEnvironme
   @Callback(doc = "function(index:number):number -- Get the color defined for the specified value.")
   public Object[] getPaletteColor(Context context, Arguments args) {
     int index = args.checkInteger(0);
-    if (index < 1 || index > colors.length) throw new ArrayIndexOutOfBoundsException();
-    return (Object[]) result(convertColor(colors[index - 1]));
+    if (index < 1 || index > colors().length) throw new ArrayIndexOutOfBoundsException();
+    return (Object[]) result(convertColor(colors()[index - 1]));
   }
 
   @Callback(doc = "function(index:number, value:number):number -- Set the color defined for the specified value.")
   public Object[] setPaletteColor(Context context, Arguments args) {
     int index = args.checkInteger(0);
-    if (index < 1 || index > colors.length) throw new ArrayIndexOutOfBoundsException();
+    if (index < 1 || index > colors().length) throw new ArrayIndexOutOfBoundsException();
     int value = args.checkInteger(1);
-    int oldValue = colors[index - 1];
-    colors[index - 1] = convertColor(value);
-    PacketSender.sendHologramColor(this, index - 1, colors[index - 1]);
+    int oldValue = colors()[index - 1];
+    colors()[index - 1] = convertColor(value);
+    PacketSender.sendHologramColor(this, index - 1, colors()[index - 1]);
     return (Object[]) result(oldValue);
   }
 
@@ -514,7 +513,7 @@ public class Hologram extends BlockEntity implements Environment, SidedEnvironme
     int value;
     if (args.isBoolean(index)) value = args.checkBoolean(index) ? 1 : 0;
     else value = args.checkInteger(index);
-    if (value < 0 || value > colors.length) throw new IllegalArgumentException("invalid value");
+    if (value < 0 || value > colors().length) throw new IllegalArgumentException("invalid value");
     return value;
   }
 
@@ -598,7 +597,7 @@ public class Hologram extends BlockEntity implements Environment, SidedEnvironme
     var vol = tag.getIntArray("volume");
     System.arraycopy(vol, 0, volume, 0, Math.min(vol.length, volume.length));
     var cols = tag.getIntArray("colors");
-    for (int i = 0; i < Math.min(cols.length, colors.length); i++) colors[i] = convertColor(cols[i]);
+    for (int i = 0; i < Math.min(cols.length, colors().length); i++) colors()[i] = convertColor(cols[i]);
     scale = nbt.getDouble(OCSettings.namespace + "scale");
     translationX = nbt.getDouble(OCSettings.namespace + "offsetX");
     translationY = nbt.getDouble(OCSettings.namespace + "offsetY");
@@ -625,8 +624,8 @@ public class Hologram extends BlockEntity implements Environment, SidedEnvironme
     try {
       var saveData = new net.minecraft.nbt.CompoundTag();
       saveData.putIntArray("volume", volume);
-      var cols = new int[colors.length];
-      for (int i = 0; i < colors.length; i++) cols[i] = convertColor(colors[i]);
+      var cols = new int[colors().length];
+      for (int i = 0; i < colors().length; i++) cols[i] = convertColor(colors()[i]);
       saveData.putIntArray("colors", cols);
       var baos = new java.io.ByteArrayOutputStream();
       var dos = new java.io.DataOutputStream(baos);
@@ -661,7 +660,7 @@ public class Hologram extends BlockEntity implements Environment, SidedEnvironme
     var vol = nbt.getIntArray("volume");
     System.arraycopy(vol, 0, volume, 0, Math.min(vol.length, volume.length));
     var cols = nbt.getIntArray("colors");
-    System.arraycopy(cols, 0, colors, 0, Math.min(cols.length, colors.length));
+    System.arraycopy(cols, 0, colors(), 0, Math.min(cols.length, colors().length));
     scale = nbt.getDouble("scale");
     hasPower = nbt.getBoolean("hasPower");
     translationX = nbt.getDouble("offsetX");
@@ -683,7 +682,7 @@ public class Hologram extends BlockEntity implements Environment, SidedEnvironme
     nbt.putInt(OCSettings.namespace + "yaw", facingDirection.get3DDataValue());
     nbt.putInt(OCSettings.namespace + "pitch", _pitch.get3DDataValue());
     nbt.putIntArray("volume", volume);
-    nbt.putIntArray("colors", colors);
+    nbt.putIntArray("colors", colors());
     nbt.putDouble("scale", scale);
     nbt.putBoolean("hasPower", hasPower);
     nbt.putDouble("offsetX", translationX);

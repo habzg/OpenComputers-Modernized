@@ -12,6 +12,7 @@ import li.cil.oc.core.Constants;
 import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.PacketSender;
 import li.cil.oc.core.impl.common.blockentity.traits.BlockEntity;
+import li.cil.oc.core.impl.common.blockentity.traits.Environment;
 import li.cil.oc.core.impl.common.blockentity.traits.Inventory;
 import li.cil.oc.core.impl.common.blockentity.traits.PowerAcceptor;
 import li.cil.oc.core.impl.common.template.AssemblerTemplates;
@@ -32,14 +33,14 @@ public class Assembler extends BlockEntity implements li.cil.oc.api.network.Envi
     .withComponent("assembler")
     .withConnector(OCSettings.get().bufferConverter)
     .create();
-  private final ItemStack[] _items = new ItemStack[getContainerSize()];
+  private final ItemStack[] _items = li.cil.oc.core.impl.common.inventory.Inventory.filledItems(getContainerSize());
   private final Map<String, String> deviceInfo = Map.of(
     DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
     DeviceInfo.DeviceAttribute.Description, "Assembler",
     DeviceInfo.DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor,
     DeviceInfo.DeviceAttribute.Product, "Factorizer R1D1"
   );
-  public ItemStack output = null;
+  public ItemStack output = ItemStack.EMPTY;
   public double totalRequiredEnergy = 0;
   public double requiredEnergy = 0;
 
@@ -57,7 +58,8 @@ public class Assembler extends BlockEntity implements li.cil.oc.api.network.Envi
   }
 
   @Override
-  public void onDisconnect(Node ignoredNode) {
+  public void onDisconnect(Node node) {
+    Environment.flushBuffer(node, node());
   }
 
   @Override
@@ -142,7 +144,7 @@ public class Assembler extends BlockEntity implements li.cil.oc.api.network.Envi
 
   public boolean canAssemble() {
     var template = AssemblerTemplates.select(getItem(0));
-    return template != null && !isAssembling() && output == null && template.validate(this).valid();
+    return template != null && !isAssembling() && output.isEmpty() && template.validate(this).valid();
   }
 
   public boolean isAssembling() {
@@ -159,7 +161,7 @@ public class Assembler extends BlockEntity implements li.cil.oc.api.network.Envi
 
   public synchronized boolean start(boolean finishImmediately) {
     var template = AssemblerTemplates.select(getItem(0));
-    if (template != null && !isAssembling() && output == null && template.validate(this).valid()) {
+    if (template != null && !isAssembling() && output.isEmpty() && template.validate(this).valid()) {
       for (int slot = 0; slot < getContainerSize(); slot++) {
         var stack = getItem(slot);
         if (stack.isEmpty()) continue;
@@ -209,16 +211,16 @@ public class Assembler extends BlockEntity implements li.cil.oc.api.network.Envi
   public void updateEntity() {
     super.updateEntity();
     var level = getLevel();
-    if (output != null && level != null && level.getGameTime() % OCSettings.get().tickFrequency == 0) {
+    if (!output.isEmpty() && level != null && level.getGameTime() % OCSettings.get().tickFrequency == 0) {
       double want = Math.clamp(requiredEnergy, 1, OCSettings.get().assemblerTickAmount * OCSettings.get().tickFrequency);
       double have = want + (OCSettings.get().ignorePower ? 0 : ((li.cil.oc.api.network.Connector) node).changeBuffer(-want));
       requiredEnergy -= have;
       if (requiredEnergy <= 0) {
         setItem(0, output);
-        output = null;
+        output = ItemStack.EMPTY;
         requiredEnergy = 0;
       }
-      PacketSender.sendRobotAssembling(this, have > 0.5 && output != null);
+      PacketSender.sendRobotAssembling(this, have > 0.5 && !output.isEmpty());
     }
   }
 
@@ -237,7 +239,7 @@ public class Assembler extends BlockEntity implements li.cil.oc.api.network.Envi
   @Override
   public void writeToNBTForServer(CompoundTag nbt) {
     super.writeToNBTForServer(nbt);
-    if (output != null && !output.isEmpty()) {
+    if (!output.isEmpty()) {
       var saved = new CompoundTag();
       output.save(getEffectiveProvider(), saved);
       nbt.put(OCSettings.namespace + "output", saved);
@@ -307,6 +309,11 @@ public class Assembler extends BlockEntity implements li.cil.oc.api.network.Envi
   @Override
   public boolean isUseableByPlayer(Player player) {
     return true;
+  }
+
+  @Override
+  public boolean stillValid(@NotNull Player player) {
+    return player.distanceToSqr(worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5) <= 64;
   }
 
   @Override

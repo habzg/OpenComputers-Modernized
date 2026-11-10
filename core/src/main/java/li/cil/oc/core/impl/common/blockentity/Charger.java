@@ -42,10 +42,11 @@ public class Charger extends BlockEntity implements li.cil.oc.api.network.Enviro
     .withConnector(OCSettings.get().bufferConverter)
     .create();
   public final Set<Chargeable> connectors = new HashSet<>();
-  public final Set<ItemStack> equipment = new HashSet<>();
+  public final Set<ItemStack> equipment = new li.cil.oc.core.impl.util.ItemStackSet();
   private final int[] _input = new int[]{-1, -1, -1, -1, -1, -1};
   private final int[] _output = new int[]{0, 0, 0, 0, 0, 0};
   private boolean _isOutputEnabled = false;
+  private boolean shouldUpdateInput = true;
   private final Map<String, String> deviceInfo = Map.of(
     DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Generic,
     DeviceInfo.DeviceAttribute.Description, "Charger",
@@ -56,7 +57,7 @@ public class Charger extends BlockEntity implements li.cil.oc.api.network.Enviro
   public boolean hasPower = false;
   public boolean invertSignal = false;
   private Direction facing = Direction.SOUTH;
-  private final ItemStack[] _items = new ItemStack[getContainerSize()];
+  private final ItemStack[] _items = li.cil.oc.core.impl.common.inventory.Inventory.filledItems(getContainerSize());
   private ManagedEnvironment[] _components;
 
   public Charger(BlockPos pos, BlockState state) {
@@ -131,16 +132,6 @@ public class Charger extends BlockEntity implements li.cil.oc.api.network.Enviro
   }
 
   @Override
-  public ItemStack[] pendingRemovals() {
-    return null;
-  }
-
-  @Override
-  public ItemStack[] pendingAdds() {
-    return null;
-  }
-
-  @Override
   public void spawnStackInWorld(ItemStack stack) {
     if (isServer()) {
       InventoryUtils.spawnStackInWorld(position(), stack, null, null);
@@ -181,6 +172,11 @@ public class Charger extends BlockEntity implements li.cil.oc.api.network.Enviro
   }
 
   @Override
+  public boolean stillValid(@NotNull Player player) {
+    return player.distanceToSqr(worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5) <= 64;
+  }
+
+  @Override
   public void clearContent() {
     for (int i = 0; i < getContainerSize(); i++) {
       setItem(i, ItemStack.EMPTY);
@@ -192,11 +188,6 @@ public class Charger extends BlockEntity implements li.cil.oc.api.network.Enviro
 
   public boolean isConnected() {
     return node.address() != null && node.network() != null;
-  }
-
-  @Override
-  public Object result(Object... args) {
-    return li.cil.oc.core.util.ResultWrapper.result(args);
   }
 
   @Override
@@ -291,6 +282,13 @@ public class Charger extends BlockEntity implements li.cil.oc.api.network.Enviro
   @Override
   public void facing(Direction value) {
     this.facing = value;
+    var level = getLevel();
+    if (level != null) {
+      var state = getBlockState();
+      if (state.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING)) {
+        level.setBlockAndUpdate(getBlockPos(), state.setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING, value));
+      }
+    }
   }
 
   @Override
@@ -356,7 +354,21 @@ public class Charger extends BlockEntity implements li.cil.oc.api.network.Enviro
 
   @Override
   public void setInput(Direction side, int value) {
+    int oldValue = _input[side.ordinal()];
     _input[side.ordinal()] = value;
+    if (oldValue >= 0 && oldValue != value) {
+      onRedstoneInputChanged(side.ordinal(), oldValue, value);
+    }
+  }
+
+  @Override
+  public boolean shouldUpdateInput() {
+    return shouldUpdateInput;
+  }
+
+  @Override
+  public void shouldUpdateInput(boolean value) {
+    shouldUpdateInput = value;
   }
 
   @Override
@@ -387,7 +399,7 @@ public class Charger extends BlockEntity implements li.cil.oc.api.network.Enviro
   }
 
   private void chargeStack(ItemStack stack, double charge) {
-    if (stack != null && charge > 0) {
+    if (!stack.isEmpty() && charge > 0) {
       double offered = charge + ((li.cil.oc.api.network.Connector) node).changeBuffer(-charge);
       double surplus = ItemCharge.charge(stack, offered);
       ((li.cil.oc.api.network.Connector) node).changeBuffer(surplus);
@@ -396,18 +408,8 @@ public class Charger extends BlockEntity implements li.cil.oc.api.network.Enviro
 
   @Override
   public void checkRedstoneInputChanged() {
-    if (getLevel() == null) return;
-    for (var side : Direction.values()) {
-      try {
-        var signal = Math.max(getLevel().getSignal(worldPosition, side), getLevel().getBestNeighborSignal(worldPosition));
-        setInput(side, signal);
-      } catch (Exception ignored) {
-      }
-    }
-    var signal = java.util.Arrays.stream(input()).max().orElse(0);
-    chargeSpeed = invertSignal ? (15 - signal) / 15.0 : signal / 15.0;
     if (isServer()) {
-      PacketSender.sendChargerState(this, chargeSpeed, hasPower);
+      shouldUpdateInput = true;
     }
   }
 
@@ -423,6 +425,12 @@ public class Charger extends BlockEntity implements li.cil.oc.api.network.Enviro
   @Override
   public void updateEntity() {
     super.updateEntity();
+    if (isServer() && shouldUpdateInput) {
+      shouldUpdateInput = false;
+      for (var side : Direction.values()) {
+        updateRedstoneInput(side);
+      }
+    }
     if ((level().getGameTime() + Math.abs(hashCode())) % 20 == 0) updateConnectors();
     if (isServer() && level().getGameTime() % OCSettings.get().tickFrequency == 0) {
       boolean canCharge = OCSettings.get().ignorePower;
@@ -470,18 +478,18 @@ public class Charger extends BlockEntity implements li.cil.oc.api.network.Enviro
     super.readFromNBTForServer(nbt);
     var loadProvider = getEffectiveProvider();
     if (loadProvider != null) load(nbt, loadProvider);
-    if (nbt.contains(OCSettings.namespace + "chargeSpeed"))
-      chargeSpeed = Math.clamp(nbt.getDouble(OCSettings.namespace + "chargeSpeed"), 0, 1);
-    else
+    if (nbt.contains("chargeSpeed"))
       chargeSpeed = Math.clamp(nbt.getDouble("chargeSpeed"), 0, 1);
-    if (nbt.contains(OCSettings.namespace + "hasPower"))
-      hasPower = nbt.getBoolean(OCSettings.namespace + "hasPower");
     else
+      chargeSpeed = Math.clamp(nbt.getDouble(OCSettings.namespace + "chargeSpeed"), 0, 1);
+    if (nbt.contains("hasPower"))
       hasPower = nbt.getBoolean("hasPower");
-    if (nbt.contains(OCSettings.namespace + "invertSignal"))
-      invertSignal = nbt.getBoolean(OCSettings.namespace + "invertSignal");
     else
+      hasPower = nbt.getBoolean(OCSettings.namespace + "hasPower");
+    if (nbt.contains("invertSignal"))
       invertSignal = nbt.getBoolean("invertSignal");
+    else
+      invertSignal = nbt.getBoolean(OCSettings.namespace + "invertSignal");
   }
 
   @Override
@@ -530,11 +538,8 @@ public class Charger extends BlockEntity implements li.cil.oc.api.network.Enviro
   @Override
   public void updateRedstoneInput(Direction side) {
     if (getLevel() == null) return;
-    int oldValue = _input[side.ordinal()];
-    int newValue = Math.max(getLevel().getSignal(worldPosition, side), getLevel().getBestNeighborSignal(worldPosition));
-    if (oldValue != newValue) {
-      _input[side.ordinal()] = newValue;
-    }
+    int newValue = li.cil.oc.core.impl.integration.util.BundledRedstone.computeInput(position(), side);
+    setInput(side, newValue);
     int signal = java.util.Arrays.stream(input()).max().orElse(0);
     chargeSpeed = invertSignal ? (15 - signal) / 15.0 : signal / 15.0;
     if (isServer()) {

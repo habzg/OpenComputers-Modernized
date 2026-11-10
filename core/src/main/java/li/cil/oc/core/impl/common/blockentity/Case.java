@@ -21,6 +21,7 @@ import li.cil.oc.core.impl.common.blockentity.traits.BlockEntity;
 import li.cil.oc.core.impl.common.blockentity.traits.Colored;
 import li.cil.oc.core.impl.common.blockentity.traits.Computer;
 import li.cil.oc.core.impl.common.blockentity.traits.PowerAcceptor;
+import li.cil.oc.core.impl.server.agent.AgentPlayer;
 import li.cil.oc.core.impl.util.Color;
 import li.cil.oc.core.impl.util.EventHandlerDelegate;
 import li.cil.oc.core.impl.util.OCBlockStateProperties;
@@ -129,6 +130,10 @@ public class Case extends BlockEntity implements PowerAcceptor, Computer, Colore
 
   @Override
   public void setChanged() {
+    if (!isServerThread()) {
+      runOnServerThread(this::setChanged);
+      return;
+    }
     super.setChanged();
     if (isServer()) {
       Machine m = machine();
@@ -221,6 +226,9 @@ public class Case extends BlockEntity implements PowerAcceptor, Computer, Colore
 
   @Override
   public boolean canInteract(String player) {
+    if (isServer() && machine() != null) {
+      return machine().canInteract(player);
+    }
     if (player == null) return false;
     if (!OCSettings.get().canComputersBeOwned) return true;
     if (_users.isEmpty()) return true;
@@ -257,11 +265,6 @@ public class Case extends BlockEntity implements PowerAcceptor, Computer, Colore
   @Override
   public void hasErrored(boolean value) {
     _hasErrored = value;
-  }
-
-  @Override
-  public Object result(Object... args) {
-    return li.cil.oc.core.util.ResultWrapper.result(args);
   }
 
   @Override
@@ -346,11 +349,6 @@ public class Case extends BlockEntity implements PowerAcceptor, Computer, Colore
   }
 
   @Override
-  public boolean consumesDye() {
-    return true;
-  }
-
-  @Override
   public void onColorChanged() {
     if (isServer()) {
       PacketSender.sendColorChange(this, color());
@@ -395,6 +393,7 @@ public class Case extends BlockEntity implements PowerAcceptor, Computer, Colore
 
   @Override
   public EnumSet<li.cil.oc.api.util.StateAware.State> getCurrentState() {
+    if (isRunning()) return EnumSet.of(li.cil.oc.api.util.StateAware.State.IsWorking);
     return EnumSet.noneOf(li.cil.oc.api.util.StateAware.State.class);
   }
 
@@ -422,16 +421,6 @@ public class Case extends BlockEntity implements PowerAcceptor, Computer, Colore
   @Override
   public boolean isSizeInventoryReady() {
     return isSizeInventoryReady;
-  }
-
-  @Override
-  public ItemStack[] pendingRemovals() {
-    return null;
-  }
-
-  @Override
-  public ItemStack[] pendingAdds() {
-    return null;
   }
 
   @Override
@@ -566,6 +555,15 @@ public class Case extends BlockEntity implements PowerAcceptor, Computer, Colore
 
   @Override
   public int[] output() {
+    var result = new int[Direction.values().length];
+    for (var side : Direction.values()) {
+      result[side.ordinal()] = _output[toLocal(side).ordinal()];
+    }
+    return result;
+  }
+
+  @Override
+  public int[] outputLocal() {
     return _output;
   }
 
@@ -580,20 +578,6 @@ public class Case extends BlockEntity implements PowerAcceptor, Computer, Colore
     if (_output[ord] != value) {
       _output[ord] = value;
       onRedstoneOutputChanged(side);
-    }
-  }
-
-  @Override
-  public void setOutput(Map<?, ?> values) {
-    for (var side : Direction.values()) {
-      var ord = toLocal(side).ordinal();
-      var key = Integer.valueOf(ord);
-      if (values.containsKey(key)) {
-        var raw = values.get(key);
-        if (raw instanceof Number num) {
-          setOutput(side, num.intValue());
-        }
-      }
     }
   }
 
@@ -614,14 +598,13 @@ public class Case extends BlockEntity implements PowerAcceptor, Computer, Colore
 
   @Override
   public void setBundledInput(Direction side, int color, int value) {
-    _bundledInput[side.ordinal()][color] = Math.max(value, 0);
+    updateInput(bundledInput(), side, color, Math.max(value, 0));
   }
 
   @Override
   public void setBundledInput(Direction side, int[] values) {
-    var ord = side.ordinal();
-    for (int i = 0; i < 16; i++) {
-      _bundledInput[ord][i] = (values != null && i < values.length) ? Math.max(values[i], 0) : 0;
+    for (int color = 0; color < 16; color++) {
+      setBundledInput(side, color, (values != null && color < values.length) ? values[color] : 0);
     }
   }
 
@@ -642,28 +625,6 @@ public class Case extends BlockEntity implements PowerAcceptor, Computer, Colore
     if (old != value) {
       _bundledOutput[ord][color] = value;
       onRedstoneOutputChanged(side);
-    }
-  }
-
-  @Override
-  public void setBundledOutput(Direction side, Map<?, ?> values) {
-    var ord = toLocal(side).ordinal();
-    for (int i = 0; i < 16; i++) _bundledOutput[ord][i] = 0;
-    for (var entry : values.entrySet()) {
-      if (entry.getKey() instanceof Number key && entry.getValue() instanceof Number val) {
-        var color = key.intValue();
-        if (color >= 0 && color < 16) _bundledOutput[ord][color] = val.intValue();
-      }
-    }
-  }
-
-  @Override
-  public void setBundledOutput(Map<?, ?> values) {
-    for (var entry : values.entrySet()) {
-      if (entry.getKey() instanceof Number sideKey && entry.getValue() instanceof Map<?, ?> sideMap) {
-        var side = Direction.from3DDataValue(sideKey.intValue());
-        setBundledOutput(side, sideMap);
-      }
     }
   }
 
@@ -862,7 +823,7 @@ public class Case extends BlockEntity implements PowerAcceptor, Computer, Colore
   @Override
   public ItemStack[] items() {
     if (_items.length != getContainerSize()) {
-      _items = new ItemStack[getContainerSize()];
+      _items = li.cil.oc.core.impl.common.inventory.Inventory.filledItems(getContainerSize());
     }
     return _items;
   }
@@ -894,6 +855,14 @@ public class Case extends BlockEntity implements PowerAcceptor, Computer, Colore
 
   @Override
   public boolean isUseableByPlayer(Player player) {
+    if (player == null) return false;
+    double d = player.distanceToSqr(worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5);
+    if (d > 64) return false;
+    String name = player.getScoreboardName();
+    if (player instanceof AgentPlayer agentPlayer && agentPlayer.agent() != null) {
+      name = agentPlayer.agent().ownerName();
+    }
+    if (!canInteract(name)) return false;
     return (!isCreative() || player.getAbilities().instabuild);
   }
 
@@ -952,7 +921,7 @@ public class Case extends BlockEntity implements PowerAcceptor, Computer, Colore
     super.dispose();
     Machine m = machine();
     if (m != null) {
-      EventHandlerDelegate.get().scheduleServer(m::stop);
+      m.stop();
     }
   }
 

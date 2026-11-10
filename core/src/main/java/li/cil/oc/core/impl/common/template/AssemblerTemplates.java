@@ -146,7 +146,7 @@ public final class AssemblerTemplates {
           return new Object[]{stack, 0.0};
         }
       }
-      return new Object[]{null, 0.0};
+      return new Object[]{net.minecraft.world.item.ItemStack.EMPTY, 0.0};
     }
   }
 

@@ -10,6 +10,7 @@ import li.cil.oc.core.impl.util.ExtendedArguments;
 import li.cil.oc.core.impl.util.InventoryUtils;
 import li.cil.oc.core.util.ResultWrapper;
 import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
@@ -21,8 +22,8 @@ public interface InventoryWorldControl extends InventoryAware, WorldAware, SideR
   @Override
   Player fakePlayer();
 
-  default net.minecraft.world.Container inventoryAtSide(BlockPosition pos, Direction side) {
-    return InventoryUtils.inventoryAt(pos);
+  default li.cil.oc.core.impl.util.InventoryUtils.InventorySource inventorySourceAtSide(BlockPosition pos, Direction side) {
+    return InventoryUtils.inventorySourceAt(pos, side);
   }
 
   @Callback(doc = "function(side:number[, fuzzy:boolean=false]):boolean -- Compare the block on the specified side with the one in the selected slot. Returns true if equal.")
@@ -34,10 +35,16 @@ public interface InventoryWorldControl extends InventoryAware, WorldAware, SideR
       BlockState state = level().getBlockState(blockPos.toBlockPos());
       boolean fuzzy = args.optBoolean(1, false);
       boolean idMatches = item.getBlock() == state.getBlock();
-      boolean subTypeMatches = fuzzy || state == item.getBlock().defaultBlockState();
+      boolean subTypeMatches = fuzzy || stateMatchesItemVariant(stack, item, state);
       return ResultWrapper.result(idMatches && subTypeMatches);
     }
     return ResultWrapper.result(false);
+  }
+
+  static boolean stateMatchesItemVariant(ItemStack stack, BlockItem item, BlockState state) {
+    var properties = stack.get(DataComponents.BLOCK_STATE);
+    if (properties == null || properties.isEmpty()) return true;
+    return properties.apply(item.getBlock().defaultBlockState()).equals(state);
   }
 
   @Callback(doc = "function(side:number[, count:number=64]):boolean -- Drops items from the selected slot towards the specified side.")
@@ -47,9 +54,10 @@ public interface InventoryWorldControl extends InventoryAware, WorldAware, SideR
     ItemStack stack = inventory().getItem(selectedSlot());
     if (!stack.isEmpty()) {
       BlockPosition blockPos = position().offset(facing);
-      net.minecraft.world.Container inv = inventoryAtSide(blockPos, facing);
-      if (inv != null && inv.stillValid(fakePlayer()) && mayInteract(blockPos, facing.getOpposite())) {
-        if (!InventoryUtils.insertIntoInventory(stack, inv, facing.getOpposite(), count)) {
+      InventoryUtils.InventorySource source = inventorySourceAtSide(blockPos, facing.getOpposite());
+      net.minecraft.world.Container inv = source != null ? source.inventory() : null;
+      if (inv != null && mayInteract(source)) {
+        if (!InventoryUtils.insertIntoInventory(stack, inv, facing.getOpposite(), count, false)) {
           return ResultWrapper.result(false, "inventory full");
         } else if (stack.isEmpty()) {
           inventory().setItem(selectedSlot(), ItemStack.EMPTY);
@@ -59,7 +67,11 @@ public interface InventoryWorldControl extends InventoryAware, WorldAware, SideR
       } else {
         ItemStack dropped = inventory().removeItem(selectedSlot(), count);
         if (!dropped.isEmpty()) {
-          ItemEntity entity = InventoryUtils.spawnStackInWorld(position(), dropped, facing, null);
+          java.util.function.Predicate<net.minecraft.world.entity.item.ItemEntity> tossValidator = null;
+          if (fakePlayer() instanceof li.cil.oc.core.impl.server.agent.AgentPlayer agentPlayer) {
+            tossValidator = agentPlayer::mayTossItem;
+          }
+          ItemEntity entity = InventoryUtils.spawnStackInWorld(position(), dropped, facing, tossValidator);
           if (entity == null) {
             fakePlayer().getInventory().add(dropped);
           }
@@ -94,14 +106,11 @@ public interface InventoryWorldControl extends InventoryAware, WorldAware, SideR
     int count = ExtendedArguments.optItemCount(args, 1, 64);
     BlockPosition blockPos = position().offset(facing);
     int extracted = 0;
-    net.minecraft.world.Container inv = inventoryAtSide(blockPos, facing);
-    if (inv != null && inv.stillValid(fakePlayer()) && mayInteract(blockPos, facing.getOpposite())) {
+    InventoryUtils.InventorySource source = inventorySourceAtSide(blockPos, facing.getOpposite());
+    net.minecraft.world.Container inv = source != null ? source.inventory() : null;
+    if (inv != null && mayInteract(source)) {
       extracted = InventoryUtils.extractAnyFromInventory(
-        stack -> {
-          for (int slot : insertionSlots()) {
-            if (InventoryUtils.insertIntoInventorySlot(stack, this.inventory(), null, slot, 64)) break;
-          }
-        },
+        (stack, simulate) -> InventoryUtils.insertIntoInventory(stack, this.inventory(), null, 64, simulate, insertionSlots()),
         inv, facing.getOpposite(), count);
     }
     if (extracted <= 0) {
@@ -116,6 +125,14 @@ public interface InventoryWorldControl extends InventoryAware, WorldAware, SideR
   }
 
   default void onSuckCollect(ItemEntity entity) {
-    entity.playerTouch(fakePlayer());
+    if (WorldAction.checkItemPickup(fakePlayer(), entity)) {
+      return;
+    }
+    if (InventoryUtils.insertIntoInventory(entity.getItem(), inventory(), null, 64, false)) {
+      InventoryUtils.playPickupSound(position());
+    }
+    if (entity.getItem().isEmpty()) {
+      entity.discard();
+    }
   }
 }

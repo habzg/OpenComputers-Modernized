@@ -1,0 +1,6 @@
+{
+  "selector": "#opencomputers:sable_normal",
+  "properties": {
+    "sable:mass": 1.0
+  }
+}

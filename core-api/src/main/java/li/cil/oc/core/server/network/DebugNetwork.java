@@ -21,7 +21,7 @@ public final class DebugNetwork {
 
   public static DebugNode getEndpoint(String tunnel) {
     for (DebugNode node : cards.keySet()) {
-      if (node.address().equals(tunnel)) return node;
+      if (java.util.Objects.equals(node.address(), tunnel)) return node;
     }
     return null;
   }

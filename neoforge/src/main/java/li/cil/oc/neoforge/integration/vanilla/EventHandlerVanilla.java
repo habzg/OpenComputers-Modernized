@@ -5,7 +5,6 @@ import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.BlockPosition;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.CactusBlock;
 import net.minecraft.world.level.block.ChorusFlowerBlock;
 import net.minecraft.world.level.block.ChorusPlantBlock;
@@ -46,13 +45,13 @@ public final class EventHandlerVanilla {
           int index = (rx - e.minX) + ((rz - e.minZ) + (ry - e.minY) * d) * w;
           BlockPos pos = new BlockPos(x, y, z);
           if (world.hasChunk(pos.getX() >> 4, pos.getZ() >> 4) && !world.isEmptyBlock(pos)) {
-            Block block = world.getBlockState(pos).getBlock();
-            if (includeReplaceable || isFluid(block) || !block.defaultBlockState().canBeReplaced()) {
+            BlockState state = world.getBlockState(pos);
+            if (includeReplaceable || isFluid(state) || !state.canBeReplaced()) {
               double dx = blockPos.x() - x;
               double dy = blockPos.y() - y;
               double dz = blockPos.z() - z;
               float distance = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
-              e.data[index] = e.data[index] * distance * OCSettings.get().geolyzerNoise + block.defaultBlockState().getDestroySpeed(world, pos);
+              e.data[index] = e.data[index] * distance * OCSettings.get().geolyzerNoise + state.getDestroySpeed(world, pos);
             } else {
               e.data[index] = 0;
             }
@@ -64,8 +63,8 @@ public final class EventHandlerVanilla {
     }
   }
 
-  private static boolean isFluid(Block block) {
-    return !block.defaultBlockState().getFluidState().isEmpty();
+  private static boolean isFluid(BlockState state) {
+    return !state.getFluidState().isEmpty();
   }
 
   @SubscribeEvent
@@ -82,9 +81,10 @@ public final class EventHandlerVanilla {
     e.data.put("harvestTool", getHarvestTool(state));
     e.data.put("color", state.getMapColor(world, blockPos).col);
     {
-      var props = new java.util.LinkedHashMap<String, String>();
+      var props = new java.util.LinkedHashMap<String, Object>();
       for (var prop : state.getProperties()) {
-        props.put(prop.getName(), state.getValue(prop).toString());
+        var value = state.getValue(prop);
+        props.put(prop.getName(), value instanceof net.minecraft.core.Direction direction ? direction.getName() : value);
       }
       e.data.put("properties", props);
     }
@@ -100,7 +100,7 @@ public final class EventHandlerVanilla {
       int age = state.getValue(net.minecraft.world.level.block.StemBlock.AGE);
       growth = Math.clamp(age / 7f, 0, 1);
     } else if (block instanceof CocoaBlock) {
-      growth = Math.clamp((state.getValue(CocoaBlock.AGE) >> 2) / 2f, 0, 1);
+      growth = Math.clamp(state.getValue(CocoaBlock.AGE) / 2f, 0, 1);
     } else if (block instanceof NetherWartBlock) {
       growth = Math.clamp(state.getValue(NetherWartBlock.AGE) / 3f, 0, 1);
     } else if (block instanceof ChorusFlowerBlock) {
@@ -118,7 +118,7 @@ public final class EventHandlerVanilla {
     if (state.is(BlockTags.MINEABLE_WITH_AXE)) return "axe";
     if (state.is(BlockTags.MINEABLE_WITH_SHOVEL)) return "shovel";
     if (state.is(BlockTags.MINEABLE_WITH_HOE)) return "hoe";
-    return "";
+    return "none";
   }
 
   private static int getHarvestLevel(BlockState state) {

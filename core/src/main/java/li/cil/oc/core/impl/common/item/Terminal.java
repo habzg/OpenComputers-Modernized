@@ -42,7 +42,7 @@ public class Terminal extends DelegateItem {
       CustomData cd = stack.get(DataComponents.CUSTOM_DATA);
       if (cd == null) return;
       String server = cd.copyTag().getString(OCSettings.namespace + "server");
-      String shown = server.length() > 13 ? server.substring(0, 13) + "." : server;
+      String shown = server.length() > 13 ? server.substring(0, 13) + "..." : server;
       tooltip.add(Component.literal("§8" + shown + "§7"));
     }
   }

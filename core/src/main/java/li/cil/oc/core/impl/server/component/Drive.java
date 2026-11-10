@@ -62,10 +62,10 @@ public class Drive extends AbstractManagedEnvironment implements DeviceInfo {
     this.sectorCount = capacity / sectorSize;
     this.sectorsPerPlatter = sectorCount / platterCount;
 
-    deviceInfo = Map.of(DeviceAttribute.Class, DeviceClass.Disk, DeviceAttribute.Description, "Hard disk drive", DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor, DeviceAttribute.Product, "MPD" + (capacity / 1024) + "L" + platterCount, DeviceAttribute.Capacity, String.valueOf((int) (capacity * 1.024)), DeviceAttribute.Size, String.valueOf(capacity), DeviceAttribute.Clock, ((2000 / readSectorCosts[speed]) / 100) + "/" +
-      ((2000 / writeSectorCosts[speed]) / 100) + "/" +
-      ((2000 / readByteCosts[speed]) / 100) + "/" +
-      ((2000 / writeByteCosts[speed]) / 100));
+    deviceInfo = Map.of(DeviceAttribute.Class, DeviceClass.Disk, DeviceAttribute.Description, "Hard disk drive", DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor, DeviceAttribute.Product, "MPD" + (capacity / 1024) + "L" + platterCount, DeviceAttribute.Capacity, String.valueOf((int) (capacity * 1.024)), DeviceAttribute.Size, String.valueOf(capacity), DeviceAttribute.Clock, (int) (2000 / readSectorCosts[speed]) / 100 + "/" +
+      (int) (2000 / writeSectorCosts[speed]) / 100 + "/" +
+      (int) (2000 / readByteCosts[speed]) / 100 + "/" +
+      (int) (2000 / writeByteCosts[speed]) / 100);
   }
 
   private File savePath() {
@@ -99,17 +99,17 @@ public class Drive extends AbstractManagedEnvironment implements DeviceInfo {
 
   @Callback(direct = true, doc = "function():number -- Returns the total capacity of the drive, in bytes.")
   public Object[] getCapacity(Context context, Arguments args) {
-    return ResultWrapper.result((double) capacity);
+    return ResultWrapper.result(capacity);
   }
 
   @Callback(direct = true, doc = "function():number -- Returns the size of a single sector on the drive, in bytes.")
   public Object[] getSectorSize(Context context, Arguments args) {
-    return ResultWrapper.result((double) sectorSize);
+    return ResultWrapper.result(sectorSize);
   }
 
   @Callback(direct = true, doc = "function():number -- Returns the number of platters in the drive.")
   public Object[] getPlatterCount(Context context, Arguments args) {
-    return ResultWrapper.result((double) platterCount);
+    return ResultWrapper.result(platterCount);
   }
 
   @Callback(direct = true, doc = "function(sector:number):string -- Read the current contents of the specified sector.")

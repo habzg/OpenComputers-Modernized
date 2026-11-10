@@ -92,7 +92,7 @@ public class HardDiskDrive extends DelegateItem implements ItemTier, FileSystemL
       var data = tag.getCompound("oc:data");
       if (data.contains("node") && data.getCompound("node").contains("address")) {
         String addr = data.getCompound("node").getString("address");
-        tooltip.add(Component.literal("§8" + addr.substring(0, Math.min(13, addr.length())) + ".§7"));
+        tooltip.add(Component.literal("§8" + addr.substring(0, Math.min(13, addr.length())) + "...§7"));
       }
     }
   }
@@ -101,11 +101,15 @@ public class HardDiskDrive extends DelegateItem implements ItemTier, FileSystemL
   public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level world, Player player, @NotNull InteractionHand hand) {
     ItemStack stack = player.getItemInHand(hand);
     if (!player.isShiftKeyDown()) {
-      if (world.isClientSide) {
-        openDriveScreen.run();
+      var cd = stack.get(DataComponents.CUSTOM_DATA);
+      boolean isLootDisk = cd != null && !cd.isEmpty() && cd.copyTag().contains(OCSettings.namespace + "lootFactory");
+      if (!isLootDisk) {
+        if (world.isClientSide) {
+          openDriveScreen.run();
+        }
+        player.swing(hand);
+        return InteractionResultHolder.success(stack);
       }
-      player.swing(hand);
-      return InteractionResultHolder.success(stack);
     }
     return InteractionResultHolder.pass(stack);
   }

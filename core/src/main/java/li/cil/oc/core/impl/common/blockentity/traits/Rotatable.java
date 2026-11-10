@@ -22,6 +22,25 @@ public interface Rotatable extends RotationAware {
   default void invertRotation() {
   }
 
+  default boolean rotateAround(Direction axis) {
+    if (axis != Direction.UP && axis != Direction.DOWN) return false;
+    var current = facing();
+    if (current == Direction.UP || current == Direction.DOWN) {
+      var currentYaw = yaw();
+      var newYaw = axis == Direction.UP ? currentYaw.getClockWise() : currentYaw.getCounterClockWise();
+      if (newYaw == currentYaw) return false;
+      return trySetPitchYaw(current, newYaw);
+    }
+    var newFacing = axis == Direction.UP ? current.getClockWise() : current.getCounterClockWise();
+    if (newFacing == current) return false;
+    facing(newFacing);
+    return true;
+  }
+
+  default boolean trySetPitchYaw(Direction pitch, Direction yaw) {
+    return false;
+  }
+
   void facing(Direction value);
 
   Direction toLocal(Direction global);

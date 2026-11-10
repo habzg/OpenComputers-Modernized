@@ -1,5 +1,7 @@
 package li.cil.oc.core.impl.common.template;
 
+import java.util.List;
+import java.util.Map;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Tier;
@@ -35,7 +37,8 @@ public final class MicrocontrollerTemplate {
 
   @SuppressWarnings("unused")
   public static Object[] validate(Container inventory) {
-    return Template.validateComputer(inventory, hostClass, MicrocontrollerTemplate::maxComplexity);
+    return Template.validateComputer(inventory, hostClass, MicrocontrollerTemplate::maxComplexity, List.of(
+      Map.entry("gui.opencomputers.assembler.warning.bios", (Container inv) -> Template.hasComponent(Constants.ItemName.EEPROM, inv))));
   }
 
   @SuppressWarnings("unused")

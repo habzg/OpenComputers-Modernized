@@ -37,6 +37,7 @@ public final class ExtendedRecipe {
   private static ItemInfo[] cpus = null;
   private static ItemInfo robot = null;
   private static ItemInfo tablet = null;
+  private static ItemInfo beaconBasePrint = null;
   private static ItemStack disabled = null;
 
   @Nullable
@@ -84,6 +85,7 @@ public final class ExtendedRecipe {
       };
       robot = li.cil.oc.api.Items.get(Constants.BlockName.Robot);
       tablet = li.cil.oc.api.Items.get(Constants.ItemName.Tablet);
+      beaconBasePrint = li.cil.oc.api.Items.get(Constants.BlockName.BeaconBasePrint);
       var stack = new ItemStack(Blocks.DIRT);
       var tag = new CompoundTag();
       ExtendedNBT.setNewCompoundTag(tag, "display", t ->
@@ -106,8 +108,12 @@ public final class ExtendedRecipe {
       if (driver != null) {
         for (var stack : getItems(inventory)) {
           if (stack.getItem() == net.minecraft.world.item.Items.FILLED_MAP) {
-            var nbt = driver.dataTag(craftedStack);
+            var customData = craftedStack.get(DataComponents.CUSTOM_DATA);
+            CompoundTag root = customData != null && !customData.isEmpty() ? customData.copyTag() : new CompoundTag();
+            CompoundTag nbt = root.contains(OCSettings.namespace + "data") ? root.getCompound(OCSettings.namespace + "data") : new CompoundTag();
             ExtendedNBT.setNewCompoundTag(nbt, OCSettings.namespace + "map", t -> t.merge((CompoundTag) stack.save(provider)));
+            root.put(OCSettings.namespace + "data", nbt);
+            craftedStack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
           }
         }
       }
@@ -135,7 +141,7 @@ public final class ExtendedRecipe {
         craftedCustomData = craftedStack.get(DataComponents.CUSTOM_DATA);
       }
       CompoundTag nbt = craftedCustomData != null ? craftedCustomData.copyTag() : new CompoundTag();
-      if (craftedStack.getCount() == 1) {
+      if (getItems(inventory).length == 1) {
         String colorKey = OCSettings.namespace + "color";
         for (var stack : getItems(inventory)) {
           var info = li.cil.oc.api.Items.get(stack);
@@ -159,12 +165,22 @@ public final class ExtendedRecipe {
           if (li.cil.oc.api.Items.get(stack) == floppy && stackCustomData != null && !stackCustomData.isEmpty()) {
             var oldData = stackCustomData.copyTag();
             for (var oldTagName : oldData.getAllKeys()) {
-              var tag = oldData.get(oldTagName);
-              if (tag != null) nbt.put(oldTagName, tag.copy());
+              if (!nbt.contains(oldTagName)) {
+                var tag = oldData.get(oldTagName);
+                if (tag != null) nbt.put(oldTagName, tag.copy());
+              }
             }
           }
         }
         craftedStack.set(DataComponents.CUSTOM_DATA, CustomData.of(nbt));
+      }
+    }
+
+    if (craftedItemName == beaconBasePrint) {
+      for (var stack : getItems(inventory)) {
+        if (li.cil.oc.api.Items.get(stack) == beaconBasePrint) {
+          return ItemStack.EMPTY;
+        }
       }
     }
 
@@ -183,9 +199,13 @@ public final class ExtendedRecipe {
         var stackCustomData = stack.get(DataComponents.CUSTOM_DATA);
         if (li.cil.oc.api.Items.get(stack) == eeprom && stackCustomData != null && !stackCustomData.isEmpty()) {
           var copy = stackCustomData.copyTag();
-          if (copy.getCompound(OCSettings.namespace + "data").getCompound("node").contains("address")) {
-            copy.getCompound(OCSettings.namespace + "data").getCompound("node").remove("address");
+          var data = copy.getCompound(OCSettings.namespace + "data");
+          var node = data.getCompound("node");
+          if (node.contains("address")) {
+            node.remove("address");
           }
+          data.put("node", node);
+          copy.put(OCSettings.namespace + "data", data);
           craftedStack.set(DataComponents.CUSTOM_DATA, CustomData.of(copy));
           break;
         }
@@ -385,7 +405,7 @@ public final class ExtendedRecipe {
       data = new TabletData(stack);
       this.components = new ArrayList<>();
       for (var opt : data.items) {
-        if (opt != null) this.components.add(opt);
+        if (opt != null && !opt.isEmpty()) this.components.add(opt);
       }
     }
 

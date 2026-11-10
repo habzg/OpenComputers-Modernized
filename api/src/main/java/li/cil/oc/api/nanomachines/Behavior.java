@@ -34,7 +34,6 @@ public interface Behavior {
    * <br>
    * Use this to initialize permanent effects.
    */
-  @SuppressWarnings("EmptyMethod")
   void onEnable();
 
   /**

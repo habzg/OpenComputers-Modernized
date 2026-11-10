@@ -24,7 +24,7 @@ public final class DriverUpgradeDatabase extends Item implements li.cil.oc.api.d
     if (host.level() != null && host.level().isClientSide()) return null;
     var provider = host.level().registryAccess();
     return new li.cil.oc.core.impl.server.component.UpgradeDatabase(new DatabaseInventory() {
-      private final ItemStack[] items = new ItemStack[OCSettings.get().databaseEntriesPerTier[tier()]];
+      private final ItemStack[] items = li.cil.oc.core.impl.common.inventory.Inventory.filledItems(OCSettings.get().databaseEntriesPerTier[tier()]);
       private final net.minecraft.core.HolderLookup.Provider lookupProvider = provider;
 
       {

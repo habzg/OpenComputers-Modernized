@@ -57,22 +57,20 @@ public interface TankInventoryControl extends WorldAware, InventoryAware, TankAw
     FluidHandler fluidHandler = FluidUtils.fluidHandlerIn(stack);
     if (fluidHandler != null) {
       FluidStack drainable = fluidHandler.drain(amount, true);
-      var remaining = stack.getItem().getCraftingRemainingItem();
-      ItemStack container = remaining != null ? new ItemStack(remaining) : ItemStack.EMPTY;
       if (drainable == null || drainable.isEmpty())
         return result(null, "item is empty or not a fluid container");
       int transferred = into.fill(drainable, true);
       if (transferred <= 0)
         return result(null, "tank is full or incompatible fluid");
+      ItemStack drained = FluidUtils.drainItem(stack, drainable.copyWithAmount(transferred));
+      if (drained == null)
+        return result(null, "item is empty or not a fluid container");
       into.fill(drainable.copyWithAmount(transferred), false);
-      fluidHandler.drain(transferred, false);
       inventory().removeItem(selectedSlot(), 1);
-      if (!container.isEmpty()) {
-        for (int s : insertionSlots()) {
-          if (InventoryUtils.insertIntoInventorySlot(container, inventory(), null, s, 64)) break;
-        }
-        if (container.getCount() > 0) {
-          InventoryUtils.spawnStackInWorld(position(), container, null, null);
+      if (!drained.isEmpty()) {
+        InventoryUtils.insertIntoInventory(drained, inventory(), null, 64, false, insertionSlots());
+        if (drained.getCount() > 0) {
+          InventoryUtils.spawnStackInWorld(position(), drained, null, null);
         }
       }
       return result(true, transferred);
@@ -99,9 +97,7 @@ public interface TankInventoryControl extends WorldAware, InventoryAware, TankAw
       from.drain(transferred, false);
       if (filledStack != null) {
         inventory().removeItem(selectedSlot(), 1);
-        for (int s : insertionSlots()) {
-          if (InventoryUtils.insertIntoInventorySlot(filledStack, inventory(), null, s, 64)) break;
-        }
+        InventoryUtils.insertIntoInventory(filledStack, inventory(), null, 64, false, insertionSlots());
         if (filledStack.getCount() > 0) {
           InventoryUtils.spawnStackInWorld(position(), filledStack, null, null);
         }

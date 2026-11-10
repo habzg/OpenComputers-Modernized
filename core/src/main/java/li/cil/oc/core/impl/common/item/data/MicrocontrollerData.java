@@ -50,7 +50,7 @@ public class MicrocontrollerData extends ItemData {
       }
     }
     if (!hasEeprom) {
-      components.add(null);
+      components.add(ItemStack.EMPTY);
     }
   }
 

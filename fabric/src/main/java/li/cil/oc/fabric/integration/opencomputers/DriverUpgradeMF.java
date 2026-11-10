@@ -40,8 +40,23 @@ public final class DriverUpgradeMF extends Item implements HostAware {
     if (host.level() != null && !host.level().isClientSide()) {
       var customData = stack.get(DataComponents.CUSTOM_DATA);
       if (customData != null && !customData.isEmpty()) {
-        return new li.cil.oc.fabric.server.component.UpgradeMF(
-          host, BlockPosition.apply(0, 0, 0, host.level()), Direction.NORTH);
+        var tag = customData.copyTag();
+        if (tag.contains(li.cil.oc.core.impl.OCSettings.namespace + "coord", net.minecraft.nbt.Tag.TAG_INT_ARRAY)) {
+          var coords = tag.getIntArray(li.cil.oc.core.impl.OCSettings.namespace + "coord");
+          if (coords.length == 4) {
+            var dimension = net.minecraft.resources.ResourceLocation.tryParse(tag.getString(li.cil.oc.core.impl.OCSettings.namespace + "dimension"));
+            if (dimension != null) {
+              var server = host.level().getServer();
+              if (server != null) {
+                var level = server.getLevel(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION, dimension));
+                if (level != null) {
+                  return new li.cil.oc.fabric.server.component.UpgradeMF(
+                    host, BlockPosition.apply(coords[0], coords[1], coords[2], level), Direction.from3DDataValue(coords[3]));
+                }
+              }
+            }
+          }
+        }
       }
     }
     return null;

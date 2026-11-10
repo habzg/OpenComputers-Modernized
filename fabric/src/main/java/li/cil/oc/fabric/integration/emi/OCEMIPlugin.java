@@ -4,6 +4,7 @@ import dev.emi.emi.api.EmiEntrypoint;
 import dev.emi.emi.api.EmiPlugin;
 import dev.emi.emi.api.EmiRegistry;
 import dev.emi.emi.api.recipe.BasicEmiRecipe;
+import dev.emi.emi.api.recipe.EmiCraftingRecipe;
 import dev.emi.emi.api.recipe.EmiRecipeCategory;
 import dev.emi.emi.api.recipe.VanillaEmiRecipeCategories;
 import dev.emi.emi.api.render.EmiTexture;
@@ -24,6 +25,9 @@ import li.cil.oc.api.Manual;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.LootManager;
+import li.cil.oc.core.impl.common.recipe.ColorizeRecipe;
+import li.cil.oc.core.impl.common.recipe.ColorizeVariants;
+import li.cil.oc.core.impl.common.recipe.DecolorizeRecipe;
 import li.cil.oc.core.server.machine.CallbackWrapper;
 import li.cil.oc.core.server.machine.Callbacks;
 import li.cil.oc.fabric.client.gui.Database;
@@ -36,6 +40,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeType;
 
 @EmiEntrypoint
 @SuppressWarnings("unused")
@@ -51,6 +56,17 @@ public class OCEMIPlugin implements EmiPlugin {
 
   @Override
   public void register(EmiRegistry registry) {
+    li.cil.oc.core.impl.client.gui.DynamicGuiContainer.addHoveredStackSupplier(() -> {
+      try {
+        var interaction = dev.emi.emi.api.EmiApi.getHoveredStack(false);
+        if (interaction == null || interaction.isEmpty()) return net.minecraft.world.item.ItemStack.EMPTY;
+        var ingredient = interaction.getStack();
+        if (ingredient instanceof dev.emi.emi.api.stack.EmiStack stack) return stack.getItemStack();
+        return net.minecraft.world.item.ItemStack.EMPTY;
+      } catch (Throwable t) {
+        return net.minecraft.world.item.ItemStack.EMPTY;
+      }
+    });
     CALLBACKS = new EmiRecipeCategory(
       ResourceLocation.fromNamespaceAndPath("opencomputers", "callbacks"),
       (guiGraphics, x, y, delta) -> {
@@ -69,6 +85,7 @@ public class OCEMIPlugin implements EmiPlugin {
     registerCallbackRecipes(registry);
     registerManualRecipes(registry);
     registerLootDiskCyclingRecipes(registry);
+    registerColorizeRecipes(registry);
 
     registry.addDragDropHandler(Database.class, new DatabaseDragHandler());
     registry.addExclusionArea(Relay.class, (screen, consumer) -> consumer.accept(new Bounds(
@@ -185,6 +202,27 @@ public class OCEMIPlugin implements EmiPlugin {
       ResourceLocation.fromNamespaceAndPath("opencomputers", "/loot_disk_cycling"),
       List.of(diskIngredient, wrench), diskStacks,
       diskIngredient, wrench, diskIngredient));
+  }
+
+  private void registerColorizeRecipes(EmiRegistry registry) {
+    for (var holder : registry.getRecipeManager().getAllRecipesFor(RecipeType.CRAFTING)) {
+      if (holder.value() instanceof ColorizeRecipe recipe) {
+        addColorizeRecipes(registry, holder.id(), ColorizeVariants.colorize(recipe.targetItem));
+      } else if (holder.value() instanceof DecolorizeRecipe recipe) {
+        addColorizeRecipes(registry, holder.id(), ColorizeVariants.decolorize(recipe.targetItem));
+      }
+    }
+  }
+
+  private void addColorizeRecipes(EmiRegistry registry, ResourceLocation recipe, List<ColorizeVariants.Variant> variants) {
+    for (int i = 0; i < variants.size(); i++) {
+      var variant = variants.get(i);
+      registry.addRecipe(new EmiCraftingRecipe(
+        List.of(EmiStack.of(variant.input()), EmiStack.of(variant.dye())),
+        EmiStack.of(variant.output()),
+        ResourceLocation.fromNamespaceAndPath(recipe.getNamespace(), "/" + recipe.getPath() + "/" + i),
+        true));
+    }
   }
 
   static List<String> getCallbackDocs(ItemStack stack) {

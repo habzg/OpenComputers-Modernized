@@ -134,6 +134,7 @@ public final class EventHandler {
   public static void onServerTick(ServerTickEvent.Post e) {
     var cache = TabletCache.get();
     if (cache != null) cache.cleanUp();
+    li.cil.oc.neoforge.common.event.BlockChangeHandler.tick();
     List<Machine> closed = new ArrayList<>();
     for (Machine machine : machines) {
       if (machine.tryClose()) {
@@ -245,9 +246,10 @@ public final class EventHandler {
   public static void onChunkUnload(ChunkEvent.Unload e) {
     if (!e.getLevel().isClientSide()) {
       var chunkPos = e.getChunk().getPos();
-      var chunkMin = new net.minecraft.core.BlockPos(chunkPos.getMinBlockX(), 0, chunkPos.getMinBlockZ());
-      var chunkMax = new net.minecraft.core.BlockPos(chunkPos.getMaxBlockX(), 255, chunkPos.getMaxBlockZ());
-      var aabb = new net.minecraft.world.phys.AABB(chunkMin.getX(), chunkMin.getY(), chunkMin.getZ(), chunkMax.getX(), chunkMax.getY(), chunkMax.getZ());
+      var level = e.getLevel();
+      var aabb = new net.minecraft.world.phys.AABB(
+        chunkPos.getMinBlockX(), level.getMinBuildHeight(), chunkPos.getMinBlockZ(),
+        chunkPos.getMaxBlockX() + 1.0, level.getMaxBuildHeight(), chunkPos.getMaxBlockZ() + 1.0);
       for (var entity : e.getLevel().getEntities(null, aabb)) {
         if (entity instanceof MachineHost host) {
           if (host.machine() instanceof Machine machine) {
@@ -257,19 +259,6 @@ public final class EventHandler {
           for (int i = 0; i < rack.getContainerSize(); i++) {
             if (rack.getMountable(i) instanceof Server server && server.machine() != null) {
               server.machine().stop();
-            }
-          }
-        }
-      }
-      var chunk = e.getChunk();
-      if (chunk instanceof net.minecraft.world.level.chunk.LevelChunk levelChunk) {
-        for (var be : levelChunk.getBlockEntities().values()) {
-          if (be instanceof li.cil.oc.core.impl.common.blockentity.traits.BlockEntity te) {
-            te.markUnloading();
-          }
-          if (be instanceof li.cil.oc.core.impl.common.blockentity.Screen screen) {
-            if (screen.node != null) {
-              screen.node.remove();
             }
           }
         }
@@ -292,6 +281,9 @@ public final class EventHandler {
             }
           }
         }
+      }
+      if (e.getLevel() instanceof net.minecraft.world.level.Level level) {
+        li.cil.oc.core.impl.common.component.TextBuffer.removeClientBuffersInChunk(level, e.getChunk().getPos().x, e.getChunk().getPos().z);
       }
     }
   }

@@ -27,7 +27,7 @@ public final class CraftHandler {
         var present = API.items.get(Constants.ItemName.Present).createItemStack(1);
         level.playSeededSound(serverPlayer, serverPlayer.getX(), serverPlayer.getY(), serverPlayer.getZ(),
           SoundEvents.NOTE_BLOCK_PLING, SoundSource.PLAYERS, 0.2f, 1f, serverPlayer.getRandom().nextLong());
-        InventoryUtils.addToPlayerInventory(present, serverPlayer);
+        InventoryUtils.addToPlayerInventory(present, serverPlayer, true);
       }
     }
 

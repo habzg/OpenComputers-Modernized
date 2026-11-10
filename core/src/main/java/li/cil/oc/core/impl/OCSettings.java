@@ -13,6 +13,7 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HexFormat;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -20,10 +21,11 @@ import java.util.regex.Pattern;
 import li.cil.oc.core.impl.util.InternetFilteringRule;
 import li.cil.repack.com.typesafe.config.Config;
 import li.cil.repack.com.typesafe.config.ConfigFactory;
+import li.cil.repack.com.typesafe.config.ConfigList;
 import li.cil.repack.com.typesafe.config.ConfigRenderOptions;
 import li.cil.repack.com.typesafe.config.ConfigValue;
 import li.cil.repack.com.typesafe.config.ConfigValueFactory;
-import org.apache.commons.codec.binary.Hex;
+import li.cil.repack.com.typesafe.config.ConfigValueType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -303,8 +305,8 @@ public class OCSettings {
   public final boolean printsHaveOpacity;
   public final double noclipMultiplier;
   // chunkloader
-  public final java.util.List<Integer> chunkloadDimensionBlacklist;
-  public final java.util.List<Integer> chunkloadDimensionWhitelist;
+  public final java.util.List<String> chunkloadDimensionBlacklist;
+  public final java.util.List<String> chunkloadDimensionWhitelist;
   // integration
   public final java.util.List<String> modBlacklist;
   public final java.util.List<String> peripheralBlacklist;
@@ -736,8 +738,8 @@ public class OCSettings {
     noclipMultiplier = Math.max(0, config.getDouble("printer.noclipMultiplier"));
 
     // chunkloader
-    chunkloadDimensionBlacklist = getIntList(config, "chunkloader.dimBlacklist", null);
-    chunkloadDimensionWhitelist = getIntList(config, "chunkloader.dimWhitelist", null);
+    chunkloadDimensionBlacklist = getStringList(config, "chunkloader.dimBlacklist", null);
+    chunkloadDimensionWhitelist = getStringList(config, "chunkloader.dimWhitelist", null);
 
     // integration
     modBlacklist = config.getStringList("integration.modBlacklist");
@@ -991,11 +993,31 @@ public class OCSettings {
         // pass
       }
     }
+
+    for (String path : new String[]{"chunkloader.dimBlacklist", "chunkloader.dimWhitelist"}) {
+      String fullPath = prefix + path;
+      if (!patched.hasPath(fullPath)) continue;
+      if (isStringList(patched.getValue(fullPath))) continue;
+      patched = patched.withValue(fullPath, defaults.getValue(fullPath));
+    }
+
     return patched;
   }
 
-  public static java.util.List<Integer> getIntList(Config config, String path, java.util.List<Integer> defaultVal) {
-    if (config.hasPath(path)) return config.getIntList(path);
+  private static boolean isStringList(ConfigValue value) {
+    if (!(value instanceof ConfigList list)) return false;
+    for (ConfigValue element : list) {
+      if (element.valueType() != ConfigValueType.STRING) return false;
+    }
+    return true;
+  }
+
+  public static java.util.List<String> getStringList(Config config, String path, java.util.List<String> defaultVal) {
+    if (config.hasPath(path)) {
+      if (isStringList(config.getValue(path))) return config.getStringList(path);
+      LOGGER.warn("Configuration option '{}' is not a list of strings, ignoring it.", path);
+      return defaultVal != null ? defaultVal : new LinkedList<>();
+    }
     if (defaultVal != null) return defaultVal;
     return new LinkedList<>();
   }
@@ -1106,7 +1128,7 @@ public class OCSettings {
       private String generateNonce() {
         byte[] buf = new byte[16];
         rng.nextBytes(buf);
-        return new String(Hex.encodeHex(buf, true));
+        return HexFormat.of().formatHex(buf);
       }
 
       public String nonce(String player) {

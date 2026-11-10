@@ -69,6 +69,7 @@ public class UpgradeBarcodeReader extends AbstractManagedEnvironment implements 
   }
 
   private void processNodes(Node[] nodes, CompoundTag nbt) {
+    if (nodes == null) return;
     ListTag readerNBT = new ListTag();
     for (Node node : nodes) {
       if (node != null) {

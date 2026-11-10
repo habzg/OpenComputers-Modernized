@@ -74,7 +74,7 @@ public class DecolorizeRecipe extends CustomRecipe {
 
   @Override
   public boolean canCraftInDimensions(int width, int height) {
-    return width * height >= 10;
+    return width * height >= 2;
   }
 
   @Override

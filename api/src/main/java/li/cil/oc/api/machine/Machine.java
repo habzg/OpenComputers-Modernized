@@ -196,7 +196,7 @@ public interface Machine extends ManagedEnvironment, Context {
    * @param message the message to set.
    * @return <code>true</code> if the computer switched to the stopping state.
    */
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"unused", "UnusedReturnValue"})
   boolean crash(String message);
 
   /**

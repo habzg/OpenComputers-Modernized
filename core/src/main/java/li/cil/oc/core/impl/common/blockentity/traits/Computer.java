@@ -75,6 +75,20 @@ public interface Computer extends Environment, ComponentInventory, Rotatable, Bu
 
   void checkRedstoneInputChanged();
 
+  default void onRedstoneInputChanged(int side, int oldValue, int newValue) {
+    onRedstoneInputChanged(side, oldValue, newValue, -1);
+  }
+
+  default void onRedstoneInputChanged(int side, int oldValue, int newValue, int color) {
+    var machine = machine();
+    if (machine == null) return;
+    var node = machine.node();
+    if (node == null) return;
+    var localSide = toLocal(net.minecraft.core.Direction.from3DDataValue(side));
+    node.sendToNeighbors("redstone.changed",
+      new RedstoneAware.RedstoneChangedEventArgs(localSide, oldValue, newValue, color));
+  }
+
   java.util.EnumSet<li.cil.oc.api.util.StateAware.State> getCurrentState();
 
   default String runSound() {

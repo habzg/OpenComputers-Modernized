@@ -1,5 +1,6 @@
 package li.cil.oc.core.impl.common.blockentity.traits.power;
 
+import li.cil.oc.core.impl.integration.util.Power;
 import net.minecraft.core.Direction;
 
 public interface RedstoneFlux extends Common {
@@ -8,19 +9,19 @@ public interface RedstoneFlux extends Common {
     return false;
   }
 
-  @SuppressWarnings({"SameReturnValue", "unused"})
+  @SuppressWarnings("unused")
   default int receiveEnergy(Direction from, int maxReceive, boolean simulate) {
-    return 0;
+    return Power.toRF(tryChangeBuffer(from, Power.fromRF(maxReceive), !simulate));
   }
 
-  @SuppressWarnings({"SameReturnValue", "unused"})
+  @SuppressWarnings("unused")
   default int getEnergyStored(Direction from) {
-    return 0;
+    return Power.toRF(globalBuffer(from));
   }
 
-  @SuppressWarnings({"SameReturnValue", "unused"})
+  @SuppressWarnings("unused")
   default int getMaxEnergyStored(Direction from) {
-    return 0;
+    return Power.toRF(globalBufferSize(from));
   }
 
   @SuppressWarnings({"SameReturnValue", "unused"})

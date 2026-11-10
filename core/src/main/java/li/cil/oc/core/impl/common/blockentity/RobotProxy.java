@@ -34,6 +34,7 @@ import org.jetbrains.annotations.NotNull;
 public class RobotProxy extends BlockEntity implements Computer, PowerInformation, Rotatable, WorldlyContainer, li.cil.oc.api.internal.Robot, net.minecraft.world.Nameable {
   public Robot robot;
   public RobotData info;
+  public boolean itemDropped;
 
   public RobotProxy(BlockEntityType<?> type, Robot robot, BlockPos pos, BlockState state) {
     super(type, pos, state);
@@ -444,6 +445,12 @@ public class RobotProxy extends BlockEntity implements Computer, PowerInformatio
   }
 
   @Override
+  public boolean rotateAround(Direction axis) {
+    robot.rotateProxy(axis);
+    return true;
+  }
+
+  @Override
   public Direction pitch() {
     return robot.pitch();
   }
@@ -572,10 +579,6 @@ public class RobotProxy extends BlockEntity implements Computer, PowerInformatio
   @Override
   public boolean isConnected() {
     return robot.isConnected();
-  }
-
-  public Object result(Object... args) {
-    return li.cil.oc.core.util.ResultWrapper.result(args);
   }
 
   @Override

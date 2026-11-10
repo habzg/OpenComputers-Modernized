@@ -157,6 +157,14 @@ public abstract class MachineBase extends AbstractManagedEnvironment implements 
     return new ArrayList<>(checked);
   }
 
+  public static Class<? extends Architecture> resolveArchitecture(String className) throws ClassNotFoundException {
+    Class<? extends Architecture> clazz = Class.forName(className).asSubclass(Architecture.class);
+    if (java.lang.reflect.Modifier.isAbstract(clazz.getModifiers())) {
+      throw new ClassNotFoundException("Architecture class is abstract: " + className);
+    }
+    return clazz;
+  }
+
   public static String getArchitectureName(Class<? extends Architecture> architecture) {
     Architecture.Name a = architecture.getAnnotation(Architecture.Name.class);
     return a != null ? a.value() : architecture.getSimpleName();
@@ -212,7 +220,9 @@ public abstract class MachineBase extends AbstractManagedEnvironment implements 
 
   @Override
   public Map<String, String> components() {
-    return new LinkedHashMap<>(_components);
+    synchronized (_components) {
+      return new LinkedHashMap<>(_components);
+    }
   }
 
   @Override
@@ -486,7 +496,7 @@ public abstract class MachineBase extends AbstractManagedEnvironment implements 
   public Object[] invoke(Value value, String method, Object[] args) {
     Map<String, CallbackWrapper> cbs = Callbacks.apply(value);
     CallbackWrapper cb = cbs.get(method);
-    if (cb == null) throw new RuntimeException(new NoSuchMethodException(method));
+    if (cb == null) throw new RuntimeException(new NoSuchMethodException());
     if (cb.annotation().direct()) consumeCallBudget(1.0 / cb.annotation().limit());
     return ConverterRegistry.get().convert(cb.apply(value, this, new ArgumentsImpl(args)));
   }
@@ -704,7 +714,11 @@ public abstract class MachineBase extends AbstractManagedEnvironment implements 
   @Override
   public void onMessage(Message msg) {
     if ("computer.signal".equals(msg.name()) && msg.data().length >= 1 && msg.data()[0] instanceof String) {
-      if (msg.source() != null && msg.source().address() != null && _components.containsKey(msg.source().address())) {
+      boolean known;
+      synchronized (_components) {
+        known = msg.source() != null && msg.source().address() != null && _components.containsKey(msg.source().address());
+      }
+      if (known) {
         Object[] a = new Object[msg.data().length];
         a[0] = msg.source().address();
         System.arraycopy(msg.data(), 1, a, 1, msg.data().length - 1);
@@ -724,7 +738,9 @@ public abstract class MachineBase extends AbstractManagedEnvironment implements 
   @Override
   public void onConnect(Node node) {
     if (node == this.node) {
-      _components.put(this.node.address(), this.node instanceof Component ? ((Component) this.node).name() : this.node.address());
+      synchronized (_components) {
+        _components.put(this.node.address(), this.node instanceof Component ? ((Component) this.node).name() : this.node.address());
+      }
       if (tmp != null) node.connect(tmp.node());
       if (architecture != null) architecture.onConnect();
     } else if (node instanceof Component) addComponent((Component) node);
@@ -741,16 +757,24 @@ public abstract class MachineBase extends AbstractManagedEnvironment implements 
   }
 
   public void addComponent(Component c) {
-    if (!_components.containsKey(c.address())) addedComponents.add(c);
+    boolean known;
+    synchronized (_components) {
+      known = _components.containsKey(c.address());
+    }
+    if (!known) addedComponents.add(c);
   }
 
   public void removeComponent(Component c) {
+    boolean removed;
     synchronized (_components) {
-      if (_components.containsKey(c.address())) {
+      removed = _components.containsKey(c.address());
+      if (removed) {
         _components.remove(c.address());
         _loadedComponents.remove(c.address());
-        signal("component_removed", c.address(), c.name());
       }
+    }
+    if (removed) {
+      signal("component_removed", c.address(), c.name());
     }
     addedComponents.remove(c);
   }
@@ -772,7 +796,11 @@ public abstract class MachineBase extends AbstractManagedEnvironment implements 
 
   private void verifyComponents() {
     Set<String> invalid = new LinkedHashSet<>();
-    for (Map.Entry<String, String> e : _components.entrySet()) {
+    Map<String, String> snapshot;
+    synchronized (_components) {
+      snapshot = new LinkedHashMap<>(_components);
+    }
+    for (Map.Entry<String, String> e : snapshot.entrySet()) {
       String name = e.getValue();
       Node n = node.network().node(e.getKey());
       if (!(n instanceof Component) || !((Component) n).name().equals(name)) {
@@ -786,7 +814,11 @@ public abstract class MachineBase extends AbstractManagedEnvironment implements 
         invalid.add(e.getKey());
       }
     }
-    for (String a : invalid) _components.remove(a);
+    if (!invalid.isEmpty()) {
+      synchronized (_components) {
+        for (String a : invalid) _components.remove(a);
+      }
+    }
   }
 
   @Override
@@ -803,14 +835,17 @@ public abstract class MachineBase extends AbstractManagedEnvironment implements 
         ListTag ul = nbt.getList("users", Tag.TAG_STRING);
         for (int i = 0; i < ul.size(); i++) _users.add(ul.getString(i));
         if (nbt.contains("message")) message = nbt.getString("message");
-        _components.clear();
-        _loadedComponents.clear();
-        ListTag cl = nbt.getList("components", Tag.TAG_COMPOUND);
-        for (int i = 0; i < cl.size(); i++) {
-          CompoundTag t = cl.getCompound(i);
-          var addr = t.getString("address");
-          var name = t.getString("name");
-          _loadedComponents.put(addr, name);
+        synchronized (_components) {
+          _components.clear();
+          _loadedComponents.clear();
+          ListTag cl = nbt.getList("components", Tag.TAG_COMPOUND);
+          for (int i = 0; i < cl.size(); i++) {
+            CompoundTag t = cl.getCompound(i);
+            var addr = t.getString("address");
+            var name = t.getString("name");
+            _loadedComponents.put(addr, name);
+          }
+          _components.putAll(_loadedComponents);
         }
         if (tmp != null) {
           if (nbt.contains("tmp")) {
@@ -890,7 +925,10 @@ public abstract class MachineBase extends AbstractManagedEnvironment implements 
         nbt.put("users", ul);
         if (message != null) nbt.putString("message", message);
         ListTag cl = new ListTag();
-        var componentsToSave = _components.isEmpty() ? _loadedComponents : _components;
+        Map<String, String> componentsToSave;
+        synchronized (_components) {
+          componentsToSave = _components.isEmpty() ? new LinkedHashMap<>(_loadedComponents) : new LinkedHashMap<>(_components);
+        }
         for (Map.Entry<String, String> e : componentsToSave.entrySet()) {
           CompoundTag t = new CompoundTag();
           t.putString("address", e.getKey());
@@ -1086,7 +1124,9 @@ public abstract class MachineBase extends AbstractManagedEnvironment implements 
 
   public int componentCount() {
     double c = -1.0;
-    for (String name : _components.values()) c += "filesystem".equals(name) ? 0.25 : 1.0;
+    synchronized (_components) {
+      for (String name : _components.values()) c += "filesystem".equals(name) ? 0.25 : 1.0;
+    }
     for (Component co : addedComponents) c += "filesystem".equals(co.name()) ? 0.25 : 1.0;
     return (int) c;
   }

@@ -62,7 +62,6 @@ import li.cil.oc.neoforge.common.Loot;
 import li.cil.oc.neoforge.common.SaveHandler;
 import li.cil.oc.neoforge.common.asm.SimpleComponentTickHandler;
 import li.cil.oc.neoforge.common.event.AngelUpgradeHandler;
-import li.cil.oc.neoforge.common.event.BlockChangeHandler;
 import li.cil.oc.neoforge.common.event.ChunkloaderUpgradeHandler;
 import li.cil.oc.neoforge.common.event.ExperienceUpgradeHandler;
 import li.cil.oc.neoforge.common.event.FileSystemAccessHandler;
@@ -198,7 +197,6 @@ public final class ModOpenComputers implements ModProxy {
 
     NeoForge.EVENT_BUS.register(li.cil.oc.neoforge.common.event.AnalyzerEventHandler.class);
     NeoForge.EVENT_BUS.register(AngelUpgradeHandler.class);
-    NeoForge.EVENT_BUS.register(BlockChangeHandler.class);
     NeoForge.EVENT_BUS.register(ChunkloaderUpgradeHandler.class);
     NeoForge.EVENT_BUS.register(EventHandler.class);
     NeoForge.EVENT_BUS.register(ExperienceUpgradeHandler.class);
@@ -290,6 +288,7 @@ public final class ModOpenComputers implements ModProxy {
     li.cil.oc.api.Driver.add(new DriverGeolyzer.Provider());
     li.cil.oc.api.Driver.add(new DriverMotionSensor.Provider());
     li.cil.oc.api.Driver.add(new DriverScreen.Provider());
+    li.cil.oc.api.Driver.add(new DriverTerminalServer.Provider());
     li.cil.oc.api.Driver.add(new DriverTransposer.Provider());
 
     li.cil.oc.api.Driver.add(new DriverUpgradeChunkloader.Provider());

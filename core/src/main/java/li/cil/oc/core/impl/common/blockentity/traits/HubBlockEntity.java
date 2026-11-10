@@ -37,6 +37,8 @@ public abstract class HubBlockEntity extends BlockEntity implements Hub {
   public final int queueBaseSize = OCSettings.get().switchDefaultMaxQueueSize;
   public int relayCooldown = -1;
   public long lastMessage = 0;
+  private final int[] packetsPerCycle = new int[20];
+  private int packetsPerCycleIndex = 0;
 
   public HubBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
     super(type, pos, state);
@@ -79,7 +81,7 @@ public abstract class HubBlockEntity extends BlockEntity implements Hub {
   @Override
   public boolean isConnected() {
     for (Plug plug : plugs) {
-      if (plug != null && plug.node() != null && plug.node().network() != null) {
+      if (plug != null && plug.node() != null && plug.node().address() != null && plug.node().network() != null) {
         return true;
       }
     }
@@ -91,16 +93,7 @@ public abstract class HubBlockEntity extends BlockEntity implements Hub {
   }
 
   @Override
-  public void onDisconnect(li.cil.oc.api.network.Node node) {
-  }
-
-  @Override
   public void onMessage(li.cil.oc.api.network.Message message) {
-  }
-
-  @Override
-  public Object result(Object... args) {
-    return li.cil.oc.core.util.ResultWrapper.result(args);
   }
 
   @Override
@@ -110,6 +103,7 @@ public abstract class HubBlockEntity extends BlockEntity implements Hub {
 
   @Override
   public Node sidedNode(Direction side) {
+    if (side == null) return null;
     Plug plug = plugs[side.ordinal()];
     if (plug != null) return plug.node();
     return null;
@@ -127,19 +121,22 @@ public abstract class HubBlockEntity extends BlockEntity implements Hub {
 
   @Override
   public boolean tryEnqueuePacket(Direction sourceSide, Packet packet) {
-    if (packet.ttl() > 0 && packetQueue.size() < maxQueueSize) {
-      packetQueue.offer(new QueuedPacket(sourceSide, packet.hop()));
-      if (relayCooldown < 0) relayCooldown = relayDelay - 1;
-      return true;
+    synchronized (packetQueue) {
+      if (packet.ttl() > 0 && packetQueue.size() < maxQueueSize) {
+        packetQueue.offer(new QueuedPacket(sourceSide, packet.hop()));
+        if (relayCooldown < 0) relayCooldown = relayDelay - 1;
+        return true;
+      }
+      return false;
     }
-    return false;
   }
 
   protected void relayPacket(Direction sourceSide, Packet packet) {
-    for (var plug : plugs) {
-      if (plug != null && plug.node() != null) {
-        if (sourceSide == null || !sourceSide.equals(plug.side())) {
-          plug.node().sendToReachable("network.message", packet);
+    for (var side : Direction.values()) {
+      if (sourceSide == null || !sourceSide.equals(side)) {
+        var node = sidedNode(side);
+        if (node != null) {
+          node.sendToReachable("network.message", packet);
         }
       }
     }
@@ -147,6 +144,17 @@ public abstract class HubBlockEntity extends BlockEntity implements Hub {
 
   public void onSwitchActivity() {
     lastMessage = System.currentTimeMillis();
+  }
+
+  protected void addPacketSample(int count) {
+    packetsPerCycle[packetsPerCycleIndex] = count;
+    packetsPerCycleIndex = (packetsPerCycleIndex + 1) % packetsPerCycle.length;
+  }
+
+  public int packetsPerCycleAvg() {
+    int sum = 0;
+    for (var v : packetsPerCycle) sum += v;
+    return sum / packetsPerCycle.length;
   }
 
   @Override
@@ -213,11 +221,6 @@ public abstract class HubBlockEntity extends BlockEntity implements Hub {
 
       @Override
       public void writeToNBTForClient(CompoundTag nbt) {
-      }
-
-      @Override
-      public Object result(Object... args) {
-        return li.cil.oc.core.util.ResultWrapper.result(args);
       }
 
       public Level level() {
@@ -315,24 +318,30 @@ public abstract class HubBlockEntity extends BlockEntity implements Hub {
   public void updateEntity() {
     super.updateEntity();
     if (isChangeScheduled) {
-      setChanged();
+      super.setChanged();
       isChangeScheduled = false;
     }
     if (isServer()) {
-      var queueSize = packetQueue.size();
-      if (relayCooldown > 0) {
-        relayCooldown--;
-      } else if (queueSize > 0) {
-        int maxPackets = relayAmount;
-        int toProcess = Math.min(queueSize, maxPackets);
-        for (int i = 0; i < toProcess; i++) {
-          var entry = packetQueue.poll();
-          if (entry != null) {
-            relayPacket(entry.sourceSide(), entry.packet());
+      synchronized (packetQueue) {
+        if (relayCooldown > 0) {
+          relayCooldown--;
+        } else {
+          relayCooldown = -1;
+          if (!packetQueue.isEmpty()) {
+            int toProcess = Math.min(packetQueue.size(), relayAmount);
+            addPacketSample(toProcess);
+            for (int i = 0; i < toProcess; i++) {
+              var entry = packetQueue.poll();
+              if (entry != null) {
+                relayPacket(entry.sourceSide(), entry.packet());
+              }
+            }
+            if (!packetQueue.isEmpty()) {
+              relayCooldown = relayDelay - 1;
+            }
+          } else if (relayDelay > 0 && level() != null && level().getGameTime() % relayDelay == 0) {
+            addPacketSample(0);
           }
-        }
-        if (!packetQueue.isEmpty()) {
-          relayCooldown = relayDelay - 1;
         }
       }
     }
@@ -362,14 +371,16 @@ public abstract class HubBlockEntity extends BlockEntity implements Hub {
       }
     }
     var queueList = nbt.getList(QueueTag, Tag.TAG_COMPOUND);
-    for (int i = 0; i < queueList.size(); i++) {
-      var tag = queueList.getCompound(i);
-      var side = ExtendedNBT.getDirection(tag, SideTag);
-      var packet = li.cil.oc.api.Network.newPacket(tag);
-      packetQueue.add(new QueuedPacket(side, packet));
-    }
-    if (nbt.contains(RelayCooldownTag)) {
-      relayCooldown = nbt.getInt(RelayCooldownTag);
+    synchronized (packetQueue) {
+      for (int i = 0; i < queueList.size(); i++) {
+        var tag = queueList.getCompound(i);
+        var side = ExtendedNBT.getDirection(tag, SideTag);
+        var packet = li.cil.oc.api.Network.newPacket(tag);
+        packetQueue.add(new QueuedPacket(side, packet));
+      }
+      if (nbt.contains(RelayCooldownTag)) {
+        relayCooldown = nbt.getInt(RelayCooldownTag);
+      }
     }
   }
 
@@ -388,16 +399,18 @@ public abstract class HubBlockEntity extends BlockEntity implements Hub {
       }
       nbt.put(PlugsTag, plugList);
       var queueList = new ListTag();
-      for (var entry : packetQueue) {
-        var tag = new CompoundTag();
-        ExtendedNBT.setDirection(tag, SideTag, entry.sourceSide());
-        entry.packet().save(tag);
-        queueList.add(tag);
+      synchronized (packetQueue) {
+        for (var entry : packetQueue) {
+          var tag = new CompoundTag();
+          ExtendedNBT.setDirection(tag, SideTag, entry.sourceSide());
+          entry.packet().save(tag);
+          queueList.add(tag);
+        }
+        if (relayCooldown > 0) {
+          nbt.putInt(RelayCooldownTag, relayCooldown);
+        }
       }
       nbt.put(QueueTag, queueList);
-      if (relayCooldown > 0) {
-        nbt.putInt(RelayCooldownTag, relayCooldown);
-      }
     }
   }
 

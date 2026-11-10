@@ -65,6 +65,7 @@ public abstract class TabletCache {
             wrapper.saveComponents(provider);
             wrapper.persistMachineState();
           }
+          wrapper.setChanged();
           if (wrapper.node() != null && wrapper.node().network() != null) {
             wrapper.node().remove();
           }
@@ -95,6 +96,8 @@ public abstract class TabletCache {
         cache.cleanUp();
         host = cache.get(id, () -> createHost(stack, player));
       }
+      host.setStack(stack);
+      host.player(player);
       return host;
     } catch (Exception e) {
       return createHost(stack, player);
@@ -108,6 +111,7 @@ public abstract class TabletCache {
         var provider = level.registryAccess();
         wrapper.saveComponents(provider);
         wrapper.persistMachineState();
+        wrapper.setChanged();
       }
     }
   }
@@ -135,7 +139,10 @@ public abstract class TabletCache {
   }
 
   public void invalidate(ItemStack stack) {
-    var id = getId(stack);
+    invalidate(getId(stack));
+  }
+
+  public void invalidate(String id) {
     if (id != null) {
       cache.invalidate(id);
     }

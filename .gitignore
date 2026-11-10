@@ -39,7 +39,3 @@ layout.json
 /build/
 .github/maven-dl
 .github/maven
-
-# shhh...
-opencode.json
-.opencode

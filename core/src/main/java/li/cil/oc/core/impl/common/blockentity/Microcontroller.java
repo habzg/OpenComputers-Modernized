@@ -1,5 +1,7 @@
 package li.cil.oc.core.impl.common.blockentity;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import li.cil.oc.api.driver.DeviceInfo;
 import li.cil.oc.api.machine.Arguments;
@@ -70,7 +72,12 @@ public class Microcontroller extends BlockEntity implements PowerAcceptor, Hub, 
         .withComponent("microcontroller")
         .create();
     }
+    for (var side : Direction.values()) {
+      plugs[side.ordinal()] = createPlug(side);
+    }
   }
+
+  public final Plug[] plugs = new Plug[6];
 
   @Override
   public Node node() {
@@ -97,8 +104,11 @@ public class Microcontroller extends BlockEntity implements PowerAcceptor, Hub, 
     return worldPosition.getZ() + 0.5;
   }
 
+  private volatile boolean isChangeScheduled = false;
+
   @Override
   public void markChanged() {
+    isChangeScheduled = true;
   }
 
   @Override
@@ -108,10 +118,6 @@ public class Microcontroller extends BlockEntity implements PowerAcceptor, Hub, 
 
   @Override
   public void onConnect(Node node) {
-  }
-
-  @Override
-  public void onDisconnect(Node node) {
   }
 
   @Override
@@ -133,15 +139,11 @@ public class Microcontroller extends BlockEntity implements PowerAcceptor, Hub, 
   }
 
   @Override
-  public Object result(Object... args) {
-    return li.cil.oc.core.util.ResultWrapper.result(args);
-  }
-
-  @Override
   public void initialize() {
     super.initialize();
     if (isServer() && getLevel() != null) {
       EventHandlerDelegate.get().scheduleServer(this);
+      EventHandlerDelegate.get().scheduleServer(this::checkRedstoneInputChanged);
       if (pendingMachineNbt != null) {
         Machine m = machine();
         if (m != null) {
@@ -211,7 +213,111 @@ public class Microcontroller extends BlockEntity implements PowerAcceptor, Hub, 
 
   @Override
   public Hub.Plug createPlug(Direction side) {
-    return null;
+    return new Hub.Plug() {
+      private final Node plugNode = createNode(this);
+      private final Direction plugSide = side;
+
+      @Override
+      public Direction side() {
+        return plugSide;
+      }
+
+      @Override
+      public Node node() {
+        return plugNode;
+      }
+
+      @Override
+      public boolean isPrimary() {
+        for (var other : plugs) {
+          if (other != null && other.node() != null && other.node().network() == plugNode.network()) {
+            return other == this;
+          }
+        }
+        return false;
+      }
+
+      @Override
+      public List<Hub.Plug> plugsInOtherNetworks() {
+        var result = new ArrayList<Hub.Plug>();
+        for (var other : plugs) {
+          if (other != null && other != this && other.node() != null && other.node().network() != plugNode.network()) {
+            result.add(other);
+          }
+        }
+        return result;
+      }
+
+      @Override
+      public boolean isConnected() {
+        return plugNode != null && plugNode.address() != null && plugNode.network() != null;
+      }
+
+      @Override
+      public void initialize() {
+      }
+
+      @Override
+      public void dispose() {
+      }
+
+      @Override
+      public void readFromNBTForServer(CompoundTag nbt) {
+      }
+
+      @Override
+      public void writeToNBTForServer(CompoundTag nbt) {
+      }
+
+      @Override
+      public void readFromNBTForClient(CompoundTag nbt) {
+      }
+
+      @Override
+      public void writeToNBTForClient(CompoundTag nbt) {
+      }
+
+      @Override
+      public Level level() {
+        return getLevel();
+      }
+
+      @Override
+      public double xPosition() {
+        return worldPosition.getX() + 0.5;
+      }
+
+      @Override
+      public double yPosition() {
+        return worldPosition.getY() + 0.5;
+      }
+
+      @Override
+      public double zPosition() {
+        return worldPosition.getZ() + 0.5;
+      }
+
+      @Override
+      public void markChanged() {
+      }
+
+      @Override
+      public void onConnect(Node node) {
+        onPlugConnect(this, node);
+      }
+
+      @Override
+      public void onDisconnect(Node node) {
+        onPlugDisconnect(this, node);
+      }
+
+      @Override
+      public void onMessage(Message message) {
+        if (isPrimary()) {
+          onPlugMessage(this, message);
+        }
+      }
+    };
   }
 
   @Override
@@ -230,12 +336,14 @@ public class Microcontroller extends BlockEntity implements PowerAcceptor, Hub, 
 
   @Override
   public boolean canConnect(Direction side) {
-    return false;
+    return side != facing();
   }
 
   @Override
   public Node sidedNode(Direction side) {
-    return null;
+    if (side == facing()) return null;
+    var plug = plugs[side.ordinal()];
+    return plug != null ? plug.node() : null;
   }
 
   protected boolean hasConnector(Direction side) {
@@ -308,10 +416,6 @@ public class Microcontroller extends BlockEntity implements PowerAcceptor, Hub, 
   }
 
   @Override
-  public void checkRedstoneInputChanged() {
-  }
-
-  @Override
   public boolean isUseableByPlayer(net.minecraft.world.entity.player.Player player) {
     return false;
   }
@@ -319,6 +423,171 @@ public class Microcontroller extends BlockEntity implements PowerAcceptor, Hub, 
   @Override
   public void markDirty() {
     setChanged();
+    if (isServer()) {
+      setOutputEnabled(hasRedstoneCard());
+    }
+  }
+
+  private final int[] _input = new int[]{-1, -1, -1, -1, -1, -1};
+  private final int[] _output = new int[6];
+  private final int[][] _bundledInput = new int[6][16];
+  private final int[][] _bundledOutput = new int[6][16];
+  private boolean _isOutputEnabled = false;
+
+  @Override
+  public boolean isOutputEnabled() {
+    return _isOutputEnabled;
+  }
+
+  @Override
+  public void setOutputEnabled(boolean value) {
+    if (value != _isOutputEnabled) {
+      _isOutputEnabled = value;
+      if (!value) {
+        java.util.Arrays.fill(_output, 0);
+      }
+      onRedstoneOutputEnabledChanged();
+    }
+  }
+
+  @Override
+  public int[] input() {
+    return _input;
+  }
+
+  @Override
+  public int getInput(Direction side) {
+    return Math.max(_input[side.ordinal()], 0);
+  }
+
+  @Override
+  public void setInput(Direction side, int value) {
+    var ord = side.ordinal();
+    var old = _input[ord];
+    _input[ord] = value;
+    if (old >= 0 && old != value) {
+      onRedstoneInputChanged(ord, old, value);
+    }
+  }
+
+  @Override
+  public void setInput(int[] values) {
+    for (var side : Direction.values()) {
+      int value = side.ordinal() < values.length ? values[side.ordinal()] : 0;
+      setInput(side, value);
+    }
+  }
+
+  @Override
+  public int maxInput() {
+    int max = 0;
+    for (int v : _input) max = Math.max(max, Math.max(v, 0));
+    return max;
+  }
+
+  @Override
+  public int[] output() {
+    var result = new int[Direction.values().length];
+    for (var side : Direction.values()) {
+      result[side.ordinal()] = _output[toLocal(side).ordinal()];
+    }
+    return result;
+  }
+
+  @Override
+  public int[] outputLocal() {
+    return _output;
+  }
+
+  @Override
+  public int getOutput(Direction side) {
+    return _output[toLocal(side).ordinal()];
+  }
+
+  @Override
+  public void setOutput(Direction side, int value) {
+    var ord = toLocal(side).ordinal();
+    if (_output[ord] != value) {
+      _output[ord] = value;
+      onRedstoneOutputChanged(side);
+    }
+  }
+
+  @Override
+  public int[][] bundledInput() {
+    return _bundledInput;
+  }
+
+  @Override
+  public int[][] bundledOutput() {
+    return _bundledOutput;
+  }
+
+  @Override
+  public int getBundledInput(Direction side, int color) {
+    return Math.max(_bundledInput[side.ordinal()][color], 0);
+  }
+
+  @Override
+  public void setBundledInput(Direction side, int color, int value) {
+    updateInput(bundledInput(), side, color, Math.max(value, 0));
+  }
+
+  @Override
+  public void setBundledInput(Direction side, int[] values) {
+    for (int color = 0; color < 16; color++) {
+      setBundledInput(side, color, (values != null && color < values.length) ? values[color] : 0);
+    }
+  }
+
+  @Override
+  public int[] getBundledOutput(Direction side) {
+    return _bundledOutput[toLocal(side).ordinal()];
+  }
+
+  @Override
+  public int getBundledOutput(Direction side, int color) {
+    return _bundledOutput[toLocal(side).ordinal()][color];
+  }
+
+  @Override
+  public void setBundledOutput(Direction side, int color, int value) {
+    var ord = toLocal(side).ordinal();
+    var old = _bundledOutput[ord][color];
+    if (old != value) {
+      _bundledOutput[ord][color] = value;
+      onRedstoneOutputChanged(side);
+    }
+  }
+
+  @Override
+  public void updateRedstoneInput(Direction side) {
+    var oldValue = _input[side.ordinal()];
+    var newValue = li.cil.oc.core.impl.integration.util.BundledRedstone.computeInput(
+      li.cil.oc.core.impl.util.BlockPosition.apply(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), getLevel()), side);
+    if (oldValue != newValue) {
+      _input[side.ordinal()] = newValue;
+      onRedstoneInputChanged(side.ordinal(), oldValue, newValue);
+    }
+    setBundledInput(side, li.cil.oc.core.impl.integration.util.BundledRedstone.computeBundledInput(
+      li.cil.oc.core.impl.util.BlockPosition.apply(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), getLevel()), side));
+  }
+
+  @Override
+  public void onRedstoneOutputChanged(Direction side) {
+    if (getLevel() != null && !getLevel().isClientSide()) {
+      getLevel().updateNeighborsAt(getBlockPos(), getBlockState().getBlock());
+    }
+    syncRedstoneState();
+  }
+
+  @Override
+  public void checkRedstoneInputChanged() {
+    if (getLevel() != null && !getLevel().isClientSide) {
+      for (Direction side : Direction.values()) {
+        updateRedstoneInput(side);
+      }
+    }
   }
 
   @Override
@@ -392,7 +661,11 @@ public class Microcontroller extends BlockEntity implements PowerAcceptor, Hub, 
   @Override
   public void updateEntity() {
     super.updateEntity();
-    if (level().getGameTime() % OCSettings.get().tickFrequency == 0) {
+    if (isChangeScheduled) {
+      isChangeScheduled = false;
+      setChanged();
+    }
+    if (isServer() && level().getGameTime() % OCSettings.get().tickFrequency == 0) {
       for (var side : Direction.values()) {
         if (side != facing()) {
           if (sidedNode(side) instanceof Connector connector) {
@@ -453,16 +726,22 @@ public class Microcontroller extends BlockEntity implements PowerAcceptor, Hub, 
   }
 
   @Override
-  public void onPlugMessage(Plug ignoredPlug, Message ignoredMessage) {
+  public void onPlugMessage(Plug plug, Message message) {
+    if ("network.message".equals(message.name()) && message.source().network() != snooperNode.network()) {
+      snooperNode.sendToReachable(message.name(), message.data());
+    }
   }
 
   @Override
   public void readFromNBTForServer(CompoundTag nbt) {
     var provider = getEffectiveProvider();
     if (provider != null) info.load(nbt.getCompound(OCSettings.namespace + "info"), provider);
-    var outputsBytes = nbt.getByteArray(OCSettings.namespace + "outputs");
-    for (int i = 0; i < Math.min(outputsBytes.length, outputSides.length); i++)
-      outputSides[i] = outputsBytes[i] != 0;
+    var plugList = nbt.getList(OCSettings.namespace + "plugs", Tag.TAG_COMPOUND);
+    for (int i = 0; i < Math.min(plugList.size(), plugs.length); i++) {
+      if (plugs[i] != null && plugs[i].node() != null && provider != null) {
+        plugs[i].node().load(plugList.getCompound(i), provider);
+      }
+    }
     var tagList = nbt.getList(OCSettings.namespace + "componentNodes", Tag.TAG_COMPOUND);
     for (int i = 0; i < Math.min(tagList.size(), componentNodes.length); i++)
       if (provider != null) componentNodes[i].load(tagList.getCompound(i), provider);
@@ -493,6 +772,15 @@ public class Microcontroller extends BlockEntity implements PowerAcceptor, Hub, 
       tagList.add(tag);
     }
     nbt.put(OCSettings.namespace + "componentNodes", tagList);
+    var plugList = new ListTag();
+    for (var plug : plugs) {
+      var tag = new CompoundTag();
+      if (plug != null && plug.node() != null) {
+        plug.node().save(tag, getEffectiveProvider());
+      }
+      plugList.add(tag);
+    }
+    nbt.put(OCSettings.namespace + "plugs", plugList);
     ExtendedNBT.setNewCompoundTag(nbt, OCSettings.namespace + "snooper", t -> snooperNode.save(t, getEffectiveProvider()));
   }
 
@@ -671,22 +959,15 @@ public class Microcontroller extends BlockEntity implements PowerAcceptor, Hub, 
   }
 
   @Override
-  public ItemStack[] pendingRemovals() {
-    return null;
-  }
-
-  @Override
-  public ItemStack[] pendingAdds() {
-    return null;
-  }
-
-  @Override
   public boolean isComponentSlot(int slot, ItemStack stack) {
-    return false;
+    return true;
   }
 
   @Override
   public boolean canInteract(String player) {
+    if (isServer() && machine() != null) {
+      return machine().canInteract(player);
+    }
     if (player == null) return false;
     if (!OCSettings.get().canComputersBeOwned) return true;
     if (users().isEmpty()) return true;
@@ -695,6 +976,16 @@ public class Microcontroller extends BlockEntity implements PowerAcceptor, Hub, 
 
   @Override
   public boolean hasRedstoneCard() {
+    if (machine() != null && !machine().isRunning()) return false;
+    for (int i = 0; i < getContainerSize(); i++) {
+      var stack = getItem(i);
+      if (!stack.isEmpty()) {
+        var driver = li.cil.oc.api.API.driver.driverFor(stack, getClass());
+        if (driver != null && li.cil.oc.core.impl.util.ComponentDriverHelper.isRedstoneCard(driver)) {
+          return true;
+        }
+      }
+    }
     return false;
   }
 
@@ -710,7 +1001,8 @@ public class Microcontroller extends BlockEntity implements PowerAcceptor, Hub, 
   @Override
   public ItemStack getStackInSlot(int slot) {
     if (slot >= 0 && slot < getSizeInventory()) {
-      return info.components.get(slot);
+      ItemStack stack = info.components.get(slot);
+      return stack == null ? ItemStack.EMPTY : stack;
     }
     return ItemStack.EMPTY;
   }
@@ -738,6 +1030,11 @@ public class Microcontroller extends BlockEntity implements PowerAcceptor, Hub, 
   public void dispose() {
     super.dispose();
     if (isServer()) {
+      for (var plug : plugs) {
+        if (plug != null && plug.node() != null) {
+          plug.node().remove();
+        }
+      }
       for (var componentNode : componentNodes) {
         if (componentNode != null) componentNode.remove();
       }
@@ -746,7 +1043,7 @@ public class Microcontroller extends BlockEntity implements PowerAcceptor, Hub, 
     Machine m = machine();
     if (m != null) {
       if (isServer() && m.node() != null) m.node().remove();
-      EventHandlerDelegate.get().scheduleServer(m::stop);
+      m.stop();
     }
   }
 }

@@ -3,6 +3,7 @@ package li.cil.oc.core.impl.util;
 import java.util.HashMap;
 import java.util.Map;
 import li.cil.oc.core.impl.IDyeColorProvider;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 
 public final class Color {
@@ -31,6 +32,7 @@ public final class Color {
   };
 
   public static final Map<String, Integer> byOreName = new HashMap<>();
+  public static final Map<String, Integer> dyeRgbByOreName = new HashMap<>();
   public static final int[] byTier = {LightGray, Yellow, Cyan, Magenta};
 
   static {
@@ -50,13 +52,26 @@ public final class Color {
     byOreName.put("dyeMagenta", Magenta);
     byOreName.put("dyeOrange", Orange);
     byOreName.put("dyeWhite", White);
+
+    dyeRgbByOreName.put("dyeBlack", 0x1D1D21);
+    dyeRgbByOreName.put("dyeRed", 0xB02E26);
+    dyeRgbByOreName.put("dyeGreen", 0x5E7C16);
+    dyeRgbByOreName.put("dyeBrown", 0x835432);
+    dyeRgbByOreName.put("dyeBlue", 0x3C44AA);
+    dyeRgbByOreName.put("dyePurple", 0x892AB8);
+    dyeRgbByOreName.put("dyeCyan", 0x169C9C);
+    dyeRgbByOreName.put("dyeLightGray", 0x9D9D97);
+    dyeRgbByOreName.put("dyeGray", 0x474F52);
+    dyeRgbByOreName.put("dyePink", 0xF38BAA);
+    dyeRgbByOreName.put("dyeLime", 0x80C71F);
+    dyeRgbByOreName.put("dyeYellow", 0xFED83D);
+    dyeRgbByOreName.put("dyeLightBlue", 0x3AB3DA);
+    dyeRgbByOreName.put("dyeMagenta", 0xC74EBD);
+    dyeRgbByOreName.put("dyeOrange", 0xF9801D);
+    dyeRgbByOreName.put("dyeWhite", 0xF9FFFE);
   }
 
-  private static IDyeColorProvider provider = li.cil.oc.core.impl.DyeColorProvider.INSTANCE;
-
-  public static void setProvider(IDyeColorProvider p) {
-    provider = p;
-  }
+  private static final IDyeColorProvider provider = li.cil.oc.core.impl.DyeColorProvider.INSTANCE;
 
   public static int byMeta(int meta) {
     return byOreName.get(dyes[15 - meta]);
@@ -74,5 +89,14 @@ public final class Color {
   public static int dyeColor(ItemStack stack) {
     String name = findDye(stack);
     return name != null ? byOreName.get(name) : 0xFF00FF;
+  }
+
+  public static int dyeRgb(String oreName) {
+    Integer value = dyeRgbByOreName.get(oreName);
+    return value != null ? value : 0xFF00FF;
+  }
+
+  public static int dyeRgb(DyeColor color) {
+    return dyeRgb(dyes[15 - color.getId()]);
   }
 }

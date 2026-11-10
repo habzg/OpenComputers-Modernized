@@ -41,7 +41,7 @@ public interface WakeMessageAware extends NetworkAware {
   }
 
   default void receivePacket(Packet packet, double distance, EnvironmentHost host) {
-    if (packet.source() != null && !packet.source().equals(node().address()) &&
+    if (!java.util.Objects.equals(packet.source(), node().address()) &&
       (packet.destination() == null || packet.destination().equals(node().address()))) {
       if (isPacketAccepted(packet, distance)) {
         Object[] data = new Object[4 + packet.data().length];

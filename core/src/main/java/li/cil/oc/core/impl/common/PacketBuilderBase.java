@@ -87,7 +87,7 @@ public abstract class PacketBuilderBase<T extends OutputStream> extends DataOutp
   public void writeBlockEntity(BlockEntity t) {
     try {
       var level = t.getLevel();
-      writeInt(level != null ? level.dimension().location().hashCode() : 0);
+      writeUTF(level != null ? level.dimension().location().toString() : "");
       writeInt(t.getBlockPos().getX());
       writeInt(t.getBlockPos().getY());
       writeInt(t.getBlockPos().getZ());
@@ -113,7 +113,7 @@ public abstract class PacketBuilderBase<T extends OutputStream> extends DataOutp
 
   public void writeEntity(Entity e) {
     try {
-      writeInt(e.level().dimension().location().hashCode());
+      writeUTF(e.level().dimension().location().toString());
       writeInt(e.getId());
     } catch (IOException ex) {
       throw new RuntimeException(ex);

@@ -349,7 +349,7 @@ public abstract class PacketSender {
     if (count <= 0) return;
     try (PacketBuilderBase<?> pb = createBuilder(PacketType.ParticleEffect)) {
       try {
-        pb.writeInt(position.level().dimension().location().hashCode());
+        pb.writeUTF(position.level().dimension().location().toString());
         pb.writeInt(position.x());
         pb.writeInt(position.y());
         pb.writeInt(position.z());
@@ -470,7 +470,7 @@ public abstract class PacketSender {
     try (PacketBuilderBase<?> pb = createBuilder(PacketType.Sound)) {
       try {
         BlockPosition blockPos = new BlockPosition(x, y, z);
-        pb.writeInt(world.dimension().location().hashCode());
+        pb.writeUTF(world.dimension().location().toString());
         pb.writeInt(blockPos.x());
         pb.writeInt(blockPos.y());
         pb.writeInt(blockPos.z());
@@ -491,7 +491,7 @@ public abstract class PacketSender {
     try (PacketBuilderBase<?> pb = createBuilder(PacketType.SoundPattern)) {
       try {
         BlockPosition blockPos = new BlockPosition(x, y, z);
-        pb.writeInt(world.dimension().location().hashCode());
+        pb.writeUTF(world.dimension().location().toString());
         pb.writeInt(blockPos.x());
         pb.writeInt(blockPos.y());
         pb.writeInt(blockPos.z());

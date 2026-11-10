@@ -31,18 +31,18 @@ public class OCProbeEntityProvider implements IProbeInfoEntityProvider, IEntityD
       ItemStack icon = new ItemStack(li.cil.oc.neoforge.common.init.Items.DRONE.get()).copy();
       String ocName = drone.name();
       net.minecraft.world.item.Rarity rarity = li.cil.oc.core.impl.util.Rarity.byTier(drone.tier());
+      net.minecraft.network.chat.MutableComponent label = Component.empty().append(
+        ocName.isEmpty() ? icon.getHoverName() : net.minecraft.network.chat.Component.literal(ocName));
+      if (rarity != net.minecraft.world.item.Rarity.COMMON) {
+        label = label.withStyle(rarity.getStyleModifier());
+      }
       if (!ocName.isEmpty() || rarity != net.minecraft.world.item.Rarity.COMMON) {
-        net.minecraft.network.chat.MutableComponent label = Component.empty().append(
-          ocName.isEmpty() ? icon.getHoverName() : net.minecraft.network.chat.Component.literal(ocName));
-        if (rarity != net.minecraft.world.item.Rarity.COMMON) {
-          label = label.withStyle(rarity.getStyleModifier());
-        }
         icon.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, label);
       }
       probeInfo.horizontal()
         .item(icon)
         .vertical()
-        .itemLabel(icon)
+        .mcText(label)
         .text(CompoundText.create().style(TextStyleClass.MODNAME).text("OpenComputers"));
       return true;
     }

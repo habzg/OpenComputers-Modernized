@@ -8,7 +8,6 @@ import li.cil.oc.api.prefab.DriverSidedBlockEntity;
 import li.cil.oc.core.impl.integration.ManagedBlockEntityEnvironment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.capabilities.Capabilities;
@@ -46,15 +45,15 @@ public final class DriverFluidHandler extends DriverSidedBlockEntity {
 
     @Callback(doc = "function():table -- Get some information about the tank accessible from the specified side.")
     public Object[] getTankInfo(final Context context, final Arguments args) {
-      var tankInfo = new java.util.ArrayList<java.util.Map<String, Object>>();
+      var tankInfo = new java.util.ArrayList<java.util.Map<Object, Object>>();
       int tanks = getBlockEntity().getTanks();
       for (int i = 0; i < tanks; i++) {
-        var info = new java.util.HashMap<String, Object>();
+        java.util.Map<Object, Object> info = new java.util.HashMap<>();
         var fluidStack = getBlockEntity().getFluidInTank(i);
-        info.put("amount", fluidStack.getAmount());
         if (!fluidStack.isEmpty()) {
-          info.put("fluid", BuiltInRegistries.FLUID.getKey(fluidStack.getFluid()).toString());
-          info.put("name", fluidStack.getFluid().getFluidType().getDescription().getString());
+          new ConverterFluidStack().convert(fluidStack, info);
+        } else {
+          info.put("amount", 0);
         }
         info.put("capacity", getBlockEntity().getTankCapacity(i));
         tankInfo.add(info);

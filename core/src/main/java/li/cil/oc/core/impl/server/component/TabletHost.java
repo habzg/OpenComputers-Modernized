@@ -10,7 +10,6 @@ import net.minecraft.world.item.component.CustomData;
 import org.jetbrains.annotations.NotNull;
 
 public class TabletHost extends TabletHostBase {
-  public final ItemStack stack;
   public Player player;
   private final ItemStack[] mirror;
 
@@ -18,7 +17,7 @@ public class TabletHost extends TabletHostBase {
     var data = new TabletData(stack);
     this.stack = stack;
     this.player = player;
-    this.mirror = new ItemStack[data.items.size()];
+    this.mirror = li.cil.oc.core.impl.common.inventory.Inventory.filledItems(data.items.size());
     for (int i = 0; i < data.items.size(); i++) {
       mirror[i] = data.items.get(i);
     }
@@ -33,11 +32,6 @@ public class TabletHost extends TabletHostBase {
   @Override
   public Player player() {
     return player;
-  }
-
-  @Override
-  public @NotNull ItemStack getStack() {
-    return stack;
   }
 
   @Override
@@ -67,6 +61,7 @@ public class TabletHost extends TabletHostBase {
     for (int i = 0; i < mirror.length; i++) {
       data.items.set(i, (mirror[i] == null || mirror[i].isEmpty()) ? null : mirror[i]);
     }
+    applyLiveState(data);
     data.save(stack);
   }
 

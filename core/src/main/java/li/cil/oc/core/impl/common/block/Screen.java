@@ -71,7 +71,9 @@ public class Screen extends RedstoneAware {
     super.setPlacedBy(world, pos, state, placer, stack);
     BlockEntity te = world.getBlockEntity(pos);
     if (te instanceof li.cil.oc.core.impl.common.blockentity.Screen screen) {
-      screen.setFromEntityPitchAndYaw(placer);
+      if (placer != null) {
+        screen.setFromEntityPitchAndYaw(placer);
+      }
       screen.invertRotation();
       screen.delayUntilCheckForMultiBlock = 0;
     }
@@ -120,7 +122,7 @@ public class Screen extends RedstoneAware {
       }
       if (screen.tier > 0 && side == screen.facing()) {
         if (world.isClientSide) {
-          screen.click(hitX, hitY, hitZ);
+          return screen.click(hitX, hitY, hitZ);
         }
         return true;
       }

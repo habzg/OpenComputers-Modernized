@@ -32,11 +32,26 @@ public final class HoverBootsHandler {
         var nbt = PlayerUtils.persistedData(player);
         boolean hadHoverBoots = nbt.getBoolean(OCSettings.namespace + "hasHoverBoots");
         boolean hasHoverBoots = false;
+        boolean canJump = false;
+
+        boolean wasOnGround = nbt.getBoolean(OCSettings.namespace + "onGround");
+        boolean onGround = player.onGround();
+        if (wasOnGround != onGround) {
+          nbt.putBoolean(OCSettings.namespace + "onGround", onGround);
+        }
+        if (wasOnGround && !onGround && player.getDeltaMovement().y > 0 && !player.isShiftKeyDown()) {
+          var jumpedBoots = findHoverBoots(player);
+          if (jumpedBoots != null) {
+            HoverBoots boots = (HoverBoots) jumpedBoots.getItem();
+            boots.chargeJump(jumpedBoots, player);
+          }
+        }
 
         if (!player.isShiftKeyDown()) {
           var bootsStack = findHoverBoots(player);
           if (bootsStack != null) {
             HoverBoots boots = (HoverBoots) bootsStack.getItem();
+            canJump = boots.canAffordJump(bootsStack, player);
             if (!OCSettings.get().ignorePower) {
               if (player.onGround() && !player.getAbilities().instabuild
                 && player.level().getGameTime() % OCSettings.get().tickFrequency == 0) {
@@ -57,7 +72,7 @@ public final class HoverBootsHandler {
         }
 
         if (hasHoverBoots) {
-          if (player.onGround()) {
+          if (player.onGround() && canJump) {
             player.addEffect(new MobEffectInstance(MobEffects.JUMP, 100, 3, false, false, true));
           } else {
             var jumpBoost = player.getEffect(MobEffects.JUMP);

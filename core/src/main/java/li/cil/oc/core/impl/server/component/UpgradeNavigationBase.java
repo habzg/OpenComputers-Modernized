@@ -18,6 +18,7 @@ import li.cil.oc.core.common.Tier;
 import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.item.data.NavigationUpgradeData;
 import li.cil.oc.core.impl.util.BlockPosition;
+import li.cil.oc.core.impl.util.SubLevelHelper;
 import li.cil.oc.core.util.ResultWrapper;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -40,11 +41,13 @@ public abstract class UpgradeNavigationBase extends AbstractManagedEnvironment i
 
   public UpgradeNavigationBase(EnvironmentHost host) {
     this.host = host;
-    deviceInfo.put(DeviceAttribute.Capacity, String.valueOf(data.getSize(host.level())));
   }
 
   @Override
   public Map<String, String> getDeviceInfo() {
+    if (host.level() != null) {
+      deviceInfo.put(DeviceAttribute.Capacity, String.valueOf(data.getSize(host.level())));
+    }
     return deviceInfo;
   }
 
@@ -56,11 +59,13 @@ public abstract class UpgradeNavigationBase extends AbstractManagedEnvironment i
   public Object[] getPosition(Context context, Arguments args) {
     NavigationUpgradeData.MapData info = data.mapData(host.level());
     int size = data.getSize(host.level());
-    double relativeX = host.xPosition() - info.xCenter();
-    double relativeZ = host.zPosition() - info.zCenter();
+    Vec3 position = SubLevelHelper.projectOut(host.level(), new Vec3(host.xPosition(), host.yPosition(), host.zPosition()));
+    Vec3 center = SubLevelHelper.projectOut(host.level(), new Vec3(info.xCenter(), position.y, info.zCenter()));
+    double relativeX = position.x - center.x;
+    double relativeZ = position.z - center.z;
 
     if (Math.abs(relativeX) <= (double) size / 2 && Math.abs(relativeZ) <= (double) size / 2)
-      return ResultWrapper.result(relativeX, host.yPosition(), relativeZ);
+      return ResultWrapper.result(relativeX, position.y, relativeZ);
     else
       return ResultWrapper.result(null, "out of range");
   }
@@ -81,23 +86,25 @@ public abstract class UpgradeNavigationBase extends AbstractManagedEnvironment i
   @Callback(doc = "function(range:number):table -- Find waypoints in the specified range.")
   public Object[] findWaypoints(Context context, Arguments args) {
     double range = Math.clamp(args.checkDouble(0), 0, OCSettings.get().maxWirelessRange[Tier.Two]);
-    if (range <= 0) return ResultWrapper.result();
+    if (range <= 0) return ResultWrapper.result((Object) new Object[0]);
     if (!consumeEnergy(range * OCSettings.get().wirelessCostPerRange[Tier.Two] * 0.25))
       return ResultWrapper.result(null, "not enough energy");
     context.pause(0.5);
     BlockPosition position = BlockPosition.apply(host);
     Vec3 positionVec = position.toVec3();
+    Vec3 placementVec = SubLevelHelper.projectOut(host.level(), positionVec);
     List<WaypointInfo> waypoints = queryWaypoints(position, range);
+    if (!placementVec.equals(positionVec)) {
+      waypoints.addAll(queryWaypoints(new BlockPosition(placementVec.x, placementVec.y, placementVec.z, host.level()), range));
+    }
+    for (Vec3 storageCenter : SubLevelHelper.storageCenters(host.level(), placementVec, range)) {
+      waypoints.addAll(queryWaypoints(new BlockPosition(storageCenter.x, storageCenter.y, storageCenter.z, host.level()), range));
+    }
     Object[] waypointsArray = waypoints.stream()
-      .filter(waypoint -> new Vec3(waypoint.position().x(), waypoint.position().y(), waypoint.position().z())
-        .distanceTo(positionVec) <= range)
+      .filter(waypoint -> SubLevelHelper.projectOut(host.level(), waypoint.position().toVec3()).distanceTo(placementVec) <= range)
       .map(waypoint -> {
-        Vec3 waypointPos = waypoint.position().offset(waypoint.facing()).toVec3();
-        Vec3 delta = new Vec3(
-          waypointPos.x - positionVec.x,
-          waypointPos.y - positionVec.y,
-          waypointPos.z - positionVec.z
-        );
+        Vec3 waypointPos = SubLevelHelper.projectOut(host.level(), waypoint.position().offset(waypoint.facing()).toVec3());
+        Vec3 delta = waypointPos.subtract(placementVec);
         Map<String, Object> map = new HashMap<>();
         map.put("position", new double[]{delta.x, delta.y, delta.z});
         map.put("redstone", waypoint.maxInput());
@@ -106,7 +113,7 @@ public abstract class UpgradeNavigationBase extends AbstractManagedEnvironment i
         return map;
       })
       .toArray();
-    return ResultWrapper.result(waypointsArray);
+    return ResultWrapper.result((Object) waypointsArray);
   }
 
   @Override
@@ -117,10 +124,11 @@ public abstract class UpgradeNavigationBase extends AbstractManagedEnvironment i
         Object[] data = message.data();
         CompoundTag nbt = (CompoundTag) data[0];
         BlockPosition blockPos = (BlockPosition) data[3];
+        Vec3 tapped = SubLevelHelper.projectOut(host.level(), blockPos.toVec3());
         NavigationUpgradeData.MapData info = this.data.mapData(host.level());
-        nbt.putInt("posX", blockPos.x() - info.xCenter());
-        nbt.putInt("posY", blockPos.y());
-        nbt.putInt("posZ", blockPos.z() - info.zCenter());
+        nbt.putInt("posX", (int) tapped.x - info.xCenter());
+        nbt.putInt("posY", (int) tapped.y);
+        nbt.putInt("posZ", (int) tapped.z - info.zCenter());
       }
     }
   }

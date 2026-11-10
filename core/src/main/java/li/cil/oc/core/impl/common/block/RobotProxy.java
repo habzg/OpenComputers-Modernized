@@ -161,6 +161,19 @@ public abstract class RobotProxy extends RedstoneAware implements GUI, StateAwar
 
   @Override
   protected void onDropInventory(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos) {
+    if (!level.isClientSide && li.cil.oc.core.impl.common.blockentity.RobotBase.movingRobot.get() == null) {
+      var te = level.getBlockEntity(pos);
+      if (te instanceof li.cil.oc.core.impl.common.blockentity.RobotProxy proxy) {
+        var robot = proxy.robot;
+        if (robot.node != null && !proxy.itemDropped) {
+          robot.node.remove();
+          robot.saveComponents(level.registryAccess());
+          Block.popResource(level, pos, robot.info.createItemStack());
+          robot.dropInventorySlots();
+        }
+        robot.disconnectComponents();
+      }
+    }
   }
 
   @Override

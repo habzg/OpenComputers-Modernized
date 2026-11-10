@@ -66,12 +66,11 @@ public interface RedstoneWireless extends DeviceInfo {
       if (WirelessRedstone.cannotHandleFrequency(newValue, getEnabledProviders())) {
         return ResultWrapper.result(null, "none of the available providers can handle the requested frequency");
       }
-      setWirelessOutputValue(false);
-      setWirelessInputValue(false);
-      WirelessRedstone.updateOutput(this);
       WirelessRedstone.removeReceiver(this);
       WirelessRedstone.removeTransmitter(this);
       setWirelessFrequencyValue(newValue);
+      setWirelessInputValue(false);
+      setWirelessOutputValue(false);
       WirelessRedstone.addReceiver(this);
       context.pause(0.5);
     }

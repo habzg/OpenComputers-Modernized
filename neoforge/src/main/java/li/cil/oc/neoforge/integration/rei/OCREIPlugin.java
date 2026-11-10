@@ -13,6 +13,9 @@ import li.cil.oc.api.Manual;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.LootManager;
+import li.cil.oc.core.impl.common.recipe.ColorizeRecipe;
+import li.cil.oc.core.impl.common.recipe.ColorizeVariants;
+import li.cil.oc.core.impl.common.recipe.DecolorizeRecipe;
 import li.cil.oc.core.impl.integration.util.Wrench;
 import li.cil.oc.core.server.machine.CallbackWrapper;
 import li.cil.oc.core.server.machine.Callbacks;
@@ -46,6 +49,8 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.RecipeType;
 
 @REIPluginClient
 @SuppressWarnings("unused")
@@ -122,9 +127,12 @@ public class OCREIPlugin implements REIClientPlugin {
     registry.add(new ManualCategory());
   }
 
+  @SuppressWarnings("UnstableApiUsage")
   @Override
   public void registerDisplays(DisplayRegistry registry) {
     registry.registerGlobalDisplayGenerator(new OCDisplayGenerator());
+    registry.registerRecipesFiller(ColorizeRecipe.class, RecipeType.CRAFTING, OCREIPlugin::colorizeDisplays);
+    registry.registerRecipesFiller(DecolorizeRecipe.class, RecipeType.CRAFTING, OCREIPlugin::decolorizeDisplays);
     registry.registerVisibilityPredicate((category, display) -> {
       var location = display.getDisplayLocation();
       if (location.isPresent() && location.get().equals(ResourceLocation.fromNamespaceAndPath("opencomputers", "loot_disk_cycling"))) {
@@ -137,6 +145,19 @@ public class OCREIPlugin implements REIClientPlugin {
   @Override
   public void registerScreens(ScreenRegistry registry) {
     registry.registerDraggableStackVisitor(new DatabaseDragHandler<>());
+    li.cil.oc.core.impl.client.gui.DynamicGuiContainer.addHoveredStackSupplier(() -> {
+      try {
+        return me.shedaniel.rei.api.client.REIRuntime.getInstance()
+          .getOverlay()
+          .map(overlay -> overlay.getEntryList().getFocusedStack())
+          .map(EntryStack::castValue)
+          .filter(value -> value instanceof net.minecraft.world.item.ItemStack)
+          .map(value -> (net.minecraft.world.item.ItemStack) value)
+          .orElse(net.minecraft.world.item.ItemStack.EMPTY);
+      } catch (Throwable t) {
+        return net.minecraft.world.item.ItemStack.EMPTY;
+      }
+    });
   }
 
   @Override
@@ -398,6 +419,26 @@ public class OCREIPlugin implements REIClientPlugin {
     return lines;
   }
 
+  private static List<ColorizeDisplay> colorizeDisplays(RecipeHolder<ColorizeRecipe> holder) {
+    return buildColorizeDisplays(holder.id(), ColorizeVariants.colorize(holder.value().targetItem));
+  }
+
+  private static List<ColorizeDisplay> decolorizeDisplays(RecipeHolder<DecolorizeRecipe> holder) {
+    return buildColorizeDisplays(holder.id(), ColorizeVariants.decolorize(holder.value().targetItem));
+  }
+
+  private static List<ColorizeDisplay> buildColorizeDisplays(ResourceLocation recipe, List<ColorizeVariants.Variant> variants) {
+    List<ColorizeDisplay> displays = new ArrayList<>();
+    for (int i = 0; i < variants.size(); i++) {
+      var variant = variants.get(i);
+      displays.add(new ColorizeDisplay(
+        ResourceLocation.fromNamespaceAndPath(recipe.getNamespace(), recipe.getPath() + "/" + i),
+        List.of(EntryIngredients.of(variant.input()), EntryIngredients.of(variant.dye())),
+        List.of(EntryIngredients.of(variant.output()))));
+    }
+    return displays;
+  }
+
   public static class CallbackDisplay implements Display {
     private final EntryIngredient input;
     private final String pageText;
@@ -459,6 +500,20 @@ public class OCREIPlugin implements REIClientPlugin {
   private static class LootDiskCyclingDisplay extends DefaultCustomShapelessDisplay {
     public LootDiskCyclingDisplay(List<EntryIngredient> inputs, List<EntryIngredient> outputs) {
       super(null, inputs, outputs);
+    }
+  }
+
+  public static class ColorizeDisplay extends DefaultCustomShapelessDisplay {
+    private final ResourceLocation location;
+
+    public ColorizeDisplay(ResourceLocation location, List<EntryIngredient> inputs, List<EntryIngredient> outputs) {
+      super(null, inputs, outputs);
+      this.location = location;
+    }
+
+    @Override
+    public Optional<ResourceLocation> getDisplayLocation() {
+      return Optional.of(location);
     }
   }
 

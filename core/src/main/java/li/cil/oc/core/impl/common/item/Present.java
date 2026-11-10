@@ -139,7 +139,7 @@ public class Present extends DelegateItem {
           SoundEvents.PLAYER_LEVELUP,
           net.minecraft.sounds.SoundSource.PLAYERS, 0.2f, 1f);
         var present = nextPresent();
-        InventoryUtils.addToPlayerInventory(present, player);
+        InventoryUtils.addToPlayerInventory(present, player, true);
       }
     }
     return InteractionResultHolder.consume(stack);

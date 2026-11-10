@@ -100,16 +100,7 @@ public class Capacitor extends BlockEntity implements Environment, DeviceInfo {
   }
 
   @Override
-  public void onDisconnect(Node node) {
-  }
-
-  @Override
   public void onMessage(li.cil.oc.api.network.Message ignoredMessage) {
-  }
-
-  @Override
-  public Object result(Object... args) {
-    return li.cil.oc.core.util.ResultWrapper.result(args);
   }
 
   @Override

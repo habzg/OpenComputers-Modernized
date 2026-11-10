@@ -97,6 +97,14 @@ public class Server extends DynamicGuiContainer<li.cil.oc.core.impl.common.conta
   }
 
   @Override
+  protected void slotClicked(net.minecraft.world.inventory.@NotNull Slot slot, int slotId, int mouseButton, net.minecraft.world.inventory.@NotNull ClickType clickType) {
+    if (shouldSuppressSlotAction(slot, clickType)) {
+      return;
+    }
+    super.slotClicked(slot, slotId, mouseButton, clickType);
+  }
+
+  @Override
   public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     if (keyCode == 81 && hoveredSlot != null && shouldSuppressClick(hoveredSlot)) {
       return true;

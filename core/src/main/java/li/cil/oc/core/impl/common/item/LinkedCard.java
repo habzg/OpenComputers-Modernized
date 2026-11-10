@@ -33,7 +33,7 @@ public class LinkedCard extends DelegateItem implements ItemTier {
         if (data.contains(OCSettings.namespace + "tunnel")) {
           String channel = data.getString(OCSettings.namespace + "tunnel");
           if (channel.length() > 13) {
-            tooltip.addAll(Tooltip.get(unlocalizedName() + "_Channel", channel.substring(0, 13) + "."));
+            tooltip.addAll(Tooltip.get(unlocalizedName() + "_Channel", channel.substring(0, 13) + "..."));
           } else {
             tooltip.addAll(Tooltip.get(unlocalizedName() + "_Channel", channel));
           }

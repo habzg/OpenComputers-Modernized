@@ -68,13 +68,12 @@ public class LinkedCard extends AbstractManagedEnvironment implements QuantumNet
   @Callback(doc = "function(data...) -- Sends the specified data to the card this one is linked to.")
   public Object[] send(Context context, Arguments args) {
     Collection<QuantumNetwork.QuantumNode> endpoints = QuantumNetwork.getEndpoints(tunnel);
-    endpoints.remove(this);
     Object[] data = new Object[args.count()];
     for (int i = 0; i < args.count(); i++) data[i] = args.checkAny(i);
     Packet packet = Network.newPacket(node.address(), null, 0, data);
     if (((Connector) node).tryChangeBuffer(-(packet.size() / 32.0 + OCSettings.get().wirelessCostPerRange[Tier.Two] * OCSettings.get().maxWirelessRange[Tier.Two] * 5))) {
       for (QuantumNetwork.QuantumNode endpoint : endpoints) {
-        endpoint.receivePacket(packet);
+        if (endpoint != this) endpoint.receivePacket(packet);
       }
       return ResultWrapper.result(true);
     }

@@ -66,7 +66,7 @@ public class FloppyDisk extends DelegateItem implements FileSystemLike {
       var data = tag.getCompound("oc:data");
       if (data.contains("node") && data.getCompound("node").contains("address")) {
         String addr = data.getCompound("node").getString("address");
-        tooltip.add(Component.literal("§8" + addr.substring(0, Math.min(13, addr.length())) + ".§7"));
+        tooltip.add(Component.literal("§8" + addr.substring(0, Math.min(13, addr.length())) + "...§7"));
       }
     }
   }

@@ -88,16 +88,7 @@ public class NetSplitter extends BlockEntity implements Environment, OpenSides, 
   }
 
   @Override
-  public void onDisconnect(Node node) {
-  }
-
-  @Override
   public void onMessage(li.cil.oc.api.network.Message message) {
-  }
-
-  @Override
-  public Object result(Object... args) {
-    return li.cil.oc.core.util.ResultWrapper.result(args);
   }
 
   @Override
@@ -148,10 +139,12 @@ public class NetSplitter extends BlockEntity implements Environment, OpenSides, 
         node.remove();
         li.cil.oc.api.Network.joinOrCreateNetwork(this);
         PacketSender.sendNetSplitterState(this, isInverted, compressSides());
-        level().playSeededSound(null, worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5,
-          net.minecraft.sounds.SoundEvents.PISTON_EXTEND, net.minecraft.sounds.SoundSource.BLOCKS,
-          0.5f, level().random.nextFloat() * 0.25f + 0.5f, level().random.nextLong());
-        level().updateNeighborsAt(worldPosition, block());
+        runOnServerThread(() -> {
+          level().playSeededSound(null, worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5,
+            net.minecraft.sounds.SoundEvents.PISTON_EXTEND, net.minecraft.sounds.SoundSource.BLOCKS,
+            0.5f, level().random.nextFloat() * 0.25f + 0.5f, level().random.nextLong());
+          level().updateNeighborsAt(worldPosition, block());
+        });
       } else {
         level().sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
       }

@@ -17,6 +17,7 @@ public final class ModIDs {
   public static final String Create = "create";
   public static final String EnderIO = "enderio";
   public static final String EnderStorage = "enderstorage";
+  public static final String ImmersiveEngineering = "immersiveengineering";
   public static final String CBMultipart = "cb_multipart";
   public static final String Mekanism = "mekanism";
   public static final String MoreRed = "morered";

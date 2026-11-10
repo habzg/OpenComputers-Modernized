@@ -117,32 +117,16 @@ public abstract class UpgradeChunkloaderBase extends AbstractManagedEnvironment 
   }
 
   private boolean isDimensionAllowed() {
-    int id = legacyDimensionId(host.level().dimension());
-    java.util.List<Integer> whitelist = OCSettings.get().chunkloadDimensionWhitelist;
-    java.util.List<Integer> blacklist = OCSettings.get().chunkloadDimensionBlacklist;
+    String dimension = host.level().dimension().location().toString();
+    java.util.List<String> whitelist = OCSettings.get().chunkloadDimensionWhitelist;
+    java.util.List<String> blacklist = OCSettings.get().chunkloadDimensionBlacklist;
     if (whitelist != null && !whitelist.isEmpty()) {
-      boolean found = false;
-      for (int w : whitelist) {
-        if (w == id) {
-          found = true;
-          break;
-        }
-      }
-      if (!found) return false;
+      if (!whitelist.contains(dimension)) return false;
     }
     if (blacklist != null) {
-      for (int b : blacklist) {
-        if (b == id) return false;
-      }
+      return !blacklist.contains(dimension);
     }
     return true;
-  }
-
-  private static int legacyDimensionId(net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dimension) {
-    if (dimension == net.minecraft.world.level.Level.OVERWORLD) return 0;
-    if (dimension == net.minecraft.world.level.Level.NETHER) return -1;
-    if (dimension == net.minecraft.world.level.Level.END) return 1;
-    return dimension.location().hashCode();
   }
 
   private boolean requestTicket(boolean throwIfBlocked) {

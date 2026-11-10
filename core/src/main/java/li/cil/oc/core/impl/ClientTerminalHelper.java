@@ -1,6 +1,5 @@
 package li.cil.oc.core.impl;
 
-import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.core.impl.client.gui.Screen;
 import li.cil.oc.core.impl.client.renderer.gui.BufferRenderer;
 import li.cil.oc.core.impl.common.component.TerminalServer;
@@ -36,13 +35,6 @@ public class ClientTerminalHelper {
       return;
     }
     var initialBuffer = terminal.buffer();
-    String bufferAddress = null;
-    if (initialBuffer instanceof li.cil.oc.core.impl.common.component.TextBufferBase base
-      && base.proxy != null && base.proxy.nodeAddress != null && !base.proxy.nodeAddress.isEmpty()) {
-      bufferAddress = base.proxy.nodeAddress;
-    }
-
-    final String lockedBufferAddress = bufferAddress;
     final TerminalServer lockedTerminal = terminal;
     final ItemStack lockedStack = stack;
     final String lockedKey = key;
@@ -68,18 +60,7 @@ public class ClientTerminalHelper {
         return false;
       }
       return true;
-    }) {
-      @Override
-      public TextBuffer buffer() {
-        var mc = Minecraft.getInstance();
-        var lvl = mc.level;
-        if (lvl != null && lockedBufferAddress != null) {
-          var found = li.cil.oc.core.impl.client.ClientComponentTracker.INSTANCE.get(lvl, lockedBufferAddress);
-          if (found instanceof TextBuffer tb) return tb;
-        }
-        return super.buffer();
-      }
-    };
+    });
     Minecraft.getInstance().setScreen(new net.minecraft.client.gui.screens.Screen(Component.literal("terminal")) {
       @Override
       public boolean isPauseScreen() {
@@ -95,8 +76,14 @@ public class ClientTerminalHelper {
 
       @Override
       public void render(net.minecraft.client.gui.@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float dt) {
-        renderBackground(guiGraphics, mouseX, mouseY, dt);
+        renderTransparentBackground(guiGraphics);
         inner.render(guiGraphics, mouseX, mouseY, dt);
+      }
+
+      @Override
+      public void onClose() {
+        inner.onGuiClosed();
+        super.onClose();
       }
 
       @Override

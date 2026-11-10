@@ -108,7 +108,7 @@ public abstract class DiskDriveMountableBase extends AbstractManagedEnvironment 
   @Override
   public Node[] onAnalyze(Player player, Direction side, float hitX, float hitY, float hitZ) {
     Node fs = filesystemNode();
-    return new Node[]{fs};
+    return fs != null ? new Node[]{fs} : null;
   }
 
   @Override
@@ -219,6 +219,8 @@ public abstract class DiskDriveMountableBase extends AbstractManagedEnvironment 
     var stack = getItem(0);
     if (!stack.isEmpty()) {
       nbt.put("disk", stack.save(provider, new CompoundTag()));
+    } else {
+      nbt.put("disk", new CompoundTag());
     }
     return nbt;
   }
@@ -244,7 +246,12 @@ public abstract class DiskDriveMountableBase extends AbstractManagedEnvironment 
         }
       }
       if (isHoldingDisk) {
-        setItem(0, heldItem.split(1));
+        setItem(0, heldItem.copy().split(1));
+        if (hand == InteractionHand.OFF_HAND) {
+          player.getOffhandItem().shrink(1);
+        } else {
+          player.getInventory().removeItem(player.getInventory().selected, 1);
+        }
       }
       return isDiskInDrive || isHoldingDisk;
     } else {

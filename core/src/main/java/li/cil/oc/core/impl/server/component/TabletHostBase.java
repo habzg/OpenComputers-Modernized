@@ -34,6 +34,7 @@ public abstract class TabletHostBase implements ComponentInventory, MachineHost,
   private li.cil.oc.api.machine.Machine _machine;
   private Tablet _tabletComponent;
   public Level creationLevel;
+  public ItemStack stack;
 
   protected TabletHostBase() {
     deviceInfo = Map.of(
@@ -43,7 +44,13 @@ public abstract class TabletHostBase implements ComponentInventory, MachineHost,
       DeviceAttribute.Product, "Jogger");
   }
 
-  public abstract ItemStack getStack();
+  public @NotNull ItemStack getStack() {
+    return stack;
+  }
+
+  public void setStack(ItemStack stack) {
+    this.stack = stack;
+  }
 
   protected abstract CompoundTag loadMachineTag();
 
@@ -75,7 +82,7 @@ public abstract class TabletHostBase implements ComponentInventory, MachineHost,
         if (tabletComponent != null) {
           var tabletData = new li.cil.oc.core.impl.common.item.data.TabletData(getStack());
           if (tabletComponent.node instanceof Connector connector) {
-            var charge = Math.max(0, tabletData.energy - connector.localBuffer());
+            var charge = Math.max(0, tabletData.energy - connector.globalBuffer());
             connector.changeBuffer(charge);
           }
         }
@@ -90,6 +97,7 @@ public abstract class TabletHostBase implements ComponentInventory, MachineHost,
       if (!level().isClientSide() && _machine.node() != null) {
         var tag = new CompoundTag();
         _machine.save(tag, level().registryAccess());
+        tag.remove("state");
         saveMachineTag(tag);
       }
     }
@@ -108,6 +116,17 @@ public abstract class TabletHostBase implements ComponentInventory, MachineHost,
         t.put(OCSettings.namespace + "component", componentTag);
         stack.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.of(t));
       }
+    }
+  }
+
+  protected void applyLiveState(li.cil.oc.core.impl.common.item.data.TabletData data) {
+    var level = level();
+    if (level == null || level.isClientSide()) return;
+    data.isRunning = lastRunning;
+    var c = serverComponent();
+    if (c != null && c.node instanceof Connector connector) {
+      data.energy = connector.globalBuffer();
+      data.maxEnergy = connector.globalBufferSize();
     }
   }
 
@@ -221,7 +240,9 @@ public abstract class TabletHostBase implements ComponentInventory, MachineHost,
   @Override
   public void setChanged() {
     if (!level().isClientSide()) {
-      new li.cil.oc.core.impl.common.item.data.TabletData(getStack()).save(getStack());
+      var data = new li.cil.oc.core.impl.common.item.data.TabletData(getStack());
+      applyLiveState(data);
+      data.save(getStack());
     }
   }
 
@@ -233,7 +254,9 @@ public abstract class TabletHostBase implements ComponentInventory, MachineHost,
   public void save(CompoundTag nbt, HolderLookup.Provider provider) {
     saveComponents(provider);
     persistMachineState();
-    new li.cil.oc.core.impl.common.item.data.TabletData(getStack()).save(getStack());
+    var data = new li.cil.oc.core.impl.common.item.data.TabletData(getStack());
+    applyLiveState(data);
+    data.save(getStack());
   }
 
   public void update() {
@@ -259,20 +282,15 @@ public abstract class TabletHostBase implements ComponentInventory, MachineHost,
       }
       m.update();
       updateComponents();
-      var data = new li.cil.oc.core.impl.common.item.data.TabletData(getStack());
       var running = m.isRunning();
-      data.isRunning = running;
-      var c = serverComponent();
-      if (c != null && c.node instanceof Connector connector) {
-        data.energy = connector.localBuffer();
-        data.maxEnergy = connector.localBufferSize();
-      }
-      data.save(getStack());
-      if (player() != null) {
-        player().getInventory().setChanged();
-      }
       if (lastRunning != running) {
         lastRunning = running;
+        var data = new li.cil.oc.core.impl.common.item.data.TabletData(getStack());
+        applyLiveState(data);
+        data.save(getStack());
+        if (player() != null) {
+          player().getInventory().setChanged();
+        }
         persistMachineState();
         if (player() instanceof net.minecraft.server.level.ServerPlayer sp) {
           li.cil.oc.core.impl.common.PacketSender.sendMachineItemState(sp, getStack(), running);

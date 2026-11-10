@@ -11,6 +11,7 @@ import net.minecraft.world.level.Level;
 
 public final class RobotCommonHandler {
   public static void onRobotApplyDamageRate(RobotUsedToolEvent.ApplyDamageRate e) {
+    if (!(e.agent instanceof Robot)) return;
     if (e.toolAfterUse.isDamageableItem()) {
       int damage = e.toolAfterUse.getDamageValue() - e.toolBeforeUse.getDamageValue();
       if (damage > 0) {

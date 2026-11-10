@@ -105,7 +105,8 @@ public class Manual extends Screen {
   }
 
   @Override
-  public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float dt) {
+  public void renderBackground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float dt) {
+    renderTransparentBackground(guiGraphics);
     guiGraphics.blit(Textures.guiManual, leftPos, topPos, 0, 0, 256, 192, 256, 192);
   }
 

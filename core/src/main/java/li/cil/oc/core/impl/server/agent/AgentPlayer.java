@@ -21,7 +21,13 @@ public interface AgentPlayer {
 
   HitResult pick(double range);
 
+  li.cil.oc.api.internal.Agent agent();
+
   int activateBlockOrUseItem(int x, int y, int z, int side, float hitX, float hitY, float hitZ, double duration);
 
   boolean useEquippedItem(double duration);
+
+  default boolean mayTossItem(net.minecraft.world.entity.item.ItemEntity entity) {
+    return true;
+  }
 }

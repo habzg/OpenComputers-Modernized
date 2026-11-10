@@ -24,7 +24,6 @@ public final class ConverterFluidTankInfo implements Converter {
         new ConverterFluidStack().convert(fs, output);
       } else {
         output.put("amount", 0);
-        output.put("hasTag", false);
       }
     }
   }

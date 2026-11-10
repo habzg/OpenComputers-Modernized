@@ -18,7 +18,7 @@ public class TabletData extends ItemData {
   public double energy = 0.0;
   public double maxEnergy = 0.0;
   public int tier = Tier.One;
-  public ItemStack container;
+  public ItemStack container = ItemStack.EMPTY;
 
   public TabletData() {
     super(Constants.ItemName.Tablet);
@@ -38,7 +38,7 @@ public class TabletData extends ItemData {
   @Override
   public void load(CompoundTag nbt, HolderLookup.Provider provider) {
     items.clear();
-    for (int i = 0; i < 32; i++) items.add(null);
+    for (int i = 0; i < 32; i++) items.add(ItemStack.EMPTY);
     var itemList = nbt.getList(OCSettings.namespace + "items", Tag.TAG_COMPOUND);
     for (int i = 0; i < itemList.size(); i++) {
       var slotNbt = itemList.getCompound(i);
@@ -61,7 +61,7 @@ public class TabletData extends ItemData {
     ListTag list = new ListTag();
     for (int i = 0; i < items.size(); i++) {
       var opt = items.get(i);
-      if (opt != null) {
+      if (opt != null && !opt.isEmpty()) {
         var slotNbt = new CompoundTag();
         slotNbt.putByte("slot", (byte) i);
         slotNbt.put("item", opt.save(provider, new CompoundTag()));

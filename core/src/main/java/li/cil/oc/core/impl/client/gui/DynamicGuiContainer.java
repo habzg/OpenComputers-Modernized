@@ -14,6 +14,21 @@ import org.jetbrains.annotations.NotNull;
 public abstract class DynamicGuiContainer<C extends AbstractContainerMenu> extends CustomGuiContainer<C> {
   private Slot hoveredSlotOptional = null;
 
+  private static final java.util.List<java.util.function.Supplier<net.minecraft.world.item.ItemStack>> hoveredStackSuppliers =
+    new java.util.ArrayList<>();
+
+  public static void addHoveredStackSupplier(java.util.function.Supplier<net.minecraft.world.item.ItemStack> supplier) {
+    if (supplier != null) hoveredStackSuppliers.add(supplier);
+  }
+
+  private static net.minecraft.world.item.ItemStack hoveredExternalStack() {
+    for (var supplier : hoveredStackSuppliers) {
+      var stack = supplier.get();
+      if (stack != null && !stack.isEmpty()) return stack;
+    }
+    return net.minecraft.world.item.ItemStack.EMPTY;
+  }
+
   @SuppressWarnings("unused")
   public DynamicGuiContainer(C container) {
     super(container);
@@ -80,6 +95,12 @@ public abstract class DynamicGuiContainer<C extends AbstractContainerMenu> exten
       if (slotIcon != null) {
         guiGraphics.blit(slotIcon, slot.x, slot.y, (int) blitOffset, 0, 0, 16, 16, 16, 16);
       }
+      if (!cs.isActive()) {
+        var naIcon = Icons.get(Tier.None);
+        if (naIcon != null) {
+          guiGraphics.blit(naIcon, slot.x, slot.y, (int) blitOffset, 0, 0, 16, 16, 16, 16);
+        }
+      }
       RenderSystem.setShaderColor(1, 1, 1, 1);
     }
     blitOffset -= 1;
@@ -91,10 +112,16 @@ public abstract class DynamicGuiContainer<C extends AbstractContainerMenu> exten
       if (slot instanceof ComponentSlot cs) {
         if (cs.slot().equals(li.cil.oc.core.common.Slot.None) || cs.tier() == Tier.None) return;
       }
-      boolean currentIsInPlayerInventory = isInPlayerInventory(slot);
-      boolean drawHighlight = hoveredSlotOptional != null && currentIsInPlayerInventory != isInPlayerInventory(hoveredSlotOptional) &&
-        ((currentIsInPlayerInventory && slot.hasItem() && isSelectiveSlot(hoveredSlotOptional) && hoveredSlotOptional.mayPlace(slot.getItem())) ||
-          (!currentIsInPlayerInventory && hoveredSlotOptional.hasItem() && isSelectiveSlot(slot) && slot.mayPlace(hoveredSlotOptional.getItem())));
+      boolean drawHighlight;
+      if (hoveredSlotOptional != null) {
+        boolean currentIsInPlayerInventory = isInPlayerInventory(slot);
+        drawHighlight = currentIsInPlayerInventory != isInPlayerInventory(hoveredSlotOptional) &&
+          ((currentIsInPlayerInventory && slot.hasItem() && isSelectiveSlot(hoveredSlotOptional) && hoveredSlotOptional.mayPlace(slot.getItem())) ||
+            (!currentIsInPlayerInventory && hoveredSlotOptional.hasItem() && isSelectiveSlot(slot) && slot.mayPlace(hoveredSlotOptional.getItem())));
+      } else {
+        var hoveredStack = hoveredExternalStack();
+        drawHighlight = !hoveredStack.isEmpty() && !isInPlayerInventory(slot) && isSelectiveSlot(slot) && slot.mayPlace(hoveredStack);
+      }
       if (drawHighlight) {
         blitOffset += 100;
         guiGraphics.fillGradient(slot.x, slot.y, slot.x + 16, slot.y + 16, 0x80FFFFFF, 0x80FFFFFF);
@@ -113,6 +140,16 @@ public abstract class DynamicGuiContainer<C extends AbstractContainerMenu> exten
   protected void drawDisabledSlot(GuiGraphics guiGraphics, ComponentSlot slot) {
     var sprite = slot.tierIcon();
     guiGraphics.blit(sprite, slot.x, slot.y, (int) blitOffset, 0, 0, 16, 16, 16, 16);
+  }
+
+  protected void renderDisabledSlotBackgrounds(GuiGraphics guiGraphics) {
+    for (Slot slot : menu.slots) {
+      if (slot instanceof ComponentSlot cs &&
+        (cs.slot().equals(li.cil.oc.core.common.Slot.None) || cs.tier() == Tier.None) &&
+        !slot.hasItem() && cs.tierIcon() != null) {
+        guiGraphics.blit(cs.tierIcon(), leftPos + slot.x, topPos + slot.y, (int) blitOffset, 0, 0, 16, 16, 16, 16);
+      }
+    }
   }
 
   protected void drawSlotBackground(GuiGraphics guiGraphics, int x, int y) {

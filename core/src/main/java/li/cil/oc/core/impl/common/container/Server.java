@@ -6,7 +6,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 public class Server extends Player {
@@ -70,19 +69,6 @@ public class Server extends Player {
   @Override
   public boolean stillValid(@NotNull net.minecraft.world.entity.player.Player player) {
     if (server != null) return super.stillValid(player);
-    if (otherInventory instanceof ServerInventory serverInv) {
-      ItemStack container = serverInv.container();
-      if (container != null) {
-        boolean found = false;
-        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
-          if (player.getInventory().getItem(i) == container) {
-            found = true;
-            break;
-          }
-        }
-        if (!found) return false;
-      }
-    }
     return player == playerEntity;
   }
 

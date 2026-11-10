@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "opencomputers:beaconbaseprint",
+    "opencomputers:cable",
+    "opencomputers:print"
+  ]
+}

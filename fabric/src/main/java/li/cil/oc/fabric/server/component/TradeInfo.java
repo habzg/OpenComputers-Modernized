@@ -23,11 +23,11 @@ public class TradeInfo extends TradeInfoBase {
 
   @Override
   protected @Nullable Entity loadEntity(@NotNull CompoundTag nbt, @NotNull UUID uuid) {
-    int dimension = nbt.getInt("dimensionID");
+    String dimension = nbt.getString("dimensionID");
     var server = OpenComputers.MINECRAFT_SERVER;
     if (server == null) return null;
     for (ServerLevel world : server.getAllLevels()) {
-      if (world.dimension().location().hashCode() == dimension) {
+      if (world.dimension().location().toString().equals(dimension)) {
         for (Entity e : world.getAllEntities()) {
           if (e.getUUID().equals(uuid)) return e;
         }
@@ -48,11 +48,11 @@ public class TradeInfo extends TradeInfoBase {
   @SuppressWarnings("unused")
   @Override
   protected @Nullable EnvironmentHost loadHostBlockEntity(@NotNull CompoundTag nbt) {
-    int dimension = nbt.getInt("dimensionID");
+    String dimension = nbt.getString("dimensionID");
     var server = OpenComputers.MINECRAFT_SERVER;
     if (server == null) return null;
     for (ServerLevel world : server.getAllLevels()) {
-      if (world.dimension().location().hashCode() == dimension) {
+      if (world.dimension().location().toString().equals(dimension)) {
         int x = nbt.getInt("hostX");
         int y = nbt.getInt("hostY");
         int z = nbt.getInt("hostZ");

@@ -3,6 +3,7 @@ package li.cil.oc.neoforge.integration.sable;
 import dev.ryanhcode.sable.companion.SableCompanion;
 import li.cil.oc.core.impl.client.ClientDistanceHelper;
 import li.cil.oc.core.impl.common.PacketBuilderBase;
+import li.cil.oc.core.impl.util.SubLevelHelper;
 import li.cil.oc.neoforge.integration.Mod;
 import li.cil.oc.neoforge.integration.ModProxy;
 import li.cil.oc.neoforge.integration.Mods;
@@ -23,6 +24,9 @@ public final class ModSable implements ModProxy {
     PacketBuilderBase.setDistanceHelper(ModSable::distanceSquared);
     ClientDistanceHelper.setDistanceHelper(ModSable::distanceSquaredTo);
     ClientDistanceHelper.setProjectHelper(ModSable::project);
+    SubLevelHelper.setProjector(ModSable::project);
+    SubLevelHelper.setDistanceSquared(ModSable::distanceSquaredBetween);
+    SubLevelHelper.setStorageCenters(ModSable::storageCenters);
   }
 
   private static double distanceSquared(Level level, double x, double y, double z, Player player) {
@@ -33,7 +37,25 @@ public final class ModSable implements ModProxy {
     return SableCompanion.INSTANCE.distanceSquaredWithSubLevels(level, x, y, z, px, py, pz);
   }
 
+  private static double distanceSquaredBetween(Level level, Vec3 posA, Vec3 posB) {
+    return SableCompanion.INSTANCE.distanceSquaredWithSubLevels(level, posA.x, posA.y, posA.z, posB.x, posB.y, posB.z);
+  }
+
   private static Vec3 project(Level level, Vec3 pos) {
     return SableCompanion.INSTANCE.projectOutOfSubLevel(level, (Position) pos);
+  }
+
+  private static java.util.List<Vec3> storageCenters(SubLevelHelper.StorageQuery query) {
+    var center = dev.ryanhcode.sable.companion.math.JOMLConversion.toJOML(query.center());
+    var box = new dev.ryanhcode.sable.companion.math.BoundingBox3d(
+      query.center().x - query.range(), query.center().y - query.range(), query.center().z - query.range(),
+      query.center().x + query.range(), query.center().y + query.range(), query.center().z + query.range());
+    var result = new java.util.ArrayList<Vec3>();
+    for (var sub : SableCompanion.INSTANCE.getAllIntersecting(query.level(), box)) {
+      var dest = new org.joml.Vector3d();
+      sub.logicalPose().transformPositionInverse(center, dest);
+      result.add(new Vec3(dest.x, dest.y, dest.z));
+    }
+    return result;
   }
 }

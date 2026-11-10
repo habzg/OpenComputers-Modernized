@@ -89,6 +89,7 @@ dependencies {
     runtimeOnly("mcp.mobius.waila:wthit:neo-${wthit_version}")
     runtimeOnly("mcjty.theoneprobe:theoneprobe:${top_version}")
     runtimeOnly("mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}")
+    runtimeOnly("net.mezzdev.config:mezz_config-1.21.1-neoforge:${mezz_config_version}")
     runtimeOnly("cc.tweaked:cc-tweaked-${minecraft_version}-forge:${cc_version}")
     runtimeOnly("mrtjp:ProjectRed:${minecraft_version}-${pr_version}:core")
     runtimeOnly("mrtjp:ProjectRed:${minecraft_version}-${pr_version}:transmission")
@@ -115,6 +116,7 @@ dependencies {
     implementation("mekanism:Mekanism:${minecraft_version}-${mekanism_version}")
     implementation("com.refinedmods.refinedstorage:refinedstorage-neoforge:${rs2_version}")
     implementation("com.refinedmods.refinedstorage:refinedstorage-mekanism-integration:${rs2mekanism_version}")
+    implementation("blusunrize.immersiveengineering:ImmersiveEngineering:${ie_version}")
 
     commonResources(project(path: ':core-api', configuration: 'commonResources'))
     commonResources(project(path: ':core', configuration: 'commonResources'))

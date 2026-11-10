@@ -5,6 +5,7 @@ import li.cil.oc.core.impl.common.item.TabletWrapper;
 import li.cil.oc.fabric.common.init.Menus;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.entity.player.Inventory;
+import org.jetbrains.annotations.NotNull;
 
 public class Tablet extends DynamicGuiContainer<li.cil.oc.core.impl.common.container.Tablet> implements li.cil.oc.core.impl.client.gui.traits.LockedHotbar {
   public final TabletWrapper tablet;
@@ -52,6 +53,22 @@ public class Tablet extends DynamicGuiContainer<li.cil.oc.core.impl.common.conta
   @Override
   protected boolean checkHotbarKeyPressed(int keyCode, int scanCode) {
     return false;
+  }
+
+  @Override
+  protected void slotClicked(net.minecraft.world.inventory.@NotNull Slot slot, int slotId, int mouseButton, net.minecraft.world.inventory.@NotNull ClickType clickType) {
+    if (shouldSuppressSlotAction(slot, clickType)) {
+      return;
+    }
+    super.slotClicked(slot, slotId, mouseButton, clickType);
+  }
+
+  @Override
+  public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    if (keyCode == 81 && hoveredSlot != null && shouldSuppressClick(hoveredSlot)) {
+      return true;
+    }
+    return super.keyPressed(keyCode, scanCode, modifiers);
   }
 
   @SuppressWarnings("unused")

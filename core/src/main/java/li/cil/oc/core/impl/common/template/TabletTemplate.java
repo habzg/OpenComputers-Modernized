@@ -1,5 +1,7 @@
 package li.cil.oc.core.impl.common.template;
 
+import java.util.List;
+import java.util.Map;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Tier;
@@ -39,7 +41,11 @@ public final class TabletTemplate {
   @SuppressWarnings("unused")
 
   public static Object[] validate(Container inventory) {
-    return Template.validateComputer(inventory, hostClass, TabletTemplate::maxComplexity);
+    return Template.validateComputer(inventory, hostClass, TabletTemplate::maxComplexity, List.of(
+      Map.entry("gui.opencomputers.assembler.warning.bios", (Container inv) -> Template.hasComponent(Constants.ItemName.EEPROM, inv)),
+      Map.entry("gui.opencomputers.assembler.warning.keyboard", (Container inv) -> Template.hasComponent(Constants.BlockName.Keyboard, inv)),
+      Map.entry("gui.opencomputers.assembler.warning.graphicscard", Template::hasGraphics),
+      Map.entry("gui.opencomputers.assembler.warning.os", (Container inv) -> Template.hasFileSystem(inv, hostClass))));
   }
 
   @SuppressWarnings("unused")
@@ -51,16 +57,16 @@ public final class TabletTemplate {
   public static Object[] assemble(Container inventory) {
     java.util.List<ItemStack> items = new java.util.ArrayList<>();
     for (int i = 1; i < inventory.getContainerSize(); i++) {
-      var stack = inventory.getItem(i);
-      if (!stack.isEmpty()) items.add(stack);
+      items.add(inventory.getItem(i));
     }
     var data = new TabletData();
     data.tier = li.cil.oc.core.impl.util.ItemUtils.caseTier(inventory.getItem(0));
-    data.container = items.isEmpty() ? null : items.getFirst();
+    data.container = items.isEmpty() ? ItemStack.EMPTY : items.getFirst();
     java.util.List<ItemStack> itemList = new java.util.ArrayList<>();
     itemList.add(li.cil.oc.api.Items.get(Constants.BlockName.ScreenTier1).createItemStack(1));
     for (int i = (data.tier == Tier.One ? 0 : 1); i < items.size(); i++) {
-      itemList.add(items.get(i));
+      var stack = items.get(i);
+      if (!stack.isEmpty()) itemList.add(stack);
     }
     data.items = itemList;
     data.energy = OCSettings.get().bufferTablet;

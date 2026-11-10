@@ -88,7 +88,14 @@ public class Loot {
         }
       }
       for (ItemStack[] entry : LootManager.globalDisks) {
-        if (!LootManager.worldDisks.contains(entry)) {
+        boolean known = false;
+        for (ItemStack[] existing : LootManager.worldDisks) {
+          if (ItemStack.matches(existing[0], entry[0]) && existing[1].getCount() == entry[1].getCount()) {
+            known = true;
+            break;
+          }
+        }
+        if (!known) {
           LootManager.worldDisks.add(entry);
         }
       }
@@ -101,6 +108,7 @@ public class Loot {
   }
 
   public static ItemStack createLootDisk(String name, String path, boolean external, int color) {
+    if (color < 0) color = 7;
     Callable<FileSystem> callable;
     if (external) {
       callable = () -> li.cil.oc.api.FileSystem.asReadOnly(li.cil.oc.api.FileSystem.fromSaveDirectory("loot/" + path, 0, false));

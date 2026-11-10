@@ -18,6 +18,7 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+
 public abstract class Player extends AbstractContainerMenu {
   public final Inventory playerInventory;
   public final Container otherInventory;
@@ -26,11 +27,13 @@ public abstract class Player extends AbstractContainerMenu {
   protected final int slotSize = 18;
   protected final SynchronizedData synchronizedData = new SynchronizedData();
   public net.minecraft.world.entity.player.Player playerEntity;
+  private long lastSync = System.currentTimeMillis();
 
   protected Player(MenuType<?> menuType, int containerId, Inventory playerInventory, Container otherInventory) {
     super(menuType, containerId);
     this.playerInventory = playerInventory;
     this.otherInventory = otherInventory;
+    this.playerEntity = playerInventory.player;
   }
 
   protected Player(MenuType<?> menuType, int containerId, Inventory playerInventory, Container otherInventory, net.minecraft.world.entity.player.Player player) {
@@ -48,6 +51,14 @@ public abstract class Player extends AbstractContainerMenu {
   @Override
   public void removed(net.minecraft.world.entity.player.@NotNull Player player) {
     super.removed(player);
+  }
+
+  @Override
+  public void clicked(int slotId, int button, net.minecraft.world.inventory.@NotNull ClickType clickType, net.minecraft.world.entity.player.@NotNull Player player) {
+    super.clicked(slotId, button, clickType, player);
+    if (SideTracker.isServer()) {
+      broadcastChanges();
+    }
   }
 
   @Override
@@ -69,13 +80,13 @@ public abstract class Player extends AbstractContainerMenu {
     if (to.container == from.container) return false;
 
     ItemStack fromStack = from.getItem();
-    ItemStack toStack = to.hasItem() ? to.getItem() : null;
-    int toStackSize = toStack != null ? toStack.getCount() : 0;
+    ItemStack toStack = to.getItem();
+    int toStackSize = toStack.isEmpty() ? 0 : toStack.getCount();
 
     int maxStackSize = Math.min(fromStack.getMaxStackSize(), to.getMaxStackSize());
     int itemsMoved = Math.min(maxStackSize - toStackSize, fromStack.getCount());
 
-    if (toStack != null) {
+    if (!toStack.isEmpty()) {
       if (toStackSize < maxStackSize &&
         ItemStack.isSameItemSameComponents(fromStack, toStack) &&
         itemsMoved > 0) {
@@ -159,6 +170,9 @@ public abstract class Player extends AbstractContainerMenu {
     CompoundTag delta = synchronizedData.getDelta();
     if (delta != null && !delta.isEmpty()) {
       nbt.put("delta", delta);
+    } else if (System.currentTimeMillis() - lastSync > 250) {
+      nbt.put("delta", synchronizedData);
+      lastSync = Long.MAX_VALUE;
     }
   }
 

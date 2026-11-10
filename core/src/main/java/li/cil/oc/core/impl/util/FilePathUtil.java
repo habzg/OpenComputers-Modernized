@@ -29,8 +29,17 @@ public final class FilePathUtil {
   private static boolean checkCaseInsensitive() {
     try {
       String uuid = UUID.randomUUID().toString();
-      File lowerCase = File.createTempFile(uuid + "oc_rox", null);
-      File upperCase = new File(lowerCase.getParentFile(), uuid + "OC_ROX");
+      File lowerCase;
+      File upperCase;
+      var server = SideTracker.getCurrentServer();
+      if (server != null) {
+        File saveRoot = server.getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).toFile();
+        lowerCase = new File(saveRoot, uuid + "oc_rox");
+        upperCase = new File(saveRoot, uuid + "OC_ROX");
+      } else {
+        lowerCase = File.createTempFile(uuid + "oc_rox", null);
+        upperCase = new File(lowerCase.getParentFile(), uuid + "OC_ROX");
+      }
       if (lowerCase.exists() && !lowerCase.delete()) {
         LOGGER.warn("Failed to delete temp file: {}", lowerCase);
       }

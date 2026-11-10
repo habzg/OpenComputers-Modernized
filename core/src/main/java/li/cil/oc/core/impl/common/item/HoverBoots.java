@@ -99,6 +99,18 @@ public class HoverBoots extends ArmorItem implements Chargeable {
     return remainder;
   }
 
+  public boolean canAffordJump(ItemStack stack, Player player) {
+    if (OCSettings.get().ignorePower || player.getAbilities().instabuild) return true;
+    return getCharge(stack) >= OCSettings.get().hoverBootJump;
+  }
+
+  public void chargeJump(ItemStack stack, Player player) {
+    if (OCSettings.get().ignorePower || player.getAbilities().instabuild) return;
+    double cost = -OCSettings.get().hoverBootJump;
+    if (charge(stack, cost, true) != 0) return;
+    charge(stack, cost, false);
+  }
+
   @Override
   public boolean isBarVisible(@NotNull ItemStack stack) {
     return true;

@@ -67,7 +67,7 @@ public abstract class ItemData implements Persistable {
   }
 
   public ItemStack createItemStack() {
-    if (itemName == null) return null;
+    if (itemName == null) return ItemStack.EMPTY;
     ItemStack stack = Items.get(itemName).createItemStack(1);
     save(stack);
     return stack;

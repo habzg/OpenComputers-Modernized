@@ -3,6 +3,7 @@ package li.cil.oc.core.util;
 import li.cil.oc.core.impl.common.blockentity.Waypoint;
 import li.cil.oc.core.impl.server.network.WaypointManager;
 
+@SuppressWarnings("unused")
 public class WaypointHelperImpl extends WaypointHelper {
   @Override
   public void add(Object waypoint) {

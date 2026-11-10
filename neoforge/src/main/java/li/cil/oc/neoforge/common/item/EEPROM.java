@@ -1,29 +1,19 @@
 package li.cil.oc.neoforge.common.item;
 
-import li.cil.oc.core.impl.OCSettings;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.nbt.CompoundTag;
+import li.cil.oc.core.impl.common.item.SneakBypass;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.level.LevelReader;
 import org.jetbrains.annotations.NotNull;
 
-public class EEPROM extends SimpleItem {
+public class EEPROM extends li.cil.oc.core.impl.common.item.EEPROM {
   public EEPROM() {
     super();
   }
 
   @Override
-  public @NotNull String getDescriptionId(ItemStack stack) {
-    CustomData cd = stack.get(DataComponents.CUSTOM_DATA);
-    if (cd != null && !cd.isEmpty()) {
-      CompoundTag tag = cd.copyTag();
-      if (tag.contains(OCSettings.namespace + "data")) {
-        CompoundTag data = tag.getCompound(OCSettings.namespace + "data");
-        if (data.contains(OCSettings.namespace + "label")) {
-          return data.getString(OCSettings.namespace + "label");
-        }
-      }
-    }
-    return super.getDescriptionId(stack);
+  public boolean doesSneakBypassUse(@NotNull ItemStack stack, @NotNull LevelReader level, @NotNull BlockPos pos, @NotNull Player player) {
+    return SneakBypass.bypasses(stack, level, pos);
   }
 }

@@ -12,6 +12,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -119,12 +120,26 @@ public abstract class AgentBase extends AbstractManagedEnvironment implements
       for (ItemEntity drop : itemsAfter) {
         if (!capturedDropsBefore.contains(drop) && !drop.isRemoved()) {
           ItemStack stack = drop.getItem();
-          li.cil.oc.core.impl.util.InventoryUtils.addToPlayerInventory(stack, player, false);
-          drop.discard();
+          insertIntoAgentInventory(stack);
+          if (stack.isEmpty()) {
+            drop.discard();
+          }
         }
       }
       capturedDropsBefore = null;
     }
+  }
+
+  protected void insertIntoAgentInventory(ItemStack stack) {
+    Container inventory = agent().mainInventory();
+    if (inventory == null || inventory.getContainerSize() <= 0 || stack == null || stack.isEmpty()) return;
+    int size = inventory.getContainerSize();
+    int selected = Math.clamp(agent().selectedSlot(), 0, size - 1);
+    int[] slots = new int[size];
+    int idx = 0;
+    for (int i = selected; i < size; i++) slots[idx++] = i;
+    for (int i = 0; i < selected; i++) slots[idx++] = i;
+    li.cil.oc.core.impl.util.InventoryUtils.insertIntoInventory(stack, inventory, null, stack.getCount(), false, slots);
   }
 
   @Callback(doc = "function(side:number[, face:number=side[, sneaky:boolean=false]]):boolean, string -- Perform a 'left click' towards the specified side. The `face' allows a more precise click calibration, and is relative to the targeted blockspace.")
@@ -208,6 +223,9 @@ public abstract class AgentBase extends AbstractManagedEnvironment implements
       double breakTime = playerBreakBlock(player, blockPos.x(), blockPos.y(), blockPos.z(), facing.ordinal());
       boolean ok = breakTime > 0;
       setPlayerSneaking(player, false);
+      if (ok) {
+        onWorldInteraction(context, breakTime);
+      }
       return ResultWrapper.result(ok, "block");
     }
 
@@ -342,12 +360,22 @@ public abstract class AgentBase extends AbstractManagedEnvironment implements
       HitResult hit = playerPick(player, OCSettings.get().useAndPlaceRange);
 
       if (hit.getType() == HitResult.Type.ENTITY) {
-        Entity entity = ((EntityHitResult) hit).getEntity();
+        EntityHitResult entityHit = (EntityHitResult) hit;
+        Entity entity = entityHit.getEntity();
         beginConsumeDrops(entity);
         try {
-          if (entity.interact(player, InteractionHand.MAIN_HAND).consumesAction()) {
-            success = true;
-            what = "item_interacted";
+          if (li.cil.oc.core.impl.server.component.traits.WorldAction.mayInteractEntity(player, entity)) {
+            InteractionResult result = entity.interactAt(player, entityHit.getLocation(), InteractionHand.MAIN_HAND);
+            if (!result.consumesAction()) {
+              result = entity.interact(player, InteractionHand.MAIN_HAND);
+            }
+            if (entity instanceof net.minecraft.world.entity.npc.Villager villager) {
+              villager.setTradingPlayer(null);
+            }
+            if (result.consumesAction()) {
+              success = true;
+              what = "item_interacted";
+            }
           }
         } finally {
           endConsumeDrops(player, entity);

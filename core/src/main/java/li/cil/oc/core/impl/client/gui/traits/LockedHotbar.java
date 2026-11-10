@@ -18,4 +18,12 @@ public interface LockedHotbar {
     ItemStack locked = lockedStack();
     return locked != null && !locked.isEmpty() && slot != null && slot.hasItem() && ItemStack.isSameItem(slot.getItem(), locked);
   }
+
+  default boolean shouldSuppressSlotAction(net.minecraft.world.inventory.Slot slot, net.minecraft.world.inventory.ClickType clickType) {
+    if (slot == null) return false;
+    return switch (clickType) {
+      case QUICK_CRAFT, THROW -> shouldSuppressClick(slot);
+      default -> false;
+    };
+  }
 }

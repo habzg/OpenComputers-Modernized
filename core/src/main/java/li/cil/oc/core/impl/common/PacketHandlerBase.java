@@ -4,6 +4,9 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import java.io.InputStream;
 import java.util.zip.InflaterInputStream;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -42,7 +45,20 @@ public abstract class PacketHandlerBase {
     }
   }
 
-  protected abstract Level world(Player player, int ignoredDimension);
+  protected abstract Level world(Player player, String dimension);
+
+  protected static Level clientLevel(Player player, String dimension) {
+    Level level = player.level();
+    ResourceLocation key = ResourceLocation.tryParse(dimension);
+    return key != null && key.equals(level.dimension().location()) ? level : null;
+  }
+
+  protected static Level serverLevel(Player player, String dimension) {
+    if (!(player instanceof ServerPlayer sp)) return null;
+    ResourceLocation key = ResourceLocation.tryParse(dimension);
+    if (key == null) return null;
+    return sp.server.getLevel(ResourceKey.create(Registries.DIMENSION, key));
+  }
 
   protected abstract void dispatch(PacketParser p);
 }

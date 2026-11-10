@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    "opencomputers:capacitor",
+    "opencomputers:carpetedcapacitor",
+    "opencomputers:case1",
+    "opencomputers:case2",
+    "opencomputers:case3",
+    "opencomputers:casecreative",
+    "opencomputers:rack",
+    "opencomputers:robot"
+  ]
+}

@@ -134,7 +134,7 @@ public class OCWthitCommonPlugin implements IWailaCommonPlugin {
       if (assembler.isAssembling()) {
         tag.putDouble(TAG_PROGRESS, assembler.progress());
         tag.putInt(TAG_TIME_REMAINING, assembler.timeRemaining());
-        if (assembler.output != null && !assembler.output.isEmpty()) {
+        if (!assembler.output.isEmpty()) {
           tag.putString(TAG_OUTPUT, assembler.output.getDescriptionId());
         }
       }

@@ -10,6 +10,12 @@ import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 public interface Inventory extends SimpleInventory {
+  static ItemStack[] filledItems(int size) {
+    var items = new ItemStack[size];
+    java.util.Arrays.fill(items, ItemStack.EMPTY);
+    return items;
+  }
+
   ItemStack[] items();
 
   void updateItems(int slot, ItemStack stack);
@@ -28,16 +34,18 @@ public interface Inventory extends SimpleInventory {
   @Override
   default void setItem(int slot, @NotNull ItemStack stack) {
     if (slot >= 0 && slot < getContainerSize()) {
-      if (stack.isEmpty() && (items()[slot] == null || items()[slot].isEmpty())) {
+      ItemStack current = items()[slot];
+      if (current == null) current = ItemStack.EMPTY;
+      if (stack.isEmpty() && current.isEmpty()) {
         return;
       }
-      if (items()[slot] == stack) {
+      if (ItemStack.matches(current, stack)) {
         return;
       }
 
-      ItemStack oldStack = items()[slot];
-      updateItems(slot, null);
-      if (oldStack != null && !oldStack.isEmpty()) {
+      ItemStack oldStack = current;
+      updateItems(slot, ItemStack.EMPTY);
+      if (!oldStack.isEmpty()) {
         onItemRemoved(slot, oldStack);
       }
       if (!stack.isEmpty() && stack.getCount() >= getInventoryStackRequired()) {
@@ -47,8 +55,9 @@ public interface Inventory extends SimpleInventory {
         updateItems(slot, stack);
       }
 
-      if (items()[slot] != null && !items()[slot].isEmpty()) {
-        onItemAdded(slot, items()[slot]);
+      ItemStack added = items()[slot];
+      if (added != null && !added.isEmpty()) {
+        onItemAdded(slot, added);
       }
 
       setChanged();

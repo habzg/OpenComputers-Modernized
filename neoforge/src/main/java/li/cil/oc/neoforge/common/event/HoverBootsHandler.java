@@ -10,6 +10,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.common.util.FakePlayer;
+import net.neoforged.neoforge.event.entity.living.LivingEvent;
 import net.neoforged.neoforge.event.entity.living.LivingFallEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
@@ -23,6 +24,7 @@ public final class HoverBootsHandler {
       boolean hadHoverBoots = nbt.getBoolean(OCSettings.namespace + "hasHoverBoots");
 
       boolean hasHoverBoots = false;
+      boolean canJump = false;
 
       if (!player.isShiftKeyDown()) {
         var bootsStack = equippedArmor(player)
@@ -30,6 +32,7 @@ public final class HoverBootsHandler {
           .findFirst();
         if (bootsStack.isPresent()) {
           HoverBoots boots = (HoverBoots) bootsStack.get().getItem();
+          canJump = boots.canAffordJump(bootsStack.get(), player);
           if (!OCSettings.get().ignorePower) {
             if (player.onGround() && !player.getAbilities().instabuild
               && player.level().getGameTime() % OCSettings.get().tickFrequency == 0) {
@@ -50,7 +53,7 @@ public final class HoverBootsHandler {
       }
 
       if (hasHoverBoots) {
-        if (player.onGround()) {
+        if (player.onGround() && canJump) {
           player.addEffect(new MobEffectInstance(MobEffects.JUMP, 100, 3, false, false, true));
         } else {
           var jumpBoost = player.getEffect(MobEffects.JUMP);
@@ -87,6 +90,19 @@ public final class HoverBootsHandler {
         stepHeightAttr.setBaseValue(hasHoverBoots ? 1.0 : 0.5);
       }
     }
+  }
+
+  @SubscribeEvent
+  public static void onJump(LivingEvent.LivingJumpEvent e) {
+    if (!(e.getEntity() instanceof Player player) || player instanceof FakePlayer) return;
+    if (player.isShiftKeyDown()) return;
+    equippedArmor(player)
+      .filter(stack -> stack.getItem() instanceof HoverBoots)
+      .findFirst()
+      .ifPresent(stack -> {
+        HoverBoots boots = (HoverBoots) stack.getItem();
+        boots.chargeJump(stack, player);
+      });
   }
 
   @SubscribeEvent

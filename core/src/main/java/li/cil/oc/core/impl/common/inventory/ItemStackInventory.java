@@ -19,7 +19,7 @@ public interface ItemStackInventory extends Inventory {
   default void reinitialize(HolderLookup.Provider provider) {
     ItemStack[] items = items();
     for (int i = 0; i < items.length; i++) {
-      updateItems(i, null);
+      updateItems(i, ItemStack.EMPTY);
     }
     ItemStack c = container();
     if (c != null && !c.isEmpty()) {

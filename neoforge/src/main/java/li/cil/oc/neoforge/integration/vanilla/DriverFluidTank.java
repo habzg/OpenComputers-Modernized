@@ -45,12 +45,12 @@ public final class DriverFluidTank extends DriverSidedBlockEntity {
 
     @Callback(doc = "function():table -- Get some information about this tank.")
     public Object[] getInfo(final Context context, final Arguments args) {
-      var info = new java.util.HashMap<String, Object>();
+      java.util.Map<Object, Object> info = new java.util.HashMap<>();
       var fluidStack = getBlockEntity().getFluidInTank(0);
-      info.put("amount", fluidStack.getAmount());
       if (!fluidStack.isEmpty()) {
-        info.put("fluid", net.minecraft.core.registries.BuiltInRegistries.FLUID.getKey(fluidStack.getFluid()).toString());
-        info.put("name", fluidStack.getFluid().getFluidType().getDescription().getString());
+        new ConverterFluidStack().convert(fluidStack, info);
+      } else {
+        info.put("amount", 0);
       }
       info.put("capacity", getBlockEntity().getTankCapacity(0));
       return new Object[]{info};

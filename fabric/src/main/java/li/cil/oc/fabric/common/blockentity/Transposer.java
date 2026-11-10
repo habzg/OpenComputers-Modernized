@@ -80,16 +80,7 @@ public class Transposer extends BlockEntity implements Environment {
   }
 
   @Override
-  public void onDisconnect(Node node) {
-  }
-
-  @Override
   public void onMessage(li.cil.oc.api.network.Message message) {
-  }
-
-  @Override
-  public Object result(Object... args) {
-    return li.cil.oc.core.util.ResultWrapper.result(args);
   }
 
   @Override

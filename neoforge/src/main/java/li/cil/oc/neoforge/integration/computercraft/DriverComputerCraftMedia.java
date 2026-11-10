@@ -50,6 +50,7 @@ public final class DriverComputerCraftMedia extends Item {
   }
 
   private record ComputerCraftLabel(ItemStack stack, IMedia media) implements Label {
+    @SuppressWarnings("DataFlowIssue")
     @Override
     public String getLabel() {
       return media.getLabel(null, stack);

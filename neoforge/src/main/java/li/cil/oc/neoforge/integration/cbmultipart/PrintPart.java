@@ -110,6 +110,9 @@ public final class PrintPart extends SimpleBlockPart
 
   @Override
   public @NotNull VoxelShape getCollisionShape(@NotNull CollisionContext context) {
+    if (state ? data.noclipOn : data.noclipOff) {
+      return Shapes.empty();
+    }
     return getOcclusionShape();
   }
 

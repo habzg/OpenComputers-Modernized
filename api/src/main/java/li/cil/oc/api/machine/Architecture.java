@@ -124,7 +124,6 @@ public interface Architecture {
    * {@link Context#signal} does not require being called from a specific
    * thread.
    */
-  @SuppressWarnings("EmptyMethod")
   void onSignal();
 
   /**
@@ -134,7 +133,6 @@ public interface Architecture {
    * in case {@link #initialize()} was called from the machine's load logic
    * (where it was not yet connected to the network).
    */
-  @SuppressWarnings("EmptyMethod")
   void onConnect();
 
   /**

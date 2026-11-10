@@ -9,6 +9,7 @@ import li.cil.oc.core.common.Slot;
 import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.PacketSender;
 import li.cil.oc.core.impl.common.blockentity.traits.BlockEntity;
+import li.cil.oc.core.impl.common.blockentity.traits.Environment;
 import li.cil.oc.core.impl.common.blockentity.traits.Inventory;
 import li.cil.oc.core.impl.common.blockentity.traits.Rotatable;
 import li.cil.oc.core.impl.common.item.data.DriveData;
@@ -110,6 +111,7 @@ public class Raid extends BlockEntity implements li.cil.oc.api.network.Environme
 
   @Override
   public void onDisconnect(Node node) {
+    Environment.flushBuffer(node, node());
   }
 
   @Override
@@ -126,7 +128,7 @@ public class Raid extends BlockEntity implements li.cil.oc.api.network.Environme
 
   @Override
   public Node[] onAnalyze(Player player, Direction side, float hitX, float hitY, float hitZ) {
-    return filesystem != null ? new Node[]{filesystem.node()} : null;
+    return new Node[]{filesystem != null ? filesystem.node() : null};
   }
 
   @Override
@@ -158,7 +160,7 @@ public class Raid extends BlockEntity implements li.cil.oc.api.network.Environme
   @Override
   public void setChanged() {
     super.setChanged();
-    for (int i = 0; i < presence.length; i++) presence[i] = items()[i] != null;
+    for (int i = 0; i < presence.length; i++) presence[i] = !items()[i].isEmpty();
   }
 
   @Override
@@ -195,6 +197,11 @@ public class Raid extends BlockEntity implements li.cil.oc.api.network.Environme
   @Override
   public boolean isUseableByPlayer(Player player) {
     return true;
+  }
+
+  @Override
+  public boolean stillValid(@NotNull Player player) {
+    return player.distanceToSqr(worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5) <= 64;
   }
 
   @Override
@@ -237,7 +244,7 @@ public class Raid extends BlockEntity implements li.cil.oc.api.network.Environme
     }
   }
 
-  private final ItemStack[] _items = new ItemStack[getContainerSize()];
+  private final ItemStack[] _items = li.cil.oc.core.impl.common.inventory.Inventory.filledItems(getContainerSize());
 
   @Override
   public ItemStack[] items() {
@@ -256,7 +263,7 @@ public class Raid extends BlockEntity implements li.cil.oc.api.network.Environme
     }
     var filled = true;
     for (var item : items())
-      if (item == null) {
+      if (item == null || item.isEmpty()) {
         filled = false;
         break;
       }
@@ -284,9 +291,9 @@ public class Raid extends BlockEntity implements li.cil.oc.api.network.Environme
       if (getLevel() != null) {
         fs.node().load(nbtToSetAddress, getLevel().registryAccess());
       }
+      ((li.cil.oc.api.network.Component) fs.node()).setVisibility(Visibility.Network);
       li.cil.oc.api.Network.joinNewNetwork(node);
       node.connect(fs.node());
-      ((li.cil.oc.api.network.Component) fs.node()).setVisibility(Visibility.Network);
       filesystem = fs;
     }
   }

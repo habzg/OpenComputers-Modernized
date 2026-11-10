@@ -39,6 +39,9 @@
         ],
         "jade": [
             "li.cil.oc.fabric.integration.jade.OCJadePlugin"
+        ],
+        "theoneprobe": [
+            "li.cil.oc.fabric.integration.top.OCTheOneProbePlugin"
         ]
     },
     "depends": {
@@ -55,6 +58,7 @@
         "jei": ">=19.50.0.414",
         "roughlyenoughitems": ">=16.0.799",
         "emi": ">=1.1.24",
+        "theoneprobe": ">=1.21.1-12.0.9",
         "team_reborn_energy": ">=4.1.0",
         "refinedstorage": ">=2.0.9"
     },
@@ -67,6 +71,7 @@
         "jei": "<19.50.0.414",
         "roughlyenoughitems": "<16.0.799",
         "emi": "<1.1.24",
+        "theoneprobe": "<1.21.1-12.0.9",
         "team_reborn_energy": "<4.1.0",
         "refinedstorage": "<2.0.9"
     }

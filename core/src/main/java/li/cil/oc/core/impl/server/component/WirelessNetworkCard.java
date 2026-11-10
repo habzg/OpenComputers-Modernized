@@ -15,10 +15,12 @@ import li.cil.oc.core.Constants;
 import li.cil.oc.core.common.Tier;
 import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.BlockPosition;
+import li.cil.oc.core.impl.util.SubLevelHelper;
 import li.cil.oc.core.util.ResultWrapper;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 
 
 public abstract class WirelessNetworkCard extends NetworkCard implements WirelessEndpoint {
@@ -63,10 +65,9 @@ public abstract class WirelessNetworkCard extends NetworkCard implements Wireles
   }
 
   public void receivePacket(Packet packet, WirelessEndpoint source) {
-    double dx = (source.x() + 0.5) - host.xPosition();
-    double dy = (source.y() + 0.5) - host.yPosition();
-    double dz = (source.z() + 0.5) - host.zPosition();
-    double distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    Vec3 sourceVec = SubLevelHelper.projectOut(host.level(), new Vec3(source.x() + 0.5, source.y() + 0.5, source.z() + 0.5));
+    Vec3 hostVec = SubLevelHelper.projectOut(host.level(), new Vec3(host.xPosition(), host.yPosition(), host.zPosition()));
+    double distance = sourceVec.distanceTo(hostVec);
     receivePacket(packet, distance, host);
   }
 

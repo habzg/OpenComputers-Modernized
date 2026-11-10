@@ -83,20 +83,11 @@ public class PowerConverter extends BlockEntity implements PowerAcceptor, Enviro
   }
 
   @Override
-  public void onDisconnect(Node node) {
-  }
-
-  @Override
   public void onMessage(li.cil.oc.api.network.Message message) {
   }
 
   public void onNeighborChanged() {
     ae2OnNeighborChanged();
-  }
-
-  @Override
-  public Object result(Object... args) {
-    return li.cil.oc.core.util.ResultWrapper.result(args);
   }
 
   @Override

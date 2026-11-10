@@ -196,6 +196,7 @@ public final class Items implements ItemAPI {
   public static final DeferredHolder<Item, BlockItem> BEACON_BASE_PRINT = registerBlockItem(Constants.BlockName.BeaconBasePrint, Blocks.BEACON_BASE_PRINT);
   @SuppressWarnings("unused")
   public static final DeferredHolder<Item, BlockItem> PRINTER = registerBlockItem("printer", Blocks.PRINTER);
+  @SuppressWarnings("unused")
   public static final DeferredHolder<Item, BlockItem> CHAMELIUM_BLOCK = ITEMS.register("chameliumblock", () -> new li.cil.oc.core.impl.common.block.ChameliumBlockItem(Blocks.CHAMELIUM_BLOCK.get()));
   @SuppressWarnings("unused")
   public static final DeferredHolder<Item, BlockItem> WAYPOINT = registerBlockItem(Constants.BlockName.Waypoint, Blocks.WAYPOINT);
@@ -454,7 +455,7 @@ public final class Items implements ItemAPI {
 
   private static ItemStack safeGetStack(String name) {
     ItemInfo info = API.items.get(name);
-    return info != null ? info.createItemStack(1) : null;
+    return info != null ? info.createItemStack(1) : ItemStack.EMPTY;
   }
 
   public static ItemStack createConfiguredDrone() {

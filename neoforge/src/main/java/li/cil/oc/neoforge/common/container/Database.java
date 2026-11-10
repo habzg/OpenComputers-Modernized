@@ -34,27 +34,14 @@ public class Database extends li.cil.oc.core.impl.common.container.Player {
 
   @Override
   public void clicked(int slotId, int button, @NotNull ClickType clickType, net.minecraft.world.entity.player.@NotNull Player player) {
-    if (slotId >= 0 && slotId < databaseSize) {
-      Slot ghostSlot = getSlot(slotId);
-      if (clickType == ClickType.PICKUP) {
-        ItemStack carried = getCarried();
-        ItemStack toPlace = carried.isEmpty() ? ItemStack.EMPTY : carried.copyWithCount(1);
-        ghostSlot.set(toPlace);
-        if (!player.level().isClientSide) broadcastChanges();
-        return;
-      } else if (clickType == ClickType.QUICK_MOVE) {
-        ghostSlot.set(ItemStack.EMPTY);
-        if (!player.level().isClientSide) broadcastChanges();
-        return;
-      } else if (clickType == ClickType.SWAP && button >= 0 && button < 9) {
-        ItemStack hotbarStack = playerInventory.getItem(button);
-        ItemStack toPlace = hotbarStack.isEmpty() ? ItemStack.EMPTY : hotbarStack.copyWithCount(1);
-        ghostSlot.set(toPlace);
-        if (!player.level().isClientSide) broadcastChanges();
-        return;
-      }
+    if (slotId < 0 || slotId >= databaseSize) {
+      super.clicked(slotId, button, clickType, player);
+      return;
     }
-    super.clicked(slotId, button, clickType, player);
+    Slot ghostSlot = getSlot(slotId);
+      ItemStack carried = getCarried();
+      ghostSlot.set(carried.isEmpty() ? ItemStack.EMPTY : carried.copy());
+    if (!player.level().isClientSide) broadcastChanges();
   }
 
   @Override

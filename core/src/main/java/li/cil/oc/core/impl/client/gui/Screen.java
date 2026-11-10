@@ -5,6 +5,7 @@ import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.core.impl.client.gui.traits.InputBuffer;
 import li.cil.oc.core.impl.client.renderer.TextBufferRenderCache;
 import li.cil.oc.core.impl.client.renderer.gui.BufferRenderer;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import org.joml.Matrix4f;
 
@@ -17,6 +18,7 @@ public class Screen implements InputBuffer {
   private double scale = 1.0;
   private int mx = -1, my = -1;
   private boolean didClick = false;
+  private long mousePressTime = 0;
 
   public Screen(TextBuffer buffer, boolean hasMouse, Supplier<Boolean> hasKeyboardCallback, Supplier<Boolean> hasPower) {
     this.buffer = buffer;
@@ -70,10 +72,11 @@ public class Screen implements InputBuffer {
   @SuppressWarnings("SameReturnValue")
   public boolean mouseClicked(double mouseX, double mouseY, int button) {
     if (hasMouse && (button == 0 || button == 1)) {
+      mousePressTime = System.currentTimeMillis();
       clickOrDrag((int) mouseX, (int) mouseY, button);
     } else if (button == 2) {
       var b = buffer();
-      if (b != null) {
+      if (b != null && hasKeyboard()) {
         b.clipboard(net.minecraft.client.Minecraft.getInstance().keyboardHandler.getClipboard(), null);
       } else {
         showKeyboardMissing(System.currentTimeMillis());
@@ -84,7 +87,7 @@ public class Screen implements InputBuffer {
 
   @SuppressWarnings("SameReturnValue")
   public boolean mouseDragged(double mouseX, double mouseY, int button, double ignoredDragX, double ignoredDragY) {
-    if (hasMouse && (button == 0 || button == 1)) {
+    if (hasMouse && (button == 0 || button == 1) && System.currentTimeMillis() - mousePressTime > 10) {
       clickOrDrag((int) mouseX, (int) mouseY, button);
     }
     return true;
@@ -134,12 +137,19 @@ public class Screen implements InputBuffer {
   }
 
   public void render(GuiGraphics guiGraphics, int ignoredMouseX, int ignoredMouseY, float ignoredDt) {
+    hasPower.get();
     var b = buffer();
     if (b == null) return;
     int oldWidth = currentWidth();
     int oldHeight = currentHeight();
-    changeSize(bufferColumns(), bufferRows(), guiSizeChanged() || oldWidth != bufferColumns() || oldHeight != bufferRows());
+    int cols = bufferColumns();
+    int rows = bufferRows();
+    changeSize(cols, rows, guiSizeChanged() || oldWidth != cols || oldHeight != rows);
+    currentWidth = cols;
+    currentHeight = rows;
+    guiSizeChanged = false;
     drawGui(guiGraphics);
+    drawBufferLayer(guiGraphics);
   }
 
   public void drawGui(GuiGraphics guiGraphics) {
@@ -165,10 +175,37 @@ public class Screen implements InputBuffer {
 
   private int guiWidth = 320;
   private int guiHeight = 200;
+  private int currentWidth = -1;
+  private int currentHeight = -1;
+  private boolean guiSizeChanged = false;
+
+  @Override
+  public int currentWidth() {
+    return currentWidth;
+  }
+
+  @Override
+  public int currentHeight() {
+    return currentHeight;
+  }
+
+  @Override
+  public boolean guiSizeChanged() {
+    return guiSizeChanged;
+  }
+
+  @Override
+  public void initGui() {
+    BufferRenderer.init(Minecraft.getInstance().getTextureManager());
+    guiSizeChanged = true;
+  }
 
   public void setGuiSize(int width, int height) {
-    this.guiWidth = width;
-    this.guiHeight = height;
+    if (this.guiWidth != width || this.guiHeight != height) {
+      this.guiWidth = width;
+      this.guiHeight = height;
+      guiSizeChanged = true;
+    }
   }
 
   @Override

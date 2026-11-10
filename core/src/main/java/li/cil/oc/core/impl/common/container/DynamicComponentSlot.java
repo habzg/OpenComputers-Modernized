@@ -58,7 +58,7 @@ public class DynamicComponentSlot extends ComponentSlot {
     if (SideTracker.isServer() && hasItem() && !mayPlace(getItem())) {
       ItemStack stack = getItem();
       set(ItemStack.EMPTY);
-      InventoryUtils.addToPlayerInventory(stack, player);
+      InventoryUtils.addToPlayerInventory(stack, player, true);
     }
   }
 }

@@ -29,7 +29,7 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 
-public class Tablet extends DelegateItem implements Chargeable {
+public class Tablet extends DelegateItem implements Chargeable, ItemUseFirst {
   private static final int TimeToAnalyze = 10;
   public static BlockPosition currentBlockPos;
   public static Direction currentSide;
@@ -77,27 +77,23 @@ public class Tablet extends DelegateItem implements Chargeable {
   @Override
   public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, Player player, @NotNull InteractionHand hand) {
     var stack = player.getItemInHand(hand);
-    if (!level.isClientSide) {
-      if (player.isShiftKeyDown()) {
-        var tabletHost = get(stack, player);
-        tabletHost.stopMachine();
-        var data = new TabletData(stack);
-        if (data.tier > li.cil.oc.core.common.Tier.One) {
-          ContainerProviderDelegate.get().openMenu(player, GuiType.TabletInner, level, 0, 0, 0);
-        }
-      }
-    }
     player.startUsingItem(hand);
     return InteractionResultHolder.consume(stack);
   }
 
   @Override
-  public @NotNull InteractionResult useOn(@NotNull UseOnContext context) {
+  public @NotNull InteractionResult useFirst(@NotNull UseOnContext context) {
     currentBlockPos = new BlockPosition(context.getClickedPos().getX(), context.getClickedPos().getY(), context.getClickedPos().getZ(), context.getLevel());
     currentSide = context.getClickedFace();
     currentHitX = (float) (context.getClickLocation().x - context.getClickedPos().getX());
     currentHitY = (float) (context.getClickLocation().y - context.getClickedPos().getY());
     currentHitZ = (float) (context.getClickLocation().z - context.getClickedPos().getZ());
+    return InteractionResult.PASS;
+  }
+
+  @Override
+  public @NotNull InteractionResult useOn(@NotNull UseOnContext context) {
+    useFirst(context);
     net.minecraft.world.entity.player.Player player = context.getPlayer();
     if (player != null) {
       player.startUsingItem(context.getHand());
@@ -127,7 +123,16 @@ public class Tablet extends DelegateItem implements Chargeable {
           }
         }
       }
-    } else if (!player.isShiftKeyDown()) {
+    } else if (player.isShiftKeyDown()) {
+      if (!level.isClientSide) {
+        var tabletHost = get(stack, player);
+        tabletHost.stopMachine();
+        var data = new TabletData(stack);
+        if (data.tier > li.cil.oc.core.common.Tier.One) {
+          ContainerProviderDelegate.get().openMenu(player, GuiType.TabletInner, level, 0, 0, 0);
+        }
+      }
+    } else {
       if (!level.isClientSide) {
         var tabletHost = get(stack, player);
         tabletHost.startMachine();
@@ -169,12 +174,14 @@ public class Tablet extends DelegateItem implements Chargeable {
   public double charge(ItemStack stack, double amount, boolean simulate) {
     if (amount < 0) return amount;
     var data = new TabletData(stack);
-    var charge = Math.min(data.maxEnergy - data.energy, amount);
-    if (!simulate) {
-      data.energy += charge;
+    double target = Math.clamp(data.energy + amount, 0, data.maxEnergy);
+    double used = target - data.energy;
+    double unused = amount - used;
+    if (!simulate && (used > Double.MIN_VALUE || used < -Double.MIN_VALUE)) {
+      data.energy = target;
       data.save(stack);
     }
-    return amount - charge;
+    return unused;
   }
 
   @Override

@@ -67,7 +67,7 @@ public class OCProbeProvider implements IProbeInfoProvider {
           : String.format("%d:%02d", timeRemaining / 60, timeRemaining % 60);
         probeInfo.mcText(Component.translatable("gui.opencomputers.assembler.progress",
           String.format("%.0f", progress), timeStr));
-        if (assembler.output != null && !assembler.output.isEmpty()) {
+        if (!assembler.output.isEmpty()) {
           probeInfo.mcText(Component.literal("Building: ")
             .append(Component.translatable(assembler.output.getDescriptionId())));
         }

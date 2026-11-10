@@ -191,9 +191,9 @@ public class RobotRenderer implements BlockEntityRenderer<RobotProxy> {
 
     Direction yaw = robot.yaw();
     switch (yaw) {
-      case SOUTH -> poseStack.mulPose(new Quaternionf().rotateY((float) Math.toRadians(180)));
-      case WEST -> poseStack.mulPose(new Quaternionf().rotateY((float) Math.toRadians(90)));
-      case EAST -> poseStack.mulPose(new Quaternionf().rotateY((float) Math.toRadians(-90)));
+      case WEST -> poseStack.mulPose(new Quaternionf().rotateY((float) Math.toRadians(-90)));
+      case NORTH -> poseStack.mulPose(new Quaternionf().rotateY((float) Math.toRadians(180)));
+      case EAST -> poseStack.mulPose(new Quaternionf().rotateY((float) Math.toRadians(90)));
       default -> {
       }
     }

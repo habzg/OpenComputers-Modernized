@@ -7,7 +7,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import li.cil.oc.api.internal.MultiTank;
-import li.cil.oc.api.network.Connector;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.network.Message;
@@ -17,6 +16,7 @@ import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.PacketSender;
 import li.cil.oc.core.impl.common.blockentity.traits.Computer;
 import li.cil.oc.core.impl.common.blockentity.traits.PowerInformation;
+import li.cil.oc.core.impl.server.agent.AgentPlayer;
 import li.cil.oc.core.impl.util.EventHandlerDelegate;
 import li.cil.oc.core.impl.util.RotationHelper;
 import li.cil.oc.core.util.FluidTank;
@@ -91,6 +91,9 @@ public abstract class Robot extends RobotBase implements Computer, PowerInformat
 
   @Override
   public boolean canInteract(String player) {
+    if (isServer() && machine() != null) {
+      return machine().canInteract(player);
+    }
     if (player == null) return false;
     if (!OCSettings.get().canComputersBeOwned) return true;
     if (users.isEmpty()) return true;
@@ -176,19 +179,22 @@ public abstract class Robot extends RobotBase implements Computer, PowerInformat
     return 0;
   }
 
+  /** This path is never taken, but Java requires defining the method. */
   @Override
   public boolean canConnectPower(Direction side) {
-    return true;
+    return false;
   }
 
+  /** This path is never taken, but Java requires defining the method. */
   @Override
   public double tryChangeBuffer(Direction side, double amount) {
-    return machine.node() instanceof Connector c ? c.changeBuffer(amount) : amount;
+    return 0;
   }
 
+  /** This path is never taken, but Java requires defining the method. */
   @Override
   public double tryChangeBuffer(Direction side, double amount, boolean doReceive) {
-    return tryChangeBuffer(side, amount);
+    return 0;
   }
 
   @Override
@@ -249,8 +255,9 @@ public abstract class Robot extends RobotBase implements Computer, PowerInformat
       var comps = _components();
       if (comps != null && slot < comps.length && comps[slot] != null) {
         var driver = li.cil.oc.api.API.driver.driverFor(stack);
-        if (driver != null) {
-          save(comps[slot], driver, stack, level().registryAccess());
+        var provider = getEffectiveProvider();
+        if (driver != null && provider != null) {
+          save(comps[slot], driver, stack, provider);
         }
       }
       PacketSender.sendRobotInventory(this, slot, stack);
@@ -326,7 +333,7 @@ public abstract class Robot extends RobotBase implements Computer, PowerInformat
       if (isUpgradeSlot(slot)) {
         PacketSender.sendRobotInventory(this, slot, stack);
       }
-      if (isFloppySlot(slot)) {
+      if (isFloppySlot(slot) && isComponentSlot(slot, stack)) {
         li.cil.oc.core.impl.common.Sound.playDiskInsert(this);
       }
       if (isComponentSlot(slot, stack)) {
@@ -361,8 +368,14 @@ public abstract class Robot extends RobotBase implements Computer, PowerInformat
       if (isUpgradeSlot(slot)) {
         PacketSender.sendRobotInventory(this, slot, ItemStack.EMPTY);
       }
-      if (isFloppySlot(slot)) {
+      if (isFloppySlot(slot) && isComponentSlot(slot, stack)) {
         li.cil.oc.core.impl.common.Sound.playDiskEject(this);
+      }
+      if (isComponentSlot(slot, stack)) {
+        var level = getLevel();
+        if (level != null) {
+          level.updateNeighborsAt(worldPosition, getBlockState().getBlock());
+        }
       }
       if (isInventorySlot(slot)) {
         if (machine() != null) {
@@ -377,19 +390,87 @@ public abstract class Robot extends RobotBase implements Computer, PowerInformat
     setItem(slot, stack);
   }
 
+  private boolean updatingInventorySize = false;
+
   @Override
-  public ItemStack[] pendingRemovals() {
-    return null;
+  public void updateInventorySize() {
+    synchronized (this) {
+      if (updatingInventorySize) return;
+      updatingInventorySize = true;
+      try {
+      int oldMain = mainInventory.getContainerSize();
+      int oldSelected = selectedSlot;
+      int newSize = computeInventorySize();
+      if (newSize != inventorySize) {
+        if (newSize < oldMain) {
+          for (int s = equipmentInventory.getContainerSize() + newSize; s < equipmentInventory.getContainerSize() + oldMain; s++) {
+            if (s >= 0 && s < inventory.length) {
+              var stack = inventory[s];
+              if (stack != null && !stack.isEmpty()) {
+                inventory[s] = ItemStack.EMPTY;
+                if (isServer()) {
+                  if (player() != null) {
+                    player().getInventory().add(stack);
+                  }
+                  if (!stack.isEmpty()) {
+                    spawnStackInWorld(stack, facing());
+                  }
+                }
+              }
+            }
+          }
+        }
+        inventorySize = newSize;
+        int compCount = componentCount();
+        containerSize = equipmentInventory.getContainerSize() + newSize + compCount;
+        var old = _components();
+        int newTotal = equipmentInventory.getContainerSize() + newSize + compCount;
+        var moved = new li.cil.oc.api.network.ManagedEnvironment[newTotal];
+        if (old != null) {
+          int oldOffset = equipmentInventory.getContainerSize() + oldMain;
+          int newOffset = equipmentInventory.getContainerSize() + newSize;
+          for (int i = 0; i < compCount; i++) {
+            int from = oldOffset + i;
+            int to = newOffset + i;
+            if (from >= 0 && from < old.length && to >= 0 && to < moved.length) {
+              moved[to] = old[from];
+            }
+          }
+        }
+        _components(moved);
+        setSelectedSlot(oldSelected);
+        setChanged();
+      }
+      } finally {
+        updatingInventorySize = false;
+      }
+    }
   }
 
   @Override
-  public ItemStack[] pendingAdds() {
-    return null;
+  public void onMachineDisconnect(Node node) {
+    super.onMachineDisconnect(node);
+    if (node == node()) {
+      var comps = _components();
+      if (comps != null) {
+        for (var env : comps) {
+          if (env != null && env.node() != null) {
+            env.node().remove();
+          }
+        }
+      }
+    }
   }
 
   @Override
   public boolean isUseableByPlayer(Player player) {
-    return stillValid(player);
+    if (player == null || !stillValid(player)) return false;
+    String name = player.getScoreboardName();
+    if (player instanceof AgentPlayer agentPlayer && agentPlayer.agent() != null) {
+      name = agentPlayer.agent().ownerName();
+    }
+    if (!canInteract(name)) return false;
+    return (!isCreative() || player.getAbilities().instabuild);
   }
 
   @Override
@@ -414,7 +495,7 @@ public abstract class Robot extends RobotBase implements Computer, PowerInformat
 
   @Override
   public void setSelectedSlot(int index) {
-    selectedSlot = index;
+    selectedSlot(index);
   }
 
   @Override
@@ -434,6 +515,10 @@ public abstract class Robot extends RobotBase implements Computer, PowerInformat
       if (l instanceof ServerLevel sl) {
         player_ = createAgentPlayer(sl);
       }
+    }
+    if (player_ != null && li.cil.oc.core.impl.util.DroneHelper.get() != null) {
+      li.cil.oc.core.impl.util.DroneHelper.get().updatePlayerPosition(player_, facing(), facing());
+      li.cil.oc.core.impl.util.DroneHelper.get().setPlayerInventoryItems(player_);
     }
     return player_;
   }
@@ -513,28 +598,14 @@ public abstract class Robot extends RobotBase implements Computer, PowerInformat
     return t != null ? t.getCapacity() : 0;
   }
 
-  public int fill(li.cil.oc.core.util.FluidStack resource, boolean simulate) {
-    var t = getFluidTank(selectedTank);
-    return t != null ? t.fill(resource, simulate) : 0;
-  }
-
-  public li.cil.oc.core.util.FluidStack drain(li.cil.oc.core.util.FluidStack resource, boolean simulate) {
-    var t = getFluidTank(selectedTank);
-    if (t != null && t.getFluid().hasSameFluid(resource)) return t.drain(resource.amount(), simulate);
-    return li.cil.oc.core.util.FluidStack.EMPTY;
-  }
-
-  public li.cil.oc.core.util.FluidStack drain(int maxDrain, boolean simulate) {
-    var t = getFluidTank(selectedTank);
-    return t != null ? t.drain(maxDrain, simulate) : li.cil.oc.core.util.FluidStack.EMPTY;
-  }
-
   @Override
   public boolean canPlaceItem(int slot, @NotNull ItemStack stack) {
     if (slot == 0) return true;
     if (isContainerSlot(slot)) {
       var driver = hostClass != null ? li.cil.oc.api.API.driver.driverFor(stack, hostClass) : null;
-      if (driver != null) {
+      if (driver != null
+        && !(driver instanceof li.cil.oc.core.impl.integration.opencomputers.DriverScreen)
+        && !(driver instanceof li.cil.oc.core.impl.integration.opencomputers.DriverKeyboard)) {
         String slotType = containerSlotType(slot);
         return driver.slot(stack).equals(slotType) && driver.tier(stack) <= containerSlotTier(slot);
       }
@@ -608,6 +679,7 @@ public abstract class Robot extends RobotBase implements Computer, PowerInformat
 
   @Override
   public void markDirty() {
+    if (inventorySize >= 0) updateInventorySize();
     setChanged();
   }
 
@@ -628,14 +700,16 @@ public abstract class Robot extends RobotBase implements Computer, PowerInformat
 
   @Override
   public int @NotNull [] getSlotsForFace(@NotNull Direction side) {
-    if (side == Direction.WEST) return new int[]{0};
-    if (side == Direction.EAST) return containerSlots().stream().mapToInt(i -> i).toArray();
+    var local = toLocal(side);
+    if (local == Direction.WEST) return new int[]{0};
+    if (local == Direction.EAST) return containerSlots().stream().mapToInt(i -> i).toArray();
     return inventorySlots().stream().mapToInt(i -> i).toArray();
   }
 
   @Override
   public boolean canPlaceItemThroughFace(int slot, @NotNull ItemStack stack, Direction side) {
-    return Arrays.stream(getSlotsForFace(side)).anyMatch(s -> s == slot);
+    if (side == null) return canPlaceItem(slot, stack);
+    return Arrays.stream(getSlotsForFace(side)).anyMatch(s -> s == slot) && canPlaceItem(slot, stack);
   }
 
   @Override
@@ -782,13 +856,15 @@ public abstract class Robot extends RobotBase implements Computer, PowerInformat
   }
 
   @Override
-  protected void onProxyMoved(net.minecraft.world.level.Level world, BlockPos newPos, BlockPos oldPos) {
+  protected boolean onProxyMoved(net.minecraft.world.level.Level world, BlockPos newPos, BlockPos oldPos) {
     var te = world.getBlockEntity(newPos);
     if (te instanceof RobotProxy newProxy && newProxy.robot == this) {
       this.proxy = newProxy;
       this.setLevel(world);
       this.setBlockPos(newPos);
+      return true;
     }
+    return false;
   }
 
   @Override

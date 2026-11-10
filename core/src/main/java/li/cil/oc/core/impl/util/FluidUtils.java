@@ -42,6 +42,10 @@ public final class FluidUtils {
     return handler != null ? handler.fillItem(stack, resource) : null;
   }
 
+  public static ItemStack drainItem(ItemStack stack, FluidStack resource) {
+    return handler != null ? handler.drainItem(stack, resource) : null;
+  }
+
   public static boolean isFluidContainer(ItemStack stack) {
     return handler != null && handler.isFluidContainer(stack);
   }
@@ -56,6 +60,8 @@ public final class FluidUtils {
     FluidHandler fluidHandlerIn(ItemStack stack);
 
     ItemStack fillItem(ItemStack stack, FluidStack resource);
+
+    ItemStack drainItem(ItemStack stack, FluidStack resource);
 
     boolean isFluidContainer(ItemStack stack);
 

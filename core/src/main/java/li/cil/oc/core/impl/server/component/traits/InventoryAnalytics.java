@@ -46,7 +46,7 @@ public interface InventoryAnalytics extends InventoryAware, NetworkAware {
     ItemStack localStack = inventory().getItem(localSlot);
     return DatabaseAccess.withDatabase(node(), dbAddress, database -> {
       int dbSlot = ExtendedArguments.checkSlot(args, database.data(), 2);
-      boolean nonEmpty = !database.getStackInSlot(dbSlot).isEmpty();
+      boolean nonEmpty = database.getStackInSlot(dbSlot) != ItemStack.EMPTY;
       database.setStackInSlot(dbSlot, localStack.copy());
       return result(nonEmpty);
     });

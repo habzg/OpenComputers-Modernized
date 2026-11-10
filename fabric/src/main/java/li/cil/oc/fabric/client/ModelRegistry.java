@@ -1,5 +1,6 @@
 package li.cil.oc.fabric.client;
 
+import li.cil.oc.core.impl.client.renderer.item.ItemState;
 import li.cil.oc.core.impl.util.Color;
 import li.cil.oc.fabric.OpenComputers;
 import li.cil.oc.fabric.model.CableModel;
@@ -10,6 +11,7 @@ import li.cil.oc.fabric.model.PrintModel;
 import li.cil.oc.fabric.model.RackModel;
 import li.cil.oc.fabric.model.RobotModel;
 import li.cil.oc.fabric.model.ScreenModel;
+import li.cil.oc.fabric.model.StateModel;
 import net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin;
 import net.fabricmc.fabric.api.client.model.loading.v1.ModelModifier;
 import net.minecraft.resources.ResourceLocation;
@@ -34,6 +36,14 @@ public final class ModelRegistry {
       var printId = ResourceLocation.fromNamespaceAndPath(OpenComputers.ID, "print");
       var beaconId = ResourceLocation.fromNamespaceAndPath(OpenComputers.ID, "beaconbaseprint");
       var netSplitterId = ResourceLocation.fromNamespaceAndPath(OpenComputers.ID, "netsplitter");
+      var tabletId = ResourceLocation.fromNamespaceAndPath(OpenComputers.ID, "tablet");
+      var terminalId = ResourceLocation.fromNamespaceAndPath(OpenComputers.ID, "terminal");
+      var tabletOnId = ResourceLocation.fromNamespaceAndPath(OpenComputers.ID, "item/tablet_on");
+      var tabletOffId = ResourceLocation.fromNamespaceAndPath(OpenComputers.ID, "item/tablet_off");
+      var terminalOnId = ResourceLocation.fromNamespaceAndPath(OpenComputers.ID, "item/terminal_on");
+      var terminalOffId = ResourceLocation.fromNamespaceAndPath(OpenComputers.ID, "item/terminal_off");
+
+      pluginContext.addModels(tabletOnId, tabletOffId, terminalOnId, terminalOffId);
 
       pluginContext.modifyModelAfterBake().register(ModelModifier.WRAP_PHASE, (model, context) -> {
         var topLevelId = context.topLevelId();
@@ -79,6 +89,14 @@ public final class ModelRegistry {
           id.equals(ResourceLocation.fromNamespaceAndPath(OpenComputers.ID, "screen2")) ||
           id.equals(ResourceLocation.fromNamespaceAndPath(OpenComputers.ID, "screen3"))) {
           return new ScreenModel();
+        }
+
+        if (id.equals(tabletId)) {
+          return model != null ? new StateModel(model, tabletOnId, tabletOffId, ItemState::tablet) : null;
+        }
+
+        if (id.equals(terminalId)) {
+          return model != null ? new StateModel(model, terminalOnId, terminalOffId, ItemState::terminal) : null;
         }
 
         return model;

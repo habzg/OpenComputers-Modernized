@@ -6,7 +6,6 @@ import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.core.common.item.traits.FileSystemLike;
 import li.cil.oc.core.impl.OCSettings;
-import li.cil.oc.core.impl.common.Achievement;
 import li.cil.oc.core.impl.common.blockentity.Assembler;
 import li.cil.oc.core.impl.common.blockentity.Rack;
 import li.cil.oc.core.impl.common.blockentity.Waypoint;
@@ -39,8 +38,8 @@ public final class ServerPacketHandler extends CommonPacketHandler {
   }
 
   @Override
-  protected Level world(Player player, int dimension) {
-    return player instanceof ServerPlayer sp ? sp.serverLevel() : null;
+  protected Level world(Player player, String dimension) {
+    return serverLevel(player, dimension);
   }
 
   @Override
@@ -307,9 +306,7 @@ public final class ServerPacketHandler extends CommonPacketHandler {
     if (p.player instanceof ServerPlayer player) {
       if (player.containerMenu instanceof li.cil.oc.core.impl.common.container.Assembler container && container.assembler == entity) {
         boolean creative = player.getAbilities().instabuild;
-        if (entity.start(creative)) {
-          if (entity.output != null) Achievement.onAssemble(entity.output, p.player);
-        }
+        entity.start(creative);
       } else {
         logForgedPacket(player);
       }

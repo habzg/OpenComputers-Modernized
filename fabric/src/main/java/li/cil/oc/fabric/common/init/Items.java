@@ -55,7 +55,6 @@ import li.cil.oc.core.impl.common.item.PrintedCircuitBoard;
 import li.cil.oc.core.impl.common.item.RawCircuitBoard;
 import li.cil.oc.core.impl.common.item.RedstoneCard;
 import li.cil.oc.core.impl.common.item.Server;
-import li.cil.oc.core.impl.common.item.Tablet;
 import li.cil.oc.core.impl.common.item.TabletCase;
 import li.cil.oc.core.impl.common.item.Terminal;
 import li.cil.oc.core.impl.common.item.TerminalServer;
@@ -93,6 +92,7 @@ import li.cil.oc.core.impl.common.item.data.TabletData;
 import li.cil.oc.core.impl.server.machine.luac.LuaStateFactory;
 import li.cil.oc.fabric.OpenComputers;
 import li.cil.oc.fabric.common.item.HoverBoots;
+import li.cil.oc.fabric.common.item.Tablet;
 import li.cil.oc.fabric.common.item.UpgradeMF;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
@@ -583,7 +583,7 @@ public final class Items implements ItemAPI {
 
   private static ItemStack safeGetStack(String name) {
     ItemInfo info = li.cil.oc.api.API.items.get(name);
-    return info != null ? info.createItemStack(1) : null;
+    return info != null ? info.createItemStack(1) : ItemStack.EMPTY;
   }
 
   public static ItemStack createConfiguredDrone() {

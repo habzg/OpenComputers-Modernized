@@ -17,6 +17,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,8 +103,12 @@ public class RobotData extends ItemData {
   public void load(ItemStack stack, HolderLookup.Provider provider) {
     super.load(stack, provider);
     var customName = stack.get(DataComponents.CUSTOM_NAME);
-    if (customName != null) {
+    if (customName != null && !customName.getString().equals(name)) {
       name = customName.getString();
+      var tag = stack.get(DataComponents.CUSTOM_DATA);
+      var nbt = tag != null && !tag.isEmpty() ? tag.copyTag() : new CompoundTag();
+      writeName(nbt);
+      stack.set(DataComponents.CUSTOM_DATA, CustomData.of(nbt));
     }
   }
 
@@ -116,27 +121,35 @@ public class RobotData extends ItemData {
     }
   }
 
-  @Override
-  public void save(CompoundTag nbt, HolderLookup.Provider provider) {
+  private void writeName(CompoundTag nbt) {
     if (!Strings.isNullOrEmpty(name)) {
       if (!nbt.contains("display")) {
         nbt.put("display", new CompoundTag());
       }
       nbt.getCompound("display").putString("Name", name);
     }
+  }
+
+  @Override
+  public void save(CompoundTag nbt, HolderLookup.Provider provider) {
+    writeName(nbt);
     nbt.putInt(OCSettings.namespace + "storedEnergy", totalEnergy);
     nbt.putInt(OCSettings.namespace + "robotEnergy", robotEnergy);
     nbt.putInt(OCSettings.namespace + "tier", tier);
     ListTag compList = new ListTag();
     for (var stack : components) {
-      if (stack != null && !stack.isEmpty()) {
+      if (stack == null || stack.isEmpty()) {
+        compList.add(new CompoundTag());
+      } else {
         compList.add(stack.save(provider, new CompoundTag()));
       }
     }
     nbt.put(OCSettings.namespace + "components", compList);
     ListTag contList = new ListTag();
     for (var stack : containers) {
-      if (stack != null && !stack.isEmpty()) {
+      if (stack == null || stack.isEmpty()) {
+        contList.add(new CompoundTag());
+      } else {
         contList.add(stack.save(provider, new CompoundTag()));
       }
     }
@@ -153,7 +166,15 @@ public class RobotData extends ItemData {
         if (customData != null && !customData.isEmpty()) {
           var nbt = customData.copyTag();
           if (nbt.contains(OCSettings.namespace + "data", Tag.TAG_COMPOUND)) {
-            nbt.getCompound(OCSettings.namespace + "data").remove("node");
+            var data = nbt.getCompound(OCSettings.namespace + "data");
+            var driver = li.cil.oc.api.API.driver.driverFor(cs);
+            if (driver instanceof li.cil.oc.core.impl.integration.opencomputers.DriverScreen) {
+              for (var key : new java.util.ArrayList<>(data.getAllKeys())) {
+                data.remove(key);
+              }
+            } else {
+              data.remove("node");
+            }
           }
           cs.set(DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.of(nbt));
         }

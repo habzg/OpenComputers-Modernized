@@ -47,7 +47,7 @@ public final class UpgradeRenderers {
       @Override
       @SuppressWarnings("unused")
       public String computePreferredMountPoint(ItemStack stack, Robot robot, Set<String> availableMountPoints) {
-        return MountPointName.Any;
+        return availableMountPoints.contains(MountPointName.BottomBack) ? MountPointName.BottomBack : MountPointName.Any;
       }
 
       @Override
@@ -73,7 +73,7 @@ public final class UpgradeRenderers {
       @Override
       @SuppressWarnings("unused")
       public String computePreferredMountPoint(ItemStack stack, Robot robot, Set<String> availableMountPoints) {
-        return MountPointName.Any;
+        return availableMountPoints.contains(MountPointName.TopBack) ? MountPointName.TopBack : MountPointName.Any;
       }
 
       @Override

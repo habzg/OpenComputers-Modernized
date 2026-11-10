@@ -142,7 +142,7 @@ public final class GuiHandler {
           return new li.cil.oc.core.impl.common.container.Drone(Menus.DRONE, containerId, player.getInventory(), (li.cil.oc.core.impl.common.entity.Drone) entity);
       }
       case Item -> {
-        ItemStack heldItem = player.getMainHandItem();
+        ItemStack heldItem = li.cil.oc.core.impl.util.GuiItemStacks.inUse(id, player);
         var item = heldItem.getItem();
         switch (item) {
           case li.cil.oc.core.impl.common.item.UpgradeDatabase ignored when id == GuiType.Database -> {

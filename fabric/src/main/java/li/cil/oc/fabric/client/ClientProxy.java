@@ -141,6 +141,11 @@ public final class ClientProxy implements ClientModInitializer {
       return 0xFF000000 | (dye != null ? Color.byMeta(dye.getId()) : Color.Black);
     }, Blocks.CHAMELIUM_BLOCK);
 
+    ColorProviderRegistry.ITEM.register((stack, tintIndex) -> {
+      if (tintIndex == 1) return 0xFF000000 | (ItemColorizer.hasColor(stack) ? ItemColorizer.getColor(stack) : 0x66DD55);
+      return 0xFFFFFFFF;
+    }, Items.HOVER_BOOTS);
+
     ColorProviderRegistry.ITEM.register(PrintItemColors::getColor, Blocks.PRINT, Blocks.BEACON_BASE_PRINT);
 
     ClientPlayNetworking.registerGlobalReceiver(OCPayload.TYPE, (payload, context) -> context.client().execute(() -> ClientPacketHandler.INSTANCE.onPacket(io.netty.buffer.Unpooled.wrappedBuffer(payload.data()))));
@@ -275,6 +280,7 @@ public final class ClientProxy implements ClientModInitializer {
           }
         }
       }
+      li.cil.oc.core.impl.common.component.TextBuffer.removeClientBuffersInChunk(world, chunk.getPos().x, chunk.getPos().z);
     });
 
     li.cil.oc.api.event.RackMountableRenderEvent.BlockEntity.EVENT.register(RackMountableRenderHandler::onRackMountableRendering);

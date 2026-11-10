@@ -109,8 +109,14 @@ public class Robot extends DynamicGuiContainer<li.cil.oc.fabric.common.container
   @Override
   public boolean hasKeyboard() {
     var r = current();
-    return r != null && r.agentComponents().stream()
-      .anyMatch(c -> c instanceof li.cil.oc.api.internal.Keyboard);
+    if (r == null) return false;
+    for (int slot : r.componentSlots()) {
+      var stack = r.getItem(slot);
+      if (stack.isEmpty()) continue;
+      var driver = li.cil.oc.api.Driver.driverFor(stack, r.getClass());
+      if (driver instanceof li.cil.oc.core.impl.integration.opencomputers.DriverKeyboard) return true;
+    }
+    return false;
   }
 
   @Override
@@ -249,6 +255,7 @@ public class Robot extends DynamicGuiContainer<li.cil.oc.fabric.common.container
   protected void renderBg(GuiGraphics guiGraphics, float dt, int mouseX, int mouseY) {
     buffer();
     guiGraphics.blit(buffer != null ? Textures.guiRobot : Textures.guiRobotNoScreen, leftPos, topPos, 0, 0, imageWidth, imageHeight, 256, 256);
+    renderDisabledSlotBackgrounds(guiGraphics);
     var r = current();
     power.level = r.globalBuffer / r.globalBufferSize;
     drawWidgets(guiGraphics);
@@ -266,13 +273,13 @@ public class Robot extends DynamicGuiContainer<li.cil.oc.fabric.common.container
 
   @Override
   public boolean mouseClicked(double mouseX, double mouseY, int button) {
-    super.mouseClicked(mouseX, mouseY, button);
+    boolean handled = super.mouseClicked(mouseX, mouseY, button);
     if (canScroll() && button == 0 && isCoordinateOverScrollBar((int) mouseX - leftPos, (int) mouseY - topPos)) {
       isDragging = true;
       scrollMouse((int) mouseY);
       return true;
     }
-    return false;
+    return handled;
   }
 
   @Override
@@ -304,21 +311,22 @@ public class Robot extends DynamicGuiContainer<li.cil.oc.fabric.common.container
       (mx > 169 + 18 * 4 + 2 && mx < 169 + 18 * 4 + 2 + 8 && my >= scrollYPos && my < scrollYPos + 94)) {
       if (scrollY < 0) scrollDown();
       else scrollUp();
+      return true;
     }
-    return true;
+    return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
   }
 
   private boolean isCoordinateOverScrollBar(int x, int y) {
     int scrollY = 155 - deltaY;
-    return x >= 169 + 18 * 4 + 2 && x <= 169 + 18 * 4 + 2 + 6 && y >= scrollY + 1 && y <= scrollY + 94 - 2;
+    return x > 169 + 18 * 4 + 2 && x < 169 + 18 * 4 + 2 + 8 && y >= scrollY && y < scrollY + 94;
   }
 
   private boolean canScroll() {
-    return current().mainInventory().getContainerSize() > 16;
+    return current().inventorySize > 16;
   }
 
   private int maxOffset() {
-    return Math.max(0, current().mainInventory().getContainerSize() / 4 - 4);
+    return current().inventorySize / 4 - 4;
   }
 
   private void scrollUp() {

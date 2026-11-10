@@ -39,6 +39,7 @@ artifacts {
 
 dependencies {
     api project(':api')
+    compileOnly 'org.slf4j:slf4j-api:2.0.20'
 }
 
 java {

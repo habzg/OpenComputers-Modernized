@@ -78,7 +78,9 @@ public final class ModVanilla implements ModProxy, BundledRedstone.RedstoneProvi
       pos.z() + side.getStepZ()
     );
     return Math.max(
-      world.getSignal(offsetPos, side),
+      Math.max(
+        world.getSignal(offsetPos, side),
+        world.getDirectSignal(offsetPos, side)),
       world.getBlockState(offsetPos).getBlock() == Blocks.REDSTONE_WIRE ?
         world.getBlockState(offsetPos).getValue(net.minecraft.world.level.block.RedStoneWireBlock.POWER) : 0
     );

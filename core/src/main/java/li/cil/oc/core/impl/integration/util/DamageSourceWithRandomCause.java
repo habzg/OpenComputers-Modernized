@@ -1,6 +1,7 @@
 package li.cil.oc.core.impl.integration.util;
 
 import net.minecraft.core.Holder;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.tags.TagKey;
@@ -36,7 +37,7 @@ public class DamageSourceWithRandomCause extends DamageSource {
     LivingEntity damager = damagee.getKillCredit();
     String format = "death.attack." + name + "." + (damagee.level().random.nextInt(numCauses) + 1);
     String withCauseFormat = format + ".player";
-    if (damager != null && net.minecraft.client.resources.language.I18n.exists(withCauseFormat)) {
+    if (damager != null && Language.getInstance().has(withCauseFormat)) {
       return Component.translatable(withCauseFormat, damagee.getDisplayName(), damager.getDisplayName());
     } else {
       return Component.translatable(format, damagee.getDisplayName());

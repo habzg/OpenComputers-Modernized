@@ -18,6 +18,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -122,6 +123,17 @@ public class Case extends RedstoneAware implements PowerAcceptor, GUI, StateAwar
       return true;
     }
     return super.onBlockActivated(world, pos, player, side, hitX, hitY, hitZ, hand);
+  }
+
+  @Override
+  public float getDestroyProgress(@NotNull BlockState state, @NotNull Player player, @NotNull BlockGetter level, @NotNull BlockPos pos) {
+    var te = level.getBlockEntity(pos);
+    if (te instanceof li.cil.oc.core.impl.common.blockentity.Case c) {
+      if (c.isCreative() && (!player.getAbilities().instabuild || !c.canInteract(player.getGameProfile().getName()))) {
+        return 0.0F;
+      }
+    }
+    return super.getDestroyProgress(state, player, level, pos);
   }
 
   @Override

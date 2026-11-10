@@ -62,7 +62,7 @@ public class DiskDrive extends SimpleBlock implements li.cil.oc.core.impl.common
       var te = world.getBlockEntity(pos);
       if (te instanceof li.cil.oc.core.impl.common.blockentity.DiskDrive drive) {
         boolean isDiskInDrive = !drive.getItem(0).isEmpty();
-        var heldItem = player.getMainHandItem();
+        var heldItem = player.getItemInHand(hand);
         boolean isHoldingDisk = drive.canPlaceItem(0, heldItem);
         if (isDiskInDrive) {
           if (!world.isClientSide) {
@@ -70,7 +70,12 @@ public class DiskDrive extends SimpleBlock implements li.cil.oc.core.impl.common
           }
         }
         if (isHoldingDisk) {
-          drive.setItem(0, heldItem.split(1));
+          drive.setItem(0, heldItem.copy().split(1));
+          if (hand == InteractionHand.MAIN_HAND) {
+            player.getInventory().removeItem(player.getInventory().selected, 1);
+          } else {
+            player.getOffhandItem().shrink(1);
+          }
         }
         return isDiskInDrive || isHoldingDisk;
       }

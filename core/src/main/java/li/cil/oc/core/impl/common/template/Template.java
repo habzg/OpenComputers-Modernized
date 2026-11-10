@@ -2,6 +2,8 @@ package li.cil.oc.core.impl.common.template;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.core.Constants;
@@ -18,10 +20,15 @@ public final class Template {
   }
 
   public static Object[] validateComputer(Container inventory, Class<? extends EnvironmentHost> hostClass) {
-    return validateComputer(inventory, hostClass, null);
+    return validateComputer(inventory, hostClass, null, suggestedComponents(hostClass));
   }
 
+  @SuppressWarnings("unused")
   public static Object[] validateComputer(Container inventory, Class<? extends EnvironmentHost> hostClass, ToIntFunction<Container> maxComplexityOverride) {
+    return validateComputer(inventory, hostClass, maxComplexityOverride, suggestedComponents(hostClass));
+  }
+
+  public static Object[] validateComputer(Container inventory, Class<? extends EnvironmentHost> hostClass, ToIntFunction<Container> maxComplexityOverride, List<Map.Entry<String, Predicate<Container>>> suggestedComponents) {
     boolean hasCase = caseTier(inventory) != Tier.None;
     boolean hasCPU = hasCPU(inventory, hostClass);
     boolean hasRAM = hasRAM(inventory, hostClass);
@@ -39,35 +46,35 @@ public final class Template {
     }
 
     List<Component> warnings = new ArrayList<>();
-    if (!hasComponent(Constants.ItemName.EEPROM, inventory)) {
-      warnings.add(Component.literal("- ").append(Component.translatable("gui.opencomputers.assembler.warning.bios")));
-    }
-    if (!hasComponent(Constants.BlockName.ScreenTier1, inventory)) {
-      warnings.add(Component.literal("- ").append(Component.translatable("gui.opencomputers.assembler.warning.screen")));
-    }
-    if (!hasComponent(Constants.BlockName.Keyboard, inventory)) {
-      warnings.add(Component.literal("- ").append(Component.translatable("gui.opencomputers.assembler.warning.keyboard")));
-    }
-    boolean hasGraphics = hasComponent(Constants.ItemName.APUCreative, inventory)
-      || hasComponent(Constants.ItemName.APUTier1, inventory)
-      || hasComponent(Constants.ItemName.APUTier2, inventory)
-      || hasComponent(Constants.ItemName.GraphicsCardTier1, inventory)
-      || hasComponent(Constants.ItemName.GraphicsCardTier2, inventory)
-      || hasComponent(Constants.ItemName.GraphicsCardTier3, inventory);
-    if (!hasGraphics) {
-      warnings.add(Component.literal("- ").append(Component.translatable("gui.opencomputers.assembler.warning.graphicscard")));
-    }
-    if (!hasInventory(inventory, hostClass)) {
-      warnings.add(Component.literal("- ").append(Component.translatable("gui.opencomputers.assembler.warning.inventory")));
-    }
-    if (!hasFileSystem(inventory, hostClass)) {
-      warnings.add(Component.literal("- ").append(Component.translatable("gui.opencomputers.assembler.warning.os")));
+    for (var entry : suggestedComponents) {
+      if (!entry.getValue().test(inventory)) {
+        warnings.add(Component.literal("- ").append(Component.translatable(entry.getKey())));
+      }
     }
     if (!warnings.isEmpty()) {
       warnings.addFirst(Component.translatable("gui.opencomputers.assembler.warnings"));
     }
 
     return new Object[]{valid, progress, warnings.toArray(new Component[0])};
+  }
+
+  public static List<Map.Entry<String, Predicate<Container>>> suggestedComponents(Class<? extends EnvironmentHost> hostClass) {
+    return List.of(
+      Map.entry("gui.opencomputers.assembler.warning.bios", (Container inv) -> hasComponent(Constants.ItemName.EEPROM, inv)),
+      Map.entry("gui.opencomputers.assembler.warning.screen", (Container inv) -> hasComponent(Constants.BlockName.ScreenTier1, inv)),
+      Map.entry("gui.opencomputers.assembler.warning.keyboard", (Container inv) -> hasComponent(Constants.BlockName.Keyboard, inv)),
+      Map.entry("gui.opencomputers.assembler.warning.graphicscard", Template::hasGraphics),
+      Map.entry("gui.opencomputers.assembler.warning.inventory", (Container inv) -> hasInventory(inv, hostClass)),
+      Map.entry("gui.opencomputers.assembler.warning.os", (Container inv) -> hasFileSystem(inv, hostClass)));
+  }
+
+  public static boolean hasGraphics(Container inventory) {
+    return hasComponent(Constants.ItemName.APUCreative, inventory)
+      || hasComponent(Constants.ItemName.APUTier1, inventory)
+      || hasComponent(Constants.ItemName.APUTier2, inventory)
+      || hasComponent(Constants.ItemName.GraphicsCardTier1, inventory)
+      || hasComponent(Constants.ItemName.GraphicsCardTier2, inventory)
+      || hasComponent(Constants.ItemName.GraphicsCardTier3, inventory);
   }
 
   public static boolean exists(Container inventory, java.util.function.Predicate<ItemStack> p) {

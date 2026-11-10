@@ -24,6 +24,7 @@ public final class Mods {
   public static final ModBase Sable = new SimpleMod(ModIDs.Sable);
   public static final ModBase EnderIO = new SimpleMod(ModIDs.EnderIO);
   public static final ModBase EnderStorage = new SimpleMod(ModIDs.EnderStorage);
+  public static final ModBase ImmersiveEngineering = new SimpleMod(ModIDs.ImmersiveEngineering);
   public static final ModBase CBMultipart = new SimpleMod(ModIDs.CBMultipart);
   public static final ModBase Mekanism = new SimpleMod(ModIDs.Mekanism);
   public static final ModBase MoreRed = new SimpleMod(ModIDs.MoreRed);
@@ -50,6 +51,7 @@ public final class Mods {
     proxyOrNull("li.cil.oc.neoforge.integration.rftools.ModRFTools"),
     proxyOrNull("li.cil.oc.neoforge.integration.mekanism.ModMekanism"),
     proxyOrNull("li.cil.oc.neoforge.integration.morered.ModMoreRed"),
+    proxyOrNull("li.cil.oc.neoforge.integration.immersiveengineering.ModImmersiveEngineering"),
     proxyOrNull("li.cil.oc.neoforge.integration.projectred.ModProjectRed"),
     proxyOrNull("li.cil.oc.neoforge.integration.tis3d.ModTIS3D"),
     new li.cil.oc.neoforge.integration.vanilla.ModVanilla(),
@@ -108,6 +110,7 @@ public final class Mods {
     public static final String Sable = ModIDs.Sable;
     public static final String EnderIO = ModIDs.EnderIO;
     public static final String EnderStorage = ModIDs.EnderStorage;
+    public static final String ImmersiveEngineering = ModIDs.ImmersiveEngineering;
     public static final String CBMultipart = ModIDs.CBMultipart;
     public static final String Mekanism = ModIDs.Mekanism;
     public static final String MoreRed = ModIDs.MoreRed;

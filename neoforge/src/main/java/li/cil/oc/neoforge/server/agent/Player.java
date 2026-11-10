@@ -12,7 +12,9 @@ import li.cil.oc.api.event.RobotPlaceBlockEvent;
 import li.cil.oc.api.event.RobotUsedToolEvent;
 import li.cil.oc.api.network.Connector;
 import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.server.component.traits.WorldAction;
 import li.cil.oc.core.impl.util.BlockPosition;
+import li.cil.oc.core.impl.util.ExtendedAABB;
 import li.cil.oc.core.impl.util.InventoryUtils;
 import li.cil.oc.core.server.agent.ActivationType;
 import li.cil.oc.neoforge.OpenComputers;
@@ -26,11 +28,14 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.BlockItem;
@@ -50,10 +55,13 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.NeoForgeMod;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.common.util.TriState;
+import net.neoforged.neoforge.event.EventHooks;
 import net.neoforged.neoforge.event.entity.living.LivingEntityUseItemEvent;
 import org.jetbrains.annotations.NotNull;
 
 public class Player extends FakePlayer implements li.cil.oc.core.impl.server.agent.AgentPlayer {
+  private static final EntityDimensions AGENT_DIMENSIONS = EntityDimensions.fixed(1.0f, 1.0f).withEyeHeight(0.0f);
+
   public final li.cil.oc.api.internal.Agent agent;
   public Direction facing = Direction.SOUTH;
   public Direction side = Direction.SOUTH;
@@ -69,6 +77,17 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
     }
     getAbilities().flying = true;
     setOnGround(true);
+    refreshDimensions();
+  }
+
+  @Override
+  public @NotNull EntityDimensions getDefaultDimensions(@NotNull Pose pose) {
+    return AGENT_DIMENSIONS;
+  }
+
+  @Override
+  public li.cil.oc.api.internal.Agent agent() {
+    return agent;
   }
 
   public Direction facing() {
@@ -85,6 +104,7 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
     Vec3 blockCenter = origin.add(facing().getStepX() * 0.51, facing().getStepY() * 0.51, facing().getStepZ() * 0.51);
     Vec3 target = blockCenter.add(side().getStepX() * range, side().getStepY() * range, side().getStepZ() * range);
     HitResult hit = level().clip(new net.minecraft.world.level.ClipContext(origin, target, net.minecraft.world.level.ClipContext.Block.OUTLINE, net.minecraft.world.level.ClipContext.Fluid.NONE, this));
+    hit = ExtendedAABB.resolveInsideHit(origin, target, hit);
     Entity closest = closestEntity(facing(), Entity.class);
     if ((closest instanceof LivingEntity || closest instanceof net.minecraft.world.entity.vehicle.Minecart || closest instanceof li.cil.oc.core.impl.common.entity.Drone)) {
       if (new Vec3(getX(), getY(), getZ()).distanceTo(hit.getLocation()) > distanceTo(closest)) {
@@ -180,7 +200,7 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
   @Override
   public void attackTargetEntityWithCurrentItem(Entity entity) {
     callUsingItemInSlot(agent.equipmentInventory(), stack -> {
-      if (entity instanceof Player && !OCSettings.get().canAttackPlayers) {
+      if (entity instanceof net.minecraft.world.entity.player.Player && !OCSettings.get().canAttackPlayers) {
         return null;
       }
       RobotAttackEntityEvent.Pre event = new RobotAttackEntityEvent.Pre(agent, entity);
@@ -206,7 +226,7 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
 
       if (!stack.isEmpty()) {
         var context = new UseOnContext(level(), this, InteractionHand.OFF_HAND, stack, blockHit);
-        if (stack.useOn(context).consumesAction()) {
+        if (stack.getItem().onItemUseFirst(stack, context) == InteractionResult.SUCCESS) {
           return ActivationType.ItemUsed;
         }
       }
@@ -215,7 +235,12 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
       if (!state.isAir() && OCSettings.get().allowActivateBlocks) {
         boolean shouldActivate = !isShiftKeyDown() || (stack.isEmpty() || stack.doesSneakBypassUse(level(), pos, this));
         if (shouldActivate) {
-          if (state.useWithoutItem(level(), this, blockHit).consumesAction()) {
+          var itemInteraction = state.useItemOn(stack, level(), this, InteractionHand.OFF_HAND, blockHit);
+          if (itemInteraction.consumesAction()) {
+            return ActivationType.BlockActivated;
+          }
+          if (itemInteraction == ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
+            && state.useWithoutItem(level(), this, blockHit).consumesAction()) {
             return ActivationType.BlockActivated;
           }
         }
@@ -328,6 +353,7 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
         new Vec3(pos.getX() + hitX, pos.getY() + hitY, pos.getZ() + hitZ),
         side, pos, false);
       var context = new net.minecraft.world.item.context.UseOnContext(level(), this, InteractionHand.OFF_HAND, stack, blockHit);
+      ItemStack beforeUse = stack.copy();
       var didPlace = stack.useOn(context);
       detectInventoryPlayerChanges(this);
 
@@ -335,12 +361,13 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
         NeoForge.EVENT_BUS.post(new RobotPlaceBlockEvent.Post(agent, stack, level(), pos));
         return true;
       }
-      if (didPlace == InteractionResult.CONSUME) {
+      if (didPlace == InteractionResult.CONSUME && !ItemStack.matches(beforeUse, stack)) {
         NeoForge.EVENT_BUS.post(new RobotPlaceBlockEvent.Post(agent, stack, level(), pos));
         return true;
       }
       return false;
     } finally {
+      Collections.fill(getInventory().armor, ItemStack.EMPTY);
       if (fakeEyeHeight != 0) {
         setPos(getX(), getY() + fakeEyeHeight, getZ());
       }
@@ -391,7 +418,7 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
     if (!useResult.getResult().consumesAction()) return false;
 
     ItemStack newStack = useResult.getObject();
-    boolean stackChanged = !ItemStack.isSameItemSameComponents(oldStack, newStack) || !ItemStack.isSameItemSameComponents(oldStack, stack);
+    boolean stackChanged = !ItemStack.matches(oldStack, newStack) || !ItemStack.matches(oldStack, stack);
 
     if (stackChanged) {
       getInventory().offhand.set(0, newStack);
@@ -431,8 +458,15 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
   }
 
   private boolean isItemUseAllowed(ItemStack stack) {
-    return stack == null || (OCSettings.get().allowUseItemsWithDuration || stack.getMaxStackSize() <= 0) &&
+    return stack == null || (OCSettings.get().allowUseItemsWithDuration || stack.getUseDuration(this) <= 0) &&
       !stack.is(Items.LEAD);
+  }
+
+  @Override
+  public boolean mayTossItem(net.minecraft.world.entity.item.ItemEntity entity) {
+    var event = new net.neoforged.neoforge.event.entity.item.ItemTossEvent(entity, this);
+    net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(event);
+    return !event.isCanceled();
   }
 
   @Override
@@ -490,6 +524,8 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
   public void setItemSlot(net.minecraft.world.entity.@NotNull EquipmentSlot slot, @NotNull ItemStack stack) {
     if (slot == net.minecraft.world.entity.EquipmentSlot.MAINHAND && agent.equipmentInventory().getContainerSize() > 0) {
       agent.equipmentInventory().setItem(0, stack);
+    } else if (slot == net.minecraft.world.entity.EquipmentSlot.OFFHAND) {
+      super.setItemSlot(slot, stack);
     }
   }
 
@@ -544,16 +580,23 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
       if (inventory != agent.mainInventory()) {
         getInventory().items.set(0, oldSlot0);
       }
-      inventory.setItem(slot, getInventory().offhand.getFirst());
-      getInventory().offhand.set(0, oldOffhand);
-      ItemStack newStack = inventory.getItem(slot);
-      if (repair && !newStack.isEmpty()) {
-        tryRepair(newStack, oldStack);
+      ItemStack result = getInventory().offhand.getFirst();
+      if (repair) {
+        if (!result.isEmpty()) {
+          tryRepair(result, oldStack);
+        } else if (!oldStack.isEmpty()) {
+          EventHooks.onPlayerDestroyItem(this, result, InteractionHand.OFF_HAND);
+        }
       }
+      inventory.setItem(slot, result);
+      getInventory().offhand.set(0, oldOffhand);
       List<ItemEntity> itemsAfter = adjacentItems();
       for (ItemEntity item : itemsAfter) {
         if (!itemsBefore.contains(item)) {
           item.setPickUpDelay(0);
+          if (WorldAction.checkItemPickup(this, item)) {
+            continue;
+          }
           ItemStack itemStack = item.getItem();
           if (!itemStack.isEmpty()) {
             int before = itemStack.getCount();
@@ -561,6 +604,7 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
             int pickedUp = before - remainder.getCount();
             if (pickedUp > 0) {
               itemStack.shrink(pickedUp);
+              InventoryUtils.playPickupSound(BlockPosition.apply(agent));
             }
             if (itemStack.isEmpty()) {
               item.discard();
@@ -587,7 +631,10 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
 
   private ItemStack addToAgentInventory(ItemStack stack) {
     ItemStack remainder = stack.copy();
-    for (int j = 0; j < agent.mainInventory().getContainerSize() && !remainder.isEmpty(); j++) {
+    int size = agent.mainInventory().getContainerSize();
+    int selected = size > 0 ? Math.clamp(agent.selectedSlot(), 0, size - 1) : 0;
+    for (int offset = 0; offset < size && !remainder.isEmpty(); offset++) {
+      int j = (selected + offset) % size;
       ItemStack slot = agent.mainInventory().getItem(j);
       if (slot.isEmpty()) {
         agent.mainInventory().setItem(j, remainder.copy());
@@ -623,7 +670,10 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
   public boolean addItem(@NotNull ItemStack stack) {
     if (stack.isEmpty()) return false;
     ItemStack remainder = addToAgentInventory(stack);
-    return remainder.getCount() < stack.getCount();
+    int added = stack.getCount() - remainder.getCount();
+    if (added <= 0) return false;
+    stack.shrink(added);
+    return true;
   }
 
   @Override
@@ -704,9 +754,17 @@ public class Player extends FakePlayer implements li.cil.oc.core.impl.server.age
           serverLevel.destroyBlockProgress(player.getId(), new BlockPos(x, y, z), -1);
         }
         player.callUsingItemInSlot(player.agent.equipmentInventory(), stack -> {
-          int expGained = PlayerInteractionManagerHelper.blockRemoving(player, new BlockPos(x, y, z));
-          if (expGained >= 0) {
-            NeoForge.EVENT_BUS.post(new RobotBreakBlockEvent.Post(player.agent, expGained));
+          Direction breakSide = Direction.from3DDataValue(side);
+          double oldX = player.getX();
+          double oldZ = player.getZ();
+          player.setPos(oldX - breakSide.getStepX() / 2.0, player.getY(), oldZ - breakSide.getStepZ() / 2.0);
+          try {
+            int expGained = PlayerInteractionManagerHelper.blockRemoving(player, new BlockPos(x, y, z));
+            if (expGained >= 0) {
+              NeoForge.EVENT_BUS.post(new RobotBreakBlockEvent.Post(player.agent, expGained));
+            }
+          } finally {
+            player.setPos(oldX, player.getY(), oldZ);
           }
           return null;
         });

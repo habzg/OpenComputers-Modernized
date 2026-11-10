@@ -108,7 +108,7 @@ public class PacketSender extends li.cil.oc.core.impl.common.PacketSender {
   protected void sendRobotMoveImpl(BlockEntity t, BlockPosition position, Direction direction) {
     try (var pb = new PacketBuilder(PacketType.RobotMove)) {
       var level = t.getLevel();
-      pb.writeInt(level != null ? level.dimension().location().hashCode() : 0);
+      pb.writeUTF(level != null ? level.dimension().location().toString() : "");
       pb.writeInt(position.x());
       pb.writeInt(position.y());
       pb.writeInt(position.z());
@@ -192,6 +192,8 @@ public class PacketSender extends li.cil.oc.core.impl.common.PacketSender {
 
   @Override
   protected void sendFileSystemActivityImpl(Node node, EnvironmentHost host, String name) {
+    int delay = OCSettings.get().diskActivitySoundDelay;
+    if (delay < 0) return;
     com.google.common.cache.Cache<String, Long> hostTimeouts;
     synchronized (fileSystemAccessTimeouts) {
       hostTimeouts = fileSystemAccessTimeouts.get(node);
@@ -199,7 +201,7 @@ public class PacketSender extends li.cil.oc.core.impl.common.PacketSender {
         hostTimeouts = com.google.common.cache.CacheBuilder.newBuilder()
           .concurrencyLevel(OCSettings.get().threads)
           .maximumSize(250)
-          .expireAfterWrite(OCSettings.get().diskActivitySoundDelay, java.util.concurrent.TimeUnit.MILLISECONDS)
+          .expireAfterWrite(delay, java.util.concurrent.TimeUnit.MILLISECONDS)
           .build();
         fileSystemAccessTimeouts.put(node, hostTimeouts);
       }
@@ -217,7 +219,7 @@ public class PacketSender extends li.cil.oc.core.impl.common.PacketSender {
     FileSystemAccessEvent.Server.EVENT.invoker().onFileSystemAccessServer(event);
     if (event.isCanceled()) return;
 
-    hostTimeouts.put(name, System.currentTimeMillis() + OCSettings.get().diskActivitySoundDelay);
+    hostTimeouts.put(name, System.currentTimeMillis() + delay);
 
     try (var pb = createBuilder(PacketType.FileSystemActivity)) {
       pb.writeUTF(event.getSound());
@@ -227,7 +229,7 @@ public class PacketSender extends li.cil.oc.core.impl.common.PacketSender {
         pb.writeBlockEntity(event.getBlockEntity());
       } else {
         pb.writeBoolean(false);
-        pb.writeInt(event.getWorld().dimension().location().hashCode());
+        pb.writeUTF(event.getWorld().dimension().location().toString());
         pb.writeDouble(event.getX());
         pb.writeDouble(event.getY());
         pb.writeDouble(event.getZ());
@@ -256,7 +258,7 @@ public class PacketSender extends li.cil.oc.core.impl.common.PacketSender {
         pb.writeBlockEntity(event.getBlockEntity());
       } else {
         pb.writeBoolean(false);
-        pb.writeInt(event.getWorld().dimension().location().hashCode());
+        pb.writeUTF(event.getWorld().dimension().location().toString());
         pb.writeDouble(event.getX());
         pb.writeDouble(event.getY());
         pb.writeDouble(event.getZ());

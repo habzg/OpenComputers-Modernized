@@ -21,7 +21,7 @@ public interface ItemInventoryControl extends InventoryAware {
       int slot = ExtendedArguments.checkSlot(args, itemInventory, 1);
       int count = ExtendedArguments.optItemCount(args, 2, 64);
       return ResultWrapper.result(InventoryUtils.extractFromInventorySlot(
-        stack -> InventoryUtils.insertIntoInventorySlot(stack, itemInventory, null, slot, count),
+        stack -> InventoryUtils.insertIntoInventorySlot(stack, itemInventory, null, slot, count, false),
         inventory(), null, selectedSlot(), count));
     });
   }
@@ -32,11 +32,7 @@ public interface ItemInventoryControl extends InventoryAware {
       int slot = ExtendedArguments.checkSlot(args, itemInventory, 1);
       int count = ExtendedArguments.optItemCount(args, 2, 64);
       return ResultWrapper.result(InventoryUtils.extractFromInventorySlot(
-        extractedStack -> {
-          for (int s : insertionSlots()) {
-            if (InventoryUtils.insertIntoInventorySlot(extractedStack, inventory(), null, s, 64)) break;
-          }
-        },
+        (extractedStack, simulate) -> InventoryUtils.insertIntoInventory(extractedStack, inventory(), null, 64, simulate, insertionSlots()),
         itemInventory, null, slot, count));
     });
   }

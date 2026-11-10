@@ -47,10 +47,10 @@ public interface InventoryControl extends InventoryAware {
     ItemStack stackA = stackInSlot(selectedSlot());
     ItemStack stackB = stackInSlot(slot);
     boolean eq;
-    if (stackA != null && stackB != null) {
-      eq = InventoryUtils.haveSameItemType(stackA, stackB, args.optBoolean(1, false));
+    if (stackA.isEmpty() || stackB.isEmpty()) {
+      eq = stackA.isEmpty() && stackB.isEmpty();
     } else {
-      eq = stackA == null && stackB == null;
+      eq = InventoryUtils.haveSameItemType(stackA, stackB, args.optBoolean(1, false));
     }
     return ResultWrapper.result(eq);
   }
@@ -64,7 +64,10 @@ public interface InventoryControl extends InventoryAware {
     }
     ItemStack from = stackInSlot(selectedSlot());
     ItemStack to = stackInSlot(slot);
-    if (from != null && to != null) {
+    if (from.isEmpty()) {
+      return ResultWrapper.result(false);
+    }
+    if (!to.isEmpty()) {
       if (InventoryUtils.haveSameItemType(from, to, true)) {
         int space = Math.min(inventory().getMaxStackSize(), to.getMaxStackSize()) - to.getCount();
         int amount = Math.min(count, Math.min(space, from.getCount()));
@@ -85,10 +88,9 @@ public interface InventoryControl extends InventoryAware {
         return ResultWrapper.result(true);
       }
       return ResultWrapper.result(false);
-    } else if (from != null) {
+    } else {
       inventory().setItem(slot, inventory().removeItem(selectedSlot(), count));
       return ResultWrapper.result(true);
     }
-    return ResultWrapper.result(false);
   }
 }

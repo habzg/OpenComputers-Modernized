@@ -1,6 +1,5 @@
 package li.cil.oc.fabric.common.event;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import li.cil.oc.core.impl.util.BlockPosition;
@@ -9,7 +8,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
 public final class BlockChangeHandler {
-  private static final Map<ChangeListener, TrackedPosition> changeListeners = new HashMap<>();
+  private static final Map<ChangeListener, TrackedPosition> changeListeners = new java.util.WeakHashMap<>();
 
   public static void addListener(ChangeListener listener, BlockPosition coord) {
     synchronized (changeListeners) {
@@ -35,6 +34,7 @@ public final class BlockChangeHandler {
           continue;
         }
         BlockPos pos = tracked.toBlockPos();
+        if (!world.isLoaded(pos)) continue;
         BlockState currentState = world.getBlockState(pos);
         if (tracked.updateState(currentState)) {
           entry.getKey().onBlockChanged();

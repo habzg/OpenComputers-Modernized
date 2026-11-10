@@ -20,9 +20,9 @@ import li.cil.oc.core.impl.common.blockentity.traits.BlockEntity;
 import li.cil.oc.core.impl.common.blockentity.traits.ComponentInventory;
 import li.cil.oc.core.impl.common.blockentity.traits.OpenSides;
 import li.cil.oc.core.impl.util.InventoryUtils;
-import li.cil.oc.core.util.ResultWrapper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -47,7 +47,7 @@ public class Adapter extends BlockEntity implements li.cil.oc.api.network.Enviro
     DeviceInfo.DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor,
     DeviceInfo.DeviceAttribute.Product, "Multiplug Ext.1"
   );
-  private final ItemStack[] _items = new ItemStack[getContainerSize()];
+  private final ItemStack[] _items = li.cil.oc.core.impl.common.inventory.Inventory.filledItems(getContainerSize());
   private final boolean[] _openSides = {true, true, true, true, true, true};
   private ManagedEnvironment[] _components;
 
@@ -148,11 +148,6 @@ public class Adapter extends BlockEntity implements li.cil.oc.api.network.Enviro
 
   @Override
   public void onMessage(li.cil.oc.api.network.Message message) {
-  }
-
-  @Override
-  public Object result(Object... args) {
-    return ResultWrapper.result(args);
   }
 
   @Override
@@ -266,6 +261,11 @@ public class Adapter extends BlockEntity implements li.cil.oc.api.network.Enviro
   @Override
   public boolean isUseableByPlayer(Player player) {
     return true;
+  }
+
+  @Override
+  public boolean stillValid(@NotNull Player player) {
+    return player.distanceToSqr(worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5) <= 64;
   }
 
   @Override
@@ -411,6 +411,23 @@ public class Adapter extends BlockEntity implements li.cil.oc.api.network.Enviro
   }
 
   @Override
+  protected void loadAdditional(@NotNull CompoundTag nbt, HolderLookup.@NotNull Provider provider) {
+    super.loadAdditional(nbt, provider);
+    if (isServer()) {
+      load(nbt, provider);
+    } else {
+      readFromNBTForClient(nbt);
+      load(nbt, provider);
+    }
+  }
+
+  @Override
+  public void saveAdditional(@NotNull CompoundTag nbt, HolderLookup.@NotNull Provider provider) {
+    super.saveAdditional(nbt, provider);
+    save(nbt, provider);
+  }
+
+  @Override
   public void readFromNBTForClient(CompoundTag nbt) {
     super.readFromNBTForClient(nbt);
     if (nbt.contains(OCSettings.namespace + "openSides")) {
@@ -422,16 +439,6 @@ public class Adapter extends BlockEntity implements li.cil.oc.api.network.Enviro
   public void writeToNBTForClient(CompoundTag nbt) {
     super.writeToNBTForClient(nbt);
     nbt.putByte(OCSettings.namespace + "openSides", compressSides());
-  }
-
-  @Override
-  public ItemStack[] pendingRemovals() {
-    return null;
-  }
-
-  @Override
-  public ItemStack[] pendingAdds() {
-    return null;
   }
 
   @Override

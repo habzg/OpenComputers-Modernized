@@ -11,6 +11,7 @@ import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.util.SubLevelHelper;
 import net.minecraft.world.entity.player.Player;
 
 public class Keyboard extends AbstractManagedEnvironment implements li.cil.oc.api.internal.Keyboard, DeviceInfo {
@@ -105,7 +106,7 @@ public class Keyboard extends AbstractManagedEnvironment implements li.cil.oc.ap
 
   public boolean isUsableByPlayer(Player p) {
     if (usableOverride != null) return usableOverride.isUsableByPlayer(this, p);
-    return p.distanceToSqr(host.xPosition(), host.yPosition(), host.zPosition()) <= 64;
+    return SubLevelHelper.distanceSquared(host.level(), new net.minecraft.world.phys.Vec3(p.getX(), p.getY(), p.getZ()), new net.minecraft.world.phys.Vec3(host.xPosition(), host.yPosition(), host.zPosition())) <= 64;
   }
 
   protected void signal(Object... args) {

@@ -8,18 +8,14 @@ import net.minecraft.world.level.Level;
 public final class ClientRobotTracker {
   public static final ClientRobotTracker INSTANCE = new ClientRobotTracker();
 
-  private final Map<Integer, Map<String, Robot>> worlds = new HashMap<>();
+  private final Map<String, Map<String, Robot>> worlds = new HashMap<>();
 
   private Map<String, Robot> robots(Level world) {
-    return worlds.computeIfAbsent(world.dimension().location().hashCode(), k -> new HashMap<>());
+    return worlds.computeIfAbsent(world.dimension().location().toString(), k -> new HashMap<>());
   }
 
   public synchronized void add(Level world, String address, Robot robot) {
     robots(world).put(address, robot);
-  }
-
-  public synchronized void remove(Level world, String address) {
-    robots(world).remove(address);
   }
 
   public synchronized void remove(Level world, Robot robot) {

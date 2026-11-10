@@ -36,6 +36,7 @@ import li.cil.oc.core.integration.ModIDs;
 import li.cil.oc.core.server.network.QuantumNetwork;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -52,8 +53,6 @@ public class Relay extends HubBlockEntity implements ComponentInventory, PowerAc
 
   public final Node[] componentNodes = new Node[6];
   private final ItemStack[] items = new ItemStack[getContainerSize()];
-  private final ItemStack[] pendingRemovalItems;
-  private final ItemStack[] pendingAddItems;
   private ManagedEnvironment[] _components;
   private final ArrayList<ManagedEnvironment> updatingComponents = new ArrayList<>();
   public int wirelessTier = -1;
@@ -69,8 +68,6 @@ public class Relay extends HubBlockEntity implements ComponentInventory, PowerAc
         .withComponent("relay")
         .create();
     }
-    pendingRemovalItems = new ItemStack[items.length];
-    pendingAddItems = new ItemStack[items.length];
     Arrays.fill(items, ItemStack.EMPTY);
   }
 
@@ -216,9 +213,11 @@ public class Relay extends HubBlockEntity implements ComponentInventory, PowerAc
 
   @Override
   public Node[] onAnalyze(Player player, Direction side, float hitX, float hitY, float hitZ) {
-    if (isWirelessEnabled())
+    if (isWirelessEnabled()) {
       player.displayClientMessage(net.minecraft.network.chat.Component.translatable("gui.opencomputers.analyzer.wirelessstrength", String.valueOf((int) strength)), false);
-    return new Node[]{componentNodes[side.ordinal()]};
+      return new Node[]{componentNodes[side.ordinal()]};
+    }
+    return null;
   }
 
   @Callback(direct = true, doc = "function():number -- Get the signal strength (range) used when relaying messages.")
@@ -281,7 +280,7 @@ public class Relay extends HubBlockEntity implements ComponentInventory, PowerAc
     for (var obj : computers) {
       if (obj instanceof IComputerAccess computer) {
         String address = "cc" + computer.getID() + "_" + computer.getAttachmentName();
-        if (!source.equals(address) && (destination == null || destination.equals(address)) && openPorts.getOrDefault(computer, java.util.Set.of()).contains(port)) {
+        if (!java.util.Objects.equals(source, address) && (destination == null || destination.equals(address)) && openPorts.getOrDefault(computer, java.util.Set.of()).contains(port)) {
           var eventArgs = new Object[3 + args.length];
           eventArgs[0] = computer.getAttachmentName();
           eventArgs[1] = port;
@@ -360,6 +359,7 @@ public class Relay extends HubBlockEntity implements ComponentInventory, PowerAc
 
   @Override
   public void onItemAdded(int slot, ItemStack stack) {
+    ComponentInventory.super.onItemAdded(slot, stack);
     updateLimits(slot, stack);
   }
 
@@ -396,6 +396,7 @@ public class Relay extends HubBlockEntity implements ComponentInventory, PowerAc
 
   @Override
   public void onItemRemoved(int slot, ItemStack stack) {
+    ComponentInventory.super.onItemRemoved(slot, stack);
     var driver = li.cil.oc.api.API.driver.driverFor(stack, getClass());
     if (driver != null) {
       if (driver.slot(stack).equals(Slot.CPU)) relayDelay = relayBaseDelay;
@@ -431,10 +432,27 @@ public class Relay extends HubBlockEntity implements ComponentInventory, PowerAc
   }
 
   @Override
+  protected void loadAdditional(@NotNull CompoundTag nbt, HolderLookup.@NotNull Provider provider) {
+    super.loadAdditional(nbt, provider);
+    if (isServer()) {
+      load(nbt, provider);
+      readFromNBTForServer(nbt);
+    } else {
+      readFromNBTForClient(nbt);
+      load(nbt, provider);
+    }
+  }
+
+  @Override
+  public void saveAdditional(@NotNull CompoundTag nbt, HolderLookup.@NotNull Provider provider) {
+    super.saveAdditional(nbt, provider);
+    save(nbt, provider);
+  }
+
+  @Override
   public void readFromNBTForServer(CompoundTag nbt) {
-    super.readFromNBTForServer(nbt);
-    for (int slot = 0; slot < items.length; slot++) {
-      if (items[slot] != null) updateLimits(slot, items[slot]);
+    super.readFromNBTForServer(nbt);    for (int slot = 0; slot < items.length; slot++) {
+      if (!items[slot].isEmpty()) updateLimits(slot, items[slot]);
     }
     if (nbt.contains(OCSettings.namespace + "strength")) {
       strength = Math.clamp(nbt.getDouble(OCSettings.namespace + "strength"), 0, maxWirelessRange());
@@ -477,6 +495,11 @@ public class Relay extends HubBlockEntity implements ComponentInventory, PowerAc
     return true;
   }
 
+  @Override
+  public boolean stillValid(@NotNull Player player) {
+    return player.distanceToSqr(worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5) <= 64;
+  }
+
   public void dropSlot(int slot) {
     dropSlot(slot, 1, null);
   }
@@ -516,16 +539,6 @@ public class Relay extends HubBlockEntity implements ComponentInventory, PowerAc
     items[slot] = stack;
   }
 
-  @Override
-  public ItemStack[] pendingRemovals() {
-    return pendingRemovalItems;
-  }
-
-  @Override
-  public ItemStack[] pendingAdds() {
-    return pendingAddItems;
-  }
-
   public List<Object> computers() {
     return computers;
   }
@@ -542,34 +555,13 @@ public class Relay extends HubBlockEntity implements ComponentInventory, PowerAc
     lastMessage = value;
   }
 
-  private int _tickPackets = 0;
-  private final int[] _packetHistory = new int[20];
-  private int _packetHistoryIndex = 0;
-
-  public int packetsPerCycleAvg() {
-    int sum = 0;
-    for (int v : _packetHistory) sum += v;
-    return sum / _packetHistory.length;
-  }
-
   @Override
   public void onSwitchActivity() {
     var now = System.currentTimeMillis();
     if (now - lastMessage >= (relayDelay - 1) * 50L) {
       super.onSwitchActivity();
       lastMessage = now;
-      _tickPackets++;
       li.cil.oc.core.impl.common.PacketSender.sendSwitchActivity(this);
     }
-  }
-
-  @Override
-  public void updateEntity() {
-    if (isServer()) {
-      _packetHistory[_packetHistoryIndex] = _tickPackets;
-      _packetHistoryIndex = (_packetHistoryIndex + 1) % _packetHistory.length;
-      _tickPackets = 0;
-    }
-    super.updateEntity();
   }
 }

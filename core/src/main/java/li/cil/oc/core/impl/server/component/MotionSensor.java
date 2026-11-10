@@ -16,6 +16,7 @@ import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.util.SubLevelHelper;
 import li.cil.oc.core.util.ResultWrapper;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -64,7 +65,15 @@ public class MotionSensor extends AbstractManagedEnvironment implements DeviceIn
   public void update() {
     super.update();
     if (host.level().getGameTime() % 10 == 0) {
-      List<LivingEntity> entities = host.level().getEntitiesOfClass(LivingEntity.class, sensorBounds());
+      List<LivingEntity> entities = new java.util.ArrayList<>(host.level().getEntitiesOfClass(LivingEntity.class, sensorBounds()));
+      Vec3 center = new Vec3(host.xPosition() + 0.5, host.yPosition() + 0.5, host.zPosition() + 0.5);
+      Vec3 placement = SubLevelHelper.projectOut(host.level(), center);
+      if (!placement.equals(center)) {
+        entities.addAll(host.level().getEntitiesOfClass(LivingEntity.class, boundsAround(placement)));
+      }
+      for (Vec3 storageCenter : SubLevelHelper.storageCenters(host.level(), placement, radius)) {
+        entities.addAll(host.level().getEntitiesOfClass(LivingEntity.class, boundsAround(storageCenter)));
+      }
       Set<LivingEntity> visible = new HashSet<>();
       for (LivingEntity entity : entities) {
         if (entity.isAlive() && isInRange(entity) && isVisible(entity)) {
@@ -95,8 +104,14 @@ public class MotionSensor extends AbstractManagedEnvironment implements DeviceIn
       cx + radius, cy + radius, cz + radius);
   }
 
+  private AABB boundsAround(Vec3 center) {
+    return new AABB(
+      center.x - radius, center.y - radius, center.z - radius,
+      center.x + radius, center.y + radius, center.z + radius);
+  }
+
   private boolean isInRange(LivingEntity entity) {
-    return entity.distanceToSqr(host.xPosition() + 0.5, host.yPosition() + 0.5, host.zPosition() + 0.5) <= radius * radius;
+    return SubLevelHelper.distanceSquared(host.level(), new Vec3(entity.getX(), entity.getY(), entity.getZ()), new Vec3(host.xPosition() + 0.5, host.yPosition() + 0.5, host.zPosition() + 0.5)) <= radius * radius;
   }
 
   private boolean isClearPath(Vec3 target) {
@@ -116,17 +131,18 @@ public class MotionSensor extends AbstractManagedEnvironment implements DeviceIn
   }
 
   private void sendSignal(LivingEntity entity) {
+    Vec3 entityVec = SubLevelHelper.projectOut(host.level(), new Vec3(entity.getX(), entity.getY(), entity.getZ()));
+    Vec3 hostVec = SubLevelHelper.projectOut(host.level(), new Vec3(host.xPosition() + 0.5, host.yPosition() + 0.5, host.zPosition() + 0.5));
+    double dx = entityVec.x - hostVec.x;
+    double dy = entityVec.y - hostVec.y;
+    double dz = entityVec.z - hostVec.z;
     if (OCSettings.get().inputUsername) {
       node.sendToReachable("computer.signal", "motion",
-        entity.getX() - (host.xPosition() + 0.5),
-        entity.getY() - (host.yPosition() + 0.5),
-        entity.getZ() - (host.zPosition() + 0.5),
+        dx, dy, dz,
         entity.getName().getString());
     } else {
       node.sendToReachable("computer.signal", "motion",
-        entity.getX() - (host.xPosition() + 0.5),
-        entity.getY() - (host.yPosition() + 0.5),
-        entity.getZ() - (host.zPosition() + 0.5));
+        dx, dy, dz);
     }
   }
 

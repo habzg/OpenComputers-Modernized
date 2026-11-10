@@ -240,11 +240,10 @@ public class Network implements li.cil.oc.api.detail.NetworkAPI, Distributor {
       }
       return false;
     } else if (containsA) {
-      add(vertex(nodeA), nodeB);
+      return add(vertex(nodeA), nodeB);
     } else {
-      add(vertex(nodeB), nodeA);
+      return add(vertex(nodeB), nodeA);
     }
-    return true;
   }
 
   public boolean disconnect(li.cil.oc.core.impl.server.network.Node nodeA, li.cil.oc.core.impl.server.network.Node nodeB) {
@@ -425,7 +424,8 @@ public class Network implements li.cil.oc.api.detail.NetworkAPI, Distributor {
         connects.add(new AbstractMap.SimpleEntry<>(n, nodes()));
       }
     } else if (addedNode.network() == oldNode.data.network()) {
-      return false;
+      addedNode.network_$eq(null);
+      return add(oldNode, addedNode);
     } else {
       Network otherNetwork = ((Wrapper) addedNode.network()).network;
 
@@ -713,7 +713,7 @@ public class Network implements li.cil.oc.api.detail.NetworkAPI, Distributor {
   @Override
   public Packet newPacket(String source, String destination, int port, Object[] data) {
     Packet packet = new Packet(source, destination, port, data);
-    if (packet.size > OCSettings.get().maxNetworkPacketSize) {
+    if (packet.size() > OCSettings.get().maxNetworkPacketSize) {
       throw new IllegalArgumentException("packet too big (max " + OCSettings.get().maxNetworkPacketSize + ")");
     }
     return packet;
@@ -722,7 +722,7 @@ public class Network implements li.cil.oc.api.detail.NetworkAPI, Distributor {
   @Override
   public Packet newPacket(CompoundTag nbt) {
     String src = nbt.getString("source");
-    String dest = nbt.contains("dest") ? nbt.getString("dest") : null;
+    String dest = nbt.contains("dest") ? null : nbt.getString("dest");
     int port = nbt.getInt("port");
     int ttl = nbt.getInt("ttl");
     int dataLength = nbt.getInt("dataLength");
@@ -1187,11 +1187,10 @@ public class Network implements li.cil.oc.api.detail.NetworkAPI, Distributor {
     }
   }
 
-  @SuppressWarnings("InnerClassMayBeStatic") // no it cannot
-  public class Packet implements li.cil.oc.api.network.Packet {
+  @SuppressWarnings("ClassCanBeRecord")
+  public static class Packet implements li.cil.oc.api.network.Packet {
     private static final int MAX_STRING_LENGTH = 65535;
     private static final int MAX_BYTE_ARRAY_LENGTH = 1048576; // 1MB
-    private static final int MAX_PACKET_SIZE = 10485760; // 10MB
 
     public final int size;
 
@@ -1231,10 +1230,6 @@ public class Network implements li.cil.oc.api.detail.NetworkAPI, Distributor {
     }
 
     public Packet(String source, String destination, int port, Object[] data, int ttl) {
-      if (source != null && source.length() > MAX_STRING_LENGTH)
-        throw new IllegalArgumentException("source too long");
-      if (destination != null && destination.length() > MAX_STRING_LENGTH)
-        throw new IllegalArgumentException("destination too long");
       this.source = source;
       this.destination = destination;
       this.port = port;
@@ -1243,9 +1238,7 @@ public class Network implements li.cil.oc.api.detail.NetworkAPI, Distributor {
       if (this.data.length > OCSettings.get().maxNetworkPacketParts) {
         throw new IllegalArgumentException("packet has too many parts");
       }
-      int s = getPacketSize();
-      if (s > MAX_PACKET_SIZE) throw new IllegalArgumentException("packet too large");
-      this.size = s;
+      this.size = getPacketSize();
     }
 
     private int getPacketSize() {

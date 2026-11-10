@@ -41,9 +41,7 @@ public class RaidData extends ItemData {
   public void save(CompoundTag nbt, HolderLookup.Provider provider) {
     ListTag list = new ListTag();
     for (var stack : disks) {
-      if (stack != null && !stack.isEmpty()) {
-        list.add(stack.save(provider, new CompoundTag()));
-      }
+      list.add(stack == null || stack.isEmpty() ? new CompoundTag() : stack.saveOptional(provider));
     }
     nbt.put(OCSettings.namespace + "disks", list);
     nbt.put(OCSettings.namespace + "filesystem", filesystem);

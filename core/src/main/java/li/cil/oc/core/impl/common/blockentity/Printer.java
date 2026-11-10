@@ -14,6 +14,7 @@ import li.cil.oc.core.Constants;
 import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.PacketSender;
 import li.cil.oc.core.impl.common.blockentity.traits.BlockEntity;
+import li.cil.oc.core.impl.common.blockentity.traits.Environment;
 import li.cil.oc.core.impl.common.blockentity.traits.Inventory;
 import li.cil.oc.core.impl.common.blockentity.traits.Rotatable;
 import li.cil.oc.core.impl.common.item.data.PrintData;
@@ -22,7 +23,6 @@ import li.cil.oc.core.impl.util.InventoryUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.Container;
 import net.minecraft.world.WorldlyContainer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -41,7 +41,7 @@ public class Printer extends BlockEntity implements li.cil.oc.api.network.Enviro
     .withComponent("printer3d")
     .withConnector(OCSettings.get().bufferConverter)
     .create();
-  private final ItemStack[] items = new ItemStack[3];
+  private final ItemStack[] items = li.cil.oc.core.impl.common.inventory.Inventory.filledItems(3);
   private final Map<String, String> deviceInfo = Map.of(
     DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Printer,
     DeviceInfo.DeviceAttribute.Description, "3D Printer",
@@ -53,7 +53,7 @@ public class Printer extends BlockEntity implements li.cil.oc.api.network.Enviro
   public PrintData data = new PrintData();
   public boolean isActive = false;
   public int limit = 0;
-  public ItemStack output = null;
+  public ItemStack output = ItemStack.EMPTY;
   public double totalRequiredEnergy = 0.0;
   public double requiredEnergy = 0.0;
 
@@ -105,6 +105,7 @@ public class Printer extends BlockEntity implements li.cil.oc.api.network.Enviro
   }
 
   public void onDisconnect(Node node) {
+    Environment.flushBuffer(node, node());
   }
 
   public void onMessage(li.cil.oc.api.network.Message message) {
@@ -140,7 +141,7 @@ public class Printer extends BlockEntity implements li.cil.oc.api.network.Enviro
 
   @Override
   public java.util.EnumSet<li.cil.oc.api.util.StateAware.State> getCurrentState() {
-    if (output != null) return java.util.EnumSet.of(li.cil.oc.api.util.StateAware.State.IsWorking);
+    if (!output.isEmpty()) return java.util.EnumSet.of(li.cil.oc.api.util.StateAware.State.IsWorking);
     if (canPrint()) return java.util.EnumSet.of(li.cil.oc.api.util.StateAware.State.CanWork);
     return java.util.EnumSet.noneOf(li.cil.oc.api.util.StateAware.State.class);
   }
@@ -150,7 +151,7 @@ public class Printer extends BlockEntity implements li.cil.oc.api.network.Enviro
   }
 
   public boolean isPrinting() {
-    return output != null;
+    return !output.isEmpty();
   }
 
   public double progress() {
@@ -305,20 +306,21 @@ public class Printer extends BlockEntity implements li.cil.oc.api.network.Enviro
 
   @Callback(doc = "function(): string, number or boolean -- The current state of the printer, `busy' or `idle', followed by the progress or model validity, respectively.")
   public Object[] status(Context context, Arguments args) {
-    if (output != null) return result("busy", progress());
+    if (!output.isEmpty()) return result("busy", progress());
     else if (canPrint()) return result("idle", true);
     else return result("idle", false);
   }
 
   public void updateEntity() {
     super.updateEntity();
+    if (isClient()) return;
     Supplier<Boolean> canMergeOutput = () -> {
       var presentStack = getItem(SLOT_OUTPUT);
       var outputStack = data.createItemStack();
       return presentStack.isEmpty() || (ItemStack.isSameItemSameComponents(presentStack, outputStack));
     };
 
-    if (isActive && output == null && canMergeOutput.get()) {
+    if (isActive && output.isEmpty() && canMergeOutput.get()) {
       var costs = PrintData.computeCosts(data);
       if (costs != null) {
         totalRequiredEnergy = OCSettings.get().printCost;
@@ -337,10 +339,13 @@ public class Printer extends BlockEntity implements li.cil.oc.api.network.Enviro
       }
     }
 
-    if (output != null) {
-      double want = Math.clamp(requiredEnergy, 1, OCSettings.get().printerTickAmount);
-      double have = want + (OCSettings.get().ignorePower ? 0 : ((li.cil.oc.api.network.Connector) node).changeBuffer(-want));
-      requiredEnergy -= have;
+    if (!output.isEmpty()) {
+      double have = 0;
+      if (requiredEnergy > 0) {
+        double want = Math.clamp(requiredEnergy, 1, OCSettings.get().printerTickAmount);
+        have = want + (OCSettings.get().ignorePower ? 0 : ((li.cil.oc.api.network.Connector) node).changeBuffer(-want));
+        requiredEnergy -= have;
+      }
       if (requiredEnergy <= 0) {
         var result = getItem(SLOT_OUTPUT);
         if (result.isEmpty()) {
@@ -348,11 +353,13 @@ public class Printer extends BlockEntity implements li.cil.oc.api.network.Enviro
         } else if (result.getCount() < result.getMaxStackSize() && canMergeOutput.get()) {
           result.grow(1);
           setChanged();
+        } else {
+          return;
         }
         requiredEnergy = 0;
-        output = null;
+        output = ItemStack.EMPTY;
       }
-      PacketSender.sendPrinting(this, have > 0.5 && output != null);
+      PacketSender.sendPrinting(this, have > 0.5 && !output.isEmpty());
     }
 
     int inputValue = PrintData.materialValue(getItem(SLOT_MATERIAL));
@@ -377,6 +384,7 @@ public class Printer extends BlockEntity implements li.cil.oc.api.network.Enviro
   @Override
   public void readFromNBTForServer(CompoundTag nbt) {
     super.readFromNBTForServer(nbt);
+    if (getEffectiveProvider() != null) load(nbt, getEffectiveProvider());
     if (nbt.contains(OCSettings.namespace + "node")) {
       node.load(nbt.getCompound(OCSettings.namespace + "node"), getEffectiveProvider());
     }
@@ -396,6 +404,7 @@ public class Printer extends BlockEntity implements li.cil.oc.api.network.Enviro
   @Override
   public void writeToNBTForServer(CompoundTag nbt) {
     super.writeToNBTForServer(nbt);
+    if (getEffectiveProvider() != null) save(nbt, getEffectiveProvider());
     var tag = new CompoundTag();
     node.save(tag, getEffectiveProvider());
     nbt.put(OCSettings.namespace + "node", tag);
@@ -404,7 +413,7 @@ public class Printer extends BlockEntity implements li.cil.oc.api.network.Enviro
     li.cil.oc.core.impl.util.ExtendedNBT.setNewCompoundTag(nbt, OCSettings.namespace + "data", t -> data.save(t, getEffectiveProvider()));
     nbt.putBoolean(OCSettings.namespace + "active", isActive);
     nbt.putInt(OCSettings.namespace + "limit", limit);
-    if (output != null)
+    if (!output.isEmpty())
       li.cil.oc.core.impl.util.ExtendedNBT.setNewCompoundTag(nbt, OCSettings.namespace + "output", t -> output.save(getEffectiveProvider(), t));
     nbt.putDouble(OCSettings.namespace + "total", totalRequiredEnergy);
     nbt.putDouble(OCSettings.namespace + "remaining", requiredEnergy);
@@ -481,12 +490,12 @@ public class Printer extends BlockEntity implements li.cil.oc.api.network.Enviro
 
   @Override
   public boolean stillValid(@NotNull Player player) {
-    return true;
+    return player.distanceToSqr(worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5) <= 64;
   }
 
   @Override
   public void clearContent() {
-    Arrays.fill(items, null);
+    Arrays.fill(items, ItemStack.EMPTY);
   }
 
   @Override
@@ -498,11 +507,6 @@ public class Printer extends BlockEntity implements li.cil.oc.api.network.Enviro
   public boolean canPlaceItem(int slot, @NotNull ItemStack stack) {
     if (slot == SLOT_MATERIAL) return PrintData.materialValue(stack) > 0;
     if (slot == SLOT_INK) return PrintData.inkValue(stack) > 0;
-    return false;
-  }
-
-  @Override
-  public boolean canTakeItem(@NotNull Container container, int slot, @NotNull ItemStack stack) {
     return false;
   }
 

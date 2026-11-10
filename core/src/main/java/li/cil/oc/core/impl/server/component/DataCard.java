@@ -1,6 +1,7 @@
 package li.cil.oc.core.impl.server.component;
 
 import com.google.common.hash.Hashing;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.Key;
@@ -14,6 +15,7 @@ import java.security.Signature;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 import java.util.Map;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterOutputStream;
@@ -34,8 +36,6 @@ import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.util.ResultWrapper;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.output.ByteArrayOutputStream;
 
 public abstract class DataCard extends AbstractManagedEnvironment implements DeviceInfo {
   private static final ThreadLocal<SecureRandom> SecureRandomInstance = ThreadLocal.withInitial(() -> {
@@ -102,12 +102,12 @@ public abstract class DataCard extends AbstractManagedEnvironment implements Dev
 
     @Callback(direct = true, limit = 32, doc = "function(data:string):string -- Applies base64 encoding to the data.")
     public Object[] encode64(Context context, Arguments args) {
-      return ResultWrapper.result((Object) Base64.encodeBase64(trivialCost(context, args)));
+      return ResultWrapper.result((Object) Base64.getMimeEncoder().encode(trivialCost(context, args)));
     }
 
     @Callback(direct = true, limit = 32, doc = "function(data:string):string -- Applies base64 decoding to the data.")
     public Object[] decode64(Context context, Arguments args) {
-      return ResultWrapper.result((Object) Base64.decodeBase64(trivialCost(context, args)));
+      return ResultWrapper.result((Object) Base64.getMimeDecoder().decode(trivialCost(context, args)));
     }
 
     @Callback(direct = true, limit = 4, doc = "function(data:string):string -- Applies deflate compression to the data.")

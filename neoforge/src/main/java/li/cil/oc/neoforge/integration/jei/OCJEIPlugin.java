@@ -12,6 +12,9 @@ import li.cil.oc.api.Manual;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.LootManager;
+import li.cil.oc.core.impl.common.recipe.ColorizeRecipe;
+import li.cil.oc.core.impl.common.recipe.ColorizeVariants;
+import li.cil.oc.core.impl.common.recipe.DecolorizeRecipe;
 import li.cil.oc.core.impl.common.recipe.LootDiskCyclingRecipe;
 import li.cil.oc.core.server.machine.CallbackWrapper;
 import li.cil.oc.core.server.machine.Callbacks;
@@ -20,6 +23,7 @@ import li.cil.oc.neoforge.client.gui.Relay;
 import li.cil.oc.neoforge.integration.util.JEI;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
+import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -31,6 +35,8 @@ import mezz.jei.api.gui.inputs.IJeiUserInput;
 import mezz.jei.api.gui.widgets.IRecipeExtrasBuilder;
 import mezz.jei.api.gui.widgets.IRecipeWidget;
 import mezz.jei.api.helpers.IGuiHelper;
+import mezz.jei.api.helpers.IJeiHelpers;
+import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.api.ingredients.subtypes.ISubtypeInterpreter;
 import mezz.jei.api.ingredients.subtypes.UidContext;
 import mezz.jei.api.recipe.IFocus;
@@ -55,6 +61,9 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingBookCategory;
+import net.minecraft.world.item.crafting.CraftingRecipe;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -174,7 +183,7 @@ public class OCJEIPlugin implements IModPlugin {
 
   @Override
   public void registerAdvanced(IAdvancedRegistration registration) {
-    registration.addRecipeManagerPlugin(new OCRecipeManagerPlugin());
+    registration.addRecipeManagerPlugin(new OCRecipeManagerPlugin(registration.getJeiHelpers()));
   }
 
   @Override
@@ -201,6 +210,12 @@ public class OCJEIPlugin implements IModPlugin {
 
   @Override
   public void onRuntimeAvailable(@NotNull IJeiRuntime runtime) {
+    li.cil.oc.core.impl.client.gui.DynamicGuiContainer.addHoveredStackSupplier(() -> {
+      var overlay = runtime.getIngredientListOverlay();
+      return overlay.getIngredientUnderMouse()
+        .flatMap(ITypedIngredient::getItemStack)
+        .orElse(net.minecraft.world.item.ItemStack.EMPTY);
+    });
     for (var supplier : JEI.getHiddenItems()) {
       var stack = supplier.get();
       if (!stack.isEmpty()) {
@@ -334,35 +349,47 @@ public class OCJEIPlugin implements IModPlugin {
   public record ManualRecipe(ItemStack stack, String path) {
   }
 
-  private static class OCRecipeManagerPlugin implements mezz.jei.api.recipe.advanced.IRecipeManagerPlugin {
+  private record OCRecipeManagerPlugin(IJeiHelpers jeiHelpers) implements mezz.jei.api.recipe.advanced.IRecipeManagerPlugin {
     @Override
     public <V> @NotNull List<RecipeType<?>> getRecipeTypes(IFocus<V> focus) {
-      if (focus.getRole() == RecipeIngredientRole.INPUT && focus.getTypedValue().getType() == VanillaTypes.ITEM_STACK) {
-        ItemStack stack = (ItemStack) focus.getTypedValue().getIngredient();
-        List<RecipeType<?>> types = new ArrayList<>();
+      if (focus.getTypedValue().getType() != VanillaTypes.ITEM_STACK) {
+        return List.of();
+      }
+      ItemStack stack = (ItemStack) focus.getTypedValue().getIngredient();
+      List<RecipeType<?>> types = new ArrayList<>();
+      if (focus.getRole() == RecipeIngredientRole.INPUT) {
         if (!getCallbackDocs(stack).isEmpty()) types.add(CALLBACKS);
         if (Manual.pathFor(stack) != null) types.add(MANUAL);
-        return types;
       }
-      return List.of();
+      if (hasColorizeFocus(stack, focus.getRole())) types.add(RecipeTypes.CRAFTING);
+      return types;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public <T, V> @NotNull List<T> getRecipes(@NotNull IRecipeCategory<T> recipeCategory, IFocus<V> focus) {
-      if (focus.getRole() == RecipeIngredientRole.INPUT && focus.getTypedValue().getType() == VanillaTypes.ITEM_STACK) {
-        ItemStack stack = (ItemStack) focus.getTypedValue().getIngredient();
-        if (recipeCategory.getRecipeType() == CALLBACKS) {
-          List<String> docs = getCallbackDocs(stack);
-          if (!docs.isEmpty()) {
-            return (List<T>) buildCallbackRecipes(stack, docs);
-          }
-        } else if (recipeCategory.getRecipeType() == MANUAL) {
-          String path = Manual.pathFor(stack);
-          if (path != null) {
-            return List.of((T) new ManualRecipe(stack, path));
-          }
+      if (focus.getTypedValue().getType() != VanillaTypes.ITEM_STACK) {
+        return List.of();
+      }
+      ItemStack stack = (ItemStack) focus.getTypedValue().getIngredient();
+      if (recipeCategory.getRecipeType() == CALLBACKS) {
+        if (focus.getRole() != RecipeIngredientRole.INPUT) return List.of();
+        List<String> docs = getCallbackDocs(stack);
+        if (!docs.isEmpty()) {
+          return (List<T>) buildCallbackRecipes(stack, docs);
         }
+      } else if (recipeCategory.getRecipeType() == MANUAL) {
+        if (focus.getRole() != RecipeIngredientRole.INPUT) return List.of();
+        String path = Manual.pathFor(stack);
+        if (path != null) {
+          return List.of((T) new ManualRecipe(stack, path));
+        }
+      } else if (recipeCategory.getRecipeType() == RecipeTypes.CRAFTING) {
+        List<RecipeHolder<CraftingRecipe>> matching = new ArrayList<>();
+        for (var holder : buildColorizeRecipes()) {
+          if (matchesColorizeFocus(holder, stack, focus.getRole())) matching.add(holder);
+        }
+        return (List<T>) matching;
       }
       return List.of();
     }
@@ -370,6 +397,58 @@ public class OCJEIPlugin implements IModPlugin {
     @Override
     public <T> @NotNull List<T> getRecipes(@NotNull IRecipeCategory<T> recipeCategory) {
       return List.of();
+    }
+
+    private boolean hasColorizeFocus(ItemStack stack, RecipeIngredientRole role) {
+      for (var holder : buildColorizeRecipes()) {
+        if (matchesColorizeFocus(holder, stack, role)) return true;
+      }
+      return false;
+    }
+
+    private static boolean matchesColorizeFocus(RecipeHolder<CraftingRecipe> holder, ItemStack stack, RecipeIngredientRole role) {
+      if (role == RecipeIngredientRole.INPUT) {
+        for (var ingredient : holder.value().getIngredients()) {
+          if (ingredient.test(stack)) return true;
+        }
+        return false;
+      }
+      if (role == RecipeIngredientRole.OUTPUT) {
+        //noinspection DataFlowIssue
+        return holder.value().getResultItem(null).getItem() == stack.getItem();
+      }
+      return false;
+    }
+
+    private List<RecipeHolder<CraftingRecipe>> buildColorizeRecipes() {
+      var level = Minecraft.getInstance().level;
+      if (level == null) {
+        return List.of();
+      }
+      List<RecipeHolder<CraftingRecipe>> recipes = new ArrayList<>();
+      var factory = jeiHelpers.getVanillaRecipeFactory();
+      for (var holder : level.getRecipeManager().getAllRecipesFor(net.minecraft.world.item.crafting.RecipeType.CRAFTING)) {
+        List<ColorizeVariants.Variant> variants;
+        if (holder.value() instanceof ColorizeRecipe recipe) {
+          variants = ColorizeVariants.colorize(recipe.targetItem);
+        } else if (holder.value() instanceof DecolorizeRecipe recipe) {
+          variants = ColorizeVariants.decolorize(recipe.targetItem);
+        } else {
+          continue;
+        }
+        for (int i = 0; i < variants.size(); i++) {
+          var variant = variants.get(i);
+          CraftingRecipe crafted = factory
+            .createShapedRecipeBuilder(CraftingBookCategory.MISC, List.of(variant.output()))
+            .define('t', Ingredient.of(variant.input()))
+            .define('d', Ingredient.of(variant.dye()))
+            .pattern("td")
+            .build();
+          recipes.add(new RecipeHolder<>(
+            ResourceLocation.fromNamespaceAndPath(holder.id().getNamespace(), "jei/" + holder.id().getPath() + "/" + i), crafted));
+        }
+      }
+      return recipes;
     }
   }
 

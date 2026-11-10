@@ -221,7 +221,7 @@ public class HologramRenderer implements BlockEntityRenderer<Hologram> {
           int colorIndex = hologram.getColor(x, y, z);
           if (colorIndex == 0) continue;
 
-          int color = hologram.colors[colorIndex - 1];
+          int color = hologram.colors()[colorIndex - 1];
           float r = (color >> 16) & 0xFF;
           float g = (color >> 8) & 0xFF;
           float b = color & 0xFF;

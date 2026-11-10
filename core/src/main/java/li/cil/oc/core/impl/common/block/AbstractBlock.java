@@ -2,6 +2,7 @@ package li.cil.oc.core.impl.common.block;
 
 import java.util.List;
 import li.cil.oc.core.common.block.traits.StateAware;
+import li.cil.oc.core.impl.common.block.traits.CustomDrops;
 import li.cil.oc.core.impl.common.blockentity.traits.Colored;
 import li.cil.oc.core.impl.common.blockentity.traits.Inventory;
 import li.cil.oc.core.impl.common.blockentity.traits.Rotatable;
@@ -134,7 +135,7 @@ public abstract class AbstractBlock extends Block implements EntityBlock {
 
   @Override
   protected void onRemove(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState newState, boolean isMoving) {
-    if (!state.is(newState.getBlock())) {
+    if (!state.is(newState.getBlock()) && !(this instanceof CustomDrops)) {
       onDropInventory(state, level, pos);
     }
     super.onRemove(state, level, pos, newState, isMoving);

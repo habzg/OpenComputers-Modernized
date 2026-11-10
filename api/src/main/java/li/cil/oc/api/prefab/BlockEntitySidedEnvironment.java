@@ -1,6 +1,5 @@
 package li.cil.oc.api.prefab;
 
-import java.util.Objects;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.Message;
@@ -68,7 +67,7 @@ public abstract class BlockEntitySidedEnvironment extends BlockEntity implements
     super.loadAdditional(nbt, registries);
     int index = 0;
     for (Node node : nodes) {
-      if (node != null && Objects.equals(node.host(), this)) {
+      if (node != null && node.host() == this) {
         node.load(nbt.getCompound("oc:node" + index), registries);
       }
       ++index;
@@ -79,7 +78,7 @@ public abstract class BlockEntitySidedEnvironment extends BlockEntity implements
     super.saveAdditional(nbt, registries);
     int index = 0;
     for (Node node : nodes) {
-      if (node != null && Objects.equals(node.host(), this)) {
+      if (node != null && node.host() == this) {
         final CompoundTag nodeNbt = new CompoundTag();
         node.save(nodeNbt, registries);
         nbt.put("oc:node" + index, nodeNbt);

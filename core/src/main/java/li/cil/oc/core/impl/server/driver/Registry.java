@@ -164,13 +164,17 @@ public final class Registry implements li.cil.oc.api.detail.DriverAPI {
 
   public boolean isBlacklisted(ItemStack stack, Class<?> host) {
     return blacklist.stream().anyMatch(entry ->
-      ItemStack.isSameItem(entry.getKey(), stack) &&
+      isItemEqual(entry.getKey(), stack) &&
         entry.getValue().stream().anyMatch(h -> h.isAssignableFrom(host)));
+  }
+
+  private static boolean isItemEqual(ItemStack a, ItemStack b) {
+    return ItemStack.isSameItem(a, b) && a.getDamageValue() == b.getDamageValue();
   }
 
   public void blacklistHost(ItemStack stack, Class<?> host) {
     for (Map.Entry<ItemStack, Set<Class<?>>> entry : blacklist) {
-      if (ItemStack.isSameItem(entry.getKey(), stack)) {
+      if (isItemEqual(entry.getKey(), stack)) {
         entry.getValue().add(host);
         return;
       }

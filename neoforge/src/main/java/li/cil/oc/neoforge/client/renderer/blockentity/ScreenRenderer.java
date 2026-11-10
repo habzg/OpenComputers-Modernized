@@ -240,12 +240,12 @@ public class ScreenRenderer implements BlockEntityRenderer<Screen> {
     float textAlpha = 1.0f;
     double distSq = ClientDistanceHelper.distanceSquared(screen.getLevel(),
       screen.getBlockPos().getX() + 0.5, screen.getBlockPos().getY() + 0.5, screen.getBlockPos().getZ() + 0.5, p);
-    double distance = Math.sqrt(distSq) / Math.min(screen.width, screen.height);
-    double maxDist = OCSettings.get().maxScreenTextRenderDistance;
-    double fadeStart = OCSettings.get().screenTextFadeStartDistance;
-    if (distance > maxDist) return;
-    if (distance > fadeStart) {
-      textAlpha = (float) Math.max(0, 1 - (distance - fadeStart) / (maxDist - fadeStart));
+    double distance = distSq / Math.min(screen.width, screen.height);
+    double maxDistSq = OCSettings.get().maxScreenTextRenderDistance * OCSettings.get().maxScreenTextRenderDistance;
+    double fadeStartSq = OCSettings.get().screenTextFadeStartDistance * OCSettings.get().screenTextFadeStartDistance;
+    if (distance > maxDistSq) return;
+    if (distance > fadeStartSq) {
+      textAlpha = (float) Math.max(0, 1 - (distance - fadeStartSq) / (maxDistSq - fadeStartSq));
     }
     if (textAlpha <= 0) return;
 

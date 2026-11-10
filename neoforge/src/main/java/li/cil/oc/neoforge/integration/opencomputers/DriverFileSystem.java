@@ -46,7 +46,7 @@ public final class DriverFileSystem extends Item {
     var subItem = stack.getItem();
     if (subItem instanceof HardDiskDrive hdd) {
       return createEnvironment(stack, hdd.kiloBytes() * 1024, hdd.platterCount(), host, hdd.tier() + 2);
-    } else if (subItem instanceof FloppyDisk disk) {
+    } else if (subItem instanceof FloppyDisk) {
       return createEnvironment(stack, OCSettings.get().floppySize * 1024, 1, host, 1);
     }
     return null;
@@ -93,7 +93,7 @@ public final class DriverFileSystem extends Item {
       }
       return null;
     } else {
-      String address = addressFromTag(getTag(stack));
+      String address = addressFromTag(stack);
       li.cil.oc.api.fs.Label label = new ReadWriteItemLabel();
       label.load(getTag(stack), null);
       boolean isFloppy = li.cil.oc.api.Items.get(stack) == li.cil.oc.api.Items.get(Constants.ItemName.Floppy);
@@ -117,19 +117,34 @@ public final class DriverFileSystem extends Item {
     }
   }
 
-  private String addressFromTag(CompoundTag tag) {
-    if (tag.contains("node") && tag.getCompound("node").contains("address")) {
-      String address = tag.getCompound("node").getString("address");
-      if (isValidUUID(address)) {
-        return address;
-      } else {
-        String newAddress = java.util.UUID.randomUUID().toString();
-        tag.getCompound("node").putString("address", newAddress);
-        OpenComputers.log().warn("Generated new address for disk '{}'.", newAddress);
-        return newAddress;
-      }
+  private String addressFromTag(ItemStack stack) {
+    CompoundTag root;
+    var cd = stack.get(DataComponents.CUSTOM_DATA);
+    if (cd != null && !cd.isEmpty()) {
+      root = cd.copyTag();
+    } else {
+      root = new CompoundTag();
     }
-    return java.util.UUID.randomUUID().toString();
+    if (!root.contains(OCSettings.namespace + "data")) {
+      root.put(OCSettings.namespace + "data", new CompoundTag());
+    }
+    CompoundTag tag = root.getCompound(OCSettings.namespace + "data");
+    String address;
+    if (tag.contains("node") && tag.getCompound("node").contains("address")) {
+      address = tag.getCompound("node").getString("address");
+      if (!isValidUUID(address)) {
+        address = java.util.UUID.randomUUID().toString();
+        var node = tag.getCompound("node");
+        node.putString("address", address);
+        tag.put("node", node);
+        OpenComputers.log().warn("Generated new address for disk '{}'.", address);
+      }
+    } else {
+      address = java.util.UUID.randomUUID().toString();
+    }
+    root.put(OCSettings.namespace + "data", tag);
+    stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
+    return address;
   }
 
   private CompoundTag getTag(ItemStack stack) {

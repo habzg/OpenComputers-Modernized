@@ -39,7 +39,7 @@ public interface BundledRedstoneAware extends RedstoneAware {
     }
   }
 
-  private void updateInput(int[][] inputs, Direction side, int color, int newValue) {
+  default void updateInput(int[][] inputs, Direction side, int color, int newValue) {
     int sideIndex = side.get3DDataValue();
     int oldValue = inputs[sideIndex][color];
     if (oldValue != newValue) {
@@ -76,7 +76,7 @@ public interface BundledRedstoneAware extends RedstoneAware {
     int sideIndex = toLocal(side).get3DDataValue();
     boolean changed = false;
     for (int color = 0; color < 16; color++) {
-      Object obj = values.get(color);
+      Object obj = getObjectFuzzy(values, color);
       if (obj instanceof Number n) {
         int newValue = n.intValue();
         if (output[sideIndex][color] != newValue) {
@@ -91,25 +91,11 @@ public interface BundledRedstoneAware extends RedstoneAware {
   }
 
   default void setBundledOutput(Map<?, ?> values) {
-    boolean changed = false;
     for (Direction side : Direction.values()) {
-      Object obj = values.get(side.get3DDataValue());
+      int sideIndex = toLocal(side).get3DDataValue();
+      Object obj = getObjectFuzzy(values, sideIndex);
       if (obj instanceof Map<?, ?> child) {
-        int[][] output = bundledOutput();
-        int sideIndex = side.get3DDataValue();
-        for (int color = 0; color < 16; color++) {
-          Object val = child.get(color);
-          if (val instanceof Number n) {
-            int newValue = n.intValue();
-            if (output[sideIndex][color] != newValue) {
-              output[sideIndex][color] = newValue;
-              changed = true;
-            }
-          }
-        }
-        if (changed) {
-          onRedstoneOutputChanged(side);
-        }
+        setBundledOutput(side, child);
       }
     }
   }

@@ -1,6 +1,5 @@
 package li.cil.oc.core.impl.common.blockentity;
 
-import java.util.Map;
 import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.core.impl.OCSettings;
@@ -73,8 +72,11 @@ public class Redstone extends BlockEntity implements Environment, BundledRedston
     return worldPosition.getZ() + 0.5;
   }
 
+  private volatile boolean isChangeScheduled = false;
+
   @Override
   public void markChanged() {
+    isChangeScheduled = true;
   }
 
   @Override
@@ -92,16 +94,7 @@ public class Redstone extends BlockEntity implements Environment, BundledRedston
   }
 
   @Override
-  public void onDisconnect(Node node) {
-  }
-
-  @Override
   public void onMessage(li.cil.oc.api.network.Message ignoredMessage) {
-  }
-
-  @Override
-  public Object result(Object... args) {
-    return li.cil.oc.core.util.ResultWrapper.result(args);
   }
 
   @Override
@@ -120,6 +113,10 @@ public class Redstone extends BlockEntity implements Environment, BundledRedston
   @Override
   public void updateEntity() {
     super.updateEntity();
+    if (isChangeScheduled) {
+      isChangeScheduled = false;
+      setChanged();
+    }
     if (isServer()) {
       if (shouldUpdateInput) {
         shouldUpdateInput = false;
@@ -197,6 +194,15 @@ public class Redstone extends BlockEntity implements Environment, BundledRedston
 
   @Override
   public int[] output() {
+    var result = new int[Direction.values().length];
+    for (var side : Direction.values()) {
+      result[side.ordinal()] = _output[toLocal(side).ordinal()];
+    }
+    return result;
+  }
+
+  @Override
+  public int[] outputLocal() {
     return _output;
   }
 
@@ -221,20 +227,6 @@ public class Redstone extends BlockEntity implements Environment, BundledRedston
     if (_output[ord] != value) {
       _output[ord] = value;
       onRedstoneOutputChanged(side);
-    }
-  }
-
-  @Override
-  public void setOutput(Map<?, ?> values) {
-    for (var side : Direction.values()) {
-      var ord = toLocal(side).ordinal();
-      var key = Integer.valueOf(ord);
-      if (values.containsKey(key)) {
-        var raw = values.get(key);
-        if (raw instanceof Number num) {
-          setOutput(side, num.intValue());
-        }
-      }
     }
   }
 

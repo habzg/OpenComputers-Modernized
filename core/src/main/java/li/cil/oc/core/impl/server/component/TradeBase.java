@@ -6,6 +6,7 @@ import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.prefab.AbstractValue;
 import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.InventoryUtils;
+import li.cil.oc.core.impl.util.SubLevelHelper;
 import li.cil.oc.core.util.ResultWrapper;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -29,7 +30,7 @@ public abstract class TradeBase extends AbstractValue {
   public boolean isInRange() {
     Merchant m = info.merchant.get();
     if (m instanceof Entity merchant && info.host != null) {
-      return merchant.distanceToSqr(info.host.xPosition(), info.host.yPosition(), info.host.zPosition()) < maxRange() * maxRange();
+      return SubLevelHelper.distanceSquared(info.host.level(), new net.minecraft.world.phys.Vec3(merchant.getX(), merchant.getY(), merchant.getZ()), new net.minecraft.world.phys.Vec3(info.host.xPosition(), info.host.yPosition(), info.host.zPosition())) < maxRange() * maxRange();
     }
     return false;
   }
@@ -55,7 +56,7 @@ public abstract class TradeBase extends AbstractValue {
   public Object[] getInput(Context context, Arguments arguments) {
     MerchantOffer recipe = info.recipe();
     if (recipe != null) {
-      ItemStack first = recipe.getBaseCostA().copy();
+      ItemStack first = recipe.getCostA().copy();
       ItemStack second = recipe.getCostB().isEmpty() ? null : recipe.getCostB().copy();
       return ResultWrapper.result(first, second);
     }
@@ -111,7 +112,7 @@ public abstract class TradeBase extends AbstractValue {
   private boolean completeTrade(Container inventory, MerchantOffer recipe, boolean exact) {
     Merchant merchant = info.merchant.get();
     if (merchant == null) return false;
-    ItemStack firstInput = recipe.getBaseCostA();
+    ItemStack firstInput = recipe.getCostA();
     ItemStack secondInput = recipe.getCostB().isEmpty() ? null : recipe.getCostB();
 
     ItemStack firstExtracted = InventoryUtils.extractFromInventory(firstInput, inventory, null, true, exact);
@@ -125,7 +126,7 @@ public abstract class TradeBase extends AbstractValue {
     InventoryUtils.extractFromInventory(firstInput, inventory, null, false, exact);
     if (secondInput != null)
       InventoryUtils.extractFromInventory(secondInput, inventory, null, false, exact);
-    InventoryUtils.insertIntoInventory(outputStack, inventory, null, outputStack.getCount());
+    InventoryUtils.insertIntoInventory(outputStack, inventory, null, outputStack.getCount(), false);
     merchant.notifyTrade(recipe);
     return true;
   }

@@ -35,6 +35,11 @@ public class Waypoint extends Screen {
   }
 
   @Override
+  public void renderBackground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float dt) {
+    renderTransparentBackground(guiGraphics);
+  }
+
+  @Override
   public void init() {
     super.init();
     int midX = width / 2;

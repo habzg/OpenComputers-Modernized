@@ -5,6 +5,7 @@ import com.google.common.cache.CacheBuilder;
 import java.util.HashMap;
 import java.util.Map;
 import li.cil.oc.api.network.ManagedEnvironment;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 
 public abstract class ComponentTracker {
@@ -18,10 +19,10 @@ public abstract class ComponentTracker {
     return serverTracker;
   }
 
-  private final Map<Integer, Cache<String, ManagedEnvironment>> worlds = new HashMap<>();
+  private final Map<ResourceKey<Level>, Cache<String, ManagedEnvironment>> worlds = new HashMap<>();
 
   private Cache<String, ManagedEnvironment> components(Level world) {
-    return worlds.computeIfAbsent(world.dimension().location().hashCode(), k ->
+    return worlds.computeIfAbsent(world.dimension(), k ->
       CacheBuilder.newBuilder().weakValues().build()
     );
   }

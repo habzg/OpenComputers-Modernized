@@ -31,7 +31,7 @@ public interface Database {
   /**
    * Get an item stack stored in the specified slot of this database.
    * <br>
-   * This will return <code>null</code> if there is no entry for the specified
+   * This will return <code>{@link ItemStack#EMPTY}</code> if there is no entry for the specified
    * slot. If there is an entry, this will return a <em>copy</em> of that
    * item stack, so it is safe to modify the returned stack.
    *

@@ -62,9 +62,9 @@ public class RaidRenderer implements BlockEntityRenderer<Raid> {
     var matrix = poseStack.last().pose();
     float l = U1 + slot * FS;
     float h = U1 + (slot + 1) * FS;
-    consumer.addVertex(matrix, l, 1, 0).setUv(sprite.getU(l * 16), sprite.getV(16));
-    consumer.addVertex(matrix, h, 1, 0).setUv(sprite.getU(h * 16), sprite.getV(16));
-    consumer.addVertex(matrix, h, 0, 0).setUv(sprite.getU(h * 16), sprite.getV(0));
-    consumer.addVertex(matrix, l, 0, 0).setUv(sprite.getU(l * 16), sprite.getV(0));
+    consumer.addVertex(matrix, l, 1, 0).setUv(sprite.getU(l), sprite.getV(1));
+    consumer.addVertex(matrix, h, 1, 0).setUv(sprite.getU(h), sprite.getV(1));
+    consumer.addVertex(matrix, h, 0, 0).setUv(sprite.getU(h), sprite.getV(0));
+    consumer.addVertex(matrix, l, 0, 0).setUv(sprite.getU(l), sprite.getV(0));
   }
 }

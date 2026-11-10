@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    "opencomputers:adapter",
+    "opencomputers:assembler",
+    "opencomputers:chameliumblock",
+    "opencomputers:charger",
+    "opencomputers:disassembler",
+    "opencomputers:diskdrive",
+    "opencomputers:endstone",
+    "opencomputers:geolyzer",
+    "opencomputers:microcontroller",
+    "opencomputers:netsplitter",
+    "opencomputers:powerconverter",
+    "opencomputers:powerdistributor",
+    "opencomputers:printer",
+    "opencomputers:raid",
+    "opencomputers:relay",
+    "opencomputers:transposer"
+  ]
+}

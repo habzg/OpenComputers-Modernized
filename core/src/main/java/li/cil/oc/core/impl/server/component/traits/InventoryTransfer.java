@@ -29,13 +29,13 @@ public interface InventoryTransfer extends WorldAware, SideRestricted {
     if (reason != null) return result(null, reason);
     InventoryUtils.TransferExtractor extractor;
     if (args.count() > 3) {
-      Container sourceInv = InventoryUtils.inventoryAt(sourcePos);
+      Container sourceInv = InventoryUtils.inventoryAt(sourcePos, sourceSide.getOpposite());
       if (sourceInv == null) throw new IllegalArgumentException("no inventory");
-      Container sinkInv = InventoryUtils.inventoryAt(sinkPos);
+      Container sinkInv = InventoryUtils.inventoryAt(sinkPos, sinkSide.getOpposite());
       if (sinkInv == null) throw new IllegalArgumentException("no inventory");
       int sourceSlot = ExtendedArguments.checkSlot(args, sourceInv, 3);
       int sinkSlot = ExtendedArguments.optSlot(args, sinkInv, 4, -1);
-      extractor = InventoryUtils.getTransferBetweenInventoriesSlotsAt(sourcePos, sourceSide.getOpposite(), sourceSlot, sinkPos, sinkSide.getOpposite(), sinkSlot < 0 ? null : sinkSlot, count);
+      extractor = InventoryUtils.getTransferBetweenInventoriesSlotsAt(sourcePos, sourceSide.getOpposite(), sourceSlot, sinkPos, sinkSide.getOpposite(), sinkSlot, count);
     } else {
       extractor = InventoryUtils.getTransferBetweenInventoriesAt(sourcePos, sourceSide.getOpposite(), sinkPos, sinkSide.getOpposite(), count);
     }
@@ -51,9 +51,9 @@ public interface InventoryTransfer extends WorldAware, SideRestricted {
     BlockPosition sinkPos = position().offset(sinkSide);
     String reason = onTransferContents();
     if (reason != null) return result(null, reason);
-    Container source = InventoryUtils.inventoryAt(sourcePos);
+    Container source = InventoryUtils.inventoryAt(sourcePos, sourceSide.getOpposite());
     if (source == null) return result(null, "no inventory");
-    Container sink = InventoryUtils.inventoryAt(sinkPos);
+    Container sink = InventoryUtils.inventoryAt(sinkPos, sinkSide.getOpposite());
     if (sink == null) return result(null, "no inventory");
     int sourceSlot = ExtendedArguments.checkSlot(args, source, 2);
     int sinkSlot = ExtendedArguments.checkSlot(args, sink, 3);

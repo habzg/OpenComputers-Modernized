@@ -2,6 +2,7 @@ package li.cil.oc.core.impl.server.component;
 
 import com.google.common.base.Strings;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.machine.Arguments;
@@ -23,6 +24,8 @@ import li.cil.oc.core.impl.util.ExtendedNBT;
 import li.cil.oc.core.impl.util.FluidUtils;
 import li.cil.oc.core.impl.util.InventoryUtils;
 import li.cil.oc.core.impl.util.Log;
+import li.cil.oc.core.impl.util.SideTracker;
+import li.cil.oc.core.impl.util.SubLevelHelper;
 import li.cil.oc.core.server.network.DebugNetwork;
 import li.cil.oc.core.util.FluidHandler;
 import li.cil.oc.core.util.FluidStack;
@@ -32,14 +35,19 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
@@ -51,6 +59,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.storage.ServerLevelData;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.ScoreAccess;
@@ -64,7 +74,7 @@ public abstract class DebugCardBase extends AbstractManagedEnvironment implement
   private Node remoteNode = null;
   private int[] remoteNodePosition = null;
 
-  protected abstract Object[] platformScanContentsAt(Level world, int x, int y, int z);
+  protected abstract boolean platformIsBlockBreakCanceled(Level world, BlockPos pos, BlockState state);
 
   protected abstract boolean platformIsModLoaded(String name);
 
@@ -93,6 +103,26 @@ public abstract class DebugCardBase extends AbstractManagedEnvironment implement
     checkAccess(access);
   }
 
+  private static Level resolveLevel(String dimension) {
+    if (dimension == null || dimension.isEmpty()) return null;
+    var location = ResourceLocation.tryParse(dimension);
+    if (location == null) return null;
+    var server = SideTracker.getCurrentServer();
+    if (server == null) return null;
+    return server.getLevel(ResourceKey.create(Registries.DIMENSION, location));
+  }
+
+  public static List<String> dimensionIds() {
+    var server = SideTracker.getCurrentServer();
+    if (server == null) return List.of();
+    var ids = new java.util.ArrayList<String>();
+    for (var key : server.registryAccess().registryOrThrow(Registries.DIMENSION).registryKeySet()) {
+      ids.add(key.location().toString());
+    }
+    java.util.Collections.sort(ids);
+    return ids;
+  }
+
   @Callback(doc = "function(value:number):number -- Changes the component network's energy buffer by the specified delta.")
   public Object[] changeBuffer(Context context, Arguments args) {
     checkAccess();
@@ -102,25 +132,37 @@ public abstract class DebugCardBase extends AbstractManagedEnvironment implement
   @Callback(doc = "function():number -- Get the container's X position in the world.")
   public Object[] getX(Context context, Arguments args) {
     checkAccess();
-    return ResultWrapper.result(host().xPosition());
+    return ResultWrapper.result(SubLevelHelper.projectOut(host().level(), new Vec3(host().xPosition(), host().yPosition(), host().zPosition())).x);
   }
 
   @Callback(doc = "function():number -- Get the container's Y position in the world.")
   public Object[] getY(Context context, Arguments args) {
     checkAccess();
-    return ResultWrapper.result(host().yPosition());
+    return ResultWrapper.result(SubLevelHelper.projectOut(host().level(), new Vec3(host().xPosition(), host().yPosition(), host().zPosition())).y);
   }
 
   @Callback(doc = "function():number -- Get the container's Z position in the world.")
   public Object[] getZ(Context context, Arguments args) {
     checkAccess();
-    return ResultWrapper.result(host().zPosition());
+    return ResultWrapper.result(SubLevelHelper.projectOut(host().level(), new Vec3(host().xPosition(), host().yPosition(), host().zPosition())).z);
   }
 
-  @Callback(doc = "function():userdata -- Get the world object of the container.")
+  @Callback(doc = "function([dimension:string]):userdata -- Get the world object for the specified dimension ID, or the container's.")
   public Object[] getWorld(Context context, Arguments args) {
     checkAccess();
-    return ResultWrapper.result(new WorldValue(host().level()));
+    if (args.count() > 0) {
+      String dimension = args.checkString(0);
+      Level level = resolveLevel(dimension);
+      if (level == null) throw new IllegalArgumentException("unknown dimension: " + dimension);
+      return ResultWrapper.result(new WorldValue(level, access));
+    }
+    return ResultWrapper.result(new WorldValue(host().level(), access));
+  }
+
+  @Callback(doc = "function():table -- Get a list of all dimension IDs, loaded and unloaded.")
+  public Object[] getWorlds(Context context, Arguments args) {
+    checkAccess();
+    return ResultWrapper.result((Object) dimensionIds().toArray(new String[0]));
   }
 
   @Callback(doc = "function(name:string):userdata -- Get the entity of a player.")
@@ -141,16 +183,64 @@ public abstract class DebugCardBase extends AbstractManagedEnvironment implement
   @Callback(doc = "function():userdata -- Get the scoreboard object for the world")
   public Object[] getScoreboard(Context context, Arguments args) {
     checkAccess();
-    return ResultWrapper.result(new ScoreboardValue(host().level()));
+    return ResultWrapper.result(new ScoreboardValue(host().level(), access));
   }
 
-  @Callback(doc = "function(x: number, y: number, z: number):boolean, string, table -- returns contents at the location in the host world")
+  @Callback(doc = "function(x: number, y: number, z: number[, dimension: string]):boolean, string, table -- returns contents at the location in world by dimension ID (default host world)")
   public Object[] scanContentsAt(Context context, Arguments args) {
     checkAccess();
     int x = args.checkInteger(0);
     int y = args.checkInteger(1);
     int z = args.checkInteger(2);
-    return platformScanContentsAt(host().level(), x, y, z);
+    Level world = host().level();
+    if (args.count() > 3) {
+      String dimension = args.checkString(3);
+      world = resolveLevel(dimension);
+      if (world == null) throw new IllegalArgumentException("unknown dimension: " + dimension);
+    }
+    return scanContents(world, x, y, z);
+  }
+
+  private Object[] scanContents(Level world, int x, int y, int z) {
+    BlockPos pos = new BlockPos(x, y, z);
+    Entity entity = nearestEntity(world, pos);
+    if (entity instanceof LivingEntity) {
+      return ResultWrapper.result(true, "EntityLivingBase", entity);
+    }
+    if (entity instanceof AbstractMinecart) {
+      return ResultWrapper.result(true, "EntityMinecart", entity);
+    }
+    BlockState state = world.getBlockState(pos);
+    Block block = state.getBlock();
+    if (state.isAir()) {
+      return ResultWrapper.result(false, "air", block);
+    }
+    if (!state.getFluidState().isEmpty()) {
+      return ResultWrapper.result(platformIsBlockBreakCanceled(world, pos, state), "liquid", block);
+    }
+    if (state.canBeReplaced()) {
+      return ResultWrapper.result(platformIsBlockBreakCanceled(world, pos, state), "replaceable", block);
+    }
+    if (state.getCollisionShape(world, pos).isEmpty()) {
+      return ResultWrapper.result(true, "passable", block);
+    }
+    return ResultWrapper.result(true, "solid", block);
+  }
+
+  private Entity nearestEntity(Level world, BlockPos pos) {
+    double centerX = pos.getX() + 0.5;
+    double centerY = pos.getY() + 0.5;
+    double centerZ = pos.getZ() + 0.5;
+    Entity nearest = null;
+    double nearestDistance = Double.MAX_VALUE;
+    for (Entity entity : world.getEntitiesOfClass(Entity.class, new AABB(pos))) {
+      double distance = entity.distanceToSqr(centerX, centerY, centerZ);
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearest = entity;
+      }
+    }
+    return nearest;
   }
 
   @Callback(doc = "function(name:string):boolean -- Get whether a mod or API is loaded.")
@@ -263,7 +353,11 @@ public abstract class DebugCardBase extends AbstractManagedEnvironment implement
       DebugNetwork.add(this);
       if (remoteNodePosition != null) {
         remoteNode = findNode(remoteNodePosition[0], remoteNodePosition[1], remoteNodePosition[2]);
-        this.node.connect(remoteNode);
+        if (remoteNode != null) {
+          this.node.connect(remoteNode);
+        } else {
+          remoteNodePosition = null;
+        }
       }
     }
   }
@@ -360,22 +454,34 @@ public abstract class DebugCardBase extends AbstractManagedEnvironment implement
     }
   }
 
-  public class WorldValue extends AbstractValue {
-    public final Level world;
+  public static class WorldValue extends AbstractValue {
+    public Level world;
+    public AccessContext access;
 
     @SuppressWarnings("unused")
     public WorldValue() {
-      this(null);
+      this(null, null);
     }
 
-    public WorldValue(Level world) {
+    public WorldValue(Level world, AccessContext access) {
       this.world = world;
+      this.access = access;
+    }
+
+    private void checkAccess() {
+      DebugCardBase.checkAccess(access);
+    }
+
+    @Callback(doc = "function():string -- Gets the id of the current dimension.")
+    public Object[] getDimensionId(Context context, Arguments args) {
+      checkAccess();
+      return ResultWrapper.result(world.dimension().location().toString());
     }
 
     @Callback(doc = "function():string -- Gets the name of the current dimension.")
     public Object[] getDimensionName(Context context, Arguments args) {
       checkAccess();
-      return ResultWrapper.result(world.dimension().location().toString());
+      return ResultWrapper.result(world.dimension().location().getPath());
     }
 
     @Callback(doc = "function():number -- Gets the seed of the world.")
@@ -534,7 +640,9 @@ public abstract class DebugCardBase extends AbstractManagedEnvironment implement
     public Object[] getLightValue(Context context, Arguments args) {
       checkAccess();
       BlockPos pos = new net.minecraft.core.BlockPos(args.checkInteger(0), args.checkInteger(1), args.checkInteger(2));
-      return ResultWrapper.result((double) world.getBrightness(LightLayer.BLOCK, pos));
+      return ResultWrapper.result((double) Math.max(
+        world.getBrightness(LightLayer.BLOCK, pos),
+        world.getBrightness(LightLayer.SKY, pos)));
     }
 
     @Callback(doc = "function(x:number, y:number, z:number):number -- Get whether the block at the specified coordinates is directly under the sky.")
@@ -601,13 +709,13 @@ public abstract class DebugCardBase extends AbstractManagedEnvironment implement
         }
       }
       BlockPosition position = BlockPosition.apply(args.checkDouble(4), args.checkDouble(5), args.checkDouble(6), world);
-      ExtendedArguments.checkSideAny(args, 7);
-      Container inventory = InventoryUtils.inventoryAt(position);
+      var side = ExtendedArguments.checkSideAny(args, 7);
+      Container inventory = InventoryUtils.inventoryAt(position, side);
       if (inventory != null) {
         ItemStack stack = new ItemStack(item, count);
         if (damage > 0) stack.setDamageValue(damage);
         if (tag != null) stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
-        return ResultWrapper.result(InventoryUtils.insertIntoInventory(stack, inventory, null));
+        return ResultWrapper.result(InventoryUtils.insertIntoInventory(stack, inventory, side, 64, false));
       }
       return ResultWrapper.result(null, "no inventory");
     }
@@ -616,7 +724,7 @@ public abstract class DebugCardBase extends AbstractManagedEnvironment implement
     public Object[] removeItem(Context context, Arguments args) {
       checkAccess();
       BlockPosition position = BlockPosition.apply(args.checkDouble(0), args.checkDouble(1), args.checkDouble(2), world);
-      Container inventory = InventoryUtils.inventoryAt(position);
+      Container inventory = InventoryUtils.inventoryAt(position, null);
       if (inventory != null) {
         int slot = ExtendedArguments.checkSlot(args, inventory, 3);
         int count = args.optInteger(4, 64);
@@ -661,12 +769,17 @@ public abstract class DebugCardBase extends AbstractManagedEnvironment implement
     @Override
     public void load(CompoundTag nbt, HolderLookup.Provider provider) {
       super.load(nbt, provider);
+      access = AccessContext.load(nbt);
+      world = resolveLevel(nbt.getString("dimension"));
     }
 
     @Override
     public void save(CompoundTag nbt, HolderLookup.Provider provider) {
       super.save(nbt, provider);
-      nbt.putInt("dimension", world.dimension().location().hashCode());
+      if (access != null) access.save(nbt);
+      if (world != null) {
+        nbt.putString("dimension", world.dimension().location().toString());
+      }
     }
   }
 
@@ -692,7 +805,7 @@ public abstract class DebugCardBase extends AbstractManagedEnvironment implement
 
     @Callback(doc = "function():userdata -- Get the player's world object.")
     public Object[] getWorld(Context context, Arguments args) {
-      return withPlayer(p -> ResultWrapper.result(new WorldValue(p.serverLevel())));
+      return withPlayer(p -> ResultWrapper.result(new WorldValue(p.serverLevel(), access)));
     }
 
     @Callback(doc = "function():string -- Get the player's game type.")
@@ -803,7 +916,7 @@ public abstract class DebugCardBase extends AbstractManagedEnvironment implement
         if (damage > 0) stack.setDamageValue(damage);
         if (tag != null) stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
         int before = stack.getCount();
-        InventoryUtils.addToPlayerInventory(stack, p);
+        InventoryUtils.addToPlayerInventory(stack, p, true);
         return ResultWrapper.result(before - stack.getCount());
       });
     }
@@ -821,16 +934,24 @@ public abstract class DebugCardBase extends AbstractManagedEnvironment implement
     }
   }
 
-  public class ScoreboardValue extends AbstractValue {
-    public final Scoreboard scoreboard;
+  public static class ScoreboardValue extends AbstractValue {
+    public Scoreboard scoreboard;
+    public String dimension;
+    public AccessContext access;
 
     @SuppressWarnings("unused")
     public ScoreboardValue() {
-      this.scoreboard = null;
+      this(null, null);
     }
 
-    public ScoreboardValue(Level world) {
+    public ScoreboardValue(Level world, AccessContext access) {
+      this.access = access;
+      this.dimension = world != null ? world.dimension().location().toString() : "";
       this.scoreboard = world != null ? world.getScoreboard() : null;
+    }
+
+    private void checkAccess() {
+      DebugCardBase.checkAccess(access);
     }
 
     @SuppressWarnings("SameReturnValue")
@@ -959,11 +1080,19 @@ public abstract class DebugCardBase extends AbstractManagedEnvironment implement
     @Override
     public void load(CompoundTag nbt, HolderLookup.Provider provider) {
       super.load(nbt, provider);
+      access = AccessContext.load(nbt);
+      dimension = nbt.getString("dimension");
+      var level = resolveLevel(dimension);
+      scoreboard = level != null ? level.getScoreboard() : null;
     }
 
     @Override
     public void save(CompoundTag nbt, HolderLookup.Provider provider) {
       super.save(nbt, provider);
+      if (access != null) access.save(nbt);
+      if (dimension != null) {
+        nbt.putString("dimension", dimension);
+      }
     }
   }
 

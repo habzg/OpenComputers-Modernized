@@ -14,51 +14,46 @@ public class ComponentAPI extends NativeLuaAPI {
     lua().newTable();
 
     ExtendedLuaState.pushScalaFunction(lua(), l -> {
-      synchronized (components()) {
-        String filter = l.isString(1) ? l.toString(1) : null;
-        boolean exact = !l.isBoolean(2) || l.toBoolean(2);
-        l.newTable(0, components().size());
-        for (Map.Entry<String, String> entry : components().entrySet()) {
-          String address = entry.getKey();
-          String name = entry.getValue();
-          if (filter == null || (exact ? name.equals(filter) : name.contains(filter))) {
-            l.pushString(address);
-            l.pushString(name);
-            l.rawSet(-3);
-          }
+      Map<String, String> comps = components();
+      String filter = l.isString(1) ? l.toString(1) : null;
+      boolean exact = !l.isBoolean(2) || l.toBoolean(2);
+      l.newTable(0, comps.size());
+      for (Map.Entry<String, String> entry : comps.entrySet()) {
+        String address = entry.getKey();
+        String name = entry.getValue();
+        if (filter == null || (exact ? name.equals(filter) : name.contains(filter))) {
+          l.pushString(address);
+          l.pushString(name);
+          l.rawSet(-3);
         }
-        return 1;
       }
+      return 1;
     });
     lua().setField(-2, "list");
 
     ExtendedLuaState.pushScalaFunction(lua(), l -> {
-      synchronized (components()) {
-        String name = components().get(l.checkString(1));
-        if (name != null) {
-          l.pushString(name);
-          return 1;
-        } else {
-          l.pushNil();
-          l.pushString("no such component");
-          return 2;
-        }
+      String name = components().get(l.checkString(1));
+      if (name != null) {
+        l.pushString(name);
+        return 1;
+      } else {
+        l.pushNil();
+        l.pushString("no such component");
+        return 2;
       }
     });
     lua().setField(-2, "type");
 
     ExtendedLuaState.pushScalaFunction(lua(), l -> {
-      synchronized (components()) {
-        String address = l.checkString(1);
-        String name = components().get(address);
-        if (name != null) {
-          l.pushInteger(owner.machine.host().componentSlot(address));
-          return 1;
-        } else {
-          l.pushNil();
-          l.pushString("no such component");
-          return 2;
-        }
+      String address = l.checkString(1);
+      String name = components().get(address);
+      if (name != null) {
+        l.pushInteger(owner.machine.host().componentSlot(address));
+        return 1;
+      } else {
+        l.pushNil();
+        l.pushString("no such component");
+        return 2;
       }
     });
     lua().setField(-2, "slot");

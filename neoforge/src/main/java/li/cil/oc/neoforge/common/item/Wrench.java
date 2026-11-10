@@ -1,15 +1,12 @@
 package li.cil.oc.neoforge.common.item;
 
-import li.cil.oc.core.impl.common.blockentity.traits.Rotatable;
+import li.cil.oc.core.impl.common.item.SneakBypass;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.block.Rotation;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.NotNull;
 
 public class Wrench extends li.cil.oc.core.impl.common.item.Wrench {
@@ -19,46 +16,11 @@ public class Wrench extends li.cil.oc.core.impl.common.item.Wrench {
 
   @Override
   public boolean doesSneakBypassUse(@NotNull ItemStack stack, @NotNull LevelReader level, @NotNull BlockPos pos, @NotNull Player player) {
-    return true;
+    return SneakBypass.bypasses(stack, level, pos);
   }
 
   @Override
   public @NotNull InteractionResult onItemUseFirst(@NotNull ItemStack ignoredStack, @NotNull UseOnContext context) {
-    var world = context.getLevel();
-    var pos = context.getClickedPos();
-    var player = context.getPlayer();
-    if (player == null) return InteractionResult.PASS;
-    if (!world.isClientSide && (!player.canInteractWithBlock(pos, 9.0) || player.isSpectator())) {
-      return InteractionResult.PASS;
-    }
-    if (world.hasChunk(pos.getX() >> 4, pos.getZ() >> 4) && world.isAreaLoaded(pos, 1)) {
-      var state = world.getBlockState(pos);
-      var face = context.getClickedFace();
-      var rotation = switch (face) {
-        case UP, DOWN, SOUTH -> Rotation.CLOCKWISE_90;
-        case NORTH -> Rotation.COUNTERCLOCKWISE_90;
-        case WEST -> Rotation.NONE;
-        case EAST -> Rotation.CLOCKWISE_180;
-      };
-      var newState = state.rotate(world, pos, rotation);
-      if (newState != state) {
-        world.setBlock(pos, newState, 3);
-        world.blockUpdated(pos, state.getBlock());
-        player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
-        return !world.isClientSide ? InteractionResult.SUCCESS : InteractionResult.PASS;
-      }
-      BlockEntity te = world.getBlockEntity(pos);
-      if (te instanceof Rotatable rotatable) {
-        var currentFacing = rotatable.facing();
-        var newFacing = face.getAxis() == Direction.Axis.Y
-          ? Direction.from2DDataValue((currentFacing.get2DDataValue() + 3) & 3)
-          : currentFacing.getClockWise();
-        rotatable.facing(newFacing);
-        world.blockUpdated(pos, state.getBlock());
-        player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
-        return !world.isClientSide ? InteractionResult.SUCCESS : InteractionResult.PASS;
-      }
-    }
-    return InteractionResult.PASS;
+    return useFirst(context);
   }
 }

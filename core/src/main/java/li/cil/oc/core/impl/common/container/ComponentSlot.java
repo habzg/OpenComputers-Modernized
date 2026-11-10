@@ -36,12 +36,12 @@ public abstract class ComponentSlot extends Slot {
 
   @Override
   public void onTake(@NotNull Player player, @NotNull ItemStack stack) {
-    super.onTake(player, stack);
     for (Slot slotObj : containerMenu.slots) {
       if (slotObj instanceof ComponentSlot) {
         ((ComponentSlot) slotObj).clearIfInvalid(player);
       }
     }
+    super.onTake(player, stack);
   }
 
   @Override

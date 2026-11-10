@@ -59,8 +59,8 @@ public class DriverCPU extends Item implements li.cil.oc.api.driver.item.Mutable
       String archClass = tag.getString(OCSettings.namespace + "archClass");
       if (!archClass.isEmpty()) {
         try {
-          return Class.forName(archClass).asSubclass(li.cil.oc.api.machine.Architecture.class);
-        } catch (ClassNotFoundException | ClassCastException t) {
+          return li.cil.oc.core.impl.server.machine.MachineBase.resolveArchitecture(archClass);
+        } catch (Throwable t) {
           OpenComputers.log().warn("Failed getting class for CPU architecture. Resetting CPU to use the default.", t);
           tag.remove(OCSettings.namespace + "archClass");
           tag.remove(OCSettings.namespace + "archName");

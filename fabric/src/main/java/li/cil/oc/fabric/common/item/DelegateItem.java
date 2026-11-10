@@ -5,8 +5,7 @@ import li.cil.oc.core.impl.util.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
-public class DelegateItem extends AbstractItem {
-  @SuppressWarnings("unused")
+public class DelegateItem extends li.cil.oc.core.impl.common.item.AbstractItem {
   public DelegateItem(Properties properties) {
     super(properties);
   }

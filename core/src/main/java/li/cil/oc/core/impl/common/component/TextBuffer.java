@@ -57,6 +57,21 @@ public class TextBuffer extends TextBufferBase {
     if (!clientBuffers.contains(t)) clientBuffers.add(t);
   }
 
+  public static void removeClientBuffersInChunk(net.minecraft.world.level.Level level, int chunkX, int chunkZ) {
+    synchronized (clientBuffers) {
+      clientBuffers.removeIf(t -> {
+        var host = t.host();
+        if (host.level() != level) return false;
+        var pos = li.cil.oc.core.impl.util.BlockPosition.apply(host);
+        if ((pos.x() >> 4) == chunkX && (pos.z() >> 4) == chunkZ) {
+          ClientComponentTracker.INSTANCE.remove(level, t);
+          return true;
+        }
+        return false;
+      });
+    }
+  }
+
   private PacketBuilderBase<?> pendingCommands = null;
 
   private PacketBuilderBase<?> pendingCommands() {

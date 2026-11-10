@@ -49,14 +49,17 @@ public interface TankWorldControl extends TankAware, WorldAware, SideRestricted 
     FluidHandler handler = FluidUtils.fluidHandlerAt(position().offset(facing), facing.getOpposite());
     if (handler == null) return ResultWrapper.result(null, "incompatible or no fluid");
     FluidStack existing = tank.getFluid();
-    FluidStack drained = existing != null && !existing.isEmpty()
-      ? handler.drain(existing.copyWithAmount(amount), false)
-      : handler.drain(amount, false);
-    if ((drained != null && !drained.isEmpty()) || amount == 0) {
-      int filled = tank.fill(drained, false);
-      return ResultWrapper.result(true, filled);
+    if (existing != null && !existing.isEmpty()) {
+      FluidStack drained = handler.drain(existing.copyWithAmount(amount), false);
+      if ((drained != null && !drained.isEmpty()) || amount == 0) {
+        int filled = tank.fill(drained, false);
+        return ResultWrapper.result(true, filled);
+      }
+      return ResultWrapper.result(null, "incompatible or no fluid");
     }
-    return ResultWrapper.result(null, "incompatible or no fluid");
+    FluidStack drained = handler.drain(amount, false);
+    int transferred = (drained == null || drained.isEmpty()) ? 0 : tank.fill(drained, false);
+    return ResultWrapper.result(transferred > 0, transferred);
   }
 
   @Callback(doc = "function(side:number[, amount:number=1000]):boolean, number or string -- Eject the specified amount of fluid to the specified side. Returns the amount ejected or an error message.")
@@ -70,7 +73,8 @@ public interface TankWorldControl extends TankAware, WorldAware, SideRestricted 
     FluidHandler handler = FluidUtils.fluidHandlerAt(position().offset(facing), facing.getOpposite());
     if (handler == null) return ResultWrapper.result(null, "no space");
     FluidStack existing = tank.getFluid();
-    int filled = handler.fill(existing != null ? existing.copyWithAmount(amount) : new FluidStack("", 0), false);
+    if (existing == null || existing.isEmpty()) return ResultWrapper.result(null, "tank is empty");
+    int filled = handler.fill(existing.copyWithAmount(amount), false);
     if (filled > 0 || amount == 0) {
       tank.drain(filled, false);
       return ResultWrapper.result(true, filled);

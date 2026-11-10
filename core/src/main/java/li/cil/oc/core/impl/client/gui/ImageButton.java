@@ -76,7 +76,7 @@ public class ImageButton extends AbstractWidget {
       int x1 = getX() + width;
       int y0 = getY();
       int y1 = getY() + height;
-      boolean hovered = hoverOverride || isHovered;
+      boolean hovered = active && (hoverOverride || isHovered);
       if (image != null) {
         int texWidth = canToggle ? width * 2 : width;
         int texHeight = height * 2;

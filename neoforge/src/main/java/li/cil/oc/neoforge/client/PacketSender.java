@@ -213,9 +213,9 @@ public final class PacketSender {
     }
   }
 
-  public static void sendRobotStateRequest(int dimension, int x, int y, int z) {
+  public static void sendRobotStateRequest(String dimension, int x, int y, int z) {
     try (SimplePacketBuilder pb = new SimplePacketBuilder(PacketType.RobotStateRequest)) {
-      pb.writeInt(dimension);
+      pb.writeUTF(dimension);
       pb.writeInt(x);
       pb.writeInt(y);
       pb.writeInt(z);

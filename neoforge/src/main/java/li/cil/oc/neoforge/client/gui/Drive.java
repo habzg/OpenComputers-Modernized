@@ -8,6 +8,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
+import org.jetbrains.annotations.NotNull;
 
 public class Drive extends Screen {
   private final Inventory playerInventory;
@@ -18,7 +19,7 @@ public class Drive extends Screen {
   private int guiLeft;
   private int guiTop;
   private final int xSize = 176;
-  private final int ySize = 111;
+  private final int ySize = 120;
 
   public Drive(Inventory playerInventory, java.util.function.Supplier<net.minecraft.world.item.ItemStack> driveStack) {
     super(Component.literal(""));
@@ -29,6 +30,17 @@ public class Drive extends Screen {
   @Override
   public boolean isPauseScreen() {
     return false;
+  }
+
+  @Override
+  public void renderBackground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float dt) {
+    renderTransparentBackground(guiGraphics);
+    var pose = guiGraphics.pose();
+    pose.pushPose();
+    pose.translate(guiLeft, guiTop, 0.0F);
+    pose.scale(1.0F, 120.0F / 111.0F, 1.0F);
+    guiGraphics.blit(Textures.guiDrive, 0, 0, 0.0F, 0.0F, 176, 111, 176, 111);
+    pose.popPose();
   }
 
   @Override
@@ -52,8 +64,7 @@ public class Drive extends Screen {
   }
 
   @Override
-  public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float dt) {
-    guiGraphics.blit(Textures.guiDrive, guiLeft, guiTop, 0, 0, xSize, ySize, 176, 111);
+  public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float dt) {
     super.render(guiGraphics, mouseX, mouseY, dt);
     guiGraphics.drawWordWrap(font, Component.translatable("gui.opencomputers.drive.warning"), guiLeft + 11, guiTop + 37, xSize - 20, 0x404040);
     guiGraphics.drawWordWrap(font, Component.translatable("gui.opencomputers.drive.readonlylockwarning"), guiLeft + 61, guiTop + ySize - 48, xSize - 68, 0x404040);

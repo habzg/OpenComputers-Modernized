@@ -41,7 +41,7 @@ public interface WorldInventoryAnalytics extends WorldAware, SideRestricted, Net
     Direction facing = checkSideForAction(args, 0);
     return withInventory(facing, inventory -> {
       ItemStack stack = inventory.getItem(ExtendedArguments.checkSlot(args, inventory, 1));
-      return result(stack.getMaxStackSize());
+      return result(stack.isEmpty() ? 0 : stack.getMaxStackSize());
     });
   }
 
@@ -51,7 +51,7 @@ public interface WorldInventoryAnalytics extends WorldAware, SideRestricted, Net
     return withInventory(facing, inventory -> {
       ItemStack stackA = inventory.getItem(ExtendedArguments.checkSlot(args, inventory, 1));
       ItemStack stackB = inventory.getItem(ExtendedArguments.checkSlot(args, inventory, 2));
-      return result(stackA == stackB || InventoryUtils.haveSameItemType(stackA, stackB, args.optBoolean(3, false)));
+      return result(ItemStack.matches(stackA, stackB) || InventoryUtils.haveSameItemType(stackA, stackB, args.optBoolean(3, false)));
     });
   }
 
@@ -159,24 +159,16 @@ public interface WorldInventoryAnalytics extends WorldAware, SideRestricted, Net
       ItemStack stack = inventory.getItem(ExtendedArguments.checkSlot(args, inventory, 1));
       return DatabaseAccess.withDatabase(node(), dbAddress, database -> {
         int dbSlot = ExtendedArguments.checkSlot(args, database.data(), 3);
-        boolean nonEmpty = database.getStackInSlot(dbSlot) != null;
+        boolean nonEmpty = database.getStackInSlot(dbSlot) != ItemStack.EMPTY;
         database.setStackInSlot(dbSlot, stack.copy());
         return result(nonEmpty);
       });
     });
   }
 
-  private boolean mayInteract(Direction side, InventoryUtils.InventorySource f) {
-    if (!f.inventory().stillValid(fakePlayer())) return false;
-    if (f instanceof InventoryUtils.BlockInventorySource) {
-      return mayInteract(((InventoryUtils.BlockInventorySource) f).position(), side.getOpposite());
-    }
-    return true;
-  }
-
   private Object[] withInventorySource(Direction side, java.util.function.Function<InventoryUtils.InventorySource, Object[]> f) {
-    InventoryUtils.InventorySource is = InventoryUtils.inventorySourceAt(position().offset(side));
-    if (is != null && mayInteract(side, is)) return f.apply(is);
+    InventoryUtils.InventorySource is = InventoryUtils.inventorySourceAt(position().offset(side), side.getOpposite());
+    if (is != null && mayInteract(is)) return f.apply(is);
     return result(null, "no inventory");
   }
 

@@ -12,16 +12,18 @@ import li.cil.oc.api.network.ManagedPeripheral;
 public class CallbackWrapper {
   private final Method method;
   private final Callback annotation;
+  private final Object environment;
   private final Invoker invoker;
 
-  private CallbackWrapper(Method method, Callback annotation, Invoker invoker) {
+  private CallbackWrapper(Method method, Callback annotation, Object environment, Invoker invoker) {
     this.method = method;
     this.annotation = annotation;
+    this.environment = environment;
     this.invoker = invoker;
   }
 
-  public static CallbackWrapper of(Method method, Callback annotation) {
-    return new CallbackWrapper(method, annotation, (instance, args) -> {
+  public static CallbackWrapper of(Method method, Callback annotation, Object environment) {
+    return new CallbackWrapper(method, annotation, environment, (instance, args) -> {
       try {
         return (Object[]) method.invoke(instance, args);
       } catch (InvocationTargetException e) {
@@ -37,7 +39,7 @@ public class CallbackWrapper {
 
   public static CallbackWrapper peripheral(String name, ManagedPeripheral peripheral) {
     String doc = peripheral instanceof DocumentedPeripheral documented ? documented.doc(name) : "";
-    return new CallbackWrapper(null, createAnnotation(name, doc), (instance, args) ->
+    return new CallbackWrapper(null, createAnnotation(name, doc), peripheral, (instance, args) ->
       peripheral.invoke(name, (Context) args[0], (Arguments) args[1])
     );
   }
@@ -48,6 +50,10 @@ public class CallbackWrapper {
 
   public Callback annotation() {
     return annotation;
+  }
+
+  public Object environment() {
+    return environment;
   }
 
   public Object[] apply(Object instance, Object... args) {

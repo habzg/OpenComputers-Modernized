@@ -11,7 +11,6 @@ import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -72,7 +71,6 @@ public class InternetCard extends AbstractManagedEnvironment implements DeviceIn
 
   private static boolean isNAT64Address(Inet6Address addr) {
     byte[] b = addr.getAddress();
-    // 64:ff9b::/96 — NAT64 well-known prefix (RFC 6052)
     return b[0] == 0x00 && b[1] == 0x64 && b[2] == (byte) 0xff && b[3] == (byte) 0x9b &&
       b[4] == 0 && b[5] == 0 && b[6] == 0 && b[7] == 0 &&
       b[8] == 0 && b[9] == 0 && b[10] == 0 && b[11] == 0;
@@ -93,18 +91,21 @@ public class InternetCard extends AbstractManagedEnvironment implements DeviceIn
     if (inetAddress instanceof Inet6Address inet6) {
       if (InetAddresses.hasEmbeddedIPv4ClientAddress(inet6)) {
         InetAddress inet4 = InetAddresses.getEmbeddedIPv4ClientAddress(inet6);
+        Boolean embedded = null;
         for (InternetFilteringRule r : rules) {
-          Boolean result = r.apply(inet4, host);
-          if (result != null && !result) return false;
+          embedded = r.apply(inet4, host);
+          if (embedded != null) break;
         }
+        if (embedded != null && !embedded) return false;
       }
-      // As above, but with NAT64 addresses.
       if (isNAT64Address(inet6)) {
         InetAddress inet4 = extractNAT64EmbeddedAddress(inet6);
+        Boolean embedded = null;
         for (InternetFilteringRule r : rules) {
-          Boolean result = r.apply(inet4, host);
-          if (result != null && !result) return false;
+          embedded = r.apply(inet4, host);
+          if (embedded != null) break;
         }
+        if (embedded != null && !embedded) return false;
       }
       for (InternetFilteringRule r : rules) {
         Boolean result = r.apply(inet6, host);
@@ -172,7 +173,7 @@ public class InternetCard extends AbstractManagedEnvironment implements DeviceIn
   }
 
   @Callback(doc = "function(address:string[, port:number]):userdata -- Opens a new TCP connection. Returns the handle of the connection.")
-  public synchronized Object[] connect(Context context, Arguments args) {
+  public synchronized Object[] connect(Context context, Arguments args) throws URISyntaxException {
     checkOwner(context);
     String address = args.checkString(0);
     int port = args.optInteger(1, -1);
@@ -221,33 +222,32 @@ public class InternetCard extends AbstractManagedEnvironment implements DeviceIn
     }
   }
 
-  private URI checkUri(String address, int port) {
+  private URI checkUri(String address, int port) throws URISyntaxException {
     try {
       URI parsed = new URI(address);
       if (parsed.getHost() != null && (parsed.getPort() > 0 || port > 0)) return parsed;
-    } catch (URISyntaxException ignored) {
+    } catch (Exception ignored) {
     }
-    try {
-      URI simple = new URI("oc://" + address);
-      if (simple.getHost() != null) {
-        if (simple.getPort() > 0) return simple;
-        if (port > 0) return new URI(simple + ":" + port);
-      }
-    } catch (URISyntaxException ignored) {
+    URI simple = new URI("oc://" + address);
+    if (simple.getHost() != null) {
+      if (simple.getPort() > 0) return simple;
+      if (port > 0) return new URI(simple + ":" + port);
     }
     throw new IllegalArgumentException("address could not be parsed or no valid port given");
   }
 
   private URL checkAddress(String address) {
+    URL url;
     try {
-      URL url = URI.create(address).toURL();
-      String protocol = url.getProtocol();
-      if (!protocol.matches("^https?$"))
-        throw new RuntimeException(new FileNotFoundException("unsupported protocol"));
-      return url;
-    } catch (MalformedURLException e) {
+      //noinspection deprecation
+      url = new URL(address);
+    } catch (Throwable e) {
       throw new RuntimeException(new FileNotFoundException("invalid address"));
     }
+    String protocol = url.getProtocol();
+    if (!protocol.matches("^https?$"))
+      throw new RuntimeException(new FileNotFoundException("unsupported protocol"));
+    return url;
   }
 
   public interface Closable {
@@ -306,7 +306,7 @@ public class InternetCard extends AbstractManagedEnvironment implements DeviceIn
             TimeUnit.MILLISECONDS.sleep(100);
           } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
-            break;
+            return;
           }
         }
       }
@@ -576,7 +576,8 @@ public class InternetCard extends AbstractManagedEnvironment implements DeviceIn
               int count = stream.get().read(buffer);
               if (count < 0) eof = true;
               else for (int i = 0; i < count; i++) queue.add(buffer[i]);
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+              throw new RuntimeException(e);
             }
           });
         }

@@ -15,10 +15,6 @@ public class CaseTile extends Case {
     super(pos, state, tier);
   }
 
-  public void setBlockPos(BlockPos pos) {
-    this.worldPosition = pos;
-  }
-
   @Override
   public void onDataPacket(@NotNull Connection ignoredNet, @NotNull ClientboundBlockEntityDataPacket packet, HolderLookup.@NotNull Provider provider) {
     var tag = packet.getTag();

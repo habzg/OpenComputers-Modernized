@@ -294,6 +294,10 @@ public final class OpenComputers {
       if (Mods.MoreRed.isModAvailable()) {
         li.cil.oc.neoforge.integration.morered.ModMoreRed.registerCapabilities(event);
       }
+
+      if (Mods.ImmersiveEngineering.isModAvailable()) {
+        li.cil.oc.neoforge.integration.immersiveengineering.ModImmersiveEngineering.registerCapabilities(event);
+      }
     });
   }
 

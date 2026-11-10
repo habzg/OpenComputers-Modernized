@@ -16,6 +16,7 @@ import li.cil.oc.core.impl.client.renderer.blockentity.RelayRenderer;
 import li.cil.oc.core.impl.client.renderer.blockentity.TransposerRenderer;
 import li.cil.oc.core.impl.client.renderer.entity.DroneRenderer;
 import li.cil.oc.core.impl.client.renderer.item.HoverBootRenderer;
+import li.cil.oc.core.impl.client.renderer.item.ItemState;
 import li.cil.oc.core.impl.util.Color;
 import li.cil.oc.core.impl.util.ItemColorizer;
 import li.cil.oc.neoforge.client.renderer.HighlightRenderer;
@@ -40,6 +41,7 @@ import li.cil.oc.neoforge.model.FloppyModel;
 import li.cil.oc.neoforge.model.NetSplitterModel;
 import li.cil.oc.neoforge.model.RobotModel;
 import li.cil.oc.neoforge.model.ScreenModel;
+import li.cil.oc.neoforge.model.StateModel;
 import li.cil.oc.neoforge.util.Audio;
 import net.minecraft.client.color.block.BlockColor;
 import net.minecraft.client.model.HumanoidModel;
@@ -91,6 +93,9 @@ public class Proxy extends li.cil.oc.neoforge.common.Proxy {
   public static void handleRegisterAdditionalModels(ModelEvent.RegisterAdditional event) {
     for (var dyeName : Color.dyes) {
       event.register(new ModelResourceLocation(ResourceLocation.fromNamespaceAndPath("opencomputers", "item/floppy_" + dyeName.toLowerCase()), "standalone"));
+    }
+    for (var variant : new String[]{"tablet_on", "tablet_off", "terminal_on", "terminal_off"}) {
+      event.register(new ModelResourceLocation(ResourceLocation.fromNamespaceAndPath("opencomputers", "item/" + variant), "standalone"));
     }
   }
 
@@ -183,6 +188,22 @@ public class Proxy extends li.cil.oc.neoforge.common.Proxy {
     event.getModels().put(screen2Key, new ScreenModel());
     var screen3Key = new ModelResourceLocation(Items.SCREEN_TIER_3.getId(), "inventory");
     event.getModels().put(screen3Key, new ScreenModel());
+
+    var tabletKey = new ModelResourceLocation(Items.TABLET.getId(), "inventory");
+    var tabletModel = event.getModels().get(tabletKey);
+    if (tabletModel != null) {
+      var onKey = new ModelResourceLocation(ResourceLocation.fromNamespaceAndPath("opencomputers", "item/tablet_on"), "standalone");
+      var offKey = new ModelResourceLocation(ResourceLocation.fromNamespaceAndPath("opencomputers", "item/tablet_off"), "standalone");
+      event.getModels().put(tabletKey, new StateModel(tabletModel, event.getModels().get(onKey), event.getModels().get(offKey), ItemState::tablet));
+    }
+
+    var terminalKey = new ModelResourceLocation(Items.TERMINAL.getId(), "inventory");
+    var terminalModel = event.getModels().get(terminalKey);
+    if (terminalModel != null) {
+      var onKey = new ModelResourceLocation(ResourceLocation.fromNamespaceAndPath("opencomputers", "item/terminal_on"), "standalone");
+      var offKey = new ModelResourceLocation(ResourceLocation.fromNamespaceAndPath("opencomputers", "item/terminal_off"), "standalone");
+      event.getModels().put(terminalKey, new StateModel(terminalModel, event.getModels().get(onKey), event.getModels().get(offKey), ItemState::terminal));
+    }
   }
 
   public static void handleRegisterBlockEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
@@ -276,5 +297,9 @@ public class Proxy extends li.cil.oc.neoforge.common.Proxy {
       var dye = li.cil.oc.core.impl.common.block.ChameliumBlock.readDyeColor(stack);
       return 0xFF000000 | (dye != null ? li.cil.oc.core.impl.util.Color.byMeta(dye.getId()) : li.cil.oc.core.impl.util.Color.Black);
     }, Blocks.CHAMELIUM_BLOCK.get().asItem());
+    event.register((stack, tintIndex) -> {
+      if (tintIndex == 1) return 0xFF000000 | (ItemColorizer.hasColor(stack) ? ItemColorizer.getColor(stack) : 0x66DD55);
+      return 0xFFFFFFFF;
+    }, Items.HOVER_BOOTS.get());
   }
 }

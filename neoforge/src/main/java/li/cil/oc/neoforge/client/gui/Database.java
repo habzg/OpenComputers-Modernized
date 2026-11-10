@@ -6,6 +6,7 @@ import li.cil.oc.core.impl.client.gui.DynamicGuiContainer;
 import li.cil.oc.neoforge.common.inventory.DatabaseInventory;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.entity.player.Inventory;
+import org.jetbrains.annotations.NotNull;
 
 public class Database extends DynamicGuiContainer<li.cil.oc.neoforge.common.container.Database> implements li.cil.oc.core.impl.client.gui.traits.LockedHotbar {
   public final DatabaseInventory databaseInventory;
@@ -55,6 +56,22 @@ public class Database extends DynamicGuiContainer<li.cil.oc.neoforge.common.cont
   @Override
   protected boolean checkHotbarKeyPressed(int ignoredKeyCode, int ignoredScanCode) {
     return false;
+  }
+
+  @Override
+  protected void slotClicked(net.minecraft.world.inventory.@NotNull Slot slot, int slotId, int mouseButton, net.minecraft.world.inventory.@NotNull ClickType clickType) {
+    if (shouldSuppressSlotAction(slot, clickType)) {
+      return;
+    }
+    super.slotClicked(slot, slotId, mouseButton, clickType);
+  }
+
+  @Override
+  public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    if (keyCode == 81 && hoveredSlot != null && shouldSuppressClick(hoveredSlot)) {
+      return true;
+    }
+    return super.keyPressed(keyCode, scanCode, modifiers);
   }
 
   @Override

@@ -59,7 +59,7 @@ public class UpgradeSolarGenerator extends AbstractManagedEnvironment implements
     BlockPosition blockPos = BlockPosition.apply(host).offset(Direction.UP);
     var bp = new BlockPos(blockPos.x(), blockPos.y(), blockPos.z());
     return host.level().isDay() &&
-      host.level().dimensionType().hasSkyLight() &&
+      host.level().dimension() != net.minecraft.world.level.Level.NETHER &&
       host.level().canSeeSky(bp) &&
       (!host.level().getBiome(bp).value().hasPrecipitation() ||
         (!host.level().isRaining() && !host.level().isThundering()));

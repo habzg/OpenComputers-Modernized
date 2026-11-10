@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import li.cil.oc.api.network.WirelessEndpoint;
 import li.cil.oc.core.impl.OCSettings;
+import li.cil.oc.core.impl.util.SubLevelHelper;
 import li.cil.oc.core.util.RTree;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
@@ -71,7 +72,23 @@ public final class WirelessNetworkManager {
       double[] max = offset(endpoint, range);
       List<WirelessEndpoint> candidates = new ArrayList<>();
       for (WirelessEndpoint ep : tree.query(min, max)) {
-        if (ep != endpoint) candidates.add(ep);
+        if (ep != endpoint && !candidates.contains(ep)) candidates.add(ep);
+      }
+      Vec3 raw = new Vec3(endpoint.x() + 0.5, endpoint.y() + 0.5, endpoint.z() + 0.5);
+      Vec3 placement = SubLevelHelper.projectOut(endpoint.level(), raw);
+      if (!placement.equals(raw)) {
+        double[] pMin = {placement.x - range, placement.y - range, placement.z - range};
+        double[] pMax = {placement.x + range, placement.y + range, placement.z + range};
+        for (WirelessEndpoint ep : tree.query(pMin, pMax)) {
+          if (ep != endpoint && !candidates.contains(ep)) candidates.add(ep);
+        }
+      }
+      for (Vec3 storageCenter : SubLevelHelper.storageCenters(endpoint.level(), placement, range)) {
+        double[] sMin = {storageCenter.x - range, storageCenter.y - range, storageCenter.z - range};
+        double[] sMax = {storageCenter.x + range, storageCenter.y + range, storageCenter.z + range};
+        for (WirelessEndpoint ep : tree.query(sMin, sMax)) {
+          if (ep != endpoint && !candidates.contains(ep)) candidates.add(ep);
+        }
       }
       List<Map.Entry<WirelessEndpoint, Double>> withDist = new ArrayList<>();
       for (WirelessEndpoint ep : candidates) {
@@ -100,9 +117,11 @@ public final class WirelessNetworkManager {
   }
 
   private static double squaredDistance(WirelessEndpoint reference, WirelessEndpoint endpoint) {
-    double dx = endpoint.x() - reference.x();
-    double dy = endpoint.y() - reference.y();
-    double dz = endpoint.z() - reference.z();
+    Vec3 a = SubLevelHelper.projectOut(reference.level(), new Vec3(reference.x(), reference.y(), reference.z()));
+    Vec3 b = SubLevelHelper.projectOut(endpoint.level(), new Vec3(endpoint.x(), endpoint.y(), endpoint.z()));
+    double dx = b.x - a.x;
+    double dy = b.y - a.y;
+    double dz = b.z - a.z;
     return dx * dx + dy * dy + dz * dz;
   }
 

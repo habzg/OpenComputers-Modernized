@@ -8,10 +8,10 @@ import net.minecraft.world.level.Level;
 public final class ServerRobotRegistry {
   public static final ServerRobotRegistry INSTANCE = new ServerRobotRegistry();
 
-  private final Map<Integer, Map<String, RobotProxy>> worlds = new HashMap<>();
+  private final Map<String, Map<String, RobotProxy>> worlds = new HashMap<>();
 
   private Map<String, RobotProxy> proxies(Level level) {
-    return worlds.computeIfAbsent(level.dimension().location().hashCode(), k -> new HashMap<>());
+    return worlds.computeIfAbsent(level.dimension().location().toString(), k -> new HashMap<>());
   }
 
   public synchronized void put(Level level, String address, RobotProxy proxy) {
@@ -31,7 +31,7 @@ public final class ServerRobotRegistry {
   }
 
   public synchronized void clear(Level level) {
-    worlds.remove(level.dimension().location().hashCode());
+    worlds.remove(level.dimension().location().toString());
   }
 
   @SuppressWarnings("unused")

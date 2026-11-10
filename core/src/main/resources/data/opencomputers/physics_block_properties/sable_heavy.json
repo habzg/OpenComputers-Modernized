@@ -1,0 +1,6 @@
+{
+  "selector": "#opencomputers:sable_heavy",
+  "properties": {
+    "sable:mass": 2.0
+  }
+}

@@ -6,9 +6,15 @@ import net.minecraft.world.item.ItemStack;
 
 
 public interface ComponentInventory extends Environment, Inventory, li.cil.oc.core.impl.common.inventory.ComponentInventory {
-  ItemStack[] pendingRemovals();
+  default ItemStack[] pendingRemovals() {
+    if (this instanceof BlockEntity be) return be.pendingRemovals(getContainerSize());
+    return null;
+  }
 
-  ItemStack[] pendingAdds();
+  default ItemStack[] pendingAdds() {
+    if (this instanceof BlockEntity be) return be.pendingAdds(getContainerSize());
+    return null;
+  }
 
   void readFromNBTForServer(CompoundTag nbt);
 

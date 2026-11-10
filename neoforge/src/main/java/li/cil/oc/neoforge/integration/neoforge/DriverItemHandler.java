@@ -20,7 +20,7 @@ public final class DriverItemHandler implements InventoryProvider {
     return handler == null ? null : new ItemHandlerContainer(handler);
   }
 
-  private record ItemHandlerContainer(IItemHandler handler) implements Container {
+  public record ItemHandlerContainer(IItemHandler handler) implements Container {
 
     @Override
     public int getContainerSize() {

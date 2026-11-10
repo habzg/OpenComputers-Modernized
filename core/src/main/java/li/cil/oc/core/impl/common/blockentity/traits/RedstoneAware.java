@@ -35,7 +35,10 @@ public interface RedstoneAware extends RotationAware {
   }
 
   default int getInput(Direction side) {
-    return 0;
+    var values = input();
+    int index = side.ordinal();
+    if (index >= values.length) return 0;
+    return Math.max(values[index], 0);
   }
 
   @SuppressWarnings("unused")
@@ -47,7 +50,11 @@ public interface RedstoneAware extends RotationAware {
   }
 
   default int maxInput() {
-    return 0;
+    int max = 0;
+    for (var value : input()) {
+      if (value > max) max = value;
+    }
+    return max;
   }
 
   default int getOutput(Direction side) {
@@ -58,6 +65,20 @@ public interface RedstoneAware extends RotationAware {
   }
 
   default void setOutput(Map<?, ?> values) {
+    for (var side : Direction.values()) {
+      var ord = toLocal(side).ordinal();
+      var raw = getObjectFuzzy(values, ord);
+      if (raw instanceof Number num) {
+        setOutput(side, num.intValue());
+      }
+    }
+  }
+
+  default Object getObjectFuzzy(Map<?, ?> values, int key) {
+    if (values == null) return null;
+    if (values.containsKey(key)) return values.get(key);
+    if (values.containsKey((double) key)) return values.get((double) key);
+    return null;
   }
 
   default void checkRedstoneInputChanged() {
@@ -98,7 +119,6 @@ public interface RedstoneAware extends RotationAware {
   default void onRedstoneInputChanged(int ignoredSide, int ignoredOldValue, int ignoredNewValue, int ignoredColor) {
   }
 
-  @SuppressWarnings("EmptyMethod")
   default void onRedstoneOutputEnabledChanged() {
     if (this instanceof BlockEntity be && be.getLevel() != null) {
       be.getLevel().updateNeighborsAt(be.getBlockPos(), be.getBlockState().getBlock());
@@ -125,11 +145,15 @@ public interface RedstoneAware extends RotationAware {
   record RedstoneChangedEventArgs(Direction side, int oldValue, int newValue, int color) {
   }
 
+  default int[] outputLocal() {
+    return output();
+  }
+
   default void readRedstoneFromNBT(CompoundTag nbt) {
     String ns = OCSettings.namespace;
     if (nbt.contains(ns + "rs.output")) {
       int[] saved = nbt.getIntArray(ns + "rs.output");
-      int[] current = output();
+      int[] current = outputLocal();
       System.arraycopy(saved, 0, current, 0, Math.min(saved.length, current.length));
     }
     if (nbt.contains(ns + "rs.input")) {
@@ -140,7 +164,7 @@ public interface RedstoneAware extends RotationAware {
   }
 
   default void writeRedstoneToNBT(CompoundTag nbt) {
-    nbt.putIntArray(OCSettings.namespace + "rs.output", output());
+    nbt.putIntArray(OCSettings.namespace + "rs.output", outputLocal());
     nbt.putIntArray(OCSettings.namespace + "rs.input", input());
   }
 }

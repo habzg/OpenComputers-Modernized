@@ -50,10 +50,8 @@ public class GraphicsCardBase extends AbstractManagedEnvironment implements Devi
   private final Map<String, String> deviceInfo;
   public boolean budgetExhausted = false;
   private String screenAddress = null;
-  private final Object screenLock = new Object();
   private TextBuffer screenInstance = null;
   private int bufferIndex = 0;
-  private int nextBufferId = 1;
 
   public GraphicsCardBase(int tier) {
     this.tier = tier;
@@ -80,19 +78,20 @@ public class GraphicsCardBase extends AbstractManagedEnvironment implements Devi
   }
 
   public String clockInfo() {
-    return ((2000 / setBackgroundCosts[tier]) / 100) + "/" +
-      ((2000 / setForegroundCosts[tier]) / 100) + "/" +
-      ((2000 / setPaletteColorCosts[tier]) / 100) + "/" +
-      ((2000 / setCosts[tier]) / 100) + "/" +
-      ((2000 / copyCosts[tier]) / 100) + "/" +
-      ((2000 / fillCosts[tier]) / 100);
+    return (int) (2000 / setBackgroundCosts[tier]) / 100 + "/" +
+      (int) (2000 / setForegroundCosts[tier]) / 100 + "/" +
+      (int) (2000 / setPaletteColorCosts[tier]) / 100 + "/" +
+      (int) (2000 / setCosts[tier]) / 100 + "/" +
+      (int) (2000 / copyCosts[tier]) / 100 + "/" +
+      (int) (2000 / fillCosts[tier]) / 100;
   }
 
   private Object[] screen(int index, Function<TextBuffer, Object[]> f) {
     if (index == 0) {
-      if (screenInstance != null) {
-        synchronized (screenLock) {
-          return f.apply(screenInstance);
+      TextBuffer screen = screenInstance;
+      if (screen != null) {
+        synchronized (screen) {
+          return f.apply(screen);
         }
       }
       return new Object[]{null, "no screen"};
@@ -126,9 +125,8 @@ public class GraphicsCardBase extends AbstractManagedEnvironment implements Devi
   }
 
   private int nextAvailableBufferIndex() {
-    int idx = nextBufferId;
+    int idx = 1;
     while (buffers.containsKey(idx)) idx++;
-    nextBufferId = idx;
     return idx;
   }
 
@@ -667,10 +665,8 @@ public class GraphicsCardBase extends AbstractManagedEnvironment implements Devi
   @Override
   public void onDisconnect(Node node) {
     super.onDisconnect(node);
-    if (node == this.node) {
+    if (node == this.node || (screenAddress != null && screenAddress.equals(node.address()))) {
       screenAddress = null;
-      screenInstance = null;
-    } else if (screenAddress != null && screenAddress.equals(node.address())) {
       screenInstance = null;
     }
   }

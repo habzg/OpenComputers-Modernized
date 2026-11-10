@@ -56,7 +56,7 @@ public final class GuiHandler {
     java.util.function.Supplier<Boolean> hasKeyboardCallback,
     java.util.function.Supplier<Boolean> hasPower) {
     var inner = new li.cil.oc.core.impl.client.gui.Screen(buffer, hasMouse, hasKeyboardCallback, hasPower);
-    return new net.minecraft.client.gui.screens.Screen(Component.literal("screen")) {
+    return new li.cil.oc.core.impl.client.gui.BufferScreen(buffer, Component.literal("screen")) {
       @Override
       public boolean isPauseScreen() {
         return false;
@@ -71,7 +71,7 @@ public final class GuiHandler {
 
       @Override
       public void render(@NotNull net.minecraft.client.gui.GuiGraphics guiGraphics, int mouseX, int mouseY, float dt) {
-        renderBackground(guiGraphics, mouseX, mouseY, dt);
+        renderTransparentBackground(guiGraphics);
         inner.render(guiGraphics, mouseX, mouseY, dt);
       }
 

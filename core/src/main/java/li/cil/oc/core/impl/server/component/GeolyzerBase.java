@@ -182,7 +182,7 @@ public abstract class GeolyzerBase extends AbstractManagedEnvironment implements
 
     return DatabaseAccess.withDatabase(node, args.checkString(1), database -> {
       int toSlot = ExtendedArguments.checkSlot(args, database.data(), 2);
-      boolean nonEmpty = database.getStackInSlot(toSlot) != null;
+      boolean nonEmpty = database.getStackInSlot(toSlot) != ItemStack.EMPTY;
       database.setStackInSlot(toSlot, finalStack);
       return ResultWrapper.result(nonEmpty);
     });

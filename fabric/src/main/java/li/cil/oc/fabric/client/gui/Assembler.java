@@ -92,7 +92,9 @@ public class Assembler extends DynamicGuiContainer<li.cil.oc.core.impl.common.co
       if (!menu.getSlot(0).hasItem()) {
         message = Component.translatable("gui.opencomputers.assembler.insertcase").getString();
       } else {
-        message = info != null ? (info.value() != null ? info.value().getString() : null) : (menu.getSlot(0).hasItem() ? Component.translatable("gui.opencomputers.assembler.collect").getString() : "");
+        message = info != null && info.value() != null
+          ? info.value().getString()
+          : Component.translatable("gui.opencomputers.assembler.collect").getString();
       }
       guiGraphics.drawString(font, message, 30, 94, 0x404040, false);
       if (runButton.isMouseOver(mouseX, mouseY)) {

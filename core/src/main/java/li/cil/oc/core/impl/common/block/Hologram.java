@@ -37,7 +37,7 @@ public class Hologram extends SimpleBlock {
 
   public static BlockEntityType<?> TYPE;
 
-  public static int getLuminance(BlockState state) {
+  public static int getLuminance(BlockState ignoredState) {
     OCSettings s = OCSettings.get();
     return s != null && s.hologramLight ? 15 : 0;
   }

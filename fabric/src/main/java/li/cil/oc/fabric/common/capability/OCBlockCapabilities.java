@@ -3,8 +3,6 @@ package li.cil.oc.fabric.common.capability;
 import li.cil.oc.api.capability.SimpleComponentProvider;
 import li.cil.oc.api.internal.Colored;
 import li.cil.oc.api.network.Environment;
-import li.cil.oc.api.network.Node;
-import li.cil.oc.api.network.SidedComponent;
 import li.cil.oc.api.network.SidedEnvironment;
 import li.cil.oc.fabric.OpenComputers;
 import net.fabricmc.fabric.api.lookup.v1.block.BlockApiLookup;
@@ -42,9 +40,6 @@ public final class OCBlockCapabilities {
     SIDED_ENVIRONMENT.registerForBlocks(
       (level, pos, state, blockEntity, side) -> {
         if (blockEntity instanceof SidedEnvironment sidedEnvironment) return sidedEnvironment;
-        if (blockEntity instanceof Environment environment && blockEntity instanceof SidedComponent sidedComponent) {
-          return new SidedComponentEnvironment(environment, sidedComponent);
-        }
         return null;
       },
       blocks);
@@ -61,18 +56,5 @@ public final class OCBlockCapabilities {
         }
         return null;
       });
-  }
-
-  private record SidedComponentEnvironment(Environment environment,
-                                           SidedComponent sidedComponent) implements SidedEnvironment {
-    @Override
-    public Node sidedNode(final Direction side) {
-      return sidedComponent.canConnectNode(side) ? environment.node() : null;
-    }
-
-    @Override
-    public boolean canConnect(final Direction side) {
-      return sidedComponent.canConnectNode(side);
-    }
   }
 }

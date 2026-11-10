@@ -31,7 +31,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import org.jetbrains.annotations.NotNull;
 
-public class Microcontroller extends SimpleBlock implements PowerAcceptor, StateAware, CustomDrops<li.cil.oc.core.impl.common.blockentity.Microcontroller> {
+public class Microcontroller extends RedstoneAware implements PowerAcceptor, StateAware, CustomDrops<li.cil.oc.core.impl.common.blockentity.Microcontroller> {
   public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
 
   public static BlockEntityType<?> TYPE;
@@ -124,7 +124,7 @@ public class Microcontroller extends SimpleBlock implements PowerAcceptor, State
             var newEeprom = held.split(1);
             var oldEeprom = mcu.changeEEPROM(newEeprom);
             if (oldEeprom != null && !oldEeprom.isEmpty()) {
-              InventoryUtils.addToPlayerInventory(oldEeprom, player);
+              InventoryUtils.addToPlayerInventory(oldEeprom, player, true);
             }
           }
         }
@@ -173,6 +173,10 @@ public class Microcontroller extends SimpleBlock implements PowerAcceptor, State
 
   @Override
   public void doCustomDrops(li.cil.oc.core.impl.common.blockentity.Microcontroller blockEntity, Player player, boolean willHarvest) {
+    var provider = blockEntity.getEffectiveProvider();
+    if (provider != null) {
+      blockEntity.saveComponents(provider);
+    }
     blockEntity.info.storedEnergy = (int) ((li.cil.oc.api.network.Connector) blockEntity.snooperNode).localBuffer();
     var level = blockEntity.getLevel();
     if (level != null) {

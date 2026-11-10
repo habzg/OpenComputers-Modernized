@@ -5,6 +5,7 @@ import li.cil.oc.core.impl.util.BlockPosition;
 import net.fabricmc.fabric.api.entity.FakePlayer;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
+import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -14,6 +15,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 
 public class BlockInteractionHandler implements li.cil.oc.core.impl.util.BlockInteractionHandler {
@@ -45,6 +47,17 @@ public class BlockInteractionHandler implements li.cil.oc.core.impl.util.BlockIn
   }
 
   @Override
+  public boolean mayInteractEntity(Player player, net.minecraft.world.entity.Entity entity) {
+    Level world = player.level();
+    if (!(world instanceof ServerLevel)) {
+      return true;
+    }
+    InteractionResult result = UseEntityCallback.EVENT.invoker().interact(
+      player, world, InteractionHand.MAIN_HAND, entity, new EntityHitResult(entity));
+    return result != InteractionResult.FAIL;
+  }
+
+  @Override
   public boolean checkBlockBreak(Level world, BlockPos pos, BlockState state) {
     if (!(world instanceof ServerLevel serverLevel)) {
       return false;
@@ -54,5 +67,11 @@ public class BlockInteractionHandler implements li.cil.oc.core.impl.util.BlockIn
     boolean allowed = PlayerBlockBreakEvents.BEFORE.invoker().beforeBlockBreak(
       world, player, pos, state, world.getBlockEntity(pos));
     return !allowed;
+  }
+
+  // Fabric has no central event for this.
+  @Override
+  public boolean checkItemPickup(Player player, net.minecraft.world.entity.item.ItemEntity entity) {
+    return false;
   }
 }

@@ -22,12 +22,6 @@ public final class ModTIS3D implements ModProxy {
   public void initialize() {
     if (registered) return;
     registered = true;
-    // TIS-3D registers its serial interface provider registry in its own
-    // mod constructor, which may run after ours, so the provider cannot be
-    // registered there. Instead, register it when the RegisterEvent for the
-    // registry fires during mod loading, at which point the registry exists
-    // and is not yet frozen. This must be called from the mod constructor
-    // (see OpenComputers), as common setup runs after the RegisterEvents.
     OpenComputers.getModEventBus().addListener(RegisterEvent.class, event -> {
       if (event.getRegistryKey().equals(SerialInterfaceProvider.REGISTRY)) {
         event.register(SerialInterfaceProvider.REGISTRY, helper ->

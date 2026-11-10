@@ -16,41 +16,36 @@ public class ComponentAPI extends LuaJAPI {
     LuaValue component = LuaValue.tableOf();
 
     component.set("list", ScalaClosure.wrapVarArgClosure(args -> {
-      synchronized (components()) {
-        String filter = args.isstring(1) ? args.tojstring(1) : null;
-        boolean exact = args.optboolean(2, false);
-        LuaValue table = LuaValue.tableOf(0, components().size());
-        for (Map.Entry<String, String> entry : components().entrySet()) {
-          String address = entry.getKey();
-          String name = entry.getValue();
-          if (filter == null || (exact ? name.equals(filter) : name.contains(filter))) {
-            table.set(address, name);
-          }
+      Map<String, String> comps = components();
+      String filter = args.isstring(1) ? args.tojstring(1) : null;
+      boolean exact = args.optboolean(2, false);
+      LuaValue table = LuaValue.tableOf(0, comps.size());
+      for (Map.Entry<String, String> entry : comps.entrySet()) {
+        String address = entry.getKey();
+        String name = entry.getValue();
+        if (filter == null || (exact ? name.equals(filter) : name.contains(filter))) {
+          table.set(address, name);
         }
-        return table;
       }
+      return table;
     }));
 
     component.set("type", ScalaClosure.wrapVarArgClosure(args -> {
-      synchronized (components()) {
-        String name = components().get(args.checkjstring(1));
-        if (name != null) {
-          return LuaValue.valueOf(name);
-        } else {
-          return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("no such component"));
-        }
+      String name = components().get(args.checkjstring(1));
+      if (name != null) {
+        return LuaValue.valueOf(name);
+      } else {
+        return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("no such component"));
       }
     }));
 
     component.set("slot", ScalaClosure.wrapVarArgClosure(args -> {
-      synchronized (components()) {
-        String address = args.checkjstring(1);
-        String name = components().get(address);
-        if (name != null) {
-          return LuaValue.valueOf(owner.machine.host().componentSlot(address));
-        } else {
-          return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("no such component"));
-        }
+      String address = args.checkjstring(1);
+      String name = components().get(address);
+      if (name != null) {
+        return LuaValue.valueOf(owner.machine.host().componentSlot(address));
+      } else {
+        return LuaValue.varargsOf(LuaValue.NIL, LuaValue.valueOf("no such component"));
       }
     }));
 

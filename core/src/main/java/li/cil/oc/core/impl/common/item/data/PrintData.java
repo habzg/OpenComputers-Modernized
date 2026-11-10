@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import li.cil.oc.api.Items;
 import li.cil.oc.core.Constants;
@@ -142,7 +141,7 @@ public class PrintData extends ItemData {
     double dx = aabb.maxX - aabb.minX;
     double dy = aabb.maxY - aabb.minY;
     double dz = aabb.maxZ - aabb.minZ;
-    return (int) ((dx * dy + dy * dz + dz * dx) * 2 * 4096);
+    return (int) ((dx * dy + dy * dz + dz * dx) * 2 * 256);
   }
 
   public static int materialValue(ItemStack stack) {
@@ -307,12 +306,12 @@ public class PrintData extends ItemData {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-      Shape shape = (Shape) o;
-      return bounds.equals(shape.bounds) &&
-        Objects.equals(texture, shape.texture) &&
-        Objects.equals(tint, shape.tint);
+      return this == o;
+    }
+
+    @Override
+    public int hashCode() {
+      return System.identityHashCode(this);
     }
 
   }

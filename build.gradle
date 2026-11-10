@@ -1,7 +1,7 @@
 plugins {
     id 'java'
-    id 'fabric-loom' version '1.17-SNAPSHOT' apply false
-    id 'net.neoforged.moddev' version '2.0.144' apply false
+    id 'fabric-loom' version '1.19-SNAPSHOT' apply false
+    id 'net.neoforged.moddev' version '2.0.148' apply false
     id 'com.gradleup.shadow' version '9.6.1' apply false
 }
 
@@ -124,6 +124,8 @@ subprojects {
             url = "https://maven.blamejared.com/"
             content {
                 includeGroup "mezz.jei"
+                includeGroup "net.mezzdev.config"
+                includeGroup "blusunrize.immersiveengineering"
             }
         }
 

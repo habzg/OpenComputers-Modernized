@@ -67,10 +67,6 @@ public class ChameliumBlock extends SimpleBlock {
     return best;
   }
 
-  public static DyeColor dyeColorFromFrequency(int frequency) {
-    return DyeColor.byId(frequency & 0xF);
-  }
-
   @Override
   public @NotNull ItemStack getCloneItemStack(@NotNull LevelReader level, @NotNull BlockPos pos, @NotNull BlockState state) {
     ItemStack stack = super.getCloneItemStack(level, pos, state);

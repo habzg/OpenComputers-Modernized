@@ -10,9 +10,7 @@ import li.cil.oc.core.impl.common.item.data.TabletData;
 import li.cil.oc.core.impl.integration.opencomputers.Item;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
 
 
 @SuppressWarnings("unused")
@@ -24,15 +22,22 @@ public final class DriverTablet extends Item {
 
   @Override
   public li.cil.oc.api.network.ManagedEnvironment createEnvironment(ItemStack stack, EnvironmentHost host) {
-    if (host.level() != null && host.level().isClientSide()) return null;
+    li.cil.oc.core.impl.util.TabletCache.get().invalidate(li.cil.oc.core.impl.util.TabletCache.getOrCreateId(stack));
+    var level = host.level();
+    if (level != null && level.isClientSide()) return null;
     TabletData data = new TabletData(stack);
-    for (ItemStack fs : data.items) {
+    for (int i = 0; i < data.items.size(); i++) {
+      ItemStack fs = data.items.get(i);
       if (fs != null && !fs.isEmpty()) {
         if (new DriverFileSystem().worksWith(fs)) {
           li.cil.oc.api.network.ManagedEnvironment environment = new DriverFileSystem().createEnvironment(fs, host);
           if (environment != null && environment.node() instanceof Component component) {
             component.setVisibility(Visibility.Network);
-            environment.save(dataTag(stack), host.level().registryAccess());
+            if (level != null) {
+              li.cil.oc.core.impl.common.inventory.ComponentInventory.saveComponentData(environment, fs, level.registryAccess());
+              data.items.set(i, fs);
+              data.save(stack, level.registryAccess());
+            }
             return environment;
           }
         }
@@ -48,40 +53,16 @@ public final class DriverTablet extends Item {
 
   public CompoundTag dataTag(ItemStack stack) {
     TabletData data = new TabletData(stack);
-    int slot = -1;
-    for (int i = 0; i < data.items.size(); i++) {
-      ItemStack item = data.items.get(i);
-      if (item != null && !item.isEmpty()) {
-        if (new DriverFileSystem().worksWith(item)) {
-          slot = i;
-          break;
-        }
-      }
-    }
-    if (slot >= 0) {
-      CustomData cd = stack.get(DataComponents.CUSTOM_DATA);
-      if (cd != null && !cd.isEmpty()) {
-        CompoundTag rootTag = cd.copyTag();
-        if (rootTag.contains(OCSettings.namespace + "items")) {
-          net.minecraft.nbt.ListTag baseTag = rootTag.getList(OCSettings.namespace + "items", Tag.TAG_COMPOUND);
-          for (int i = 0; i < baseTag.size(); i++) {
-            CompoundTag entryTag = baseTag.getCompound(i);
-            if (entryTag.getByte("slot") == (byte) slot) {
-              if (!entryTag.contains("item")) {
-                entryTag.put("item", new CompoundTag());
-              }
-              CompoundTag itemTag = entryTag.getCompound("item");
-              if (!itemTag.contains("tag")) {
-                itemTag.put("tag", new CompoundTag());
-              }
-              CompoundTag stackTag = itemTag.getCompound("tag");
-              if (!stackTag.contains(OCSettings.namespace + "data")) {
-                stackTag.put(OCSettings.namespace + "data", new CompoundTag());
-              }
-              return stackTag.getCompound(OCSettings.namespace + "data");
-            }
+    for (ItemStack item : data.items) {
+      if (item != null && !item.isEmpty() && new DriverFileSystem().worksWith(item)) {
+        var customData = item.get(DataComponents.CUSTOM_DATA);
+        if (customData != null && !customData.isEmpty()) {
+          var tag = customData.copyTag();
+          if (tag.contains(OCSettings.namespace + "data")) {
+            return tag.getCompound(OCSettings.namespace + "data");
           }
         }
+        return new CompoundTag();
       }
     }
     return new CompoundTag();

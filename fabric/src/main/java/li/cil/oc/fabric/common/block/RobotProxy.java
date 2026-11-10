@@ -25,7 +25,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class RobotProxy extends li.cil.oc.core.impl.common.block.RobotProxy {
   public RobotProxy() {
-    super(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(2f, 10f).sound(SoundType.METAL));
+    super(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(2f, 10f).sound(SoundType.METAL).requiresCorrectToolForDrops());
   }
 
   @Override
@@ -77,7 +77,7 @@ public class RobotProxy extends li.cil.oc.core.impl.common.block.RobotProxy {
       }
       return true;
     }
-    if (player.getMainHandItem().isEmpty()) {
+    if (player.getItemInHand(hand).isEmpty()) {
       if (!world.isClientSide) {
         var te = world.getBlockEntity(pos);
         if (te instanceof li.cil.oc.fabric.common.blockentity.RobotProxy proxy) {
@@ -110,7 +110,9 @@ public class RobotProxy extends li.cil.oc.core.impl.common.block.RobotProxy {
           robot.ownerUUID = li.cil.oc.fabric.server.agent.Player.determineUUID(p.getGameProfile().getId());
         }
       }
-      robot.setFromEntityPitchAndYaw(placer);
+      if (placer != null) {
+        robot.setFromEntityPitchAndYaw(placer);
+      }
       robot.syncFacingToBlockState();
       if (robot.getLevel() == null) {
         robot.setLevel(world);
@@ -132,6 +134,18 @@ public class RobotProxy extends li.cil.oc.core.impl.common.block.RobotProxy {
   }
 
   @Override
+  public float getDestroyProgress(@NotNull BlockState state, @NotNull Player player, @NotNull BlockGetter level, @NotNull BlockPos pos) {
+    var te = level.getBlockEntity(pos);
+    if (te instanceof li.cil.oc.fabric.common.blockentity.RobotProxy proxy) {
+      var robot = proxy.robot;
+      if (robot.isCreative() && (!player.getAbilities().instabuild || !robot.canInteract(player.getGameProfile().getName()))) {
+        return 0.0F;
+      }
+    }
+    return super.getDestroyProgress(state, player, level, pos);
+  }
+
+  @Override
   public @NotNull BlockState playerWillDestroy(@NotNull Level world, @NotNull BlockPos pos, @NotNull BlockState state, @NotNull Player player) {
     var te = world.getBlockEntity(pos);
     if (te instanceof li.cil.oc.fabric.common.blockentity.RobotProxy proxy) {
@@ -140,10 +154,14 @@ public class RobotProxy extends li.cil.oc.core.impl.common.block.RobotProxy {
         return state;
       }
       if (!world.isClientSide) {
+        if (robot.player() == player) {
+          return state;
+        }
         if (robot.player() != player) {
           if (robot.node != null) robot.node.remove();
           robot.saveComponents(world.registryAccess());
           Block.popResource(world, pos, robot.info.createItemStack());
+          proxy.itemDropped = true;
           robot.dropInventorySlots();
           if (robot.isAnimatingMove()) {
             var fromPos = new BlockPos(robot.moveFromX, robot.moveFromY, robot.moveFromZ);

@@ -3,6 +3,7 @@
   "values": [
     "opencomputers:adapter",
     "opencomputers:assembler",
+    "opencomputers:beaconbaseprint",
     "opencomputers:cable",
     "opencomputers:capacitor",
     "opencomputers:carpetedcapacitor",

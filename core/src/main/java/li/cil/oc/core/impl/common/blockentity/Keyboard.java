@@ -81,16 +81,7 @@ public class Keyboard extends BlockEntity implements Environment, Rotatable, Sid
   }
 
   @Override
-  public void onDisconnect(Node node) {
-  }
-
-  @Override
   public void onMessage(li.cil.oc.api.network.Message message) {
-  }
-
-  @Override
-  public Object result(Object... args) {
-    return li.cil.oc.core.util.ResultWrapper.result(args);
   }
 
   public Direction[] validFacings() {
@@ -156,7 +147,7 @@ public class Keyboard extends BlockEntity implements Environment, Rotatable, Sid
     return _yaw;
   }
 
-  @SuppressWarnings("UnusedReturnValue")
+  @Override
   public boolean trySetPitchYaw(Direction pitch, Direction yaw) {
     boolean changed = false;
     if (pitch != _pitch) {

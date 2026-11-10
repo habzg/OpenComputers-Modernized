@@ -26,6 +26,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
 import org.jetbrains.annotations.Nullable;
 
@@ -65,7 +66,8 @@ public class UpgradeDatabase extends AbstractManagedEnvironment implements li.ci
   @Override
   public ItemStack getStackInSlot(int slot) {
     ItemStack stack = data.getItem(slot);
-    return stack.isEmpty() ? ItemStack.EMPTY : stack.copy();
+    if (stack == ItemStack.EMPTY || stack.getItem() == Items.AIR) return ItemStack.EMPTY;
+    return stack.copy();
   }
 
   @Override
@@ -106,7 +108,7 @@ public class UpgradeDatabase extends AbstractManagedEnvironment implements li.ci
   @Callback(doc = "function(slot:number):boolean -- Clears the specified slot. Returns true if there was something in the slot before.")
   public Object[] clear(Context context, Arguments args) {
     int slot = ExtendedArguments.checkSlot(args, data, 0);
-    boolean nonEmpty = !data.getItem(slot).isEmpty();
+    boolean nonEmpty = data.getItem(slot) != ItemStack.EMPTY;
     data.setItem(slot, ItemStack.EMPTY);
     return ResultWrapper.result(nonEmpty);
   }
@@ -118,13 +120,13 @@ public class UpgradeDatabase extends AbstractManagedEnvironment implements li.ci
     if (args.count() > 2) {
       return DatabaseAccess.withDatabase(node, args.checkString(2), database -> {
         int toSlot = ExtendedArguments.checkSlot(args, database.data(), 1);
-        boolean nonEmpty = !database.data().getItem(toSlot).isEmpty();
+        boolean nonEmpty = database.data().getItem(toSlot) != ItemStack.EMPTY;
         database.data().setItem(toSlot, entry.copy());
         return ResultWrapper.result(nonEmpty);
       });
     } else {
       int toSlot = ExtendedArguments.checkSlot(args, data, 1);
-      boolean nonEmpty = !data.getItem(toSlot).isEmpty();
+      boolean nonEmpty = data.getItem(toSlot) != ItemStack.EMPTY;
       data.setItem(toSlot, entry.copy());
       return ResultWrapper.result(nonEmpty);
     }

@@ -1,0 +1,6 @@
+{
+  "selector": "#opencomputers:sable_light",
+  "properties": {
+    "sable:mass": 0.5
+  }
+}

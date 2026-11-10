@@ -47,9 +47,11 @@ public class Rack extends HubBlockEntity implements PowerAcceptor, PowerBalancer
   private ManagedEnvironment[] _components;
   private final ArrayList<ManagedEnvironment> updatingComponents = new ArrayList<>();
   protected boolean _isOutputEnabled = false;
-  private final ItemStack[] items = new ItemStack[getContainerSize()];
-  private final ItemStack[] pendingRemovalItems = new ItemStack[items.length];
-  private final ItemStack[] pendingAddItems = new ItemStack[items.length];
+  private final int[] _input = new int[]{-1, -1, -1, -1, -1, -1};
+  private final int[] _output = new int[6];
+  private final int[][] _bundledInput = new int[6][16];
+  private final int[][] _bundledOutput = new int[6][16];
+  private final ItemStack[] items = li.cil.oc.core.impl.common.inventory.Inventory.filledItems(getContainerSize());
   private Direction facing = Direction.SOUTH;
 
   public Rack(BlockEntityType<?> type, net.minecraft.core.BlockPos pos, net.minecraft.world.level.block.state.BlockState state) {
@@ -204,6 +206,7 @@ public class Rack extends HubBlockEntity implements PowerAcceptor, PowerBalancer
     super.initialize();
     if (isServer()) {
       EventHandlerDelegate.get().scheduleServer(this);
+      EventHandlerDelegate.get().scheduleServer(this::checkRedstoneInputChanged);
     }
   }
 
@@ -223,6 +226,7 @@ public class Rack extends HubBlockEntity implements PowerAcceptor, PowerBalancer
 
   public void onNeighborChanged() {
     ae2OnNeighborChanged();
+    checkRedstoneInputChanged();
   }
 
   private void relayIfMessageFromConnectable(Message message, Packet packet) {
@@ -302,10 +306,14 @@ public class Rack extends HubBlockEntity implements PowerAcceptor, PowerBalancer
 
   @Override
   public double tryChangeBuffer(Direction side, double amount, boolean doReceive) {
+    if (isClient() || OCSettings.get().ignorePower) return 0;
     var c = connector(side);
     if (c.isPresent()) {
       var conn = c.get();
-      if (conn.tryChangeBuffer(amount)) return amount;
+      double limit = Math.min(Math.min(energyThroughput(), amount), globalDemand(side));
+      double cappedAmount = Math.max(0, limit);
+      if (doReceive) return cappedAmount - conn.changeBuffer(cappedAmount);
+      return cappedAmount;
     }
     return 0;
   }
@@ -400,11 +408,6 @@ public class Rack extends HubBlockEntity implements PowerAcceptor, PowerBalancer
   }
 
   @Override
-  public void markChanged() {
-    super.setChanged();
-  }
-
-  @Override
   public EnumSet<li.cil.oc.api.util.StateAware.State> getCurrentState() {
     var result = EnumSet.noneOf(li.cil.oc.api.util.StateAware.State.class);
     for (var component : componentEnvironments()) {
@@ -422,7 +425,16 @@ public class Rack extends HubBlockEntity implements PowerAcceptor, PowerBalancer
 
   @Override
   public void facing(Direction value) {
+    if (facing == value) return;
     facing = value;
+    var level = getLevel();
+    if (level != null) {
+      var state = getBlockState();
+      if (state.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING)) {
+        level.setBlockAndUpdate(getBlockPos(), state.setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING, value));
+      }
+    }
+    onRotationChanged();
   }
 
   @Override
@@ -473,7 +485,140 @@ public class Rack extends HubBlockEntity implements PowerAcceptor, PowerBalancer
   public void setOutputEnabled(boolean value) {
     if (value != _isOutputEnabled) {
       _isOutputEnabled = value;
+      if (!value) {
+        java.util.Arrays.fill(_output, 0);
+      }
       onRedstoneOutputEnabledChanged();
+    }
+  }
+
+  @Override
+  public int[] input() {
+    return _input;
+  }
+
+  @Override
+  public int getInput(Direction side) {
+    return Math.max(_input[side.ordinal()], 0);
+  }
+
+  @Override
+  public void setInput(Direction side, int value) {
+    var ord = side.ordinal();
+    var old = _input[ord];
+    _input[ord] = value;
+    if (old >= 0 && old != value) {
+      onRedstoneInputChanged(ord, old, value);
+    }
+  }
+
+  @Override
+  public void setInput(int[] values) {
+    for (var side : Direction.values()) {
+      int value = side.ordinal() < values.length ? values[side.ordinal()] : 0;
+      setInput(side, value);
+    }
+  }
+
+  @Override
+  public int maxInput() {
+    var max = 0;
+    for (var v : _input) max = Math.max(max, Math.max(v, 0));
+    return max;
+  }
+
+  @Override
+  public int[] output() {
+    var result = new int[Direction.values().length];
+    for (var side : Direction.values()) {
+      result[side.ordinal()] = _output[toLocal(side).ordinal()];
+    }
+    return result;
+  }
+
+  @Override
+  public int[] outputLocal() {
+    return _output;
+  }
+
+  @Override
+  public int getOutput(Direction side) {
+    return _output[toLocal(side).ordinal()];
+  }
+
+  @Override
+  public void setOutput(Direction side, int value) {
+    var ord = toLocal(side).ordinal();
+    if (_output[ord] != value) {
+      _output[ord] = value;
+      onRedstoneOutputChanged(side);
+    }
+  }
+
+  @Override
+  public int[][] bundledInput() {
+    return _bundledInput;
+  }
+
+  @Override
+  public int[][] bundledOutput() {
+    return _bundledOutput;
+  }
+
+  @Override
+  public int getBundledInput(Direction side, int color) {
+    return Math.max(_bundledInput[side.ordinal()][color], 0);
+  }
+
+  @Override
+  public void setBundledInput(Direction side, int color, int value) {
+    updateInput(bundledInput(), side, color, Math.max(value, 0));
+  }
+
+  @Override
+  public void setBundledInput(Direction side, int[] values) {
+    for (int color = 0; color < 16; color++) {
+      setBundledInput(side, color, (values != null && color < values.length) ? values[color] : 0);
+    }
+  }
+
+  @Override
+  public int[] getBundledOutput(Direction side) {
+    return _bundledOutput[toLocal(side).ordinal()];
+  }
+
+  @Override
+  public int getBundledOutput(Direction side, int color) {
+    return _bundledOutput[toLocal(side).ordinal()][color];
+  }
+
+  @Override
+  public void setBundledOutput(Direction side, int color, int value) {
+    var ord = toLocal(side).ordinal();
+    var old = _bundledOutput[ord][color];
+    if (old != value) {
+      _bundledOutput[ord][color] = value;
+      onRedstoneOutputChanged(side);
+    }
+  }
+
+  @Override
+  public void updateRedstoneInput(Direction side) {
+    var oldValue = _input[side.ordinal()];
+    var newValue = li.cil.oc.core.impl.integration.util.BundledRedstone.computeInput(position(), side);
+    if (oldValue != newValue) {
+      _input[side.ordinal()] = newValue;
+      onRedstoneInputChanged(side.ordinal(), oldValue, newValue);
+    }
+    setBundledInput(side, li.cil.oc.core.impl.integration.util.BundledRedstone.computeBundledInput(position(), side));
+  }
+
+  @Override
+  public void checkRedstoneInputChanged() {
+    if (getLevel() != null && !getLevel().isClientSide) {
+      for (Direction side : Direction.values()) {
+        updateRedstoneInput(side);
+      }
     }
   }
 
@@ -529,18 +674,13 @@ public class Rack extends HubBlockEntity implements PowerAcceptor, PowerBalancer
   }
 
   @Override
-  public ItemStack[] pendingRemovals() {
-    return pendingRemovalItems;
-  }
-
-  @Override
-  public ItemStack[] pendingAdds() {
-    return pendingAddItems;
-  }
-
-  @Override
   public boolean isUseableByPlayer(Player player) {
-    return true;
+    return player != null && player.distanceToSqr(worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5) <= 64;
+  }
+
+  @Override
+  public boolean stillValid(@NotNull Player player) {
+    return player.distanceToSqr(worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5) <= 64;
   }
 
   @Override
@@ -595,6 +735,10 @@ public class Rack extends HubBlockEntity implements PowerAcceptor, PowerBalancer
 
   @Override
   public void setChanged() {
+    if (!isServerThread()) {
+      runOnServerThread(this::setChanged);
+      return;
+    }
     super.setChanged();
     if (isServer()) {
       setOutputEnabled(hasRedstoneCard());
@@ -649,6 +793,32 @@ public class Rack extends HubBlockEntity implements PowerAcceptor, PowerBalancer
           var node = sidedNode(side);
           if (node instanceof Connector c) connectors[side.ordinal()] = c;
         }
+        var world = getLevel();
+        if (world != null && world.getGameTime() % OCSettings.get().tickFrequency == 0) {
+          var seen = new java.util.ArrayList<li.cil.oc.api.network.Network>();
+          double sumBuffer = 0;
+          double sumSize = 0;
+          for (var connector : connectors) {
+            if (connector != null && connector.network() != null && !seen.contains(connector.network())) {
+              seen.add(connector.network());
+              sumBuffer += connector.globalBuffer();
+              sumSize += connector.globalBufferSize();
+            }
+          }
+          if (sumSize > 0) {
+            double ratio = sumBuffer / sumSize;
+            seen.clear();
+            for (var connector : connectors) {
+              if (connector != null && connector.network() != null && !seen.contains(connector.network())) {
+                seen.add(connector.network());
+                connector.changeBuffer(connector.globalBufferSize() * ratio - connector.globalBuffer());
+              }
+            }
+          }
+          globalBuffer(sumBuffer);
+          globalBufferSize(sumSize);
+        }
+        updatePowerInformation();
 
         var comps = componentEnvironments();
         for (int slot = 0; slot < comps.length; slot++) {
@@ -773,7 +943,7 @@ public class Rack extends HubBlockEntity implements PowerAcceptor, PowerBalancer
       var globalY = (int) (hitY * 16);
       int l = 2, h = 14;
       var slot = (15 - globalY - l) * getContainerSize() / (h - l);
-      return Optional.of(Math.clamp(getContainerSize() - 1, 0, slot));
+      return Optional.of(Math.clamp(slot, 0, getContainerSize() - 1));
     }
     return Optional.empty();
   }

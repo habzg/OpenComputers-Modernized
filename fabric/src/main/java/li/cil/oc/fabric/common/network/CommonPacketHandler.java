@@ -29,7 +29,7 @@ public abstract class CommonPacketHandler extends PacketHandlerBase {
       super(stream, player);
     }
 
-    public <T> T getBlockEntity(int dimension, int x, int y, int z, Class<T> clazz) {
+    public <T> T getBlockEntity(String dimension, int x, int y, int z, Class<T> clazz) {
       Level world = world(player, dimension);
       if (world != null && world.hasChunk(x >> 4, z >> 4)) {
         var te = world.getBlockEntity(new BlockPos(x, y, z));
@@ -47,7 +47,7 @@ public abstract class CommonPacketHandler extends PacketHandlerBase {
       return null;
     }
 
-    public <T> T getEntity(int dimension, int id, Class<T> clazz) {
+    public <T> T getEntity(String dimension, int id, Class<T> clazz) {
       Level world = world(player, dimension);
       if (world != null) {
         var e = world.getEntity(id);
@@ -60,7 +60,7 @@ public abstract class CommonPacketHandler extends PacketHandlerBase {
 
     public <T> T readBlockEntity(Class<T> clazz) {
       try {
-        int dimension = readInt();
+        String dimension = readUTF();
         int x = readInt();
         int y = readInt();
         int z = readInt();
@@ -72,7 +72,7 @@ public abstract class CommonPacketHandler extends PacketHandlerBase {
 
     public <T> T readEntity(Class<T> clazz) {
       try {
-        int dimension = readInt();
+        String dimension = readUTF();
         int id = readInt();
         return getEntity(dimension, id, clazz);
       } catch (IOException e) {

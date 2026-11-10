@@ -11,6 +11,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -24,7 +25,7 @@ public abstract class BlockEntity extends net.minecraft.world.level.block.entity
   protected HolderLookup.Provider loadProvider;
 
   private boolean initialized;
-  private boolean unloading;
+  private boolean disposed;
 
   public BlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
     super(type, pos, state);
@@ -54,6 +55,27 @@ public abstract class BlockEntity extends net.minecraft.world.level.block.entity
     return true;
   }
 
+  private ItemStack[] pendingRemovalItems = new ItemStack[0];
+  private ItemStack[] pendingAddItems = new ItemStack[0];
+
+  public ItemStack[] pendingRemovals(int size) {
+    pendingRemovalItems = adjustPendingSize(pendingRemovalItems, size);
+    return pendingRemovalItems;
+  }
+
+  public ItemStack[] pendingAdds(int size) {
+    pendingAddItems = adjustPendingSize(pendingAddItems, size);
+    return pendingAddItems;
+  }
+
+  private ItemStack[] adjustPendingSize(ItemStack[] buffer, int size) {
+    if (buffer.length == size) return buffer;
+    var adjusted = new ItemStack[size];
+    java.util.Arrays.fill(adjusted, ItemStack.EMPTY);
+    System.arraycopy(buffer, 0, adjusted, 0, Math.min(buffer.length, size));
+    return adjusted;
+  }
+
   public Block block() {
     return getBlockState().getBlock();
   }
@@ -62,16 +84,43 @@ public abstract class BlockEntity extends net.minecraft.world.level.block.entity
     return BlockPosition.apply(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), getLevel());
   }
 
-  public void markUnloading() {
-    unloading = true;
-  }
-
   @Override
   public void setRemoved() {
     super.setRemoved();
-    if (!unloading) {
-      dispose();
+    if (disposed) return;
+    dispose();
+  }
+
+  public boolean isServerThread() {
+    var level = getLevel();
+    if (level == null || level.isClientSide) return true;
+    var server = level.getServer();
+    return server == null || Thread.currentThread() == server.getRunningThread();
+  }
+
+  public void runOnServerThread(Runnable task) {
+    if (isServerThread()) {
+      task.run();
+      return;
     }
+    var delegate = EventHandlerDelegate.get();
+    if (delegate == null) {
+      task.run();
+      return;
+    }
+    delegate.scheduleServer(task);
+  }
+
+  @Override
+  public void setChanged() {
+    if (!isServerThread()) {
+      var delegate = EventHandlerDelegate.get();
+      if (delegate != null) {
+        delegate.scheduleServer(super::setChanged);
+        return;
+      }
+    }
+    super.setChanged();
   }
 
   public void initialize() {
@@ -81,6 +130,8 @@ public abstract class BlockEntity extends net.minecraft.world.level.block.entity
   }
 
   public void dispose() {
+    if (disposed) return;
+    disposed = true;
     if (this instanceof AppliedEnergistics2 ae2) {
       ae2.ae2Invalidate();
     }

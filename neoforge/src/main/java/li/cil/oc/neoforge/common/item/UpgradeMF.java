@@ -33,8 +33,9 @@ public class UpgradeMF extends DelegateItem {
         data = cd.copyTag();
       }
       data.putIntArray(OCSettings.namespace + "coord", new int[]{
-        pos.getX(), pos.getY(), pos.getZ(), world.dimension().location().hashCode(), side.ordinal()
+        pos.getX(), pos.getY(), pos.getZ(), side.ordinal()
       });
+      data.putString(OCSettings.namespace + "dimension", world.dimension().location().toString());
       stack.set(DataComponents.CUSTOM_DATA, CustomData.of(data));
       return InteractionResult.SUCCESS;
     }

@@ -8,7 +8,6 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.ManagedEnvironment;
-import li.cil.oc.api.network.Node;
 import li.cil.oc.api.prefab.DriverSidedBlockEntity;
 import li.cil.oc.core.impl.integration.ManagedBlockEntityEnvironment;
 import li.cil.oc.core.util.ResultWrapper;
@@ -44,11 +43,6 @@ public class DriverExporter extends DriverSidedBlockEntity {
     @Override
     public int priority() {
       return 2;
-    }
-
-    @Override
-    public Node node() {
-      return super.node();
     }
 
     @Callback(doc = "function([slot:number]):boolean -- Make the exporter perform a single export operation immediately.")

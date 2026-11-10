@@ -13,7 +13,6 @@ import li.cil.oc.api.machine.MachineHost;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.PacketSender;
-import li.cil.oc.core.impl.common.blockentity.Screen;
 import li.cil.oc.core.impl.common.blockentity.traits.BlockEntity;
 import li.cil.oc.core.impl.server.component.Keyboard;
 import li.cil.oc.core.impl.server.machine.luac.LuaStateFactory;
@@ -197,15 +196,9 @@ public final class EventHandler {
     });
 
     ServerChunkEvents.CHUNK_UNLOAD.register((world, chunk) -> {
-      var chunkPos = chunk.getPos();
-      for (var be : chunk.getBlockEntities().values()) {
-        if (be instanceof BlockEntity te) {
-          te.markUnloading();
-        }
-      }
-      var chunkMin = new net.minecraft.core.BlockPos(chunkPos.getMinBlockX(), 0, chunkPos.getMinBlockZ());
-      var chunkMax = new net.minecraft.core.BlockPos(chunkPos.getMaxBlockX(), 255, chunkPos.getMaxBlockZ());
-      var aabb = new net.minecraft.world.phys.AABB(chunkMin.getX(), chunkMin.getY(), chunkMin.getZ(), chunkMax.getX(), chunkMax.getY(), chunkMax.getZ());
+      var aabb = new net.minecraft.world.phys.AABB(
+        chunk.getPos().getMinBlockX(), world.getMinBuildHeight(), chunk.getPos().getMinBlockZ(),
+        chunk.getPos().getMaxBlockX() + 1.0, world.getMaxBuildHeight(), chunk.getPos().getMaxBlockZ() + 1.0);
       for (var entity : world.getEntities(null, aabb)) {
         if (entity instanceof MachineHost host) {
           if (host.machine() instanceof li.cil.oc.fabric.server.machine.Machine machine) {
@@ -230,14 +223,6 @@ public final class EventHandler {
             li.cil.oc.fabric.OpenComputers.log().warn("Error in block entity initialize", t);
           }
         });
-      }
-    });
-
-    ServerBlockEntityEvents.BLOCK_ENTITY_UNLOAD.register((blockEntity, world) -> {
-      if (blockEntity instanceof Screen screen) {
-        if (!world.isClientSide && screen.node != null) {
-          screen.node.remove();
-        }
       }
     });
   }

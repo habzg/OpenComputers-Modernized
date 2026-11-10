@@ -10,7 +10,7 @@ import net.minecraft.sounds.SoundSource;
 
 public final class Sound {
   private static final Map<EnvironmentHost, Map<String, Long>> globalTimeouts = new WeakHashMap<>();
-  private static final long COOLDOWN = 250;
+  private static final long COOLDOWN = 500;
 
   private Sound() {
   }
@@ -23,7 +23,7 @@ public final class Sound {
     }
     var location = ResourceLocation.parse(OCSettings.resourceDomain + ":" + name);
     var soundEvent = SoundEvent.createVariableRangeEvent(location);
-    host.level().playSound(null, host.xPosition(), host.yPosition(), host.zPosition(), soundEvent, SoundSource.BLOCKS, OCSettings.get().soundVolume, 1.0f);
+    host.level().playSound(null, host.xPosition(), host.yPosition(), host.zPosition(), soundEvent, SoundSource.BLOCKS, 15 * OCSettings.get().soundVolume, 1.0f);
     globalTimeouts.computeIfAbsent(host, k -> new java.util.HashMap<>()).put(name, now + COOLDOWN);
   }
 

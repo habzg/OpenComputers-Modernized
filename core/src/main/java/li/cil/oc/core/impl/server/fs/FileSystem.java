@@ -66,6 +66,9 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
         CompoundTag nodeData = tagData.getCompound("node");
         if (nodeData.contains("address")) {
           nodeData.remove("address");
+          tagData.put("node", nodeData);
+          data.put(OCSettings.namespace + "data", tagData);
+          fsStack.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.of(data));
         }
       }
     }
@@ -484,13 +487,10 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
 
       @Override
       public void write(byte[] b) {
-        long oldLen = inner.length();
-        long newLen = Math.max(oldLen, inner.position() + b.length);
-        long delta = newLen - oldLen;
-        if (owner.capacity() - owner.used < delta && !owner.ignoreCapacity)
+        if (owner.capacity() - owner.used < b.length && !owner.ignoreCapacity)
           throw new RuntimeException(new IOException("not enough space"));
         inner.write(b);
-        owner.used += delta;
+        owner.used += b.length;
       }
     }
   }
@@ -651,13 +651,10 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
 
       @Override
       public void write(byte[] b) {
-        long oldLen = inner.length();
-        long newLen = Math.max(oldLen, inner.position() + b.length);
-        long delta = newLen - oldLen;
-        if (owner.capacity() - owner.used < delta && !owner.ignoreCapacity)
+        if (owner.capacity() - owner.used < b.length && !owner.ignoreCapacity)
           throw new RuntimeException(new IOException("not enough space"));
         inner.write(b);
-        owner.used += delta;
+        owner.used += b.length;
       }
     }
   }
@@ -752,7 +749,9 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
           saving.get(120L, TimeUnit.SECONDS);
         } catch (TimeoutException e) {
           LOGGER.warn("Waiting for filesystem to save took two minutes! Aborting.");
-        } catch (CancellationException | InterruptedException | ExecutionException ignored) {
+        } catch (CancellationException | InterruptedException ignored) {
+        } catch (ExecutionException e) {
+          throw new RuntimeException(e.getCause() == null ? e : e.getCause());
         }
       }
       try {
@@ -851,15 +850,27 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
           FileUtils.deleteQuietly(file);
       }
       deletions.clear();
-      recurseSave("", fileRoot());
+      String[] rootListing;
+      try {
+        rootListing = list("");
+      } catch (RuntimeException e) {
+        rootListing = null;
+      }
+      if (rootListing == null || rootListing.length == 0) {
+        //noinspection ResultOfMethodCallIgnored
+        fileRoot().delete();
+      } else {
+        recurseSave("", fileRoot());
+      }
     }
 
-    private void recurseSave(String path, File directory) {
+    private boolean recurseSave(String path, File directory) {
       if (!directory.exists()) {
         if (!directory.mkdirs() && !directory.isDirectory()) {
           LOGGER.warn("Failed to create directory during save: {}", directory);
         }
       }
+      boolean dirChanged = false;
       String[] children = list(path);
       if (children != null) {
         for (String child : children) {
@@ -867,27 +878,46 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
           String childName = child.endsWith("/") ? child.substring(0, child.length() - 1) : child;
           File childFile = new File(directory, childName);
           if (isDirectory(childPath)) {
-            recurseSave(childPath + "/", childFile);
+            dirChanged = recurseSave(childPath + "/", childFile) || dirChanged;
           } else {
-            try {
-              long len = size(childPath);
-              byte[] data = new byte[(int) len];
-              int handleId = open(childPath, Mode.Read);
-              if (handleId >= 0) {
-                li.cil.oc.api.fs.Handle h = getHandle(handleId);
-                h.read(data);
-                h.close();
-              }
-              try (FileOutputStream fos = new FileOutputStream(childFile)) {
-                fos.write(data);
-              }
-              if (!childFile.setLastModified(lastModified(childPath))) {
+            long time = lastModified(childPath);
+            if (time == 0 || !childFile.exists() || FileUtils.isFileOlder(childFile, time)) {
+              writeFile(childPath, childFile);
+              if (!childFile.setLastModified(time)) {
                 LOGGER.warn("Failed to set last modified on: {}", childFile);
               }
-            } catch (Exception ignored) {
+              dirChanged = true;
             }
           }
         }
+      }
+      if (dirChanged) {
+        //noinspection ResultOfMethodCallIgnored
+        directory.setLastModified(lastModified(path));
+      }
+      return dirChanged;
+    }
+
+    private void writeFile(String path, File file) {
+      int handleId = open(path, Mode.Read);
+      if (handleId < 0) return;
+      li.cil.oc.api.fs.Handle handle = getHandle(handleId);
+      try {
+        FileUtils.deleteQuietly(file);
+        //noinspection ResultOfMethodCallIgnored
+        file.createNewFile();
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+          byte[] buffer = new byte[16 * 1024];
+          while (true) {
+            int read = handle.read(buffer);
+            if (read < 0) break;
+            if (read > 0) fos.write(buffer, 0, read);
+          }
+        }
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      } finally {
+        handle.close();
       }
     }
 
@@ -971,13 +1001,10 @@ public final class FileSystem implements li.cil.oc.api.detail.FileSystemAPI {
 
       @Override
       public void write(byte[] b) {
-        long oldLen = inner.length();
-        long newLen = Math.max(oldLen, inner.position() + b.length);
-        long delta = newLen - oldLen;
-        if (owner.capacity() - owner.used < delta && !owner.ignoreCapacity)
+        if (owner.capacity() - owner.used < b.length && !owner.ignoreCapacity)
           throw new RuntimeException(new IOException("not enough space"));
         inner.write(b);
-        owner.used += delta;
+        owner.used += b.length;
       }
     }
   }

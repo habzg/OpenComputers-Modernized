@@ -48,7 +48,6 @@ public class TerminalServer implements Environment, EnvironmentHost, Analyzable,
 
   public final double range = OCSettings.get().maxWirelessRange[Tier.Two];
   public final List<String> keys = new ArrayList<>();
-  private volatile String persistedAddress = null;
 
   private final Map<String, String> deviceInfo;
 
@@ -123,22 +122,15 @@ public class TerminalServer implements Environment, EnvironmentHost, Analyzable,
   public boolean hasAddress() {
     if (rack != null) {
       var data = rack.getMountableData(slot);
-      if (data != null && data.contains("terminalAddress")) return true;
+      if (data != null) {
+        return data.contains("terminalAddress");
+      }
     }
-    var persisted = persistedAddress;
-    return persisted != null && !persisted.isEmpty();
+    return false;
   }
 
   public String address() {
-    if (rack != null) {
-      var data = rack.getMountableData(slot);
-      if (data != null) {
-        var addr = data.getString("terminalAddress");
-        if (!addr.isEmpty()) return addr;
-      }
-    }
-    var persisted = persistedAddress;
-    return (persisted == null || persisted.isEmpty()) ? null : persisted;
+    return rack.getMountableData(slot).getString("terminalAddress");
   }
 
   public List<String> sidedKeys() {
@@ -186,8 +178,8 @@ public class TerminalServer implements Environment, EnvironmentHost, Analyzable,
   public void onDisconnect(Node node) {
     if (this.node == null) return;
     if (node != this.node) return;
-    var buf = this.buffer;
-    var kb = this.keyboard;
+    var buf = buffer();
+    var kb = keyboard();
     if (buf != null && buf.node() != null) buf.node().remove();
     if (kb != null && kb.node() != null) kb.node().remove();
   }
@@ -234,10 +226,6 @@ public class TerminalServer implements Environment, EnvironmentHost, Analyzable,
         Network.joinNewNetwork(node);
       }
       nbt.putString("terminalAddress", node.address() == null ? "" : node.address());
-    }
-    var buf = bufferIfLoaded();
-    if (buf != null && buf.node() != null && buf.node().address() != null) {
-      nbt.putString("bufferAddress", buf.node().address());
     }
     return nbt;
   }
@@ -292,22 +280,11 @@ public class TerminalServer implements Environment, EnvironmentHost, Analyzable,
   public void load(CompoundTag nbt, HolderLookup.Provider provider) {
     var level = rack.level();
     boolean isClient = level != null && level.isClientSide();
-    if (nbt.contains("address")) {
-      var persisted = nbt.getString("address");
-      persistedAddress = persisted.isEmpty() ? null : persisted;
-    }
     if (level != null && !isClient && node != null) {
       node.load(nbt, provider);
-      if (node.address() != null && !node.address().isEmpty()) {
-        persistedAddress = node.address();
-      }
     }
-    if (nbt.contains(BufferTag)) {
-      buffer().load(nbt.getCompound(BufferTag), provider);
-    }
-    if (nbt.contains(KeyboardTag)) {
-      keyboard().load(nbt.getCompound(KeyboardTag), provider);
-    }
+    buffer().load(nbt.getCompound(BufferTag), provider);
+    keyboard().load(nbt.getCompound(KeyboardTag), provider);
     keys.clear();
     var keysList = nbt.getList(KeysTag, Tag.TAG_STRING);
     for (int i = 0; i < keysList.size(); i++) {
@@ -320,16 +297,12 @@ public class TerminalServer implements Environment, EnvironmentHost, Analyzable,
     if (node != null) {
       node.save(nbt, provider);
     }
-    if (buffer != null) {
-      var bufferNbt = new CompoundTag();
-      buffer.save(bufferNbt, provider);
-      nbt.put(BufferTag, bufferNbt);
-    }
-    if (keyboard != null) {
-      var keyboardNbt = new CompoundTag();
-      keyboard.save(keyboardNbt, provider);
-      nbt.put(KeyboardTag, keyboardNbt);
-    }
+    var bufferNbt = new CompoundTag();
+    buffer().save(bufferNbt, provider);
+    nbt.put(BufferTag, bufferNbt);
+    var keyboardNbt = new CompoundTag();
+    keyboard().save(keyboardNbt, provider);
+    nbt.put(KeyboardTag, keyboardNbt);
     var keysList = new ListTag();
     for (var key : keys) {
       keysList.add(StringTag.valueOf(key));
@@ -385,22 +358,13 @@ public class TerminalServer implements Environment, EnvironmentHost, Analyzable,
     public void completePending() {
       var promoted = new ArrayList<TerminalServer>();
       for (var term : pending) {
-        if (!term.hasAddress()) continue;
-        var address = term.address();
-        if (address == null) {
-          promoted.add(term);
-          continue;
-        }
-        var prev = ready.get(address);
-        if (prev == null || prev == term) {
-          promoted.add(term);
-        }
+        if (term.hasAddress()) promoted.add(term);
       }
       for (var term : promoted) {
         pending.remove(term);
         var address = term.address();
         if (address == null) continue;
-        ready.put(address, term);
+        if (!ready.containsKey(address)) ready.put(address, term);
       }
     }
 
@@ -414,11 +378,7 @@ public class TerminalServer implements Environment, EnvironmentHost, Analyzable,
             if (!pending.contains(terminal)) pending.add(terminal);
             return true;
           }
-          var prev = ready.get(newAddress);
-          if (prev != null && prev != terminal) {
-            if (!pending.contains(terminal)) pending.add(terminal);
-            return true;
-          }
+          if (ready.containsKey(newAddress)) return false;
           ready.put(newAddress, terminal);
         } else {
           if (!pending.contains(terminal)) pending.add(terminal);
@@ -437,17 +397,10 @@ public class TerminalServer implements Environment, EnvironmentHost, Analyzable,
           if (addr == null) {
             return pending.remove(terminal);
           }
-          var existing = ready.get(addr);
-          if (existing == terminal) {
-            ready.remove(addr);
-            removed = true;
-          } else {
-            removed = pending.remove(terminal);
-          }
+          removed = ready.remove(addr) != null;
         } else {
           removed = pending.remove(terminal);
         }
-        if (removed) completePending();
         return removed;
       }
     }

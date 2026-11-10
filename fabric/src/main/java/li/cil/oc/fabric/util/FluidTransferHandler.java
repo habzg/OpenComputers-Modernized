@@ -82,6 +82,26 @@ public class FluidTransferHandler implements FluidUtils.FluidTransferHandler {
   }
 
   @Override
+  public ItemStack drainItem(ItemStack stack, FluidStack resource) {
+    if (stack.isEmpty()) return null;
+    SimpleContainer container = new SimpleContainer(1);
+    container.setItem(0, stack.copy());
+    var inventoryStorage = InventoryStorage.of(container, null);
+    var context = ContainerItemContext.ofSingleSlot(inventoryStorage.getSlot(0));
+    Storage<FluidVariant> storage = context.find(FluidStorage.ITEM);
+    if (storage == null) return null;
+    long droplets = resource.amount() * (FluidConstants.BUCKET / 1000);
+    try (Transaction tx = Transaction.openOuter()) {
+      long extracted = storage.extract(FabricFluidHandler.toFabric(resource), droplets, tx);
+      if (extracted > 0) {
+        tx.commit();
+        return container.getItem(0);
+      }
+    }
+    return null;
+  }
+
+  @Override
   public boolean isFluidContainer(ItemStack stack) {
     if (stack.isEmpty()) return false;
     var context = ContainerItemContext.withConstant(stack);

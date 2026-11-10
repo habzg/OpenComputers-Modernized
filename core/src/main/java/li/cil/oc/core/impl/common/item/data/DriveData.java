@@ -21,10 +21,10 @@ public class DriveData extends ItemData {
   }
 
   public static void lock(ItemStack stack, Player player) {
-    var key = player.getDisplayName().getString();
+    var key = player.getGameProfile().getName();
     var data = new DriveData(stack);
     if (!data.isLocked()) {
-      data.lockInfo = !key.isEmpty() ? key : "notch";
+      data.lockInfo = key != null && !key.isEmpty() ? key : "notch";
       data.save(stack);
     }
   }

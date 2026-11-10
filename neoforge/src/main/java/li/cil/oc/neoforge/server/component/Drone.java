@@ -196,7 +196,7 @@ public class Drone extends DroneBase {
   @Override
   protected void playPickupSound() {
     agent.level().playSound(null, agent.blockPosition(),
-      SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS,
-      0.2f, (agent.level().random.nextFloat() - agent.level().random.nextFloat()) * 0.7f + 1.0f);
+      SoundEvents.ITEM_PICKUP, SoundSource.NEUTRAL,
+      0.2f, ((agent.level().random.nextFloat() - agent.level().random.nextFloat()) * 0.7f + 1.0f) * 2.0f);
   }
 }

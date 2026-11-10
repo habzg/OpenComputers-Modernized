@@ -14,6 +14,9 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
@@ -60,6 +63,12 @@ public final class ConverterItemStack implements Converter {
           }
           output.put("lore", lore.toString());
         }
+        if (tag.contains("advDmg", Tag.TAG_INT)) {
+          output.put("customDamage", tag.getInt("advDmg"));
+        }
+        if (tag.contains("Energy", Tag.TAG_INT)) {
+          output.put("Energy", tag.getInt("Energy"));
+        }
       }
 
       var enchantments = new ArrayList<Map<String, Object>>();
@@ -93,14 +102,16 @@ public final class ConverterItemStack implements Converter {
     var map = new HashMap<String, Object>();
     var ench = enchantment.value();
     var key = enchantment.unwrapKey().orElse(null);
-    map.put("name", key != null ? key.location().toString() : ench.description().getString());
-    map.put("label", ench.description().getString());
+    map.put("name", enchantmentName(ench, key));
+    map.put("label", Enchantment.getFullname(enchantment, level).getString());
     map.put("level", level);
-    if (OCSettings.get().insertIdsInConverters) {
-      if (key != null) {
-        map.put("id", key.location().toString());
-      }
-    }
     return map;
+  }
+
+  private static String enchantmentName(Enchantment ench, ResourceKey<Enchantment> key) {
+    if (ench.description().getContents() instanceof TranslatableContents translatable) {
+      return translatable.getKey();
+    }
+    return key != null ? key.location().toString() : ench.description().getString();
   }
 }

@@ -152,8 +152,10 @@ public class Rack extends RedstoneAware implements PowerAcceptor, GUI, StateAwar
         int localY = (15 - globalY) - 2 - 3 * slot;
         if (localX >= 0 && localX < 14 && localY >= 0 && localY < 3) {
           var mountable = rack.getMountable(slot);
-          if (mountable != null && mountable.onActivate(player, hand, player.getItemInHand(hand), localX / 14f, localY / 3f)) {
-            return true;
+          if (mountable != null) {
+            if (mountable.onActivate(player, hand, player.getItemInHand(hand), localX / 14f, localY / 3f)) {
+              return true;
+            }
           }
         }
       }

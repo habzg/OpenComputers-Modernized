@@ -32,7 +32,7 @@ public abstract class UpgradeStickyPiston extends UpgradePiston {
     BlockState frontState = host.level().getBlockState(frontPos);
     if (!frontState.isAir()) {
       if (frontState.getPistonPushReaction() == PushReaction.DESTROY) {
-        host.level().destroyBlock(frontPos, true);
+        host.level().removeBlock(frontPos, false);
       } else {
         return ResultWrapper.result(false, "path is obstructed");
       }
@@ -84,7 +84,7 @@ public abstract class UpgradeStickyPiston extends UpgradePiston {
 
     @Override
     public Direction pushDirection(Arguments args, int index) {
-      return rotatable.toGlobal(li.cil.oc.core.impl.util.ExtendedArguments.optSideAny(args, index, Direction.SOUTH));
+      return rotatable.toGlobal(li.cil.oc.core.impl.util.ExtendedArguments.optSideForAction(args, index, Direction.SOUTH));
     }
   }
 }

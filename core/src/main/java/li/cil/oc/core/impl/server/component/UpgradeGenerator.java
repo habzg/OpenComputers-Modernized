@@ -108,7 +108,8 @@ public class UpgradeGenerator extends AbstractManagedEnvironment implements Devi
         return ResultWrapper.result(false, "no space in inventory for fuel containers");
       } else if (container.getCount() > 0) {
         var player = host.player();
-        var itemEntity = new ItemEntity(host.level(), player.getX(), player.getY() - 0.75, player.getZ(), container.copy());
+        var itemEntity = new ItemEntity(host.level(), player.getX(), player.getY() - 0.25, player.getZ(), container.copy());
+        itemEntity.setDefaultPickUpDelay();
         host.level().addFreshEntity(itemEntity);
       }
     }

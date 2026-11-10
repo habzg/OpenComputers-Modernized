@@ -14,6 +14,7 @@ public final class RobotCommonHandler {
   @SuppressWarnings("unused")
   @SubscribeEvent
   public static void onRobotApplyDamageRate(RobotUsedToolEvent.ApplyDamageRate e) {
+    if (!(e.agent instanceof Robot)) return;
     if (e.toolAfterUse.isDamageableItem()) {
       int damage = e.toolAfterUse.getDamageValue() - e.toolBeforeUse.getDamageValue();
       if (damage > 0) {

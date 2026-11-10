@@ -13,9 +13,7 @@ import net.fabricmc.fabric.api.entity.FakePlayer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,22 +25,12 @@ public class DebugCard extends DebugCardBase {
 
   @SuppressWarnings("unused")
   @Override
-  protected Object @NotNull [] platformScanContentsAt(@NotNull Level world, int x, int y, int z) {
-    BlockPosition position = BlockPosition.apply(x, y, z, world);
-    FakePlayer fakePlayer = FakePlayer.get((ServerLevel) world, OCSettings.get().fakePlayerProfile);
-    fakePlayer.setPos(position.x() + 0.5, position.y() + 0.5, position.z() + 0.5);
-
-    Entity entity = world.getNearestPlayer(fakePlayer.getX(), fakePlayer.getY(), fakePlayer.getZ(), 1, false);
-    if (entity != null) {
-      return ResultWrapper.result(true, "EntityLivingBase", entity);
-    }
-    BlockState blockState = world.getBlockState(new net.minecraft.core.BlockPos(x, y, z));
-    Block block = blockState.getBlock();
-    if (blockState.isAir()) {
-      return ResultWrapper.result(false, "air", block);
-    } else {
-      return ResultWrapper.result(true, "solid", block);
-    }
+  protected boolean platformIsBlockBreakCanceled(@NotNull Level world, @NotNull net.minecraft.core.BlockPos pos, @NotNull BlockState state) {
+    if (!(world instanceof ServerLevel serverLevel)) return false;
+    FakePlayer fakePlayer = FakePlayer.get(serverLevel, OCSettings.get().fakePlayerProfile);
+    fakePlayer.setPos(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+    return !net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents.BEFORE.invoker()
+      .beforeBlockBreak(serverLevel, fakePlayer, pos, state, serverLevel.getBlockEntity(pos));
   }
 
   @SuppressWarnings("unused")

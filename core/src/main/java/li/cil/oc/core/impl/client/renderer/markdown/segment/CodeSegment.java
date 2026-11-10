@@ -16,6 +16,11 @@ public class CodeSegment extends TextSegment {
   }
 
   @Override
+  protected boolean ignoreLeadingWhitespace() {
+    return false;
+  }
+
+  @Override
   public String toString(MarkupFormat format) {
     return switch (format) {
       case Markdown -> "`" + text() + "`";

@@ -33,7 +33,22 @@ public final class BlockInteractionHandlerImpl implements BlockInteractionHandle
       getFakePlayer(level, blockPos), net.minecraft.world.InteractionHand.MAIN_HAND, pos, hitVec
     );
     NeoForge.EVENT_BUS.post(event);
+    return !event.isCanceled() && event.getUseBlock() != net.neoforged.neoforge.common.util.TriState.FALSE;
+  }
+
+  @Override
+  public boolean mayInteractEntity(Player player, net.minecraft.world.entity.Entity entity) {
+    PlayerInteractEvent.EntityInteract event = new PlayerInteractEvent.EntityInteract(
+      player, net.minecraft.world.InteractionHand.MAIN_HAND, entity
+    );
+    NeoForge.EVENT_BUS.post(event);
     return !event.isCanceled();
+  }
+
+  @Override
+  public net.minecraft.world.Container itemHandlerContainer(Level level, BlockPos pos, Direction side) {
+    var handler = level.getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK, pos, side);
+    return handler == null ? null : new li.cil.oc.neoforge.integration.neoforge.DriverItemHandler.ItemHandlerContainer(handler);
   }
 
   @Override
@@ -42,5 +57,12 @@ public final class BlockInteractionHandlerImpl implements BlockInteractionHandle
     var event = new BlockEvent.BreakEvent(level, pos, state, getFakePlayer(level, bPos));
     NeoForge.EVENT_BUS.post(event);
     return event.isCanceled();
+  }
+
+  @Override
+  public boolean checkItemPickup(Player player, net.minecraft.world.entity.item.ItemEntity entity) {
+    var event = new net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent.Pre(player, entity);
+    NeoForge.EVENT_BUS.post(event);
+    return event.canPickup() == net.neoforged.neoforge.common.util.TriState.FALSE;
   }
 }

@@ -46,11 +46,11 @@ public final class DatabaseAccess {
         int entry = args.checkInteger(offset + 1);
         int size = args.optInteger(offset + 2, 1);
         ItemStack dbStack = database.getStackInSlot(entry - 1);
-        if (dbStack == null || dbStack.isEmpty() || size < 1) return null;
+        if (dbStack == null || dbStack.isEmpty() || size < 1) return ItemStack.EMPTY;
         dbStack.setCount(Math.min(size, dbStack.getMaxStackSize()));
         return dbStack;
       });
     }
-    return null;
+    return ItemStack.EMPTY;
   }
 }

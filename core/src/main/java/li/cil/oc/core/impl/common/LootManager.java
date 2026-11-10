@@ -75,10 +75,10 @@ public final class LootManager {
           stack = creator.create(parts[0], key, external, java.util.Arrays.asList(Color.dyes).indexOf(parts[2]));
           count = Integer.parseInt(parts[1]);
         } else if (parts.length == 2) {
-          stack = creator.create(parts[0], key, external, 8);
+          stack = creator.create(parts[0], key, external, -1);
           count = Integer.parseInt(parts[1]);
         } else {
-          stack = creator.create(value, key, external, 8);
+          stack = creator.create(value, key, external, -1);
           count = 1;
         }
         acc.add(new ItemStack[]{stack, API.items.get(Constants.ItemName.Floppy).createItemStack(1).copyWithCount(count)});

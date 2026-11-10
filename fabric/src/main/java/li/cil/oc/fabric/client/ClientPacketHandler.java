@@ -56,8 +56,8 @@ public final class ClientPacketHandler extends CommonPacketHandler {
   }
 
   @Override
-  protected Level world(Player player, int dimension) {
-    return player.level();
+  protected Level world(Player player, String dimension) {
+    return clientLevel(player, dimension);
   }
 
   @SuppressWarnings("unused")
@@ -303,7 +303,7 @@ public final class ClientPacketHandler extends CommonPacketHandler {
           FileSystemAccessEvent.Client.EVENT.invoker().onFileSystemAccessClient(new FileSystemAccessEvent.Client(sound, t, data));
         }
       } else {
-        Level w = world(p.player, p.readInt());
+        Level w = world(p.player, p.readUTF());
         double x = p.readDouble();
         double y = p.readDouble();
         double z = p.readDouble();
@@ -323,7 +323,7 @@ public final class ClientPacketHandler extends CommonPacketHandler {
           NetworkActivityEvent.Client.EVENT.invoker().onNetworkActivityClient(new NetworkActivityEvent.Client(t, data));
         }
       } else {
-        Level w = world(p.player, p.readInt());
+        Level w = world(p.player, p.readUTF());
         double x = p.readDouble();
         double y = p.readDouble();
         double z = p.readDouble();
@@ -355,8 +355,8 @@ public final class ClientPacketHandler extends CommonPacketHandler {
       if (t != null) {
         int index = p.readInt();
         int value = p.readInt();
-        if (index < 0 || index >= t.colors.length) return;
-        t.colors[index] = value & 0xFFFFFF;
+        if (index < 0 || index >= t.colors().length) return;
+        t.colors()[index] = value & 0xFFFFFF;
         t.needsRendering = true;
       }
     } catch (IOException e) {
@@ -561,8 +561,9 @@ public final class ClientPacketHandler extends CommonPacketHandler {
 
   private void onParticleEffect(PacketParser p) {
     try {
-      int dimension = p.readInt();
+      String dimension = p.readUTF();
       Level w = world(p.player, dimension);
+      if (w == null) return;
       int x = p.readInt();
       int y = p.readInt();
       int z = p.readInt();
@@ -683,9 +684,16 @@ public final class ClientPacketHandler extends CommonPacketHandler {
       Rack t = p.readBlockEntity(Rack.class);
       if (t != null) {
         int mountableIndex = p.readInt();
-        if (mountableIndex < 0 || mountableIndex >= t.lastData.length) return;
         var data = p.readNBT();
+        if (mountableIndex < 0 || mountableIndex >= t.lastData.length) {
+          org.slf4j.LoggerFactory.getLogger("OpenComputers-Client").warn("Received invalid mountable index: {}", mountableIndex);
+          return;
+        }
         t.lastData[mountableIndex] = data;
+        var level = t.getLevel();
+        if (level != null) {
+          level.sendBlockUpdated(t.getBlockPos(), t.getBlockState(), t.getBlockState(), 3);
+        }
         TerminalServer.TerminalServerCache.loaded.completePending();
       }
     } catch (IOException e) {
@@ -820,7 +828,7 @@ public final class ClientPacketHandler extends CommonPacketHandler {
 
   private void onRobotMove(PacketParser p) {
     try {
-      int dimension = p.readInt();
+      String dimension = p.readUTF();
       int x = p.readInt();
       int y = p.readInt();
       int z = p.readInt();
@@ -937,7 +945,7 @@ public final class ClientPacketHandler extends CommonPacketHandler {
 
           @Override
           public void render(net.minecraft.client.gui.@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float dt) {
-            renderBackground(guiGraphics, mouseX, mouseY, dt);
+            renderTransparentBackground(guiGraphics);
             inner.render(guiGraphics, mouseX, mouseY, dt);
           }
 
@@ -974,6 +982,12 @@ public final class ClientPacketHandler extends CommonPacketHandler {
           @Override
           public boolean charTyped(char codePoint, int modifiers) {
             return inner.handleCharTyped(codePoint, modifiers) || super.charTyped(codePoint, modifiers);
+          }
+
+          @Override
+          public void onClose() {
+            inner.onGuiClosed();
+            super.onClose();
           }
         });
         return;
@@ -1290,8 +1304,8 @@ public final class ClientPacketHandler extends CommonPacketHandler {
 
   private void onSound(PacketParser p) {
     try {
-      int dimension = p.readInt();
-      world(p.player, dimension);
+      String dimension = p.readUTF();
+      if (world(p.player, dimension) == null) return;
       int x = p.readInt();
       int y = p.readInt();
       int z = p.readInt();
@@ -1305,8 +1319,8 @@ public final class ClientPacketHandler extends CommonPacketHandler {
 
   private void onSoundPattern(PacketParser p) {
     try {
-      int dimension = p.readInt();
-      world(p.player, dimension);
+      String dimension = p.readUTF();
+      if (world(p.player, dimension) == null) return;
       int x = p.readInt();
       int y = p.readInt();
       int z = p.readInt();

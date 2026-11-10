@@ -115,8 +115,11 @@ public class Screen extends BlockEntity implements TextBufferHost, SidedEnvironm
     return worldPosition.getZ() + 0.5;
   }
 
+  private volatile boolean isChangeScheduled = false;
+
   @Override
   public void markChanged() {
+    isChangeScheduled = true;
   }
 
   @Override
@@ -129,16 +132,7 @@ public class Screen extends BlockEntity implements TextBufferHost, SidedEnvironm
   }
 
   @Override
-  public void onDisconnect(Node node) {
-  }
-
-  @Override
   public void onMessage(li.cil.oc.api.network.Message message) {
-  }
-
-  @Override
-  public Object result(Object... args) {
-    return li.cil.oc.core.util.ResultWrapper.result(args);
   }
 
   @Override
@@ -215,7 +209,8 @@ public class Screen extends BlockEntity implements TextBufferHost, SidedEnvironm
     return _yaw;
   }
 
-  public void trySetPitchYaw(Direction pitch, Direction yaw) {
+  @Override
+  public boolean trySetPitchYaw(Direction pitch, Direction yaw) {
     boolean changed = false;
     if (pitch != _pitch) {
       _pitch = pitch;
@@ -228,6 +223,7 @@ public class Screen extends BlockEntity implements TextBufferHost, SidedEnvironm
     if (changed) {
       updateTranslation();
     }
+    return changed;
   }
 
   private void updateTranslation() {
@@ -309,7 +305,13 @@ public class Screen extends BlockEntity implements TextBufferHost, SidedEnvironm
   @Override
   public void updateEntity() {
     super.updateEntity();
-    buffer.update();
+    if (isChangeScheduled) {
+      isChangeScheduled = false;
+      setChanged();
+    }
+    if (isClient() || isConnected()) {
+      buffer.update();
+    }
     RedstoneAware.super.updateEntity();
     if (shouldCheckForMultiBlock && ((isClient() && isClientReadyForMultiBlockCheck()) || (isServer() && isConnected()))) {
       var pending = new TreeSet<Screen>();
@@ -419,7 +421,7 @@ public class Screen extends BlockEntity implements TextBufferHost, SidedEnvironm
         double hitX = e.getX() - getBlockPos().getX();
         double hitY = e.getY() - getBlockPos().getY();
         double hitZ = e.getZ() - getBlockPos().getZ();
-        if (e instanceof AbstractArrow arrow && arrow.getOwner() instanceof Player player && player == net.minecraft.client.Minecraft.getInstance().player) {
+        if (e instanceof AbstractArrow arrow && arrow.getOwner() instanceof Player player && player.isLocalPlayer()) {
           click(hitX, hitY, hitZ);
         }
       }
@@ -440,6 +442,9 @@ public class Screen extends BlockEntity implements TextBufferHost, SidedEnvironm
     super.dispose();
     if (isServer() && node != null) node.remove();
     for (var s : new HashSet<>(screens)) s.checkMultiBlock();
+    if (isClient()) {
+      li.cil.oc.core.impl.client.gui.BufferScreen.closeIfOpen(buffer);
+    }
   }
 
   @Override
@@ -681,11 +686,6 @@ public class Screen extends BlockEntity implements TextBufferHost, SidedEnvironm
     color = value;
   }
 
-  @Override
-  public boolean consumesDye() {
-    return true;
-  }
-
   @SuppressWarnings("UnusedReturnValue")
   public boolean copyToAnalyzer(double hitX, double hitY, double hitZ, Player player) {
     double[] coords = toScreenCoordinates(hitX, hitY, hitZ);
@@ -710,11 +710,11 @@ public class Screen extends BlockEntity implements TextBufferHost, SidedEnvironm
     int[] lp = localPosition();
     int x = lp[0];
     int y = lp[1];
-    int[] oldPos = lastWalked.get(entity);
+    int[] oldPos = origin.lastWalked.get(entity);
     if (oldPos != null && oldPos[0] == x && oldPos[1] == y) return;
-    lastWalked.put(entity, new int[]{x, y});
+    origin.lastWalked.put(entity, new int[]{x, y});
     if (entity instanceof Player player && OCSettings.get().inputUsername) {
-      origin.node.sendToReachable("computer.signal", "walk", x + 1, height - y, player.getName());
+      origin.node.sendToReachable("computer.signal", "walk", x + 1, height - y, player.getScoreboardName());
     } else {
       origin.node.sendToReachable("computer.signal", "walk", x + 1, height - y);
     }

@@ -10,6 +10,7 @@ import li.cil.oc.core.Constants;
 import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.PacketSender;
 import li.cil.oc.core.impl.common.blockentity.traits.BlockEntity;
+import li.cil.oc.core.impl.common.blockentity.traits.Environment;
 import li.cil.oc.core.impl.common.blockentity.traits.Inventory;
 import li.cil.oc.core.impl.common.blockentity.traits.PlayerInputAware;
 import li.cil.oc.core.impl.common.blockentity.traits.PowerAcceptor;
@@ -48,7 +49,7 @@ public class Disassembler extends BlockEntity implements li.cil.oc.api.network.E
   public double totalRequiredEnergy = 0;
   public double buffer = 0;
   public boolean disassembleNextInstantly = false;
-  private final ItemStack[] _items = new ItemStack[getContainerSize()];
+  private final ItemStack[] _items = li.cil.oc.core.impl.common.inventory.Inventory.filledItems(getContainerSize());
 
   public Disassembler(BlockPos pos, BlockState state) {
     super(TYPE, pos, state);
@@ -65,6 +66,7 @@ public class Disassembler extends BlockEntity implements li.cil.oc.api.network.E
 
   @Override
   public void onDisconnect(Node node) {
+    Environment.flushBuffer(node, node());
   }
 
   @Override
@@ -193,7 +195,7 @@ public class Disassembler extends BlockEntity implements li.cil.oc.api.network.E
   public void updateEntity() {
     super.updateEntity();
     var level = getLevel();
-    if (level != null && level.getGameTime() % OCSettings.get().tickFrequency == 0) {
+    if (level != null && !level.isClientSide && level.getGameTime() % OCSettings.get().tickFrequency == 0) {
       if (queue.isEmpty()) {
         boolean instant = disassembleNextInstantly;
         disassemble(removeItem(0, 1), instant);
@@ -253,6 +255,11 @@ public class Disassembler extends BlockEntity implements li.cil.oc.api.network.E
   }
 
   @Override
+  public boolean stillValid(@NotNull Player player) {
+    return player.distanceToSqr(worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5) <= 64;
+  }
+
+  @Override
   public void clearContent() {
     for (int i = 0; i < getContainerSize(); i++) {
       setItem(i, ItemStack.EMPTY);
@@ -281,10 +288,10 @@ public class Disassembler extends BlockEntity implements li.cil.oc.api.network.E
   }
 
   private void drop(ItemStack stack) {
-    if (stack != null) {
+    if (!stack.isEmpty()) {
       for (var side : Direction.values()) {
         if (stack.getCount() <= 0) break;
-        InventoryUtils.insertIntoInventoryAt(stack, BlockPosition.apply(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), getLevel()).offset(side), side.getOpposite());
+        InventoryUtils.insertIntoInventoryAt(stack, BlockPosition.apply(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), getLevel()).offset(side), side.getOpposite(), 64, false);
       }
       if (stack.getCount() > 0) spawnStackInWorld(stack, Direction.UP);
     }
@@ -293,6 +300,8 @@ public class Disassembler extends BlockEntity implements li.cil.oc.api.network.E
   @Override
   public void readFromNBTForServer(CompoundTag nbt) {
     super.readFromNBTForServer(nbt);
+    var provider = getEffectiveProvider();
+    if (provider != null) load(nbt, provider);
     queue.clear();
     var tagList = nbt.getList(OCSettings.namespace + "queue", Tag.TAG_COMPOUND);
     for (int i = 0; i < tagList.size(); i++) {
@@ -306,6 +315,8 @@ public class Disassembler extends BlockEntity implements li.cil.oc.api.network.E
   @Override
   public void writeToNBTForServer(CompoundTag nbt) {
     super.writeToNBTForServer(nbt);
+    var provider = getEffectiveProvider();
+    if (provider != null) save(nbt, provider);
     var tagList = new ListTag();
     for (var stack : queue) tagList.add(stack.save(getEffectiveProvider(), new CompoundTag()));
     nbt.put(OCSettings.namespace + "queue", tagList);
@@ -348,7 +359,7 @@ public class Disassembler extends BlockEntity implements li.cil.oc.api.network.E
   }
 
   private boolean allowDisassembling(ItemStack stack) {
-    if (stack == null) return false;
+    if (stack == null || stack.isEmpty()) return false;
     CustomData _cd = stack.get(DataComponents.CUSTOM_DATA);
     return _cd == null || _cd.isEmpty() || !_cd.copyTag().getBoolean(OCSettings.namespace + "undisassemblable");
   }
@@ -364,7 +375,7 @@ public class Disassembler extends BlockEntity implements li.cil.oc.api.network.E
   public void onSetInventorySlotContents(net.minecraft.world.entity.player.Player player, int slot, ItemStack stack) {
     var level = getLevel();
     if (level != null && !level.isClientSide) {
-      disassembleNextInstantly = stack != null && slot == 0 && player.getAbilities().instabuild;
+      disassembleNextInstantly = !stack.isEmpty() && slot == 0 && player.getAbilities().instabuild;
     }
   }
 }

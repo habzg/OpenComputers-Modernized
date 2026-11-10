@@ -108,9 +108,6 @@ public final class SerialInterfaceProviderAdapter implements SerialInterfaceProv
       }
     }
 
-    // ------------------------------------------------------------------ //
-    // SerialInterface
-
     @Override
     public boolean canWrite() {
       synchronized (readBuffer) {

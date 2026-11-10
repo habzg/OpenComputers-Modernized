@@ -1,0 +1,14 @@
+{
+  "replace": false,
+  "values": [
+    "opencomputers:hologram1",
+    "opencomputers:hologram2",
+    "opencomputers:keyboard",
+    "opencomputers:motionsensor",
+    "opencomputers:redstone",
+    "opencomputers:screen1",
+    "opencomputers:screen2",
+    "opencomputers:screen3",
+    "opencomputers:waypoint"
+  ]
+}

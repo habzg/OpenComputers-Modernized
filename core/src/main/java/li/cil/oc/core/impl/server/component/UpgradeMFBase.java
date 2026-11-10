@@ -13,6 +13,7 @@ import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.core.Constants;
 import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.util.BlockPosition;
+import li.cil.oc.core.impl.util.SubLevelHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -64,7 +65,7 @@ public abstract class UpgradeMFBase extends AbstractManagedEnvironment implement
   protected abstract boolean consumeEnergy(double amount);
 
   protected void updateBoundState() {
-    if (node.network() != null && coord.level() != null && coord.level().dimension().location().hashCode() == host.level().dimension().location().hashCode() && coord.toVec3().distanceTo(new Vec3(host.xPosition(), host.yPosition(), host.zPosition())) <= OCSettings.get().mfuRange) {
+    if (node.network() != null && coord.level() != null && coord.level().dimension().equals(host.level().dimension()) && SubLevelHelper.distanceSquared(host.level(), coord.toVec3(), new Vec3(host.xPosition(), host.yPosition(), host.zPosition())) <= OCSettings.get().mfuRange * OCSettings.get().mfuRange) {
       BlockPos blockPos = new BlockPos(coord.x(), coord.y(), coord.z());
       BlockEntity te = host.level().getBlockEntity(blockPos);
       if (otherEnv != null && otherEnv instanceof BlockEntity) {
@@ -72,10 +73,11 @@ public abstract class UpgradeMFBase extends AbstractManagedEnvironment implement
         otherEnv = null;
       }
       if (te instanceof Environment) {
-        if (otherDrvEnv != null) {
-          node.disconnect(otherDrvEnv.node());
-          otherDrvEnv.save(blockData.data, host.level().registryAccess());
-          if (otherDrvEnv.node() != null) otherDrvEnv.node().remove();
+        var staleDrv = otherDrvEnv;
+        if (staleDrv != null) {
+          node.disconnect(staleDrv.node());
+          staleDrv.save(blockData.data, host.level().registryAccess());
+          if (staleDrv.node() != null) staleDrv.node().remove();
           otherDrvEnv = null;
           otherDrvDriver = null;
         }
@@ -85,26 +87,38 @@ public abstract class UpgradeMFBase extends AbstractManagedEnvironment implement
         var w = coord.level();
         DriverBlock newDriver = li.cil.oc.api.API.driver.driverFor(w, blockPos, dir);
         if (newDriver != null) {
-          if (otherDrvDriver != newDriver) {
-            if (otherDrvEnv != null) {
+          if (otherDrvEnv != null) {
+            if (!otherDrvDriver.equals(newDriver)) {
               node.disconnect(otherDrvEnv.node());
               otherDrvEnv = null;
               otherDrvDriver = null;
               blockData = null;
+              var environment = newDriver.createEnvironment(w, blockPos, dir);
+              if (environment != null) {
+                otherDrvEnv = environment;
+                otherDrvDriver = newDriver;
+                blockData = new BlockData(environment.getClass().getName(), new CompoundTag());
+                node.connect(environment.node());
+              }
             }
+          } else {
             var environment = newDriver.createEnvironment(w, blockPos, dir);
             if (environment != null) {
               otherDrvEnv = environment;
               otherDrvDriver = newDriver;
+              if (blockData != null && blockData.name().equals(environment.getClass().getName())) {
+                environment.load(blockData.data(), host.level().registryAccess());
+              }
               blockData = new BlockData(environment.getClass().getName(), new CompoundTag());
               node.connect(environment.node());
             }
           }
         } else {
-          if (otherDrvEnv != null) {
-            node.disconnect(otherDrvEnv.node());
-            otherDrvEnv.save(blockData.data, host.level().registryAccess());
-            if (otherDrvEnv.node() != null) otherDrvEnv.node().remove();
+          var staleDrv = otherDrvEnv;
+          if (staleDrv != null) {
+            node.disconnect(staleDrv.node());
+            staleDrv.save(blockData.data, host.level().registryAccess());
+            if (staleDrv.node() != null) staleDrv.node().remove();
             otherDrvEnv = null;
             otherDrvDriver = null;
           }
@@ -118,10 +132,11 @@ public abstract class UpgradeMFBase extends AbstractManagedEnvironment implement
       connectToTileNode((BlockEntity) otherEnv, node::disconnect);
       otherEnv = null;
     }
-    if (otherDrvEnv != null) {
-      node.disconnect(otherDrvEnv.node());
-      otherDrvEnv.save(blockData.data, host.level().registryAccess());
-      if (otherDrvEnv.node() != null) otherDrvEnv.node().remove();
+    var staleDrv = otherDrvEnv;
+    if (staleDrv != null) {
+      node.disconnect(staleDrv.node());
+      staleDrv.save(blockData.data, host.level().registryAccess());
+      if (staleDrv.node() != null) staleDrv.node().remove();
       otherDrvEnv = null;
       otherDrvDriver = null;
     }
@@ -134,8 +149,11 @@ public abstract class UpgradeMFBase extends AbstractManagedEnvironment implement
       otherDrvEnv.update();
     }
     if (host.level().getGameTime() % OCSettings.get().tickFrequency == 0) {
+      if (otherEnv == null && otherDrvEnv == null) {
+        updateBoundState();
+      }
       if (!consumeEnergy(OCSettings.get().mfuCost * OCSettings.get().tickFrequency *
-        coord.toVec3().distanceTo(new Vec3(host.xPosition(), host.yPosition(), host.zPosition())))) {
+        Math.sqrt(SubLevelHelper.distanceSquared(host.level(), coord.toVec3(), new Vec3(host.xPosition(), host.yPosition(), host.zPosition()))))) {
         disconnect();
       }
     }

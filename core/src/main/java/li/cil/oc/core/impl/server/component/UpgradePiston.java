@@ -90,6 +90,11 @@ public abstract class UpgradePiston extends AbstractManagedEnvironment implement
         BlockEntity be = state.hasBlockEntity() ? level.getBlockEntity(pos) : null;
         Block.dropResources(state, level, pos, be);
         level.setBlock(pos, Blocks.AIR.defaultBlockState(), 18);
+        level.gameEvent(net.minecraft.world.level.gameevent.GameEvent.BLOCK_DESTROY, pos,
+          net.minecraft.world.level.gameevent.GameEvent.Context.of(state));
+        if (!state.is(net.minecraft.tags.BlockTags.FIRE)) {
+          level.addDestroyBlockEffect(pos, state);
+        }
       }
     }
     for (int i = toPush.size() - 1; i >= 0; i--) {
@@ -139,7 +144,7 @@ public abstract class UpgradePiston extends AbstractManagedEnvironment implement
 
     @Override
     public Direction pushDirection(Arguments args, int index) {
-      return rotatable.toGlobal(ExtendedArguments.optSideAny(args, index, Direction.SOUTH));
+      return rotatable.toGlobal(ExtendedArguments.optSideForAction(args, index, Direction.SOUTH));
     }
   }
 }

@@ -35,9 +35,9 @@ public final class MFUTargetRenderer {
         var data = cd.copyTag();
         if (data.contains(OCSettings.namespace + "coord", net.minecraft.nbt.Tag.TAG_INT_ARRAY)) {
           var coords = data.getIntArray(OCSettings.namespace + "coord");
-          if (coords.length < 5) return;
-          if (player.level().dimension().location().hashCode() != coords[3]) return;
-          int x = coords[0], y = coords[1], z = coords[2], side = coords[4];
+          if (coords.length < 4) return;
+          if (!player.level().dimension().location().toString().equals(data.getString(OCSettings.namespace + "dimension"))) return;
+          int x = coords[0], y = coords[1], z = coords[2], side = coords[3];
 
           if (ClientDistanceHelper.distanceSquared(player.level(), x, y, z, player) > 64 * 64) return;
 

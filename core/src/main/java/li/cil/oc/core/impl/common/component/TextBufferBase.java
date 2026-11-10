@@ -29,10 +29,10 @@ import net.minecraft.world.entity.player.Player;
 public abstract class TextBufferBase extends AbstractManagedEnvironment implements TextBufferProxy, VideoRamRasterizer, DeviceInfo {
   public final Node node;
   private final int syncInterval = 100;
-  private final Map<String, String> deviceInfo = new HashMap<>();
+  private Map<String, String> deviceInfo;
 
   public double fullyLitCost;
-  public Proxy proxy;
+  public final Proxy proxy;
   public int viewportW, viewportH;
   private int maxWidth;
   private int maxHeight;
@@ -51,14 +51,6 @@ public abstract class TextBufferBase extends AbstractManagedEnvironment implemen
   private int syncCooldown = syncInterval;
 
   private final Map<String, VideoRamDevice> internalBuffers = new HashMap<>();
-
-  {
-    deviceInfo.put(DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Display);
-    deviceInfo.put(DeviceInfo.DeviceAttribute.Description, "Text buffer");
-    deviceInfo.put(DeviceInfo.DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor);
-    deviceInfo.put(DeviceInfo.DeviceAttribute.Product, "Text Screen V0");
-    deviceInfo.put(DeviceInfo.DeviceAttribute.Width, String.valueOf(new int[]{1, 4, 8}[maxDepth]));
-  }
 
   protected TextBufferBase(EnvironmentHost host) {
     super(host);
@@ -98,6 +90,16 @@ public abstract class TextBufferBase extends AbstractManagedEnvironment implemen
 
   @Override
   public Map<String, String> getDeviceInfo() {
+    if (deviceInfo == null) {
+      deviceInfo = Map.of(
+        DeviceInfo.DeviceAttribute.Class, DeviceInfo.DeviceClass.Display,
+        DeviceInfo.DeviceAttribute.Description, "Text buffer",
+        DeviceInfo.DeviceAttribute.Vendor, Constants.DeviceInfo.DefaultVendor,
+        DeviceInfo.DeviceAttribute.Product, "Text Screen V0",
+        DeviceInfo.DeviceAttribute.Capacity, String.valueOf(maxWidth * maxHeight),
+        DeviceInfo.DeviceAttribute.Width, String.valueOf(new int[]{1, 4, 8}[maxDepth])
+      );
+    }
     return deviceInfo;
   }
 
@@ -195,7 +197,7 @@ public abstract class TextBufferBase extends AbstractManagedEnvironment implemen
 
   @Callback(doc = "function(enabled:boolean):boolean -- Set whether to use high precision mode (sub-pixel mouse event positions).")
   public Object[] setPrecise(Context computer, Arguments args) {
-    if (maxDepth == OCSettings.screenDepthsByTier[3].ordinal()) {
+    if (maxDepth == OCSettings.screenDepthsByTier[2].ordinal()) {
       boolean old = precisionMode;
       precisionMode = args.checkBoolean(0);
       return ResultWrapper.result(old);

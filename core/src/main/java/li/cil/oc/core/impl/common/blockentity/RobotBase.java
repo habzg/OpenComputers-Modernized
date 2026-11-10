@@ -10,7 +10,6 @@ import java.util.UUID;
 import li.cil.oc.api.internal.Agent;
 import li.cil.oc.api.internal.MultiTank;
 import li.cil.oc.api.machine.Machine;
-import li.cil.oc.api.network.Environment;
 import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.Message;
 import li.cil.oc.api.network.Node;
@@ -21,6 +20,7 @@ import li.cil.oc.core.common.inventory.TankSelection;
 import li.cil.oc.core.impl.OCSettings;
 import li.cil.oc.core.impl.common.PacketSender;
 import li.cil.oc.core.impl.common.blockentity.traits.BlockEntity;
+import li.cil.oc.core.impl.common.blockentity.traits.Environment;
 import li.cil.oc.core.impl.common.inventory.InventoryProxy;
 import li.cil.oc.core.impl.common.item.data.RobotData;
 import li.cil.oc.core.impl.util.BlockPosition;
@@ -48,7 +48,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class RobotBase extends BlockEntity implements li.cil.oc.core.impl.common.blockentity.traits.Environment, Agent, Container, InventorySelection, TankSelection, Environment, li.cil.oc.core.impl.common.blockentity.traits.BundledRedstoneAware {
+public abstract class RobotBase extends BlockEntity implements Environment, Agent, Container, InventorySelection, TankSelection, li.cil.oc.core.impl.common.blockentity.traits.BundledRedstoneAware {
   private static final Logger LOGGER = LoggerFactory.getLogger(RobotBase.class);
   public static final int MAX_INVENTORY_SIZE = 100;
   public final RobotData info = new RobotData();
@@ -59,6 +59,7 @@ public abstract class RobotBase extends BlockEntity implements li.cil.oc.core.im
   public Class<? extends EnvironmentHost> hostClass;
   public final ItemStack[] inventory = new ItemStack[MAX_INVENTORY_SIZE];
   public int inventorySize = -1;
+  int containerSize = MAX_INVENTORY_SIZE;
   public volatile int selectedSlot = 0;
   public volatile int selectedTank = 0;
   public double globalBuffer, globalBufferSize;
@@ -126,7 +127,7 @@ public abstract class RobotBase extends BlockEntity implements li.cil.oc.core.im
 
       @Override
       public int getContainerSize() {
-        return RobotBase.this.inventorySize >= 0 ? RobotBase.this.inventorySize : 16;
+        return Math.max(0, RobotBase.this.inventorySize);
       }
 
       @Override
@@ -230,7 +231,7 @@ public abstract class RobotBase extends BlockEntity implements li.cil.oc.core.im
     var stack = getItem(slot);
     if (stack.isEmpty()) return false;
     var driver = hostClass != null ? li.cil.oc.api.API.driver.driverFor(stack, hostClass) : null;
-    return driver != null && driver.slot(stack).equals(Slot.Floppy);
+    return driver != null && driver.slot(stack).equals(Slot.Floppy) && (isContainerSlot(slot) || componentSlots().contains(slot));
   }
 
   public boolean isUpgradeSlot(int slot) {
@@ -282,11 +283,12 @@ public abstract class RobotBase extends BlockEntity implements li.cil.oc.core.im
     try {
       movingRobot.set(this);
       world.setBlock(newPos, Blocks.AIR.defaultBlockState(), 3);
-      boolean created = world.setBlock(newPos, world.getBlockState(bp), 1) &&
-        world.getBlockEntity(newPos) != null;
+      boolean created = world.setBlock(newPos, world.getBlockState(bp), 1);
       if (created) {
         pendingOnLoadSkip = true;
-        onProxyMoved(world, newPos, bp);
+        created = onProxyMoved(world, newPos, bp);
+      }
+      if (created) {
         world.setBlock(bp, Blocks.AIR.defaultBlockState(), 1);
         world.setBlock(bp, afterimageBlock.defaultBlockState(), 1);
         var moveTicks = Math.max((int) (OCSettings.get().moveDelay * 20), 1);
@@ -313,18 +315,18 @@ public abstract class RobotBase extends BlockEntity implements li.cil.oc.core.im
           world.sendBlockUpdated(bp, world.getBlockState(bp), world.getBlockState(bp), 3);
           world.sendBlockUpdated(newPos, world.getBlockState(newPos), world.getBlockState(newPos), 3);
         }
-        return true;
       } else {
         world.setBlock(newPos, Blocks.AIR.defaultBlockState(), 3);
       }
+      return created && getBlockPos().equals(newPos);
     } finally {
       movingRobot.remove();
     }
-    return false;
   }
 
   @SuppressWarnings("unused")
-  protected void onProxyMoved(Level world, BlockPos newPos, BlockPos oldPos) {
+  protected boolean onProxyMoved(Level world, BlockPos newPos, BlockPos oldPos) {
+    return false;
   }
 
   public void checkRedstoneInputChanged() {
@@ -415,36 +417,38 @@ public abstract class RobotBase extends BlockEntity implements li.cil.oc.core.im
     return max;
   }
 
+  public int computeInventorySize() {
+    int totalCapacity = 0;
+    for (int slot : containerSlots()) {
+      var stack = getItem(slot);
+      if (!stack.isEmpty()) {
+        var driver = hostClass != null ? li.cil.oc.api.API.driver.driverFor(stack, hostClass) : null;
+        if (driver instanceof li.cil.oc.api.driver.item.Inventory inv) {
+          totalCapacity += inv.inventoryCapacity(stack);
+        }
+      }
+    }
+    int offset = Math.max(getContainerSize() - componentCount(), equipmentInventory.getContainerSize());
+    for (int i = 0; i < componentCount(); i++) {
+      var stack = getItem(offset + i);
+      if (!stack.isEmpty()) {
+        var driver = hostClass != null ? li.cil.oc.api.API.driver.driverFor(stack, hostClass) : null;
+        if (driver instanceof li.cil.oc.api.driver.item.Inventory inv) {
+          totalCapacity += inv.inventoryCapacity(stack);
+        }
+      }
+    }
+    return Math.min(maxInventorySize(), totalCapacity);
+  }
+
   public void updateInventorySize() {
     synchronized (this) {
-      int totalCapacity = 0;
-      for (int i = 0; i < info.containers.size(); i++) {
-        var stack = info.containers.get(i);
-        if (!stack.isEmpty()) {
-          var driver = hostClass != null ? li.cil.oc.api.API.driver.driverFor(stack, hostClass) : null;
-          if (driver instanceof li.cil.oc.api.driver.item.Inventory inv) {
-            totalCapacity += inv.inventoryCapacity(stack);
-          }
-        }
-      }
-      for (int i = 0; i < componentCount(); i++) {
-        int slot = componentSlots().stream().skip(i).findFirst().orElse(-1);
-        if (slot >= 0) {
-          var stack = getItem(slot);
-          if (!stack.isEmpty()) {
-            var driver = hostClass != null ? li.cil.oc.api.API.driver.driverFor(stack, hostClass) : null;
-            if (driver instanceof li.cil.oc.api.driver.item.Inventory inv) {
-              totalCapacity += inv.inventoryCapacity(stack);
-            }
-          }
-        }
-      }
-      inventorySize = Math.min(maxInventorySize(), totalCapacity);
+      inventorySize = computeInventorySize();
     }
   }
 
   public boolean isAnimatingMove() {
-    return animationTicksLeft > 0 && (moveFromX != Integer.MAX_VALUE || moveFromY != Integer.MAX_VALUE || moveFromZ != Integer.MAX_VALUE);
+    return animationTicksLeft > 0 && (moveFromX != Integer.MAX_VALUE && moveFromY != Integer.MAX_VALUE && moveFromZ != Integer.MAX_VALUE);
   }
 
   public boolean isAnimatingSwing() {
@@ -456,6 +460,7 @@ public abstract class RobotBase extends BlockEntity implements li.cil.oc.core.im
   }
 
   public void animateSwing(double duration) {
+    if (getItem(0).isEmpty()) return;
     setAnimateSwing((int) (duration * 20));
     PacketSender.sendRobotAnimateSwing(this, animationTicksTotal);
   }
@@ -466,9 +471,6 @@ public abstract class RobotBase extends BlockEntity implements li.cil.oc.core.im
   }
 
   public void setAnimateMove(BlockPosition from, int ticks) {
-    if (isAnimatingMove() && moveFromX == from.x() && moveFromY == from.y() && moveFromZ == from.z()) {
-      return;
-    }
     animationTicksTotal = ticks + 2;
     prepareForAnimation();
     moveFromX = from.x();
@@ -700,8 +702,9 @@ public abstract class RobotBase extends BlockEntity implements li.cil.oc.core.im
 
   public void readFromNBTForClient(CompoundTag nbt, HolderLookup.Provider provider) {
     info.load(nbt, provider);
-    updateInventorySize();
     selectedSlot = nbt.getInt("selectedSlot");
+    if (nbt.contains(OCSettings.namespace + "facing"))
+      facing = Direction.from3DDataValue(nbt.getInt(OCSettings.namespace + "facing"));
     isRunning = nbt.getBoolean("isRunning");
     int nbtTicksTotal = nbt.getInt("animationTicksTotal");
     int nbtTicksLeft = nbt.getInt("animationTicksLeft");
@@ -739,12 +742,14 @@ public abstract class RobotBase extends BlockEntity implements li.cil.oc.core.im
         }
       }
     }
+    updateInventorySize();
   }
 
   public void writeToNBTForClient(CompoundTag nbt, HolderLookup.Provider provider) {
     synchronized (this) {
       info.save(nbt, provider);
       nbt.putInt("selectedSlot", selectedSlot);
+      nbt.putInt(OCSettings.namespace + "facing", facing.get3DDataValue());
       nbt.putBoolean("isRunning", isRunning);
       if (isAnimatingMove() || isAnimatingSwing() || isAnimatingTurn()) {
         nbt.putInt("animationTicksTotal", animationTicksTotal);
@@ -860,10 +865,6 @@ public abstract class RobotBase extends BlockEntity implements li.cil.oc.core.im
     return node != null && node.address() != null && node.network() != null;
   }
 
-  public Object result(Object... args) {
-    return li.cil.oc.core.util.ResultWrapper.result(args);
-  }
-
   @Override
   public Iterable<ItemStack> internalComponents() {
     return info.components;
@@ -888,7 +889,12 @@ public abstract class RobotBase extends BlockEntity implements li.cil.oc.core.im
 
   @Override
   public void onMachineDisconnect(Node node) {
+    Environment.super.onDisconnect(node);
     if (node == node()) {
+      if (this instanceof li.cil.oc.core.impl.common.inventory.ComponentInventory ci) {
+        ci.disconnectComponents();
+      }
+      node.remove();
       if (bot instanceof li.cil.oc.core.impl.server.component.Robot rb) {
         rb.node().remove();
       }
@@ -900,15 +906,11 @@ public abstract class RobotBase extends BlockEntity implements li.cil.oc.core.im
   }
 
   @Override
-  public void onDisconnect(Node node) {
-  }
-
-  @Override
   public void onMessage(Message ignoredMessage) {
   }
 
   public void dropSlot(int slot) {
-    li.cil.oc.core.impl.util.InventoryUtils.dropSlot(BlockPosition.apply(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), getLevel()), this, slot, getMaxStackSize());
+    li.cil.oc.core.impl.util.InventoryUtils.dropSlot(BlockPosition.apply(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), getLevel()), this, slot, getMaxStackSize(), null);
   }
 
   public void dropSlot(int slot, int count, Direction direction) {
@@ -921,9 +923,12 @@ public abstract class RobotBase extends BlockEntity implements li.cil.oc.core.im
 
   public void dropInventorySlots() {
     var position = BlockPosition.apply(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), getLevel());
-    var invSlots = inventorySlots();
-    for (int slot : invSlots) {
-      li.cil.oc.core.impl.util.InventoryUtils.dropSlot(position, this, slot, getMaxStackSize());
+    li.cil.oc.core.impl.util.InventoryUtils.dropSlot(position, this, 0, getMaxStackSize(), null);
+    for (int slot : containerSlots()) {
+      li.cil.oc.core.impl.util.InventoryUtils.dropSlot(position, this, slot, getMaxStackSize(), null);
+    }
+    for (int slot : inventorySlots()) {
+      li.cil.oc.core.impl.util.InventoryUtils.dropSlot(position, this, slot, getMaxStackSize(), null);
     }
   }
 
@@ -969,7 +974,7 @@ public abstract class RobotBase extends BlockEntity implements li.cil.oc.core.im
 
   @Override
   public int getContainerSize() {
-    return equipmentInventory.getContainerSize() + mainInventory.getContainerSize() + componentCount();
+    return containerSize;
   }
 
   @Override
@@ -1012,17 +1017,33 @@ public abstract class RobotBase extends BlockEntity implements li.cil.oc.core.im
   @Override
   public void setItem(int slot, @NotNull ItemStack stack) {
     int size = getContainerSize();
-    if (slot < 0 || slot >= size) return;
-    int compCount = componentCount();
-    if (slot >= size - compCount) {
-      int compIdx = slot - (size - compCount);
-      if (compIdx >= 0 && compIdx < info.components.size()) {
-        info.components.set(compIdx, stack);
+    if (slot < 0 || slot >= size) {
+      if (!stack.isEmpty() && isServer()) {
+        spawnStackInWorld(stack, Direction.UP);
       }
-    } else if (slot < inventory.length) {
-      inventory[slot] = stack;
+      return;
     }
-    setChanged();
+    int compCount = componentCount();
+    if (slot < size - compCount && (canPlaceItem(slot, stack) || stack.isEmpty())) {
+      if (!stack.isEmpty() && stack.getCount() > 1 && isServer() && (isContainerSlot(slot) || slot >= size - componentCount())) {
+        var single = stack.split(1);
+        setItem(slot, single);
+        player().getInventory().add(stack);
+        if (!stack.isEmpty()) {
+          spawnStackInWorld(stack, facing());
+        }
+        updateInventorySize();
+        setChanged();
+        return;
+      }
+      if (slot < inventory.length) {
+        inventory[slot] = stack;
+      }
+      updateInventorySize();
+      setChanged();
+    } else if (!stack.isEmpty() && isServer()) {
+      spawnStackInWorld(stack, Direction.UP);
+    }
   }
 
   @Override
@@ -1042,7 +1063,8 @@ public abstract class RobotBase extends BlockEntity implements li.cil.oc.core.im
   @Override
   public boolean canPlaceItem(int slot, @NotNull ItemStack stack) {
     if (slot == 0) return true;
-    if (isContainerSlot(slot)) {
+    if (slot < equipmentInventory.getContainerSize()) {
+      if (!isContainerSlot(slot)) return false;
       var driver = hostClass != null ? li.cil.oc.api.API.driver.driverFor(stack, hostClass) : null;
       if (driver != null) {
         String slotType = containerSlotType(slot);
@@ -1050,7 +1072,7 @@ public abstract class RobotBase extends BlockEntity implements li.cil.oc.core.im
       }
       return false;
     }
-    return true;
+    return isInventorySlot(slot);
   }
 
   @Override
@@ -1077,6 +1099,10 @@ public abstract class RobotBase extends BlockEntity implements li.cil.oc.core.im
     if (isClient()) {
       onClientDispose();
     } else {
+      Machine m = machine();
+      if (m != null) {
+        m.stop();
+      }
       if (EventHandlerDelegate.get() != null) EventHandlerDelegate.get().onRobotStopped(this);
     }
   }

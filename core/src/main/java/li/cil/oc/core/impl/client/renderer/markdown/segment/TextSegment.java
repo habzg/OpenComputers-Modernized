@@ -29,7 +29,7 @@ public class TextSegment extends BasicTextSegment {
     int currentX = x + indent;
     int currentY = y;
     String chars = _text;
-    if (indent == 0) chars = stripLeadingWhitespace(chars);
+    if (ignoreLeadingWhitespace() && indent == 0) chars = stripLeadingWhitespace(chars);
     int wrapIndent = computeWrapIndent(renderer);
     int numChars = maxChars(chars, maxWidth - indent, maxWidth - wrapIndent, renderer);
     InteractiveSegment hovered = null;
