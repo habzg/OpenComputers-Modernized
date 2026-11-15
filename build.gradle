@@ -169,7 +169,7 @@ subprojects {
 
         maven {
             name = "Commoble"
-            url = "https://commoble.net/maven"
+            url = "https://maven.commoble.net/releases"
             content {
                 includeGroup "net.commoble.morered"
             }
